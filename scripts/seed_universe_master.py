@@ -46,12 +46,16 @@ HISTORICAL_TXT = Path(__file__).parent.parent / "symbols_in_store.txt"
 
 
 def load_historical_symbols(path: Path) -> set[str]:
-    """Read symbols_in_store.txt; skip header lines, skip non-ASCII (Chinese chars)."""
+    """Read symbols_in_store.txt; skip header/comment lines, keep all USDT symbols.
+
+    Includes non-ASCII symbols (e.g. Chinese-char Binance perps) — these are real
+    trading pairs that appear in exchangeInfo and must not be silently dropped.
+    """
     syms: set[str] = set()
     with open(path, encoding="utf-8") as f:
         for line in f:
             s = line.strip()
-            if not s or not s.endswith("USDT") or not s.isascii():
+            if not s or not s.endswith("USDT"):
                 continue
             syms.add(s)
     return syms
@@ -78,7 +82,7 @@ def seed_main(force: bool, dry_run: bool) -> None:
     all_ei_syms = set(exchange_info.keys())
     print(f"  exchangeInfo TRADING: {len(trading_syms)}", flush=True)
 
-    # --- Source (b): 394 historical ---
+    # --- Source (b): 394 historical (includes non-ASCII Binance perps) ---
     historical = load_historical_symbols(HISTORICAL_TXT)
     print(f"  Historical store:     {len(historical)}", flush=True)
 
