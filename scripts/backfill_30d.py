@@ -11,6 +11,7 @@ Usage:
 from __future__ import annotations
 
 import asyncio
+import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -59,21 +60,30 @@ class MetricConfig:
     extra_params: dict
     # /futures/data/ endpoints reject startTime >= 30d (code -1130); cap at 29d
     max_lookback_days: Optional[int] = None
+    # Pagination cursor step: +1ms works for klines (candle open_time is hour-aligned);
+    # /futures/data/* returns [] when startTime is between period boundaries → must step
+    # by exactly one period so the next call lands on a valid hour boundary.
+    ts_step_ms: int = 1
 
 
 HOURLY_METRICS: list[MetricConfig] = [
     MetricConfig("klines_1h", PATHS["klines"], parse_klines, 2, KLINE_LIMIT,
                  lambda x: int(x[0]), {"interval": "1h"}),
     MetricConfig("oi_hist_1h", PATHS["oi_hist"], parse_oi_hist, 1, OI_LIMIT,
-                 lambda x: int(x["timestamp"]), {"period": "1h"}, max_lookback_days=29),
+                 lambda x: int(x["timestamp"]), {"period": "1h"},
+                 max_lookback_days=29, ts_step_ms=HOUR_MS),
     MetricConfig("top_pos_1h", PATHS["top_pos"], parse_top_pos, 1, RATIO_LIMIT,
-                 lambda x: int(x["timestamp"]), {"period": "1h"}, max_lookback_days=29),
+                 lambda x: int(x["timestamp"]), {"period": "1h"},
+                 max_lookback_days=29, ts_step_ms=HOUR_MS),
     MetricConfig("top_acct_1h", PATHS["top_acct"], parse_top_acct, 1, RATIO_LIMIT,
-                 lambda x: int(x["timestamp"]), {"period": "1h"}, max_lookback_days=29),
+                 lambda x: int(x["timestamp"]), {"period": "1h"},
+                 max_lookback_days=29, ts_step_ms=HOUR_MS),
     MetricConfig("retail_global_1h", PATHS["retail"], parse_retail, 1, RATIO_LIMIT,
-                 lambda x: int(x["timestamp"]), {"period": "1h"}, max_lookback_days=29),
+                 lambda x: int(x["timestamp"]), {"period": "1h"},
+                 max_lookback_days=29, ts_step_ms=HOUR_MS),
     MetricConfig("taker_ratio_1h", PATHS["taker"], parse_taker_ratio, 1, RATIO_LIMIT,
-                 lambda x: int(x["timestamp"]), {"period": "1h"}, max_lookback_days=29),
+                 lambda x: int(x["timestamp"]), {"period": "1h"},
+                 max_lookback_days=29, ts_step_ms=HOUR_MS),
 ]
 
 BTC_METRIC = MetricConfig("btc_market_1h", PATHS["klines"], parse_klines, 2, KLINE_LIMIT,
@@ -100,10 +110,98 @@ async def _paginate(
     start_ms: int,
     end_ms: int,
 ) -> list:
-    """Paginate through an endpoint until exhausted. Returns all items."""
-    all_items: list = []
-    cur_start = start_ms
+    """Paginate through an endpoint. Returns all items in chronological order.
 
+    /futures/data/* (ts_step_ms=HOUR_MS): API returns the NEWEST `limit` items when
+    range > limit. Walk endTime backward so each page covers an earlier window, then
+    reassemble in chronological order.
+
+    klines (ts_step_ms=1): API returns items ascending from startTime; walk startTime
+    forward (confirmed correct).
+    """
+    if mc.ts_step_ms > 1:
+        # Align start_ms down to the nearest period boundary so startTime is always
+        # on a valid hour mark (period-based endpoints reject mid-period startTimes).
+        aligned_start = (start_ms // mc.ts_step_ms) * mc.ts_step_ms
+
+        max_pages = math.ceil((end_ms - aligned_start) / mc.ts_step_ms / mc.limit) + 2
+        segments: list[list] = []
+        cur_end = end_ms
+        prev_cur_end = cur_end + 1  # sentinel; must strictly decrease each iteration
+
+        for _page in range(max_pages):
+            if cur_end <= aligned_start:
+                break
+            if cur_end >= prev_cur_end:
+                log.error("paginate_endtime_not_decreasing",
+                          metric=mc.key, symbol=symbol,
+                          cur_end=cur_end, prev_end=prev_cur_end)
+                break
+
+            params = {
+                "symbol": symbol,
+                "startTime": aligned_start,
+                "endTime": cur_end,
+                "limit": mc.limit,
+                **mc.extra_params,
+            }
+            log.info("paginate_request", metric=mc.key, symbol=symbol,
+                     page=_page + 1, params=params)
+
+            try:
+                data = await client.get(mc.path, params, weight=mc.weight)
+            except Exception as exc:
+                log.error("paginate_fetch_error", metric=mc.key, symbol=symbol,
+                          page=_page + 1, error=str(exc))
+                break
+
+            if not data:
+                # Verify: retry once with a short delay before accepting as data edge.
+                await asyncio.sleep(2)
+                try:
+                    data = await client.get(mc.path, params, weight=mc.weight)
+                except Exception as exc:
+                    log.error("paginate_fetch_error_retry", metric=mc.key, symbol=symbol,
+                              page=_page + 1, error=str(exc))
+                    break
+                if not data:
+                    break
+
+            segments.append(data)
+
+            if len(data) < mc.limit:
+                break
+
+            prev_cur_end = cur_end
+            oldest_ts = min(mc.ts_extractor(x) for x in data)
+            cur_end = oldest_ts - mc.ts_step_ms
+
+        else:
+            log.error("paginate_max_pages_reached",
+                      metric=mc.key, symbol=symbol, max_pages=max_pages)
+
+        # Post-condition: warn when collected window is still short of aligned_start
+        # on a full final page — sign of a paging regression or unexpected API cap.
+        # Runs even when the loop exits via break (fetch error, empty, guard) so the
+        # tripwire fires on partial collections as well as normal completions.
+        if segments:
+            flat = [x for seg in segments for x in seg]
+            collected_min_ts = min(mc.ts_extractor(x) for x in flat)
+            if collected_min_ts > aligned_start + mc.ts_step_ms and len(segments[-1]) == mc.limit:
+                log.warning("paginate_truncation_gap",
+                            metric=mc.key, symbol=symbol,
+                            collected_min_ts=collected_min_ts,
+                            aligned_start=aligned_start)
+
+        # Segments collected newest→oldest; reverse to restore chronological order
+        all_items: list = []
+        for seg in reversed(segments):
+            all_items.extend(seg)
+        return all_items
+
+    # startTime cursor for ascending endpoints (klines — paging confirmed correct)
+    all_items = []
+    cur_start = start_ms
     while cur_start < end_ms:
         params = {
             "symbol": symbol,
@@ -118,8 +216,7 @@ async def _paginate(
         all_items.extend(data)
         if len(data) < mc.limit:
             break
-        cur_start = mc.ts_extractor(data[-1]) + 1
-
+        cur_start = mc.ts_extractor(data[-1]) + mc.ts_step_ms
     return all_items
 
 
@@ -140,22 +237,27 @@ async def _collect_symbol(
             data = await _paginate(client, mc, symbol, start_ms, end_ms)
         except ValueError as exc:
             return symbol, 0, f"bad_symbol: {exc}"
-        except RuntimeError as exc:
-            return symbol, 0, f"runtime: {exc}"
         except Exception as exc:
             return symbol, 0, f"{type(exc).__name__}: {exc}"
 
         if not data:
             return symbol, 0, None
 
-        df = mc.parser(data, symbol, fetched_at_ms)
+        try:
+            df = mc.parser(data, symbol, fetched_at_ms)
+        except Exception as exc:
+            return symbol, 0, f"parse_error: {type(exc).__name__}: {exc}"
+
         if df.empty:
             return symbol, 0, None
 
         df["_date"] = df["as_of_ts_ms"].apply(ms_to_date_str)
-        for date_str, group in df.groupby("_date"):
-            g = group.drop(columns=["_date"])
-            await write_parquet_partition(g, mc.key, date_str)
+        try:
+            for date_str, group in df.groupby("_date"):
+                g = group.drop(columns=["_date"])
+                await write_parquet_partition(g, mc.key, date_str)
+        except Exception as exc:
+            return symbol, 0, f"write_error: {type(exc).__name__}: {exc}"
 
         return symbol, len(df), None
 
@@ -165,6 +267,7 @@ async def run_backfill(
     days_back: int = 30,
     max_symbols: Optional[int] = None,
     symbols_override: Optional[list[str]] = None,
+    metrics_override: Optional[list[str]] = None,
     resume: bool = False,
     workers: int = SEMAPHORE_SIZE,
     dry_run: bool = False,
@@ -176,6 +279,9 @@ async def run_backfill(
 
     fetch_logger = FetchLogger()
     limiter = RateLimiter(max_weight_per_min=RATE_LIMIT_WEIGHT_PER_MIN)
+    # /futures/data/* pool is separate from the general fapi pool; empirically
+    # saturates below the 2000 weight/min ceiling. Start conservative at 500/min.
+    futures_data_limiter = RateLimiter(max_weight_per_min=500)
 
     now = now_ms()
     end_ms = now
@@ -206,7 +312,8 @@ async def run_backfill(
         log.info("dry_run_complete", symbols=len(symbols))
         return 0
 
-    async with BinanceClient(limiter, fetch_logger) as client:
+    async with BinanceClient(limiter, fetch_logger,
+                              futures_data_limiter=futures_data_limiter) as client:
         # Step 2: Probe retentions
         log.info("probing_retentions")
         retentions = await probe_all_retentions(client)
@@ -222,18 +329,23 @@ async def run_backfill(
 
         sem = asyncio.Semaphore(workers)
 
-        # Step 3: Pull BTC market data (special case — 100% completion required)
-        log.info("pulling_btc_data")
-        btc_symbol, btc_rows, btc_err = await _collect_symbol(
-            client, BTC_METRIC, "BTCUSDT", default_start_ms, end_ms, sem, now
-        )
-        if btc_err:
-            log.error("btc_failed", error=btc_err)
+        # Step 3: Pull BTC market data (skip if metrics_override excludes klines)
+        if metrics_override is None or "klines_1h" in metrics_override:
+            log.info("pulling_btc_data")
+            btc_symbol, btc_rows, btc_err = await _collect_symbol(
+                client, BTC_METRIC, "BTCUSDT", default_start_ms, end_ms, sem, now
+            )
+            if btc_err:
+                log.error("btc_failed", error=btc_err)
 
-        # Step 4: Pull all hourly metrics (sequential per metric, concurrent per symbol)
+        # Step 4: Pull hourly metrics (filtered by metrics_override when set)
+        metrics_to_run = [
+            mc for mc in HOURLY_METRICS
+            if metrics_override is None or mc.key in metrics_override
+        ]
         all_errors: dict[str, list[str]] = {}
 
-        for mc in HOURLY_METRICS:
+        for mc in metrics_to_run:
             # Clamp start_ms: /futures/data/ endpoints reject startTime >= 30d (-1130)
             if mc.max_lookback_days is not None:
                 cap_ms = now - mc.max_lookback_days * 86_400_000
@@ -351,11 +463,15 @@ async def run_backfill(
     return 0 if passed else 1
 
 
+RATIO_METRICS = ["oi_hist_1h", "top_pos_1h", "top_acct_1h", "retail_global_1h", "taker_ratio_1h"]
+
+
 @app.command()
 def main(
     days_back: int = typer.Option(30, help="Days to look back"),
     max_symbols: Optional[int] = typer.Option(None, help="Limit symbols for testing"),
     symbols: Optional[str] = typer.Option(None, help="Comma-separated symbol override list"),
+    metrics: Optional[str] = typer.Option(None, help="Comma-separated metric keys; 'ratio' expands to 5 /futures/data/ metrics"),
     resume: bool = typer.Option(False, help="Skip metrics already complete"),
     workers: int = typer.Option(SEMAPHORE_SIZE, help="Concurrent symbol workers"),
     dry_run: bool = typer.Option(False, help="Probe + universe only, no pulls"),
@@ -368,10 +484,21 @@ def main(
         ],
     )
     symbols_override = [s.strip() for s in symbols.split(",")] if symbols else None
+    if metrics:
+        raw = [m.strip() for m in metrics.split(",")]
+        metrics_override: Optional[list[str]] = []
+        for m in raw:
+            if m == "ratio":
+                metrics_override.extend(RATIO_METRICS)
+            else:
+                metrics_override.append(m)
+    else:
+        metrics_override = None
     exit_code = asyncio.run(run_backfill(
         days_back=days_back,
         max_symbols=max_symbols,
         symbols_override=symbols_override,
+        metrics_override=metrics_override,
         resume=resume,
         workers=workers,
         dry_run=dry_run,
