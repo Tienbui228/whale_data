@@ -1,0 +1,18 @@
+# Whale Data Collector — crontab (UTC)
+# Install with: crontab crontab.txt
+# Requires WHALE_DATA_DIR env var pointing to project root
+
+# Hourly: klines, OI, position ratios, taker (at :05 to avoid exchange rollover spikes)
+5 * * * * cd $WHALE_DATA_DIR && python scripts/collect_hourly.py >> data/logs/$(date -u +\%Y-\%m-\%d)/hourly.log 2>&1
+
+# 8h: funding rates (10 min after Binance settlement at 00:00/08:00/16:00 UTC)
+10 0,8,16 * * * cd $WHALE_DATA_DIR && python scripts/collect_funding.py >> data/logs/$(date -u +\%Y-\%m-\%d)/funding.log 2>&1
+
+# W2: daily-period metrics (00:35 UTC — 35 min after 1d candle closes at 00:00)
+35 0 * * * cd $WHALE_DATA_DIR && python scripts/collect_daily_metrics.py >> data/logs/$(date -u +\%Y-\%m-\%d)/collect_daily_metrics.log 2>&1
+
+# Daily: universe refresh (CoinGecko + exchangeInfo)
+30 1 * * * cd $WHALE_DATA_DIR && python scripts/collect_daily.py >> data/logs/$(date -u +\%Y-\%m-\%d)/daily.log 2>&1
+
+# Weekly: integrity audit (Sunday 03:00 UTC)
+0 3 * * 0 cd $WHALE_DATA_DIR && python scripts/audit_integrity.py >> data/logs/$(date -u +\%Y-\%m-\%d)/audit.log 2>&1
