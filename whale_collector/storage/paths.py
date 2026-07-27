@@ -14,6 +14,8 @@ METRIC_DIRS: dict[str, Path] = {
     "funding_8h":       RAW_DIR / "funding_8h",
     "btc_market_1h":    RAW_DIR / "btc_market_1h",
     "universe":         RAW_DIR / "universe",
+    # W3: premium index hourly
+    "premium_1h":       RAW_DIR / "premium_1h",
     # W2: daily-period (1d) metrics
     "oi_hist_1d":       RAW_DIR / "oi_hist_1d",
     "top_pos_1d":       RAW_DIR / "top_pos_1d",
