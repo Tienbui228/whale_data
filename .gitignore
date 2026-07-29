@@ -1,8 +1,5 @@
 # Data — never commit
 data/
-# Exception: case file outputs (docs/case_files/data/)
-!docs/case_files/data/
-!docs/case_files/data/*.csv
 *.parquet
 *.log
 
