@@ -61,6 +61,7 @@
 &#x20; TAG vs TAGUSDT hoặc date-join). Fix join, KHÔNG đụng export.
 
 \- Excel oi\_vs\_med14 ≠ định nghĩa fire (window khác).
+\- OI daily canonical = export 00:00 UTC. Số intraday chỉ ghi EVENTS kèm timestamp, không vào cột DAILY. (chốt 30/07)
 
 
 

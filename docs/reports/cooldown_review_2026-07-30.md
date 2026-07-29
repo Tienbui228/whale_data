@@ -56,7 +56,7 @@ Ghi chú: Jul 24-26 missing toàn universe (mass outage), không có data.
 - Funding: PINNED 2 ngày cuối (fn=1 low_conf)
 - Xu hướng: cấu trúc LSR đã normalize hoàn toàn
 
-**Đề xuất agent:** Đề xuất UNLOCK — div_raw < 1 (0.849), OI co -72% từ peak, cấu trúc đảo chiều rõ ràng. gLSR 1.75 đang tăng — monitor sau unlock.
+**Đề xuất agent:** Đề xuất UNLOCK → **WATCH** (re-staging, không NO_SETUP) — div_raw < 1 (0.849), OI co -72% từ peak, cấu trúc đảo chiều rõ ràng. gLSR 1.75 đang tăng — cần theo dõi re-staging sau unlock, không coi là case đóng.
 
 ---
 

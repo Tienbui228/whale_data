@@ -171,4 +171,41 @@ Ket luan T4: Tat ca items done. Cleanup bao phu day du screener + pending exempt
 
 ---
 
-*Cap nhat: 2026-07-29 (sau chinh sua 30/07)*
+### TAG — Verdict trang thai (operator chot 29/07)
+
+**Invalidate theo nghia den: CHUA BAN.** Ve "gia dung" FAIL — ret_3d = -9.87%, gia dang roi that (0.001348 → 0.001295 → 0.001215). Hard floor 0.00072: con xa.
+
+**Cau hinh thuc te:** Gia -9.87%/3d + gLSR bo 1.30→1.61 + acc_r bat 0.999→1.372 = crowd long nap vao duong gia xuong (bat dao). Khong phai wash-by-rally (crowd roi khi gia tang). Gan nhat voi pha fade hau-stealth-fire: fire 07-28 margin mong, gia fade, crowd sai phia nap vao.
+
+**Ket luan trang thai: TAG WATCH ha nhiet.**
+- Cach tai-ARM xa hon: can div_raw >= 1.72 hai ngay lien, trong khi raw vua sap ve 1.18
+- Dieu kien can truoc moi ho so tai-ARM: gLSR quay ve <=1.1 (lua long moi phai bi rua)
+- **Diem canh giac:** neu gia NGUNG roi ma gLSR van >1.5 → ca hai ve invalidate cung thoa → canh chinh xac to hop do tung ngay
+
+**Trong so tang:** tx cum 6 vi ma 6 vi van hold trong pha fade + crowd sai phia = kich ban gom-tiep con song. Bat ky redeposit nao = dong an khong cho gia.
+
+---
+
+### BR OI Canonical — Quy uoc chot (30/07)
+
+**Confirmed:** OI daily canonical = export 00:00 UTC (Binance openInterestHist sumOpenInterestValue).
+- Export 3,782,263 = snapshot ~00:00 UTC Jul 29 → ghi vao DAILY
+- Operator 4,634,000 = snapshot intraday (Coinglass/GMGN luc nhin) → ghi EVENTS kem timestamp, khong vao DAILY
+- Hieu qua: CASE_BR row 67 L = 4,634,000 la EVENTS entry, khong phai DAILY canonical. Dinh luat #9 tinh tren floor theo chuan export (3.78M); pos_r 1.661 tai floor van dung.
+
+**Quy uoc da vao CLAUDE.md:** "OI daily canonical = export 00:00 UTC; so intraday chi ghi EVENTS kem timestamp, khong vao cot DAILY."
+
+---
+
+### Checklist sang mai (Jul 30, sau 07:10 SGT)
+
+- [ ] **Verify P1 snapshot:** SSH VPS → kiem `data/screener/daily_2026-07.csv` 526 dong + TAGUSDT fn=6 → PASS → goi agent commit P1
+- [ ] **Cooldown verdict 4 con:** PARTI/EVAA/CLO (UNLOCK → dien verdict sheet CASE). EVAA unlock → WATCH (re-staging). BLUAI: REMAIN. Verify oi_vs_med14 VPS signals.py truoc khi ghi verdict.
+- [ ] **Viec tay TAG:** tx cum 6 vi (BscScan) — trong so da tang sau fade + crowd sai phia
+- [ ] **Viec tay BR:** bid/ask wall Gate snapshot ngay 2 (30/07)
+
+**Sau P1 commit:** case_daily + BscScan watcher (nho hon, khep vong tu van hanh) → P2 session tuoi rieng.
+
+---
+
+*Cap nhat: 2026-07-29 → operator chot 30/07*
