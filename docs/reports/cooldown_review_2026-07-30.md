@@ -102,13 +102,13 @@ Ghi chú: Jul 24-26 missing toàn universe (mass outage), không có data.
 | Jul 29  | 1.3136 | 2.0741 | 0.633   | 2.5323 | 5,389,692  | 3.29e-04  | 1* |
 
 **Tóm tắt tín hiệu 29/07:**
-- `gLSR` = 2.5323 → **HOT** (cao nhất trong 4 token, bùng lên từ 1.13 ngày 23/07)
-- `funding_avg` = 0.000329 (3.29e-04) → funding HOT
+- `gLSR` = 2.5323 → **crowd long dày = sai phía** (cao nhất trong 4 token, bùng từ 1.13 ngày 23/07; gLSR cao KHÔNG = "hot setup", = đám đông đang long chồng dư → wrong-side risk)
+- `funding_avg` = 0.000329 (3.29e-04) → funding elevated, xác nhận crowd long bias
 - `div_raw` = 0.633 → đảo chiều (acc > pos)
 - OI: stable ~5.0-5.6M
-- Xu hướng: gLSR và funding cùng bùng, cấu trúc đang leo thang
+- Xu hướng: gLSR và funding cùng leo thang, crowd càng long nhiều càng tăng rủi ro sai phía
 
-**Đề xuất agent:** REMAIN COOLDOWN — gLSR bùng lên 2.53 (peak mới từ sau Jul 23), funding HOT +0.033%, dù div_raw đảo chiều nhưng áp lực global short rất mạnh. Chưa an toàn để unlock.
+**Đề xuất agent:** REMAIN COOLDOWN — gLSR 2.53 = crowd long dày, wrong-side risk đang leo thang (không phải tín hiệu "tier A" tích cực). Funding +0.033% xác nhận bias. Dù div_raw đảo chiều nhưng cấu trúc crowd chưa flush. Chưa an toàn để unlock.
 
 ---
 

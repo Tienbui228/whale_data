@@ -76,3 +76,5 @@
 
 \- DAILY data chỉ sống trong CASE\_<TOKEN>.xlsx sheet DAILY — cấm sinh CSV song song trong docs/case\_files/ (án 30/07, tái phạm 1 lần).
 
+\- Ratio fn=1 (native\_1d low\_conf) → không dùng làm số chốt. Fallback: Zone A aggregate từ ledger\_v2.xlsx CAMPAIGNS, ghi rõ nguồn "Zone-A-agg". Quy ước tạm cho đến khi P1 screener snapshot 5-phút chạy ổn định.
+
