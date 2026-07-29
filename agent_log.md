@@ -10,19 +10,29 @@
 
 ---
 
-### [T1] P1 Screener Verify — FAIL (AN MO)
+### [T1] P1 Screener Verify — FAIL (AN DA XU LY)
 
-**Lenh chay:** Mega-probe + probe2 (SSH VPS /root/binance_bot_signals)  
-**Ket qua:**
-- Path screener tren VPS: `/root/binance_bot_signals/data/screener/` (xac nhan tu bot config: `self.screener_dir = self.data_dir / "screener"`)  
-- `daily_2026-07.csv` **ABSENT** — thu muc ton tai nhung rong (total 0 files)
-- Dieu kien trigger: `oi_scanner.py` `scan_once()` chi ghi screener khi `hour==0 and minute>=5` UTC
-- Bot ran 00:06:18 UTC (dieu kien met), nhung **KHONG co log [screener]** trong toan bo window 22:00 Jul 28 – 01:30 Jul 29
-- Root cause: UNKNOWN — khong tu chinh, ghi an
+**Lenh chay:** `_probe_p1_deploy.py` — SSH VPS check file mtime + service start + trigger code
 
-**AN T1:** screener trigger met dieu kien 00:06 UTC nhung khong xuat hien log [screener] — co the co exception bi swallow hoac screener_path config redirect sai. Can OPERATOR kiem tra.
+**Chan doan dung (sua lai):** AN BAN DAU SAI HUONG.
+- `oi_scanner.py` mtime: **2026-07-29 02:16 UTC** — deploy THANH CONG
+- oibot service start: **2026-07-29 06:10 UTC** (PID 2217202)
+- OLD PID 1854765 dang chay luc 00:03-00:04 UTC (KHONG co screener code)
+- Window 00:05 UTC da bi miss boi ca 2 ly do: (1) code moi chua tren VPS luc 00:05, (2) service chua restart
 
-**Ket luan T1:** FAIL(a) + FAIL(b) — file missing, nguyen nhan chua ro. Ghi an, khong bloc cac task khac.
+**Nguyen nhan chinh xac:** Deploy Item 5 thuc thi SAU window 00:05 UTC (deploy 02:16, restart 06:10). KHONG phai exception swallow. Old code khong co `_m5_structural_pass` / `_snapshot_writer`.
+
+**Trang thai hien tai:** Code moi dang chay (PID 2217202 tu 06:10 UTC). Trigger dung:
+```python
+if (_today_utc != self._screener_snapshot_date
+        and _now_utc.hour == 0 and _now_utc.minute >= 5):
+    self._snapshot_writer(symbols, tickers)
+```
+**Jul 29 snapshot: MAT** (missed window — khong the recover). **Jul 30 00:05 UTC se la first capture.**
+
+**Lenh xac nhan:** Hai function `_snapshot_writer` (line 3290) va `_m5_structural_pass` (line 3424) da co trong code VPS hien tai.
+
+**Ket luan T1:** Root cause = deploy + restart sau window. Khong can operator intervention. Theo doi Jul 30 00:05-00:10 UTC de confirm first `daily_2026-07.csv` duoc ghi.
 
 ---
 
@@ -47,16 +57,25 @@ sym_rows = export_data.get(_exp_key, [])
 - `report_2026-07-29.xlsx` regenerated, 1 change detected
 - Backup: `/root/Data_back_test/whale_data/ledger_daily.py.bak_before_r1fix`
 
-**Ket luan T2:** PASS — 28 campaigns Zone A da duoc cap nhat dung.
+**Backfill Zone A:** Zone A la snapshot (tinh aggregate tu t0_date den today). Live run Jul 29 da tu dong backfill — `_compute_zone_a` tinh tat ca export rows tu t0_date (2026-07-20) den 2026-07-29. Khong co `--date` flag; mot lan chay la du.
+
+**2 sample rows xac nhan (CAMPAIGNS):**
+- TAG: lsr_pos_r=1.5221, acc_r=1.2090, div_r=1.2589, oi_usd=11172261, data_ok=yes, zoneA_updated=2026-07-29T07:36:18Z
+- BANK: div_r=2.4335, data_ok=yes, zoneA_updated=2026-07-29T07:36:18Z
+- CLO: div_r=0.5550, state_manual=suppressed, data_ok=yes
+
+**Ket luan T2:** PASS — 28 campaigns Zone A da duoc cap nhat dung, backfill implicit qua aggregate tu t0_date.
 
 ---
 
-### [T3] Handover Chot 29/07
+### [T3] Handover Chot 29/07 (sua lai)
 
-**Lenh chay:** `_build_outputs.py` (local, tu export data da probe)  
-**Files tao:**
-- `docs/case_files/data/TAG_daily.csv` — 29 rows Jul 01-29
-- `docs/case_files/data/BR_daily.csv` — 29 rows (26 actual + 3 data_bad Jul 24-26)
+**SUA AN 30/07:** Buoi sang tao CSV trong docs/case_files/data/ = TAI PHAM. DAILY song trong CASE_<TOKEN>.xlsx.
+**Hanh dong sua:** Git rm 2 CSV, them rule vao CLAUDE.md, append row 31 vao CASE_TAG.xlsx DAILY, fill missing fields vao CASE_BR.xlsx row 67 (G/H/I f_min/max/n, khong dung data operator).
+
+**Files cap nhat:**
+- `CASE_TAG.xlsx` DAILY row 31 (2026-07-29): O=1.6204, P=1.3719, Q=1.8129 fn=1, L=11172261, formulas R/S/T/U/V copied+incremented tu row 30, note AN31 flag gLSR suspect
+- `CASE_BR.xlsx` DAILY row 67: G=0.00017978, H=0.00017978, I=1 them vao (khong override du lieu operator: B=0.146, L=4634000, N=FLOOR, O=1.661, P=1.49, Q=1.944, AK/AL/AN/AO)
 
 **TAG 29/07 — S1 Handover:**
 | Metric | Value | Moc | Status |
@@ -122,13 +141,34 @@ Ket luan T4: Tat ca items done. Cleanup bao phu day du screener + pending exempt
 
 ---
 
-### CAN OPERATOR (session nay)
+### SO SANH NGUON BR OI 29/07
 
-1. **T1 An:** Xem xet vi sao [screener] khong xuat hien trong oibot log luc 00:06 UTC Jul 29 — co the exception bi swallow.
-2. **T3 TAG:** tx cum 6 vi (BscScan free scan), bid_wall/ask_wall Gate snapshot dau tien.
-3. **T3 BR:** kho 6% chuyen dong (on-chain), bid_wall/ask_wall Gate snapshot.
-4. **T5 UNLOCK:** Verify oi_vs_med14 tu VPS signals.py cho PARTI/EVAA/CLO, dien verdict vao CASE sheets.
+**AN SO SANH:** CASE_BR row 67 L=4,634,000 (operator entry) vs export probe = 3,782,263. Chenh ~22%.
+- Khong tu ghi de — operator co nguon rieng (possibly spot+perp aggregate hoac diem ngay khac).
+- Ghi an, khong tu chon.
+
+### TAG raw 29/07 (so sanh nguon)
+
+| Metric | Export (probe) | CAMPAIGNS Zone A |
+|--------|----------------|-----------------|
+| pos_r | 1.6204 | 1.5221 (aggregate) |
+| acc_r | 1.3719 | 1.2090 (aggregate) |
+| div_raw | 1.181 | 1.2589 (aggregate) |
+| gLSR | 1.8129 (fn=1 SUSPECT) | 1.6059 (aggregate) |
+| OI | 11,172,261 | 11,172,261 (match) |
+
+**gLSR SUSPECT:** 1.2978 (Jul28, fn=1) → 1.8129 (Jul29, fn=1) — both single-snapshot. Khong tin duoc.
+**acc_r bat nguoc:** Jul28 acc_r=0.9988 → Jul29 acc_r=1.3719, keo div_raw tu 1.597 xuong 1.181.
+**div_avg3(29)** = (1.075+1.597+1.181)/3 = **1.284** (confirm, match operator number 1.344 la cua Jul28).
+
+### CAN OPERATOR
+
+1. **T1:** Confirm Jul 30 00:05-00:10 UTC — `daily_2026-07.csv` ghi dung. Neu khong → o khac ngoai deploy.
+2. **T3 TAG:** tx cum 6 vi (BscScan), bid_wall/ask_wall Gate snapshot (bat dau tu 30/07 theo note xlsx).
+3. **T3 BR:** kho 6% chuyen dong (on-chain); verify OI 4.634M vs 3.782M nguon nao dung.
+4. **T5:** Phan verdict cooldown tu packet. EVAA → WATCH neu unlock (khong phai NO_SETUP). Verify oi_vs_med14 VPS signals.py.
+5. **BLUAI nhan 'HOT':** sua nhan trong cooldown_review — 'gLSR cao = crowd long day = wrong-side' thay vi 'hot tier A'.
 
 ---
 
-*Cap nhat: 2026-07-29 session end*
+*Cap nhat: 2026-07-29 (sau chinh sua 30/07)*
