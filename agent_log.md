@@ -360,7 +360,7 @@ Ket luan T4: Tat ca items done. Cleanup bao phu day du screener + pending exempt
 
 ---
 
-### Checklist sang mai (Jul 30, sau 07:10 SGT)
+### Checklist sang mai (Jul 30, sau 07:10 ICT)
 
 - [ ] **Verify P1 snapshot:** SSH VPS → kiem `data/screener/daily_2026-07.csv` 526 dong + TAGUSDT fn=6 → PASS → goi agent commit P1
 - [ ] **Cooldown verdict 4 con:** PARTI/EVAA/CLO (UNLOCK → dien verdict sheet CASE). EVAA unlock → WATCH (re-staging). BLUAI: REMAIN. Verify oi_vs_med14 VPS signals.py truoc khi ghi verdict.
@@ -476,12 +476,12 @@ Code của L-34 (PermissionError → RAISE) đã được implement trong case_d
 | Field | Value |
 |-------|-------|
 | Task name | `FreshWatch_case_daily` |
-| Schedule | Daily 09:00 SGT = 02:00 UTC (machine UTC+7) |
+| Schedule | Daily 09:00 ICT (UTC+7, Vietnam) = 02:00 UTC |
 | Wrapper | `scripts/run_case_daily.bat` |
 | Log | `data/logs/case_daily.log` |
-| Status | Ready (next run 2026-07-31 09:00 SGT) |
+| Status | Ready (next run 2026-07-31 09:00 ICT) |
 
-**LedgerSync timing:** Export ships ~01:00 UTC = 08:00 SGT. case_daily chạy 09:00 SGT → buffer 1h. PASS.
+**LedgerSync timing:** Export ships ~01:00 UTC = 08:00 ICT. case_daily chạy 09:00 ICT → buffer 1h. PASS.
 
 ---
 
@@ -500,5 +500,52 @@ Spec: `proposals/tape_daemon_spec.md` — **chờ operator approve** trước kh
 - (a) LESSONS renumber+L-34: **BLOCKED** (chờ L-28..L-31 từ operator)
 - (b) case_daily fn<6 fix + BANK Jul29 retrofix: **DONE** (commit sau)
 - (c) schtasks bat: **DONE** (commit sau)
+
+---
+
+## SESSION 2026-07-30 — P1.5 FOLLOW-UP (session 4 / tiep theo session 3)
+
+### [T1] LESSONS sync rev.2 — DONE
+
+**Source:** docs/lessons_rev2_source.md (operator-approved rev.2, ghi vao repo cung session nay)
+
+**Thao tac:**
+1. Rename: L-26 (file-canonical) → L-32, L-27 (fn=1 guard) → L-33
+2. Insert 6 rows: L-26→L-31 (wrong-side fuel, M2 dao dau, tu-ha-cap narrative, alpha_vol_suspect, Bitget lech ngay, consolidation nguon)
+3. Update L-14→L-20 theo rev.2 (xoa so bia, sua ten L-16, them co che L-14/L-15)
+4. Append L-34: PermissionError RAISE
+5. Verify: 34 bai, L-01..L-34 day du, khong trung ID
+6. Regenerate docs/lessons_learned.md (141 dong)
+
+Script: _task_sync_lessons.py
+
+---
+
+### [T3] Label fix ICT — DONE
+
+SGT (UTC+8, Singapore) sai — may la UTC+7 (ICT, Vietnam). Sua 4 cho trong agent_log.md:
+- 07:10 SGT → 07:10 ICT (lich su)
+- 09:00 SGT → 09:00 ICT trong T3 summary (×3)
+
+---
+
+### [T4] BR full-day Jul29 test — PASS
+
+**3 so:**
+| Metric | Ket qua |
+|--------|---------|
+| Trades Jul29 | **2 401 trades** (3 pages x limit=1000) |
+| Timestamp phu | 00:00:13 → 23:59:09 UTC (gap <1 phut hai dau) |
+| Tape vol vs kline vol | $24,025.34 vs $24,025.34 = **0.0% diff** |
+
+**Ket luan:** PASS — one-shot daily DU cho BR. Collect_tape.py pagination hop le.
+
+**Dinh nghia nguong:** one-shot valid cho token <=5000 trades/ngay (<=5 pages, margin 2x). BR (2401/ngay) nam trong vung an toan.
+
+**Hanh dong tiep (cho operator duyet):**
+1. Add collect_tape BR vao cron daily (02:30 ICT = 19:30 UTC hom truoc, sau export)
+2. Do volume TAG truoc khi quyet dinh one-shot vs daemon
+
+**Khong thay doi:** collect_tape.py giu nguyen (one-shot da dung). Daemon spec trong proposals/tape_daemon_spec.md cho tokens vol cao.
 
 ---
