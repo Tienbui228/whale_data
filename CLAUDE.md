@@ -61,7 +61,7 @@
 &#x20; TAG vs TAGUSDT hoặc date-join). Fix join, KHÔNG đụng export.
 
 \- Excel oi\_vs\_med14 ≠ định nghĩa fire (window khác).
-\- OI daily canonical = export 00:00 UTC. Số intraday chỉ ghi EVENTS kèm timestamp, không vào cột DAILY. (chốt 30/07)
+\- ratio+OI DAILY canonical = snapshot 00:00 UTC mở ngày D (derived_1h hiện hành), khớp native_1d 21/21 diff 0%; keep-last 23:xx = EVENTS, không vào cột DAILY. (chốt 31/07, proposal v2)
 \- Repo canonical binance-bot-signals: `D:\Data back test\binance-bot-signals\` (chuyển 31/07 — OneDrive copy đã RETIRED). replay.py + 12 calib files ở đây.
 \- Calib files chỉ đọc từ repo `D:\Data back test\binance-bot-signals\docs\case study\` — KHÔNG dùng bản rời trong `D:\Check onchain fresh wallets\u50_data\` (đã rename _LOOSE_RETIRED_20260731 ngày 31/07).
 
