@@ -7,9 +7,10 @@ Per-case logic:
   1. Open CASE_<TOKEN>.xlsx DAILY sheet, read existing dates
   2. If yesterday already present → skip
   3. Fetch yesterday's row from freshwatch_daily_YYYY-MM.csv (matched symbol+date)
-  4. fn=1 (low_conf=True or funding_n=1) → taker_buy_pct from Zone-A-agg
-     (ledger_v2.xlsx CAMPAIGNS, col taker_buy_pct_5d) + openpyxl Comment on cell
+  4. fn<6 (low_conf=True or funding_n<6) → ratio cols {15,16,17} get "SUSPECT fn<6" comment;
+     taker/px/vol/OI always use native export value regardless of fn.
   5. Write raw fields + formula strings → append row → save xlsx
+     File locked → RAISE (never silent-save to _NEW filename, per L-34)
 
 After all cases: append §1 digest to agent_log.md.
 
@@ -41,7 +42,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 WHALE      = Path(r"D:\Data back test\whale_data")
 CASE_DIR   = WHALE / "docs" / "case_files"
 EXPORT_DIR = Path(r"D:\Check onchain fresh wallets\data\export")
-LEDGER     = Path(r"D:\Check onchain fresh wallets\data\ledger\ledger_v2.xlsx")
 AGENT_LOG  = WHALE / "agent_log.md"
 
 FIRST_DATA_ROW = 3   # DAILY rows 1-2 are headers
@@ -67,14 +67,16 @@ EXPORT_COL_MAP: dict[int, tuple[str, str]] = {
 
 FORMULA_COLS = {3, 18, 19, 20, 21, 22, 36}
 
+# Ratio cols that get "SUSPECT fn<6" comment when fn_suspect=True.
+# Taker (col 5) is intentionally excluded — always write native value.
+_RATIO_COLS = {15, 16, 17}
+
 # Bảo vệ mapping: mỗi col ratio chỉ được map đúng metric tương ứng.
-# Rationale (L-22): fn=1 fallback chỉ được dùng cho taker (col 5),
-# KHÔNG được mượn cột ratio (gLSR/pos/acc) sang metric khác.
 _ASSERT_COL_METRIC: dict[int, str] = {
-    5:  "taker_buy_pct",   # taker → taker only  (fn=1: Zone-A-agg)
-    15: "lsr_pos_r",       # pos ratio → pos ratio only
-    16: "lsr_acc_r",       # acc ratio → acc ratio only
-    17: "lsr_global_r",    # global LSR → global LSR only
+    5:  "taker_buy_pct",
+    15: "lsr_pos_r",
+    16: "lsr_acc_r",
+    17: "lsr_global_r",
 }
 for _col, _expected in _ASSERT_COL_METRIC.items():
     _actual = EXPORT_COL_MAP.get(_col, (None,))[0]
@@ -154,32 +156,6 @@ def _load_export_csv(date_str: str) -> dict[str, dict]:
     return result
 
 
-def _load_zone_a(token: str) -> tuple[Optional[float], str]:
-    """Return (taker_buy_pct_5d, source_label) from ledger_v2 CAMPAIGNS for token."""
-    if not LEDGER.exists():
-        return None, "ledger_v2_not_found"
-    wb = openpyxl.load_workbook(str(LEDGER), data_only=True, read_only=True)
-    if "CAMPAIGNS" not in wb.sheetnames:
-        wb.close()
-        return None, "no_CAMPAIGNS_sheet"
-    ws = wb["CAMPAIGNS"]
-    result: Optional[float] = None
-    campaign_id = "—"
-    for row in ws.iter_rows(min_row=2, max_col=17, values_only=True):
-        if row[1] and str(row[1]).upper() == token.upper():
-            v17 = row[16]
-            if v17 is not None:
-                try:
-                    result = float(v17); campaign_id = str(row[0])
-                except (TypeError, ValueError):
-                    pass
-    wb.close()
-    if result is not None:
-        src = f"Zone-A-agg (ledger_v2 CAMPAIGNS/{campaign_id})"
-        return result, src
-    return None, f"no_campaign_for_{token}"
-
-
 def _existing_dates_and_max_row(ws) -> tuple[set[str], int]:
     dates: set[str] = set()
     max_row = FIRST_DATA_ROW - 1
@@ -195,9 +171,8 @@ def _append_daily_row(
     ws,
     row_n: int,
     csv_row: dict,
-    fn1: bool,
-    zone_a_val: Optional[float],
-    zone_a_src: str,
+    fn_suspect: bool,
+    fn_n_str: str,
     src_ratio: str,
 ) -> None:
     formulas = _formulas_for_row(row_n)
@@ -214,20 +189,18 @@ def _append_daily_row(
             continue
 
         field, parse_type = EXPORT_COL_MAP[c]
-
-        # fn=1: taker_buy_pct (col 5) uses Zone-A-agg
-        if c == 5 and fn1:
-            cell.value = zone_a_val
-            if zone_a_val is not None:
-                note = f"fn=1 ({src_ratio}) — taker từ {zone_a_src}"
-                cell.comment = Comment(note, "case_daily.py")
-            continue
-
         raw = csv_row.get(field, "")
         cell.value = _parse_val(raw, parse_type)
 
+        # fn<6: ratio cols get SUSPECT comment; taker/px/vol/OI write native unchanged
+        if fn_suspect and c in _RATIO_COLS:
+            cell.comment = Comment(
+                f"SUSPECT fn<6 (fn={fn_n_str}, src={src_ratio})",
+                "case_daily.py",
+            )
 
-def _compute_digest_metrics(csv_row: dict, fn1: bool, zone_a_val: Optional[float]) -> dict:
+
+def _compute_digest_metrics(csv_row: dict, fn_suspect: bool) -> dict:
     def f(key: str) -> Optional[float]:
         v = csv_row.get(key, "")
         try:
@@ -237,7 +210,7 @@ def _compute_digest_metrics(csv_row: dict, fn1: bool, zone_a_val: Optional[float
 
     pos_r = f("lsr_pos_r"); acc_r = f("lsr_acc_r"); glsr = f("lsr_global_r")
     div_raw = (pos_r / acc_r) if (pos_r and acc_r and acc_r != 0) else None
-    taker   = zone_a_val if fn1 else f("taker_buy_pct")
+    taker   = f("taker_buy_pct")   # always native
 
     return {
         "px_avg":        f("px_avg"),
@@ -251,7 +224,7 @@ def _compute_digest_metrics(csv_row: dict, fn1: bool, zone_a_val: Optional[float
         "taker_buy_pct": taker,
         "data_ok":       csv_row.get("data_ok", ""),
         "low_conf":      csv_row.get("low_conf", ""),
-        "fn1":           fn1,
+        "fn_suspect":    fn_suspect,
     }
 
 
@@ -305,7 +278,6 @@ def main(
             results.append({"token": token, "status": "SKIP_NO_FILE", "note": str(xlsx_path)})
             continue
 
-        # Load xlsx
         wb = openpyxl.load_workbook(str(xlsx_path), data_only=False)
         if "DAILY" not in wb.sheetnames:
             log.warning("case_daily_no_daily_sheet", file=cfile)
@@ -326,66 +298,68 @@ def main(
             results.append({"token": token, "status": "SKIP_NO_EXPORT", "symbol": sym})
             continue
 
-        # fn=1 check
-        fn_n       = csv_row.get("funding_n", "")
-        low_conf   = csv_row.get("low_conf", "False")
-        src_ratio  = csv_row.get("src_ratio", "")
-        fn1        = (fn_n == "1" or low_conf == "True")
+        fn_n      = csv_row.get("funding_n", "")
+        low_conf  = csv_row.get("low_conf", "False")
+        src_ratio = csv_row.get("src_ratio", "")
 
-        zone_a_val: Optional[float] = None
-        zone_a_src = "—"
-        if fn1:
-            zone_a_val, zone_a_src = _load_zone_a(token)
-            log.info("case_daily_fn1", token=token, zone_a=zone_a_val, src=zone_a_src)
+        try:
+            fn_suspect = int(fn_n) < 6 if fn_n else False
+        except (ValueError, TypeError):
+            fn_suspect = False
+        fn_suspect = fn_suspect or (low_conf == "True")
+
+        if fn_suspect:
+            log.info("case_daily_fn_suspect", token=token, fn_n=fn_n, low_conf=low_conf, src_ratio=src_ratio)
 
         row_n = last_row + 1
 
         if not dry_run:
-            _append_daily_row(ws, row_n, csv_row, fn1, zone_a_val, zone_a_src, src_ratio)
+            _append_daily_row(ws, row_n, csv_row, fn_suspect, fn_n, src_ratio)
             try:
                 wb.save(str(xlsx_path))
                 log.info("case_daily_saved", token=token, row=row_n, date=date_str)
                 status = "OK"
             except PermissionError:
-                new_path = xlsx_path.parent / (xlsx_path.stem + "_DAILY_NEW.xlsx")
-                wb.save(str(new_path))
-                log.warning("case_daily_locked", token=token, saved_as=str(new_path))
-                status = f"LOCKED→{new_path.name}"
+                # L-34: cấm silent-save sang tên khác — close xlsx rồi retry
+                raise RuntimeError(
+                    f"[L-34] File locked — close xlsx then retry: {xlsx_path}"
+                ) from None
         else:
             status = "DRY_RUN"
             log.info("case_daily_dry_run", token=token, would_append_row=row_n, date=date_str)
 
-        metrics = _compute_digest_metrics(csv_row, fn1, zone_a_val)
+        metrics = _compute_digest_metrics(csv_row, fn_suspect)
         results.append({
-            "token":   token,
-            "status":  status,
-            "date":    date_str,
-            "row":     row_n,
-            "metrics": metrics,
-            "fn1":     fn1,
-            "zone_a":  zone_a_src if fn1 else "—",
+            "token":      token,
+            "status":     status,
+            "date":       date_str,
+            "row":        row_n,
+            "metrics":    metrics,
+            "fn_suspect": fn_suspect,
+            "fn_n":       fn_n,
         })
 
     # §1 digest
     digest_lines.append("### §1 Handover digest")
     digest_lines.append("")
-    digest_lines.append("| Token | Status | row | lsr_pos_r | lsr_acc_r | div_raw | taker_buy_pct | f_avg | f_n | OI_USD | fn=1 | Zone-A src |")
-    digest_lines.append("|-------|--------|-----|-----------|-----------|---------|---------------|-------|-----|--------|------|------------|")
+    digest_lines.append("| Token | Status | row | lsr_pos_r | lsr_acc_r | div_raw | taker_buy_pct | f_avg | f_n | OI_USD | SUSPECT |")
+    digest_lines.append("|-------|--------|-----|-----------|-----------|---------|---------------|-------|-----|--------|---------|")
 
     for r in results:
         if "metrics" not in r:
-            digest_lines.append(f"| {r['token']} | {r['status']} | — | — | — | — | — | — | — | — | — | — |")
+            digest_lines.append(f"| {r['token']} | {r['status']} | — | — | — | — | — | — | — | — | — |")
             continue
         m = r["metrics"]
         def fmt(v, fmt_s=".4f"):
             return f"{v:{fmt_s}}" if v is not None else "—"
+        suspect_label = f"fn<6(fn={r['fn_n']})" if r["fn_suspect"] else "no"
         digest_lines.append(
             f"| {r['token']} | {r['status']} | {r['row']} "
             f"| {fmt(m['lsr_pos_r'])} | {fmt(m['lsr_acc_r'])} "
             f"| {fmt(m['div_raw'])} | {fmt(m.get('taker_buy_pct'))} "
             f"| {fmt(m['funding_avg'], '.6f')} | {m['funding_n']} "
             f"| {fmt(m['oi_usd'], ',.0f')} "
-            f"| {'YES' if r['fn1'] else 'no'} | {r['zone_a']} |"
+            f"| {suspect_label} |"
         )
 
     digest_lines.append("")
@@ -395,7 +369,6 @@ def main(
     digest_lines.append("")
     digest_lines.append("---")
 
-    # Append to agent_log.md
     if not dry_run:
         with open(AGENT_LOG, "a", encoding="utf-8") as f:
             f.write("\n".join(digest_lines) + "\n")

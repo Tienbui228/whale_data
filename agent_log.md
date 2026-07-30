@@ -430,3 +430,75 @@ Ket luan T4: Tat ca items done. Cleanup bao phu day du screener + pending exempt
 **Tổng:** 1 OK, 2 skip, 0 dry_run
 
 ---
+
+## SESSION 2026-07-30 — P1.5 FOLLOW-UP (session 3)
+
+**Nhiệm vụ:** LESSONS gap check, case_daily fn<6 fix, schtasks, tape spec, commits.
+
+---
+
+### [T1] LESSONS sheet — BLOCKER: CẦN OPERATOR
+
+**Probe kết quả:** CASE_INDEX.xlsx LESSONS sheet có **27 bài** (L-01 đến L-27), max_row=31 (4 header rows + 27 data rows).
+
+**Task yêu cầu:** sync lên 31 bài trước khi renumber. L-28 đến L-31 nội dung **chưa có** — không tìm thấy trong codebase hay chat history.
+
+**Chặn cứng:** Cần operator cung cấp nội dung L-28 đến L-31, sau đó:
+- Append L-28..L-31 vào LESSONS sheet
+- Renumber: L-26→L-32 (file-canonical), L-27→L-33 (fn=1-guard)
+- Thêm L-34: cấm silent-save sang tên khác khi file lock → RAISE
+- Regenerate lessons_learned.md
+
+Code của L-34 (PermissionError → RAISE) đã được implement trong case_daily.py.
+
+---
+
+### [T2] case_daily fn<6 fix — DONE
+
+**Root cause Jul29 taker substitution:** `fn_n == "1"` → `fn1 = True` → Zone-A-agg (0.5046) thay thế native taker (0.4989). Logic cũ sai: Zone-A thay taker khi fn=1 dù taker KHÔNG phải ratio field cần suspect.
+
+**Fix đã apply:**
+- `fn_suspect = int(fn_n) < 6 or low_conf == "True"` (thay vì `fn_n == "1"`)
+- Taker (col 5): luôn dùng native, bỏ Zone-A substitution
+- Ratio cols {15,16,17}: ghi native + comment `"SUSPECT fn<6 (fn={fn_n}, src={src_ratio})"` khi fn_suspect=True
+- PermissionError handler → `raise RuntimeError("[L-34] File locked — close xlsx then retry")` (bỏ fallback _NEW file)
+- Xóa `_load_zone_a` và toàn bộ Zone-A code (dead code)
+
+**CASE_BANK.xlsx Jul29 retrofix:**
+- Col 5 (taker): 0.5046 → **0.49892268377010573** (native)
+- Cols 15/16/17: comment "SUSPECT fn<6 (fn=1, src=native_1d)" thêm vào (giá trị pos_r/acc_r/gLSR giữ nguyên đúng native)
+- Script: `_task_fix_bank_jul29.py`
+
+---
+
+### [T3] Task Scheduler case_daily — DONE
+
+| Field | Value |
+|-------|-------|
+| Task name | `FreshWatch_case_daily` |
+| Schedule | Daily 09:00 SGT = 02:00 UTC (machine UTC+7) |
+| Wrapper | `scripts/run_case_daily.bat` |
+| Log | `data/logs/case_daily.log` |
+| Status | Ready (next run 2026-07-31 09:00 SGT) |
+
+**LedgerSync timing:** Export ships ~01:00 UTC = 08:00 SGT. case_daily chạy 09:00 SGT → buffer 1h. PASS.
+
+---
+
+### [T4] Tape daemon spec — DONE
+
+Probe BR@Gate: ~1 282 trades/day, ~2 pages (limit=1000), from/to filter CONFIRMED.
+
+**Kết luận:** BR volume thấp → one-shot daily đủ. Daemon cần cho tokens volume cao (TAG, BANK chưa đo).
+
+Spec: `proposals/tape_daemon_spec.md` — **chờ operator approve** trước khi implement.
+
+---
+
+### [T5] Commits tách
+
+- (a) LESSONS renumber+L-34: **BLOCKED** (chờ L-28..L-31 từ operator)
+- (b) case_daily fn<6 fix + BANK Jul29 retrofix: **DONE** (commit sau)
+- (c) schtasks bat: **DONE** (commit sau)
+
+---
