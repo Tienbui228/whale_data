@@ -1,6 +1,7 @@
 # Proposal: Quy ước ratio-daily canonical
 **Ngày soạn:** 2026-07-31  
-**Trạng thái:** CHỜ OPERATOR KÝ  
+**Trạng thái:** ~~CHỜ OPERATOR KÝ~~ **SUPERSEDED** bởi `ratio_daily_canonical_20260731_v2.md` (rework 31/07)  
+**Lý do SUPERSEDED:** Bản này đề xuất keep-last 23:00 UTC — SAI. Test 21 điểm xác nhận native_1d = 00:00 UTC (diff 0.000%), keep-last trung bình lệch 6.6%. Xem v2.  
 **Tác giả:** Agent (claude-sonnet-4-6)  
 **Đối xứng với:** L-21 (OI daily canonical = export 00:00 UTC)
 
