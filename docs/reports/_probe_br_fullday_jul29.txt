@@ -1,0 +1,29 @@
+Probe: BR_USDT full-day Jul29 2026
+DAY_START: 2026-07-29 00:00:00+00:00
+DAY_END:   2026-07-29 23:59:59+00:00
+
+  page 1: 1000 trades
+  page 2: 1000 trades
+  page 3: 401 trades
+
+Total trades pulled: 2401
+Timestamp range:
+  Oldest: 2026-07-29 00:00:13+00:00 (epoch 1785283213)
+  Newest: 2026-07-29 23:59:09+00:00 (epoch 1785369549)
+  Window coverage: 23.98h
+  Gap from day start: 13s (0.2 min)
+  Gap to day end:     50s (0.8 min)
+  Trades within Jul29 window: 2401/2401
+
+Tape vol (sum size*price): $24,025.34 USDT
+
+--- Kline cross-check ---
+Klines returned: 2
+  2026-07-29: vol_quote=$24,025.34 USDT  close=0.14749
+  2026-07-30: vol_quote=$1,005.95 USDT  close=0.14752
+
+=== COMPARISON ===
+  Tape vol  (probe):  $24,025.34
+  Kline vol (Gate):   $24,025.34
+  Difference: 0.0%
+  VERDICT: PASS — diff 0.0% ≤ 5% → one-shot daily la du cho BR

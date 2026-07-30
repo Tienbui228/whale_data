@@ -2,30 +2,41 @@
 
 **Status:** DRAFT — chờ operator approve trước khi implement  
 **Date:** 2026-07-30  
-**Based on:** probe `scripts/_probe_tape_br_rate.py` (run 2026-07-30)
+**Based on:** probe `scripts/_probe_tape_br_rate.py` + `_probe_br_fullday_jul29.py` (run 2026-07-30)
 
 ---
 
 ## 1. Kết quả probe BR@Gate
 
+### Probe 1 — Rate estimate (rate probe từ 100 trades mẫu)
 | Metric | Giá trị |
 |--------|---------|
-| Trades returned | 100 (API limit) |
-| Time span | 6 738 s ≈ 112 min |
-| Rate estimate | ~0.9 trades/min |
-| Rate estimate | ~53 trades/hour |
-| Rate estimate | **~1 282 trades/day** |
-| Pages needed (limit=1000) | **~2 pages/day** |
-| Gate `from`/`to` filter | **CONFIRMED working** (test: yesterday 00:00–03:00 UTC, 100 trades, all in window) |
+| Rate estimate (từ sample 112 min) | ~1 282 trades/day *(underestimate)* |
+| Gate `from`/`to` filter | CONFIRMED working |
+
+### Probe 2 — Full-day Jul29 VERIFIED (L-09: chỉ tin bảng điều kiện)
+| Metric | Giá trị |
+|--------|---------|
+| Trades Jul29 thực tế | **2 401 trades** |
+| Timestamp phủ | 00:00:13 → 23:59:09 UTC (gap <1 phút hai đầu) |
+| Pages cần (limit=1000) | **3 pages** |
+| Tape vol (sum size×price) | **$24 025.34 USDT** |
+| Kline vol Gate Jul29 | **$24 025.34 USDT** |
+| Sai lệch | **0.0%** |
+| Verdict | **PASS ≤ 5%** |
 
 ---
 
 ## 2. Kết luận kiến trúc
 
-### BR@Gate — One-shot đủ
-Volume cực thấp (~1 282 trades/day). `collect_tape.py` hiện tại (one-shot, từ `from`/`to` ngày hôm qua) là **đủ** cho BR:
-- 2 lần gọi API limit=1000 phủ 1 ngày hoàn chỉnh
-- Không cần daemon liên tục; cron daily là phù hợp
+### BR@Gate — One-shot đủ (VERIFIED bằng số)
+BR có **2 401 trades/ngày** thực tế, cần 3 lần gọi API (page=1/2/3, limit=1000).  
+`collect_tape.py` dùng pagination đúng (last_id hoặc page); one-shot daily **phủ 100%** ngày Jul29.  
+Tape vol khớp kline **0.0%** — xác nhận không mất trade.
+
+**Giới hạn áp dụng:** one-shot valid chỉ cho token ≤ ~5 000 trades/ngày (≤ 5 pages limit=1000, margin 2×). Tokens > 5 000 trades/ngày → cần daemon incremental.
+
+Cron daily cho BR: **APPROVED (by probe)**. Implement sau khi operator confirm mục 5.
 
 ### Tokens volume cao — Cần daemon
 Với tokens như TAG (perp, khối lượng lớn hơn), một-shot có thể bỏ sót nếu:
@@ -76,7 +87,7 @@ Dùng `from`/`to` (epoch seconds) thay vì `last_id` — đã xác nhận hoạt
 
 | Priority | Symbol | Ước lượng volume | Mode hiện tại | Mode đề xuất |
 |----------|--------|-----------------|---------------|--------------|
-| LOW | BR_USDT | ~1 282/day | one-shot daily | **giữ one-shot** |
+| LOW | BR_USDT | **2 401/day** (verified Jul29) | one-shot daily | **giữ one-shot + cron** |
 | MEDIUM | TAG_USDT | chưa đo | one-shot daily | daemon 15min |
 | MEDIUM | BANK_USDT | chưa đo | chưa collect | daemon 15min |
 
