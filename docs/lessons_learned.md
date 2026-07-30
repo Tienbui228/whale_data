@@ -1,7 +1,7 @@
 # Lessons Learned — FreshWatch
 
 > Auto-generated tu CASE_INDEX.xlsx sheet LESSONS. Khong edit file nay truc tiep.
-> Lan sinh: 2026-07-30 (rev.2) · Tong: 34 bai hoc (L-01 → L-34)
+> Lan sinh: 2026-07-30 (rev.3) · Tong: 37 bai hoc (L-01 → L-37)
 
 ## L-01 [2026-07-30] BR (+BAS,TUT,BANK) — `dinh luat` · DA VAO master plan §1 #9
 OI-floor = so vi the MM: ratio doc tai day OI trong so cao (retail da roi); pos_r nhich tai nen chet = tin hieu som dam; ratio tai OI-peak phai chiet khau
@@ -138,3 +138,15 @@ fn=1 fallback (Zone-A-agg) chỉ dành cho cột taker_buy_pct — KHÔNG mượ
 ## L-34 [2026-07-30] CASE_BANK_NEW.xlsx (an 30/07), fix da commit — `process/rule` · DA VAO case_daily.py (L-34 raise, commit 2026-07-30)
 PermissionError khi save xlsx → RAISE RuntimeError ngay, cam silent-save sang ten khac (_NEW suffix). Ten file khac = INDEX tro sai = case_daily ghi nham → data bi pha vo im lang. Fix: close xlsx roi retry
 *Hanh dong tiep: backfill script cung phai RAISE neu gap lock (kiem tra backfill.py)*
+
+## L-35 [2026-07-31] binance-bot-signals P0 regression suite — `process/rule` · GHI NHAN
+Bo calib (12 file _result.txt + GATE dict + replay.py) phai song trong git cung voi code — da dung, ghi nhan de giu. Quy tac: moi repo moi can regression suite commit ngay tu dau, khong de calib file ngoai version control. Loi that nhat la khi calib tach khoi code: code duoc update ma calib cu → false pass / false fail.
+*Hanh dong tiep: moi repo moi commit regression suite cung voi code trong 24h dau — khong phan tach calib khoi git*
+
+## L-36 [2026-07-31] P0 gate session 31/07 (TAG/BTW reconstruct) — `process/rule` · GHI NHAN
+Tai tao data file phai test bang suite nguyen ban (replay.py goc tu git), KHONG tu viet harness moi. Harness tu viet dan den 3 assertion sai: (1) AKE lsr_accum: viet fires_in thay vi never_in; (2) BASED crowd_flush: viet fires_in thay vi never_in; (3) BULLA pos_rerate: dung file tai tao (pos 07-20=1.75) thay vi file goc (1.99). An: bao 40/43 gia, mat thoi gian debug. Fix: dung replay.py goc → 43/43 PASS.
+*Hanh dong tiep: quy trinh tai tao data: viet file → chay replay.py goc tu git → PASS truoc khi commit bat ky thu gi*
+
+## L-37 [2026-07-31] B0 bundle backup 4 repo (31/07) — `rule` · DA VAO — bundle 4 repo len VPS /root/archive/ ngay 31/07
+Repo chi local (khong remote git server) = single point of failure — mot loi o dia hay OneDrive deauth mat het. Giai phap toi thieu: git bundle → SCP len VPS /root/archive/ trong vong 24h tao repo, sau do bundle lai tai moi milestone lon. Da ap 4 repo ngay 31/07: binance-bot-signals, whale_data, Check onchain, Whales_scan. Repo OneDrive them an: file-lock + single-copy = combo sinh an (CASE_BANK_NEW, L-34).
+*Hanh dong tiep: moi repo moi phai co bundle tren VPS trong 24h; nhac lai tai moi milestone lon*

@@ -2,6 +2,60 @@
 
 ---
 
+## SESSION 2026-07-31 — P0 GATE CLOSE + REPO BACKUP + B5/B6
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** B0→B6 theo plan operator: bundle backup 4 repo, xác nhận suite 43/43 nguyên bản, probe BULLA B4, dời repo ra OneDrive (B5), append L-35/L-36/L-37 (B6).
+
+---
+
+### [B0] Bundle 4 repo + SCP lên VPS: PASS
+
+- 4 bundle: binance-bot-signals_20260731.bundle, whale_data_20260731.bundle, Check_onchain_20260731.bundle, Whales_scan_20260731.bundle
+- SCP lên `root@5.223.67.21:/root/archive/` — tất cả header check `# v2 git bundle` OK
+- whale_data bundle 916MB, SCP background PowerShell 600s
+
+### [B2] Archive bản tái tạo TAG/BTW: PASS
+
+- Renamed `TAG_result.txt` → `TAG_result_RECONSTRUCTED_ARCHIVED_20260731.txt`
+- Renamed `BTW_result.txt` → `BTW_result_RECONSTRUCTED_ARCHIVED_20260731.txt`
+- Path: `D:\Check onchain fresh wallets\u50_data\`
+- Bản gốc từ repo đã có tại `D:\Data back test\binance-bot-signals\docs\case study\`
+
+### [B3] Suite gốc replay.py → 43/43: PASS
+
+- Chạy `replay.py` tại repo canonical mới (`D:\Data back test\binance-bot-signals\`)
+- Kết quả: 43 PASS, 0 FAIL — ALL PASS (100%)
+- Token: BANK(5) AKE(3) TAG(5) BAS(2) POWER(4) BASED(5) CLO(2) BTW(2) TUT(4) BULLA(5) ESPORTS(3) IDOL(3)
+
+### [B4] Probe BULLA 07-20 pos từ VPS store: GHI ÁN
+
+- `freshwatch_daily_2026-07.csv`: BULLA 07-20 `lsr_pos_r=1.981`, `src_ratio=derived_1h`
+- `top_pos_1h` keep-last 07-20 (23:00 UTC): `long_short_ratio=1.6811`
+- `top_pos_1h` first entry 07-21 (00:00 UTC): `long_short_ratio=1.6755`
+- `top_pos_1d`: không có data trước 07-24
+- **Kết luận:** Store không confirm 1.75 (reconstruction error) cũng không confirm đúng 1.99 (native_1d missing). Án theo binary condition operator: không sửa twelve_cases. Native_1d 07-20 = unavailable.
+
+### [B5] Robocopy repo ra khỏi OneDrive: PASS
+
+- Source: `C:\Users\Hello\OneDrive\Máy tính\Binance_bot\binance-bot-signals\`
+- Dest canonical: `D:\Data back test\binance-bot-signals\`
+- `git log` tại bản mới: b0b4cff4 P0 signal library locked ✓
+- Suite tại bản mới: 43/43 PASS ✓
+- OneDrive copy renamed → `binance-bot-signals_RETIRED_20260731` (chưa xóa)
+- CLAUDE.md cập nhật: path canonical ghi nhận
+
+### [B6] Append L-35/L-36/L-37: PASS
+
+- CASE_INDEX.xlsx LESSONS sheet: 37 lessons (L-01→L-37)
+- lessons_learned.md regenerate rev.3: 37 lessons
+- L-35: bộ calib phải sống trong git — ghi nhận quy tắc giữ
+- L-36: tái tạo data phải test bằng suite nguyên bản — án 40/43 giả
+- L-37: repo không remote = SPF; bundle→VPS tối thiểu ngày 1
+
+---
+
 ## SESSION 2026-07-30 — P1.5 AUDIT + FIX
 
 **Operator:** Tien
