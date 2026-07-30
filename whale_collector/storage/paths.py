@@ -22,6 +22,10 @@ METRIC_DIRS: dict[str, Path] = {
     "top_acct_1d":      RAW_DIR / "top_acct_1d",
     "retail_global_1d": RAW_DIR / "retail_global_1d",
     "taker_ratio_1d":   RAW_DIR / "taker_ratio_1d",
+    # E3: Binance spot daily klines (+ alpha_bsc subset with taker_abstain=True)
+    "spot_klines_1d":   RAW_DIR / "spot_klines_1d",
+    # E4: tape aggregate per symbol×venue (Gate/Binance spot public trades)
+    "spot_tape_1d":     RAW_DIR / "spot_tape_1d",
 }
 
 
@@ -38,6 +42,16 @@ def funding_partition_path(month_str: str) -> Path:
 def universe_partition_path(date_str: str) -> Path:
     """Return path: raw/universe/date=YYYY-MM-DD/snapshot.parquet"""
     return METRIC_DIRS["universe"] / f"date={date_str}" / "snapshot.parquet"
+
+
+def spot_klines_partition_path(as_of_date_str: str) -> Path:
+    """Return path: raw/spot_klines_1d/date=YYYY-MM-DD/part-0.parquet"""
+    return METRIC_DIRS["spot_klines_1d"] / f"date={as_of_date_str}" / "part-0.parquet"
+
+
+def spot_tape_partition_path(venue: str, as_of_date_str: str) -> Path:
+    """Return path: raw/spot_tape_1d/venue=VENUE/date=YYYY-MM-DD/part-0.parquet"""
+    return METRIC_DIRS["spot_tape_1d"] / f"venue={venue}" / f"date={as_of_date_str}" / "part-0.parquet"
 
 
 def list_universe_snapshots() -> list[Path]:

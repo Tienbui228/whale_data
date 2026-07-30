@@ -79,3 +79,10 @@
 
 \- Ratio fn=1 (native\_1d low\_conf) → không dùng làm số chốt. Fallback: Zone A aggregate từ ledger\_v2.xlsx CAMPAIGNS, ghi rõ nguồn "Zone-A-agg". Quy ước tạm cho đến khi P1 screener snapshot 5-phút chạy ổn định.
 
+\- lessons\_learned.md là view sinh từ sheet LESSONS của CASE\_INDEX.xlsx — mọi edit vào sheet, md chỉ regenerate (không edit md trực tiếp).
+
+\- CẤM chạy `python -c` inline. Mọi đoạn Python ghi ra file `_probe_*.py` / `_task_*.py` rồi chạy `python <file>.py`. Lý do: (a) lệnh inline phức tạp luôn bị permission prompt chặn, (b) script ra file = audit được, chạy lại được — đúng kỷ luật probe→raw→duyệt.
+\- Chạy ở chế độ skip-permissions. Chốt Nansen nằm ở tầng env (NANSEN\_KEY\_LOCKED) — CẤM tự rename ngược, cấm hardcode key, cấm truyền key qua tham số. Cần Nansen → ghi "CẦN OPERATOR" vào agent\_log.md.
+\- Lệnh bash phải TRẦN, một lệnh một call: không chain ;/&&, không pipe Out-String, không cd đầu lệnh (đứng sẵn repo root). Python luôn chạy từ file \_probe\_\*.py / \_task\_\*.py, cấm python -c. Output lớn ghi file.
+\- Tầng HUMAN không đổi: không ghi thresholds.yaml (đề xuất → proposals/), không điền verdict CASE sheet.
+
