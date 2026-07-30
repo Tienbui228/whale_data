@@ -2,6 +2,169 @@
 
 ---
 
+## SESSION 2026-07-30 — P1.5 AUDIT + FIX
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** Trace + fix 3 red flag (BANK row 6, fn=1 mapping, tape design) + cron + alpha guard.
+
+---
+
+### [B1] Án BANK row 6 — ROOT CAUSE + FIX: PASS
+
+**Root cause:** Backfill 35 dòng (Jun09→Jul29) được save vào `CASE_BANK_NEW.xlsx` (file mới tạo trong session backfill 29/07) thay vì `CASE_BANK.xlsx`. CASE_INDEX vẫn trỏ `CASE_BANK.xlsx` → case_daily first-run đúng file INDEX nhưng sai canonical → ghi Jul29 vào row 6 của file cũ chỉ có 4 dòng.
+
+**Bằng chứng số:**
+- `CASE_BANK.xlsx`: max_row=7, date rows = Jul26-Jul29 (4 dòng), taker col5 row6 = 0.5046
+- `CASE_BANK_NEW.xlsx`: max_row=37, date rows = Jun09-Jul29 (35 dòng), col O row28 = 1.0905 ✓
+
+**Fix đã áp dụng:**
+1. Merge taker=0.5046 (comment: "fn=1 (native_1d) — taker từ Zone-A-agg (ledger_v2 CAMPAIGNS/BANK_20260720)") vào CASE_BANK_NEW.xlsx row 37 col 5
+2. `CASE_BANK.xlsx` → `CASE_BANK_PRE_BF_20260730.xlsx` (backup)
+3. `CASE_BANK_NEW.xlsx` → `CASE_BANK.xlsx` (canonical)
+4. Verify: 35 date rows, last=Jul29, taker=0.5046, SKIP_EXISTS Jul29 ✓, row 38 cho Jul30 ✓
+
+**Script:** `scripts/_fix_bank_merge.py --apply`
+
+---
+
+### [B2] Án mapping fn=1 (0.5046) — PASS (mapping đúng)
+
+**Vị trí 0.5046:** CASE_BANK.xlsx (cũ) row 6 **col 5 (taker_buy_pct)** — đúng column, đúng metric.
+
+**Kiểm tra chéo:**
+- col 5 (taker_buy_pct) = 0.5046 ← Zone-A-agg CAMPAIGNS/BANK_20260720 ✓ đúng metric
+- col 15 (lsr_pos_r) = 1.3307 ← export CSV ✓ đúng metric  
+- col 16 (lsr_acc_r) = 0.8567 ← export CSV ✓ đúng metric
+- col 17 (lsr_global_r) = 0.9384 ← export CSV ✓ đúng metric
+- fn=1 chỉ thay taker, KHÔNG ảnh hưởng gLSR/pos/acc ✓
+
+**Fix phòng ngừa:** Thêm `_ASSERT_COL_METRIC` assertion vào case_daily.py (runs tại import time) — fail-fast nếu ai mapping sai metric sau này.
+
+---
+
+### [B3] Tape collector — ONE-SHOT: HOÃN
+
+**Kết luận:** `collect_tape.py` là ONE-SHOT (asyncio.run rồi exit). Gate REST `/spot/trades?from=X&to=Y` có thể chỉ trả latest N trades → chạy 01:15 UTC sẽ aggregate vài phút cuối ngày = CVD/takerBUY% rác.
+
+**Hành động:** HOÃN tape — KHÔNG thêm vào cron. Cần thiết kế lại thành daemon hoặc polling interval ngắn (buffer trades cả ngày, aggregate lúc 00:00 UTC rollover). Đây là change-set riêng.
+
+**CẦN OPERATOR:** Chọn hướng triển khai daemon (systemd trên VPS theo mẫu oibot) hay polling loop + xem trade-rate thực tế BR@Gate.
+
+---
+
+### [B4] Alpha guard collect_alpha_spot.py — PASS
+
+**Bằng chứng code** (`scripts/collect_alpha_spot.py` hàm `_parse_alpha_kline_row`):
+- Đọc: k[1] open, k[2] high, k[3] low, k[4] close, k[5] base_vol, k[7] quote_vol, k[8] n_trades
+- **KHÔNG đọc** k[9] (taker_buy_base_vol) hoặc k[10] (taker_buy_quote_vol)
+- Guard comment: "GUARD: DO NOT read klines[9] ... For BSC-bridged tokens these fields always equal klines[5]/klines[7] (100% taker buy = broken API field)"
+- Store values: `taker_buy_base_vol=nan, taker_buy_quote_vol=nan, taker_buy_pct=nan, taker_abstain=True`
+- Sổ rác không vào store ✓
+
+---
+
+### [B5] Cron VPS — PASS (2/3)
+
+**Export job (export_freshwatch_daily.py):** 00:50 UTC ← dependency của case_daily
+
+**Đã thêm vào VPS crontab (`5.223.67.21`):**
+```
+05 01 * * * cd /root/Data_back_test/whale_data && .venv/bin/python3 scripts/collect_spot_daily.py >> data/logs/collect_spot_daily.log 2>&1
+10 01 * * * cd /root/Data_back_test/whale_data && .venv/bin/python3 scripts/collect_alpha_spot.py >> data/logs/collect_alpha_spot.log 2>&1
+```
+
+**Thứ tự phụ thuộc:** export 00:50 → spot_daily 01:05 (+15min) → alpha_spot 01:10 (+5min) ✓
+
+**Tape:** KHÔNG thêm (hoãn per B3).
+
+**case_daily:** KHÔNG trong VPS crontab — script có Windows path (`D:\...`), phải chạy Windows Task Scheduler. Operator cần thiết lập Task Scheduler job 02:00 UTC.
+
+**Scripts deployed to VPS:** `collect_spot_daily.py`, `collect_alpha_spot.py`, `whale_collector/storage/paths.py` (updated với `spot_klines_partition_path`)
+
+**Crontab backup:** `/root/archive/crontab_backup_2026-07-30.txt`
+
+---
+
+### [B6] Bài học mới — L-26, L-27
+
+- **L-26** (GHI NHẬN): Backfill save nhầm file → canonical phải đúng tên trong INDEX
+- **L-27** (GHI NHẬN): fn=1 fallback chỉ taker_buy_pct; assert guard đã vào case_daily.py
+
+---
+
+## SESSION 2026-07-30 — SETUP SKIP-PERMISSIONS + NANSEN LOCK
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** Chuyển sang chế độ skip-permissions an toàn: khoá Nansen tầng env, cập nhật CLAUDE.md, ghi điểm khởi động.
+
+---
+
+### [B1] Nansen ENV Lock — PASS
+
+**Biến đã rename (tên, không ghi giá trị):**
+- `NANSEN_API_KEY` → `NANSEN_KEY_LOCKED`
+- Vị trí: `D:\Check onchain fresh wallets\.env` dòng 21
+- Windows User/System env: KHÔNG tồn tại biến NANSEN (đã kiểm tra)
+
+**Code đọc NANSEN_API_KEY (KHÔNG sửa — để fail-fast tự nhiên):**
+- `botaccum.py:116` — `os.getenv("NANSEN_API_KEY")`
+- `core_nansen.py:20` — `os.getenv("NANSEN_API_KEY", "")`
+- `core_nansen.py:362` — guard `if not NANSEN_API_KEY: raise RuntimeError`
+- `m1_check.py:43` — `os.getenv("NANSEN_API_KEY")`
+- `probe_botaccum_v3.py:29` — `os.getenv("NANSEN_API_KEY")`
+- `probe_flows.py:21` — `env.get("NANSEN_API_KEY", "")`
+- `probe_window.py:27` — `env.get("NANSEN_API_KEY", "")`
+
+**Verify:** `_probe_nansen_lock.py` chạy tại repo root → `NANSEN_API_KEY: None` ✓ `NANSEN_KEY_LOCKED: SET` ✓ → **PASS**
+
+---
+
+### [B2] CLAUDE.md — PASS
+
+Ba dòng KỶ LUẬT thêm vào mục KỶ LUẬT:
+1. Skip-permissions + Nansen env lock rule
+2. Bash discipline (lệnh trần, không chain, không python -c)
+3. Nhắc tầng HUMAN (thresholds.yaml, verdict CASE)
+
+---
+
+### [B3] Task Scheduler — N/A (không có task claude)
+
+**Đã kiểm tra:** Tasks FreshWatch, FreshWatch-SnapshotWriter, WhalePhaseScanner — không có task nào chạy `claude`.
+
+**Dòng lệnh khởi động thủ công cho operator:**
+```
+cd "D:\Data back test\whale_data"
+claude --dangerously-skip-permissions
+```
+Claude path: `C:\Users\Hello\AppData\Roaming\npm\claude.cmd`
+
+---
+
+### [B4] settings.local.json — GHI CHÚ (schema block)
+
+`_note` field bị schema validation block (settings.json không cho additionalProperties có tên lạ).
+Ghi chú thay thế trong agent_log này: **chạy chính bằng `--dangerously-skip-permissions`; settings.local.json là fallback khi ai chạy không flag.**
+
+---
+
+### [B5] Kết quả tổng
+
+| Bước | Trạng thái | Ghi chú |
+|------|-----------|---------|
+| 1a/b Rename env var | PASS | `.env` FreshWatch repo |
+| 1c List code đọc key | PASS | 7 file:line liệt kê trên |
+| 1d Verify probe | PASS | NANSEN_API_KEY → None |
+| 2 CLAUDE.md | PASS | 3 dòng KỶ LUẬT thêm |
+| 3a Task Scheduler | N/A | Không có task claude |
+| 3c Dòng lệnh operator | PASS | Ghi trên |
+| 4 settings.json note | PARTIAL | Schema block _note → ghi vào log |
+| 5 agent_log.md | PASS | Bài này |
+
+---
+
 ## SESSION 2026-07-29
 
 **Operator:** Tien  
@@ -209,3 +372,61 @@ Ket luan T4: Tat ca items done. Cleanup bao phu day du screener + pending exempt
 ---
 
 *Cap nhat: 2026-07-29 → operator chot 30/07*
+
+---
+
+## SESSION 2026-07-30 — LESSONS consolidation
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiem vu:** Them cot MM vao CASE_INDEX LESSONS, tong hop 12 lesson moi tu 4 nguon, sinh docs/lessons_learned.md, cap nhat CLAUDE.md
+
+---
+
+### [L-CON] LESSONS Consolidation — DONE
+
+**Lenh chay:** openpyxl update CASE_INDEX.xlsx + Write lessons_learned.md + Edit CLAUDE.md
+
+**Ket qua so:**
+- CASE_INDEX.xlsx sheet LESSONS: them cot H = "MM" (header), tat ca o de trong (operator dien)
+- Append 12 lesson moi: L-14 den L-25
+- Tong sheet LESSONS sau consolidation: 25 bai hoc (L-01 to L-25)
+- docs/lessons_learned.md: 18,482 bytes, 4 muc (I.SIGNAL-LEVEL 11 bai / II.MM-LEVEL 4 / III.DATA-QUALITY 7 / IV.PROCESS 3)
+- CLAUDE.md: them 1 dong cuoi KY LUAT: "lessons_learned.md la view sinh tu sheet LESSONS..."
+
+**Nguon 4 du lieu da tich hop:**
+1. 13 lesson hien co (L-01 to L-13) — giu nguyen, chi them cot MM
+2. twelve_cases_ref: L-14 (wash-by-crash), L-15 (bai-probe), L-16 (M2 dao dau), L-17 (squeeze-nhien-lieu)
+3. u50_verdicts: L-18 (§2 phase check), L-19 (§3 phase-context filter), L-20 (§6 tu-ha-cap)
+4. An topic 30/07: L-21 (OI canonical), L-22 (fn=1 fallback), L-23 (TAG fire-fade), L-24 (hai-window), L-25 (mot-nha-mot-data x2)
+
+**Phan loai moi:**
+| Muc | Lesson |
+|-----|--------|
+| I. SIGNAL-LEVEL | L-01, L-03, L-04, L-06, L-11, L-14, L-15, L-16, L-17, L-18, L-23 |
+| II. MM-LEVEL | L-05, L-07, L-08, L-12 |
+| III. DATA-QUALITY | L-09, L-10, L-20, L-21, L-22, L-24, L-25 |
+| IV. PROCESS | L-02, L-13, L-19 |
+
+**Trang thai moi:**
+- GHI NHAN (can theo doi them): L-04, L-06, L-07, L-14, L-15, L-16, L-17, L-18, L-19, L-23
+- DA VAO CLAUDE.md: L-20, L-21, L-22, L-24, L-25
+- Da co trong spec/tracker truoc: L-01, L-02, L-03, L-05, L-08, L-09, L-10, L-11, L-12, L-13
+
+*Cap nhat: 2026-07-30*
+
+## SESSION 2026-07-30 — case_daily digest
+
+**Target date:** 2026-07-29  **Run:** 2026-07-30 02:02 UTC  **dry_run:** False
+
+### §1 Handover digest
+
+| Token | Status | row | lsr_pos_r | lsr_acc_r | div_raw | taker_buy_pct | f_avg | f_n | OI_USD | fn=1 | Zone-A src |
+|-------|--------|-----|-----------|-----------|---------|---------------|-------|-----|--------|------|------------|
+| BANK | OK | 6 | 1.3307 | 0.8567 | 1.5533 | 0.5046 | -0.000268 | 1 | 25,365,666 | YES | Zone-A-agg (ledger_v2 CAMPAIGNS/BANK_20260720) |
+| TAG | SKIP_EXISTS | — | — | — | — | — | — | — | — | — | — |
+| BR | SKIP_EXISTS | — | — | — | — | — | — | — | — | — | — |
+
+**Tổng:** 1 OK, 2 skip, 0 dry_run
+
+---
