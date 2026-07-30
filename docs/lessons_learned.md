@@ -1,7 +1,7 @@
 # Lessons Learned — FreshWatch
 
 > Auto-generated tu CASE_INDEX.xlsx sheet LESSONS. Khong edit file nay truc tiep.
-> Lan sinh: 2026-07-30 (rev.3) · Tong: 37 bai hoc (L-01 → L-37)
+> Lan sinh: 2026-07-30 (rev.4) · Tong: 38 bai hoc (L-01 → L-38)
 
 ## L-01 [2026-07-30] BR (+BAS,TUT,BANK) — `dinh luat` · DA VAO master plan §1 #9
 OI-floor = so vi the MM: ratio doc tai day OI trong so cao (retail da roi); pos_r nhich tai nen chet = tin hieu som dam; ratio tai OI-peak phai chiet khau
@@ -150,3 +150,7 @@ Tai tao data file phai test bang suite nguyen ban (replay.py goc tu git), KHONG 
 ## L-37 [2026-07-31] B0 bundle backup 4 repo (31/07) — `rule` · DA VAO — bundle 4 repo len VPS /root/archive/ ngay 31/07
 Repo chi local (khong remote git server) = single point of failure — mot loi o dia hay OneDrive deauth mat het. Giai phap toi thieu: git bundle → SCP len VPS /root/archive/ trong vong 24h tao repo, sau do bundle lai tai moi milestone lon. Da ap 4 repo ngay 31/07: binance-bot-signals, whale_data, Check onchain, Whales_scan. Repo OneDrive them an: file-lock + single-copy = combo sinh an (CASE_BANK_NEW, L-34).
 *Hanh dong tiep: moi repo moi phai co bundle tren VPS trong 24h; nhac lai tai moi milestone lon*
+
+## L-38 [2026-07-31] BULLA 07-20 (B4 probe — 4 nguon 4 so) — `rule` · GHI NHAN — proposals/ratio_daily_canonical_20260731.md cho operator ky
+Mot metric mot ngay ra 4 con so khac nhau (1.75/1.68/1.981/1.99) tu 4 nguon: (1) u50 loose = 1.75 (nguon khong ro, retired); (2) top_pos_1h keep-last 23:00 UTC = 1.6811; (3) derived_1h = 00:00 UTC dau ngay = 1.981; (4) native_1d repo goc = 1.99. Nguyen nhan: quy uoc canonical CHUA TON TAI khi calib duoc viet. He qua: verdict buoc phai chon nguon theo ket luan muon co = vi pham nguyen tac. Fix: quy uoc phai duoc ky TRUOC khi bat ky so nao duoc trich dan vao calib/DAILY. Xem proposals/ratio_daily_canonical_20260731.md cho de xuat keep-last canonical.
+*Hanh dong tiep: ky proposals/ratio_daily_canonical_20260731.md truoc khi chay backfill tu ngay 31/07*

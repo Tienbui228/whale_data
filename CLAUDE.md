@@ -63,6 +63,7 @@
 \- Excel oi\_vs\_med14 ≠ định nghĩa fire (window khác).
 \- OI daily canonical = export 00:00 UTC. Số intraday chỉ ghi EVENTS kèm timestamp, không vào cột DAILY. (chốt 30/07)
 \- Repo canonical binance-bot-signals: `D:\Data back test\binance-bot-signals\` (chuyển 31/07 — OneDrive copy đã RETIRED). replay.py + 12 calib files ở đây.
+\- Calib files chỉ đọc từ repo `D:\Data back test\binance-bot-signals\docs\case study\` — KHÔNG dùng bản rời trong `D:\Check onchain fresh wallets\u50_data\` (đã rename _LOOSE_RETIRED_20260731 ngày 31/07).
 
 
 
