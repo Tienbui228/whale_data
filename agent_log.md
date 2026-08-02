@@ -603,3 +603,45 @@ SGT (UTC+8, Singapore) sai — may la UTC+7 (ICT, Vietnam). Sua 4 cho trong agen
 **Khong thay doi:** collect_tape.py giu nguyen (one-shot da dung). Daemon spec trong proposals/tape_daemon_spec.md cho tokens vol cao.
 
 ---
+
+---
+
+## SESSION 2026-08-02 — NANSEN WRAPPER FIX + L-39 + L-40
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiem vu:** (1) boundary canonical v2 vao CLAUDE.md + L-39; (2) kiem tra Zone-A-agg TAG 29/07 + case_daily fn<6; (3) dieu tra bot Nansen chet + fix wrapper + L-40.
+
+### Task 1 — CLAUDE.md boundary fact v2
+- Cap nhat dong OI-only → ratio+OI DAILY canonical = snapshot 00:00 UTC mo ngay D (derived_1h hien hanh), khop native_1d 21/21 diff 0%; keep-last 23:xx = EVENTS.
+- Commit: 4021aa0 (whale_data)
+
+### Task 2 — Ra soat nguoc (khong thay doi code)
+- Zone-A-agg TAG 29/07 glsr_r=1.6059: avg3(1.7071+1.2978+1.8129)/3 = chinh xac 00:00 UTC. Verdict TAG armed khong doi.
+- case_daily fn<6: ghi CSV value (00:00 UTC) + SUSPECT comment — khong dung keep-last. Khong can sua.
+
+### Task 3 — L-39
+- L-39 append CASE_INDEX.xlsx LESSONS: "Quy uoc boundary phai TEST bang doi chieu nguon (21/21 diff 0%) truoc khi van ban hoa — proposal v1 hop ly tren giay nhung nguoc 180 voi thuc nghiem; n=1 suy luan dep van phai qua n=21."
+- lessons_learned.md rev.5 (39 bai). Commit: 4021aa0
+
+### Task 4 — NANSEN_KEY_LOCKED blast-radius investigation
+**Root cause:** NANSEN_KEY_LOCKED trong .env (khong phai Windows system env). FreshWatch task chay pythonw.exe run_daily.py → refresh_nansen.py → core_nansen.py doc NANSEN_API_KEY = None → RuntimeError.
+**Gap data:** may off 30/07 PM – 02/08 PM. Last Nansen success: 2026-07-30 08:00. Missing: 31/07, 01/08, 02/08 (3 ngay).
+**Consumers tu dong:** chi \FreshWatch (run_daily → refresh_nansen → core_nansen). Manual: botaccum.py, m1_check.py, probe_*.py.
+
+**Fix da ap:**
+- run_daily_wrapper.py: doc NANSEN_KEY_LOCKED tu dotenv_values() (khong side-effect env), inject NANSEN_API_KEY vao child_env, chay run_daily.py qua subprocess.
+- \FreshWatch schtasks: da update → pythonw.exe run_daily_wrapper.py.
+- Probe verify: core_nansen key check PASS, agent NANSEN_API_KEY = None (chot nguyen ven).
+- Commit: 1bf74e2 (Check onchain repo)
+
+**CAN OPERATOR duyet truoc khi backfill:**
+- Backfill Nansen 3 ngay (31/07, 01/08, 02/08): kiem tra endpoint ho tro historical date hay khong, list cost, duyet roi chay.
+- Neu khong backfill duoc: danh dau data_bad cho window 31/07–02/08 trong store freshwatch_daily.
+
+**L-40** append CASE_INDEX.xlsx (rev.6, 40 bai). Commit: e14fb0b (whale_data)
+
+### VERIFY CON LAI (CAN OPERATOR)
+1. Bot chay 1 vong tay thu cong ngay 03/08 08:xx → xac nhan Nansen call PASS.
+2. Quyet dinh backfill 3 ngay missing Nansen data (CAN OPERATOR).
+
