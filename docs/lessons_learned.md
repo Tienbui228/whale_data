@@ -1,5 +1,5 @@
 # Lessons Learned
-_Generated from CASE_INDEX.xlsx sheet LESSONS — 39 entries_
+_Generated from CASE_INDEX.xlsx sheet LESSONS — 40 entries_
 
 **L-01** (2026-07-30): OI-floor = so vi the MM: ratio doc tai day OI trong so cao (retail da roi); pos_r nhich tai nen chet = tin hieu som dam; ratio tai OI-peak phai chiet khau
 
@@ -78,3 +78,5 @@ _Generated from CASE_INDEX.xlsx sheet LESSONS — 39 entries_
 **L-38** (2026-07-31): Mot metric mot ngay ra 4 con so khac nhau (1.75/1.68/1.981/1.99) tu 4 nguon: (1) u50 loose = 1.75 (nguon khong ro, retired); (2) top_pos_1h keep-last 23:00 UTC = 1.6811; (3) derived_1h = 00:00 UTC dau ngay = 1.981; (4) native_1d repo goc = 1.99. Nguyen nhan: quy uoc canonical CHUA TON TAI khi calib duoc viet. He qua: verdict buoc phai chon nguon theo ket luan muon co = vi pham nguyen tac. Fix: quy uoc phai duoc ky TRUOC khi bat ky so nao duoc trich dan vao calib/DAILY. Xem proposals/ratio_daily_canonical_20260731.md cho de xuat keep-last canonical.
 
 **L-39** (2026-07-31): Quy ước boundary phải TEST bằng đối chiếu nguồn (21/21 diff 0%) trước khi văn bản hóa — proposal v1 hợp lý trên giấy nhưng ngược 180° với thực nghiệm; n=1 suy luận đẹp vẫn phải qua n=21.
+
+**L-40** (2026-08-02): Chốt chặn cấp máy có blast radius cấp máy — trước khi gạt công tắc dùng chung (env/key/config toàn cục), bắt buộc liệt kê MỌI consumer hợp lệ; ràng buộc nhắm vào agent phải đặt ở tầng hẹp nhất đủ dùng (per-process wrapper), không đặt tầng chung. Bằng chứng: bot fresh wallets chết 3 ngày (gap 31/07–02/08) vì NANSEN_API_KEY rename sang NANSEN_KEY_LOCKED — automated job \FreshWatch không đọc được key.
