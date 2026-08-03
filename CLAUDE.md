@@ -113,4 +113,6 @@ Quy ước vòng đời artifact:
 \- **IDOL (ALPHA_223) = no_spot Binance:** vĩnh viễn không vào `alpha_bsc_symbols.txt` (pipeline chỉ cover token CÓ Binance Spot listing). Alpha vol IDOL = one-off fetch từ `/bapi/defi/v1/public/alpha-trade/klines?symbol=ALPHA_223USDT` — đã backfill 01/06→03/08 vào CASE_IDOL DAILY (c42). KHÔNG lập lại.
 \- **Binance Alpha public endpoint:** `https://www.binance.com/bapi/defi/v1/public/alpha-trade/klines` (public, no auth). `/bapi/alpha/v1/...` bị Cloudflare WAF block (khác endpoint). alpha_id lookup: xem `D:\Check onchain fresh wallets\_calib_alpha_daily.py` CALIB_ALPHA dict.
 \- **spot_klines_1d store bắt đầu từ 30/07** — không có lịch sử trước đó trên VPS hiện tại.
+\- **venue=binance_spot_bsc = DEAD CODE (03/08 confirmed):** BSC_BROKEN taker = 0 trong 2 probe độc lập (10 symbols VPS + 50 symbols local). alpha_bsc_symbols.txt sẽ rỗng nếu generate. collect_alpha_spot.py không collect được gì cho universe hiện tại. KHÔNG backfill, KHÔNG tạo collector song song cho venue này.
+\- **freshwatch_symbols.txt MISSING trên VPS** — data/config/ chưa tồn tại. Probe alpha_taker phải dùng fallback 10 symbols.
 

@@ -1478,3 +1478,81 @@ GET https://www.binance.com/bapi/defi/v1/public/alpha-trade/klines
 - [ ] L-44 đề xuất: `ALPHA_<id>` discovery pipeline cho token mới vào universe
 
 ---
+
+## SESSION 2026-08-03 — ALPHA STORE PROBE + DEAD CODE CONFIRMATION
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** Probe VPS alpha store → classify gap → update CLAUDE.md. Sau đó chạy `_probe_alpha_taker.py` trên VPS xác nhận BSC_BROKEN count.
+
+---
+
+### [AP1] VPS alpha store probe — CLASSIFIED
+
+**Lý do probe:** Trước khi fetch Binance Alpha API trực tiếp, quy trình mới yêu cầu kiểm tra VPS store trước.
+
+**SSH probe kết quả:**
+- `data/config/` dir: **KHÔNG TỒN TẠI** trên VPS
+- `freshwatch_symbols.txt`: MISSING
+- `spot_klines_1d` partitions: `date=2026-07-30` → `date=2026-08-02` (4 partitions, bắt đầu từ 30/07)
+- `venue=binance_spot_bsc` rows: **0** trong tất cả 4 partitions
+- `collect_alpha_spot.log` (4 entries 31/07→03/08): tất cả `alpha_config_missing` + `alpha_spot_no_symbols` — no-op hoàn toàn
+
+**Phân loại gap:** Case (b) + structural
+- Case (b): cần lịch sử Alpha trước 30/07 → one-off backfill từ public endpoint OK
+- Structural: IDOL = no_spot Binance → vĩnh viễn ngoài pipeline
+
+---
+
+### [AP2] _probe_alpha_taker.py chạy trên VPS — BSC_BROKEN = 0
+
+**Script:** `_probe_alpha_taker.py` — SCP lên VPS root, chạy `python3 _probe_alpha_taker.py`
+
+**Kết quả VPS (2026-08-03 08:33 UTC):**
+```
+freshwatch_symbols.txt not found — using test subset: 10 symbols
+BANKUSDT: OK 0.4930  | TAGUSDT: NO_SPOT  | BRUSDT: NO_SPOT
+BTCUSDT: OK 0.5445   | ETHUSDT: OK       | BNBUSDT: OK
+CAKEUSDT: OK         | BABYUSDT: OK      | ALPACAUSDT: EMPTY | NFTUSDT: NO_SPOT
+BSC broken: 0
+```
+
+**Cross-check local (50 symbols từ symbols_in_store.txt):**
+- BSC_BROKEN = 0 (0%) trong 50 symbols
+- no_spot = 15 (30%) → ~119 tokens mù trong 398 universe
+
+**Kết luận:** 2 probe độc lập (10 VPS + 50 local) → BSC_BROKEN = 0 → `alpha_bsc_symbols.txt` sẽ RỖNG nếu generate.
+
+---
+
+### [AP3] Dead code confirmation + CLAUDE.md update
+
+**Dead code xác nhận:**
+- `collect_alpha_spot.py`: cron 01:10 UTC, chạy từ 31/07 nhưng no-op toàn bộ 4 run
+- `venue=binance_spot_bsc`: 0 rows trong store — dead
+- `freshwatch_symbols.txt`: MISSING trên VPS → fallback 10 symbols → BSC_BROKEN = 0 → file rỗng
+
+**Quyết định:** KHÔNG backfill, KHÔNG tạo collector song song. **Đóng nhánh BSC_BROKEN**.
+
+**CLAUDE.md đã cập nhật:** Mục FACTS ĐÃ CHỐT — ALPHA / BSC (03/08/2026) ghi đầy đủ:
+- Alpha daily store spec
+- alpha_bsc_symbols.txt MISSING + DEV task
+- IDOL ALPHA_223 = one-off only
+- Binance Alpha public endpoint confirmed
+- venue=binance_spot_bsc = DEAD CODE (03/08)
+- freshwatch_symbols.txt MISSING on VPS
+
+**Rule mới trong KỶ LUẬT:** PROBE STORE TRƯỚC khi fetch external API — check VPS partition + log collector trước; fetch ngoài chỉ khi case (b) history gap hoặc case (c) data type không có trong store.
+
+---
+
+### PENDING
+
+| Việc | Chặn bởi |
+|------|----------|
+| VPS cleanup: xóa `_probe_alpha_taker.py` khỏi VPS root | SSH |
+| DAILY 03/08 IDOL | Cron 04/08 01:20 UTC |
+| Z1: 13 ví đích + txhash | Operator/Nansen |
+| freshwatch_symbols.txt: tìm generator script | DEV |
+
+---
