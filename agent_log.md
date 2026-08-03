@@ -2,6 +2,115 @@
 
 ---
 
+## SESSION 2026-08-03 — IDOL ANALYSIS POST-BACKFILL + CASE UPDATE
+
+**Operator:** Tien  
+**Agent model:** claude-sonnet-4-6  
+**Nhiệm vụ:** Verify backfill, đọc chuỗi sạch 27/07→02/08, cập nhật EVENTS/TRIGGERS/MM_PROFILE.
+
+---
+
+### [D1] B1 — VERIFY BACKFILL
+
+| date | row | fn | px_avg | SUSPECT | trạng thái |
+|------|-----|----|--------|---------|------------|
+| 27/07 | 26 | 6 | 0.015677 | none ✓ | OK (pre-backfill) |
+| 28/07 | 27 | **6** | 0.016809 | none ✓ | OVERWRITE_OK (fn=1→6) |
+| 29/07 | 28 | **6** | 0.015687 | none ✓ | OVERWRITE_OK (fn=1→6) |
+| 30/07 | 29 | **6** | 0.015234 | none ✓ | OVERWRITE_OK (fn=1→6) |
+| 31/07 | 30 | **6** | 0.016403 | none ✓ | OVERWRITE_OK (fn=1→6) |
+| 01/08 | 31 | 6 | 0.023946 | none ✓ | OK |
+| 02/08 | 32 | 6 | 0.023117 | none ✓ | OK |
+| 03/08 | — | MISSING | — | — | Stale fn=1 — append sau 04/08 01:20 UTC |
+
+**PASS** — fn=6 toàn bộ chuỗi (IDOL 4h interval ✓). Không còn SUSPECT.
+
+---
+
+### [D2] B2 — 03/08 DAILY
+
+Không append hôm nay: export 2026-08.csv có 03/08 nhưng fn=1 (stale — generated 00:50 UTC bởi old cron trước khi fix chạy). Đây chính là L-41 vòng tự nhiên: verify xem 04/08 01:20 UTC cron có ra fn=6 cho 03/08 không.
+
+---
+
+### [D3] B3 — PHÂN TÍCH CHUỖI SẠch 27/07→02/08
+
+**Chuỗi số native:**
+
+| date | fn | px | taker | f_avg | pos_r | acc_r | glsr | div* | OI_USD |
+|------|----|----|-------|-------|-------|-------|------|------|--------|
+| 27/07 | 6 | 0.01568 | 0.485 | 0.000343 | 2.059 | 1.360 | 1.369 | 1.515 | 6.60M |
+| 28/07 | 6 | 0.01681 | 0.480 | 0.000198 | 2.207 | 0.992 | 1.038 | 2.224 | 10.71M |
+| 29/07 | 6 | 0.01569 | 0.473 | 0.000067 | 2.328 | 1.161 | 1.390 | 2.005 | 9.91M |
+| 30/07 | 6 | 0.01523 | 0.529 | 0.000096 | 2.559 | 1.209 | 1.459 | 2.116 | 8.87M |
+| 31/07 | 6 | 0.01640 | 0.499 | 0.000318 | 2.546 | 1.240 | 1.558 | 2.054 | 8.81M |
+| 01/08 | 6 | 0.02395 | 0.515 | 0.000095 | 2.524 | 1.183 | 1.489 | 2.135 | 9.84M |
+| 02/08 | 6 | 0.02312 | 0.501 | 0.000050 | 1.731 | 1.178 | 1.144 | 1.470 | 10.48M |
+
+*div = pos_r / acc_r (computed manually — formula cache chưa có).
+
+**a) OI build 28/07→31/07 — số sạch vs cũ:**
+
+Old (fn=1 stale): pos_r 2.207→2.546. New (fn=6 native): 2.2065→2.5585. Δmax < 1.3%.
+**"Smart money vào trước ignition" VẪN ĐỨNG** — số không lệch material.
+
+28/07: OI +62% (6.60M→10.71M) + taker=0.480 (bear!) = MM mua limit khi retail sell = BIDWALK-A.
+29-31/07: pos_r tiếp leo 2.33→2.56 dù OI giảm nhẹ → top longs giữ/thêm, không phải retail pile-in.
+
+**b) 02/08 post-markup:**
+
+pos_r: 2.524→1.731 (−31%) | OI: 9.84M→10.48M (+6.5%) | glsr: 1.489→1.144 | div: 2.135→1.470
+
+Key: pos_r sụp nhưng OI TĂNG → top longs đang CLOSE, retail bù OI. "Ghế đổi tay."
+glsr 1.144: crowd tiến về neutral (chưa flush full, cần <1.1 >=3d).
+03/08 còn thiếu — không kết luận "tiếp diễn" hay "chững".
+
+**c) Funding 02/08 PINNED = mảnh hồ sơ re-staging:**
+
+Sau markup +50% (01/08), f_avg 02/08 = 5e-5 (sàn pinned). Crowd không rush mua (không tạo premium). Consistent EVAA khuôn leg-2 re-staging: MM ghim funding để crowd không thấy "đắt", chờ tích lũy vòng mới.
+
+**d) Suppressor scan:**
+
+Từ số raw: pos_r 1.731 > 1.6 → còn ghế (định luật #9, chưa kích T3). glsr 1.144 > 1.1 → chưa flush (chưa kích T2). Cols 23/24 (signals_suppress) chưa có giá trị computed. Wall data (cols 30-35) chưa populate.
+
+**e) Spot Gate 03/08:** Không có data trong CASE. Perp vol: 175.67M (01/08) → 40.7M (02/08) (−77%). Gate spot cụ thể cần operator check.
+
+---
+
+### [D4] B4 — CASE_IDOL.xlsx CẬP NHẬT
+
+**EVENTS:**
+- E1 ngày: `~07-27→08-01` → `31/07→02/08` ✓
+- E1 doc_nhanh: thêm "rút TRONG markup — hai khuôn cạnh tranh: thắt float leg-2 vs chốt chiến lợi phẩm (ESPORTS-10%)" ✓
+- E2 (Gate deposit): thêm note "hạ cấp <2% supply" ✓
+
+**TRIGGERS (T1-T4 điền):**
+- T1: Redeposit bất kỳ ví nào trong cụm 13 → ĐÓNG ÁN XẢ TỨC THỜI
+- T2: gLSR flush ≤1.1 + funding tái ghim ≥3d → re-staging leg-2 sống
+- T3: pos_r ≥1.6 tại OI floor = còn ghế; <1.3 = ghế rỗng → canh ngày mai 03/08
+- T4: Suppressor bất kỳ (L-27 §5) → STAND_ASIDE
+
+**MM_PROFILE:**
+- Van tay funding: pin-post-markup + taker<55% = BIDWALK-A fingerprint ✓
+- Van tay markup: taker 51.5% (<55%), vol 10x nen, pos_r load trước ignition ✓
+- Kỹ thuật crowd: bid-walk trên fear-sell (28/07 taker 0.480 khi OI +62%) ✓
+- MM_ID tạm: **unknown-IDOL / BIDWALK-A khuôn** (chờ bait-probe taker 23/07)
+
+**PENDING (chờ operator):**
+- DAILY 03/08: dominance_pct=15%, exch_balance=723M — điền sau 04/08 append
+- Gate spot vol 03/08: cần manual check
+- P3: 13 ví → 58bro txhash + địa chỉ đích
+
+---
+
+### [D5] B5 — BscScan WATCHER 13 VÍ
+
+Không có armed-address §8 template trong codebase. → **DEV TASK MỚI** (chuyển sang DEV topic).
+Đề bài: watcher ≤20 địa chỉ, 15min/lần, 0-credit (BscScan free API).
+Blocking: P3 (58bro đích chưa có) → không dựng trước khi có địa chỉ.
+
+---
+
 ## SESSION 2026-08-03 — FIX EXPORTER + RE-GENERATE 28-31/07
 
 **Operator:** Tien

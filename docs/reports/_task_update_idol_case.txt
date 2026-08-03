@@ -1,0 +1,43 @@
+======================================================================
+TASK update_idol_case — 2026-08-03 03:13 UTC
+======================================================================
+
+[EVENTS] Đọc hiện trạng:
+  row1: c1='D. NHAT KY DIEN BIEN (append-only, moi nhat duoi c'
+  row3: c1='ngay'  c2='su_kien_so_lieu'  c3='nguon'  c4='doc_nhanh'
+  row4: c1='~07-27→08-01'  c2='13 vi nhan ~273M IDOL (~5.7% supply) tu Binance. 7'  c3='Nansen UI (so hua, chua co txhash)'  c4='PENDING-VERIFY: txhash + ngay chinh xac + dich 58b'
+  row5: c1='2026-08-02'  c2='Gate wallet 0x0d0707 +54.76M IDOL (~1.14% supply) '  c3='Nansen UI (so hua, chua co txhash)'  c4='PENDING-VERIFY: txhash + ma tran BTW-vs-IDOL (B5 c'
+
+[EVENTS] Sửa E1 ngày + ghi chú:
+  E1 col1: '~07-27→08-01' → '31/07→02/08'
+  E1 col4 (doc_nhanh): updated (274 chars)
+
+[EVENTS] Hạ cấp E2:
+  E2 row5 col4: updated (HA CAP note added)
+
+[TRIGGERS] Điền 4 chốt canh:
+  Current max_row=7
+  row1: c1='C. CHOT THEO DOI — doc moi nga'
+  row3: c1='#' | c2='chot' | c3='dieu_kien' | c4='nghia_khi_bat' | c5='trang_thai_hom_nay'
+  row4 T1: Redeposit bat ky vi nao trong cum 13
+  row5 T2: gLSR flush <=1.1 + funding tai ghin >=3d
+  row6 T3: pos_r floor hau-sap
+  row7 T4: Suppressor bat ky (L-27 §5)
+
+[MM_PROFILE] Cập nhật vân tay từ số sạch:
+  MM_PROFILE row5 (Van tay funding): updated
+  MM_PROFILE row6 (Van tay markup): updated
+  MM_PROFILE row7 (Ky thuat quan crowd): updated
+  MM_PROFILE row10 (Cross-campaign): updated
+  MM_PROFILE row11 (Ung xu voi minh): updated
+
+→ CASE_IDOL.xlsx SAVED
+
+[NOTE] PENDING — chưa thực hiện (chờ data/operator):
+  • DAILY 03/08: dominance_pct=15%, exch_balance=723M — điền khi case_daily
+    append 03/08 (sau 04/08 01:20 UTC cron + LedgerSync + case_daily 02:00 UTC)
+  • Gate spot vol 03/08: cần manual check từ operator
+  • B5 (BscScan watcher 13 vi): không có armed-address §8 template — DEV task mới
+
+======================================================================
+TASK DONE

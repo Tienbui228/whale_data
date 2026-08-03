@@ -1,0 +1,170 @@
+================================================================================
+PROBE idol_full_read — 2026-08-03 03:07 UTC
+================================================================================
+Sheets: ['CASE', 'DAILY', 'EVENTS', 'TRIGGERS', 'OUTCOME', 'MM_PROFILE', 'UNLOCK']
+
+======================================================================
+SHEET: DAILY
+max_row=32, max_col=41
+
+Column map (first non-empty header per col):
+  col 1: 2026-07-01
+  col 2: 0.0186562358117994
+  col 3: ret_1d
+  col 4: 16584068.48426
+  col 5: 0.4780007889437288
+  col 6: 5e-05
+  col 7: 5e-05
+  col 8: 5e-05
+  col 9: 6
+  col10: PINNED
+  col11: 1
+  col12: 3099014.82334011
+  col13: oi_vs_med14
+  col14: oi_cycle_pos
+  col15: 1.2677
+  col16: 1.7941
+  col17: 1.8563
+  col18: =IFERROR(O3/P3,"")
+  col19: =IFERROR(AVERAGE(R1:
+  col20: =IFERROR(SLOPE(Q3:Q3
+  col21: d_pos_3d
+  col22: d_acc_3d
+  col23: signals_bullish
+  col24: signals_suppress
+  col25: screen_rank
+  col26: data_bad
+  col27: spot_venue
+  col28: vol_spot_usd
+  col29: taker_spot_pct
+  col30: depth_bid2_usd
+  col31: depth_ask2_usd
+  col32: bid_wall_px
+  col33: bid_wall_usd
+  col34: ask_wall_px
+  col35: ask_wall_usd
+  col36: =IF(OR(AB3="",D3="",
+  col37: exch_balance_delta
+  col38: wallet_activity
+  col39: dominance_pct
+  col40: note_operator
+  col41: mm_note
+
+——————————————————————————————————————————————————————————————————————
+DAILY data rows (col 1 = date):
+
+date          fn     px_avg      f_avg   pos_r   acc_r    glsr     div       oi_usd suspect      note
+--------------------------------------------------------------------------------------------------------------
+2026-07-01     6   0.018656
+2026-07-02     6   0.015541
+2026-07-03     6   0.015401
+2026-07-04     6   0.015169
+2026-07-05     6   0.015171
+2026-07-06     6   0.014967
+2026-07-07     6   0.014905
+2026-07-08     6   0.014731
+2026-07-09     6   0.014917
+2026-07-10     6   0.015688
+2026-07-11     6   0.014964
+2026-07-12     6   0.015664
+2026-07-13     6   0.015010
+2026-07-14     6   0.015204
+2026-07-15     6   0.015364
+2026-07-16     6   0.015460
+2026-07-17     6   0.016922
+2026-07-18     6   0.017177
+2026-07-19     6   0.017332
+2026-07-20     6   0.015834
+2026-07-21     6   0.015094
+2026-07-22     6   0.015140
+2026-07-23     6   0.017997
+2026-07-27     6   0.015677
+2026-07-28     6   0.016809
+2026-07-29     6   0.015687
+2026-07-30     6   0.015234
+2026-07-31     6   0.016403
+2026-08-01     6   0.023946
+2026-08-02     6   0.023117
+
+
+======================================================================
+TARGET DATES DETAIL (27/07 → 03/08):
+
+col   label           | 07-27        | 07-28        | 07-29        | 07-30        | 07-31        | 08-01        | 08-02        | 08-03       
+————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+c1   date            | 2026-07-27   | 2026-07-28   | 2026-07-29   | 2026-07-30   | 2026-07-31   | 2026-08-01   | 2026-08-02   | MISSING     
+c9   funding_n       | 6            | 6            | 6            | 6            | 6            | 6            | 6            | MISSING     
+c2   px_avg          | 0.015677     | 0.016809     | 0.015687     | 0.015234     | 0.016403     | 0.023946     | 0.023117     | MISSING     
+c4   vol_q           | 1.6919e+07   | 5.9308e+06   | 3.0011e+06   | 2.9957e+06   | 7.3359e+06   | 1.7567e+08   | 4.0715e+07   | MISSING     
+c5   taker           | 0.48512      | 0.4802       | 0.47252      | 0.52848      | 0.49875      | 0.51529      | 0.50085      | MISSING     
+c6   f_avg           | 0.00034307   | 0.00019756   | 6.6775e-05   | 9.5962e-05   | 0.00031801   | 9.4923e-05   | 5e-05        | MISSING     
+c7   f_min           | 5e-05        | 5.655e-05    | 5e-05        | 5e-05        | 5e-05        | -0.00070055  | 5e-05        | MISSING     
+c8   f_max           | 0.00065669   | 0.00035535   | 0.00014646   | 0.00020606   | 0.00080377   | 0.00066625   | 5e-05        | MISSING     
+c12  oi_usd          | 6.603e+06    | 1.0711e+07   | 9.9097e+06   | 8.8676e+06   | 8.8057e+06   | 9.8448e+06   | 1.0483e+07   | MISSING     
+c15  pos_r           | 2.0591       | 2.2065       | 2.3278       | 2.5585       | 2.5455       | 2.5241       | 1.7314       | MISSING     
+c16  acc_r           | 1.3596       | 0.992        | 1.1608       | 1.209        | 1.2396       | 1.1825       | 1.1782       | MISSING     
+c17  glsr            | 1.3691       | 1.0379       | 1.3895       | 1.4594       | 1.5575       | 1.4888       | 1.1436       | MISSING     
+c18  div             | =IFERROR(O26 | =IFERROR(O27 | =IFERROR(O28 | =IFERROR(O29 | =IFERROR(O30 | =IFERROR(O31 | =IFERROR(O32 | MISSING     
+c19  div_avg3        | =IFERROR(AVE | =IFERROR(AVE | =IFERROR(AVE | =IFERROR(AVE | =IFERROR(AVE | =IFERROR(AVE | =IFERROR(AVE | MISSING     
+c20  div_slope5      | =IFERROR(SLO | =IFERROR(Q27 | =IFERROR(Q28 | =IFERROR(Q29 | =IFERROR(Q30 | =IFERROR(SLO | =IFERROR(SLO | MISSING     
+c10  note1           | FLOAT        | —            | —            | —            | —            | FLOAT        | PINNED       | MISSING     
+c11  note2           | —            | —            | —            | —            | —            | —            | 1            | MISSING     
+c26  data_bad        | —            | —            | —            | —            | —            | —            | —            | MISSING     
+
+
+SUSPECT comments in target date rows:
+  2026-07-27 row=26: no SUSPECT ✓
+  2026-07-28 row=27: no SUSPECT ✓
+  2026-07-29 row=28: no SUSPECT ✓
+  2026-07-30 row=29: no SUSPECT ✓
+  2026-07-31 row=30: no SUSPECT ✓
+  2026-08-01 row=31: no SUSPECT ✓
+  2026-08-02 row=32: no SUSPECT ✓
+  2026-08-03: ROW NOT FOUND
+
+
+======================================================================
+SHEET: EVENTS
+max_row=8
+  row1: c1='D. NHAT KY DIEN BIEN (append-only, moi n'
+  row3: c1='ngay'  c2='su_kien_so_lieu'  c3='nguon'  c4='doc_nhanh'
+  row4: c1='~07-27→08-01'  c2='13 vi nhan ~273M IDOL (~5.7% supply) tu '  c3='Nansen UI (so hua, chua co txhash)'  c4='PENDING-VERIFY: txhash + ngay chinh xac '
+  row5: c1='2026-08-02'  c2='Gate wallet 0x0d0707 +54.76M IDOL (~1.14'  c3='Nansen UI (so hua, chua co txhash)'  c4='PENDING-VERIFY: txhash + ma tran BTW-vs-'
+
+
+======================================================================
+SHEET: TRIGGERS (if exists)
+max_row=7
+  row1 col1: 'C. CHOT THEO DOI — doc moi ngay sau nen dong'
+  row3 col1: '#'
+  row3 col2: 'chot'
+  row3 col3: 'dieu_kien'
+  row3 col4: 'nghia_khi_bat'
+  row3 col5: 'trang_thai_hom_nay'
+
+
+======================================================================
+SHEET: MM_PROFILE (if exists)
+max_row=14
+  row1 col1: 'I. MM / OPERATOR PROFILE — van tay hanh vi (moi MM danh mot kieu)'
+  row3 col1: 'MM cong bo / nghi van'
+  row3 col2: 'unknown — chua co ho so listing chinh thuc; can tra (PENDING)'
+  row4 col1: 'MM_ID'
+  row4 col2: 'unknown-IDOL (chua du 3 van tay de gan; nghi khuon AKE/bid-walk theo hanh vi sta'
+  row5 col1: 'Van tay funding'
+  row5 col2: 'PENDING — fn=1 chua co du lieu sach 28-31/07; can serie sach sau ignition'
+  row6 col1: 'Van tay markup'
+  row6 col2: 'PENDING — 3 van tay cho chot (bid-walk? bait-probe? staging-that?)'
+  row7 col1: 'Ky thuat quan crowd'
+  row7 col2: 'PENDING — 07-23 vol spike 167M (8x nen) nghi bait-probe; can vol_persistence T+1'
+  row8 col1: 'Ky thuat moi on-chain'
+  row8 col2: 'staging that (7 vi x20M hold, Sent=0) — GIONG BANK; nghi MM-BIDWALK-A khuon'
+  row9 col1: 'Venue'
+  row9 col2: 'Binance perp (chinh, OI uu the); Gate spot (bai do / deposit point)'
+  row10 col1: 'Cross-campaign'
+  row10 col2: 'PENDING — ma tran BTW-vs-IDOL (Gate wallet 0x0d0707 co lien he BTW khong?)'
+  row11 col1: 'Ung xu voi minh'
+  row11 col2: 'PENDING — theo doi sau khi infra_gate label-check xong'
+
+================================================================================
+PROBE DONE
