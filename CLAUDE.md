@@ -67,7 +67,24 @@
 
 
 
-\## KỶ LUẬT
+\## CẤU TRÚC THƯ MỤC (L-42, ký 03/08/2026)
+
+```
+scripts/           — script SỐNG: job chạy lịch, tool dùng lại
+scripts/archive/   — probe/task ĐÃ XONG án (giữ vết, khỏi mắt)
+docs/reports/      — report đang sống; đã xử xong → docs/reports/archive/
+docs/case_files/   — chỉ CASE_*.xlsx + CASE_INDEX (cấm CSV song song)
+proposals/         — active; SUPERSEDED/đã ký → proposals/archive/
+scratch/           — data dump tạm (không commit)
+backtest/          — module Python sống
+```
+
+Quy ước vòng đời artifact:
+- Probe/task mới: tên `_probe_<án>_<YYYYMMDD>.py` / `_task_<mô_tả>_<YYYYMMDD>.py`
+- Đóng án → agent TỰ move vào archive trong commit đóng án (KHÔNG đợi dọn định kỳ)
+- Root chỉ chứa: tool sống (scripts không có cron-prefix), config, probe đang chạy dở
+
+## KỶ LUẬT
 
 \- Mỗi session ghi agent\_log.md: việc + lệnh + kết quả số.
 
@@ -87,4 +104,13 @@
 \- Chạy ở chế độ skip-permissions. Chốt Nansen nằm ở tầng env (NANSEN\_KEY\_LOCKED) — CẤM tự rename ngược, cấm hardcode key, cấm truyền key qua tham số. Cần Nansen → ghi "CẦN OPERATOR" vào agent\_log.md.
 \- Lệnh bash phải TRẦN, một lệnh một call: không chain ;/&&, không pipe Out-String, không cd đầu lệnh (đứng sẵn repo root). Python luôn chạy từ file \_probe\_\*.py / \_task\_\*.py, cấm python -c. Output lớn ghi file.
 \- Tầng HUMAN không đổi: không ghi thresholds.yaml (đề xuất → proposals/), không điền verdict CASE sheet.
+\- **PROBE STORE TRƯỚC** khi fetch external API: ssh VPS → kiểm tra partition tồn tại + log collector → chỉ fetch ngoài khi (b) cần lịch sử trước ngày store bắt đầu (one-off backfill, có nhãn) hoặc (c) data type không có trong store (ghi DEV task). KHÔNG lập đường collect song song ad-hoc.
+
+## FACTS ĐÃ CHỐT — ALPHA / BSC (03/08/2026)
+
+\- **Alpha daily store:** `raw/spot_klines_1d` venue=`binance_spot_bsc`, collector `collect_alpha_spot.py`, cron 01:10 UTC, chạy từ 31/07. **Price/vol only, taker=ABSTAIN** (klines[9]==klines[5] broken). Forward-only — không backfill tự động.
+\- **alpha_bsc_symbols.txt:** CHƯA TỒN TẠI trên VPS (03/08 confirm). Collector chạy 31/07→03/08 nhưng no-op (`alpha_config_missing`). DEV task cần: chạy `python3 scripts/archive/_probe_alpha_taker.py --write-config` trên VPS để sinh file.
+\- **IDOL (ALPHA_223) = no_spot Binance:** vĩnh viễn không vào `alpha_bsc_symbols.txt` (pipeline chỉ cover token CÓ Binance Spot listing). Alpha vol IDOL = one-off fetch từ `/bapi/defi/v1/public/alpha-trade/klines?symbol=ALPHA_223USDT` — đã backfill 01/06→03/08 vào CASE_IDOL DAILY (c42). KHÔNG lập lại.
+\- **Binance Alpha public endpoint:** `https://www.binance.com/bapi/defi/v1/public/alpha-trade/klines` (public, no auth). `/bapi/alpha/v1/...` bị Cloudflare WAF block (khác endpoint). alpha_id lookup: xem `D:\Check onchain fresh wallets\_calib_alpha_daily.py` CALIB_ALPHA dict.
+\- **spot_klines_1d store bắt đầu từ 30/07** — không có lịch sử trước đó trên VPS hiện tại.
 
