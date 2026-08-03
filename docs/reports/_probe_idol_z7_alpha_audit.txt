@@ -1,0 +1,154 @@
+===========================================================================
+PROBE idol_z7_alpha_audit — 2026-08-03 07:16 UTC
+===========================================================================
+
+[1] ALPHA_BSC_SYMBOLS.TXT — Genesis:
+  File: data/config/alpha_bsc_symbols.txt (VPS only, không có local)
+  Generator: scripts/archive/_probe_alpha_taker.py
+  Input: data/config/freshwatch_symbols.txt (VPS, ~140 symbols)
+  Logic:
+    - Probe Binance Spot /api/v3/klines cho mỗi symbol
+    - NO_SPOT (400) → skip (không thể collect qua Binance Spot)
+    - klines[9]/klines[5] > 0.9985 → BSC_BROKEN → thêm vào file
+    - BSC_BROKEN = Binance Spot listing nhưng taker field bị broken do BSC bridge
+  Collection logic: collect_alpha_spot.py đọc file → Binance Spot API (venue=binance_spot_bsc)
+
+  IDOL gap:
+    IDOL = no_spot trên Binance (không có IDOL/USDT spot pair)
+    → _probe_alpha_taker.py classify = NO_SPOT → không thêm vào file
+    → Không phải bug: IDOL genuinely không có Binance Spot listing
+    → alpha_bsc_symbols.txt chỉ cover tokens CÓ Binance Spot listing
+    → IDOL on Gate.io spot + PancakeSwap BSC DEX — ngoài phạm vi collector
+
+[2] UNIVERSE (symbols_in_store.txt — 398 symbols, proxy cho freshwatch):
+  Total symbols: 398 → filtered USDT/BTC/ETH pairs: 394
+  IDOL in universe: True
+
+[3] BINANCE SPOT API PROBE (sample 50 symbols — rate limit aware):
+  Probing /api/v3/klines?interval=1d limit=1 (yesterday) for each symbol...
+  NOTE: hạn chế 50 symbols để tránh rate limit. Tập trung vào tokens nghi BSC/Alpha.
+
+  Symbol                 Status           taker/base
+  ----------------------------------------------------
+  IDOLUSDT               NO_SPOT                   —
+  BANKUSDT               spot_ok              0.4930
+  BRUSDT                 NO_SPOT                   —
+  AKEUSDT                NO_SPOT                   —
+  TAGUSDT                NO_SPOT                   —
+  NFTUSDT                NO_SPOT                   —
+  BABYUSDT               spot_ok              0.4792
+  ALPACAUSDT             EMPTY                     —
+  CAKEUSDT               spot_ok              0.5215
+  0GUSDT                 spot_ok              0.4539
+  1INCHUSDT              spot_ok              0.3687
+  2ZUSDT                 spot_ok              0.5741
+  ACHUSDT                spot_ok              0.5647
+  ACUUSDT                NO_SPOT                   —
+  ACXUSDT                spot_ok              0.3557
+  AERGOUSDT              EMPTY                     —
+  AEROUSDT               spot_ok              0.4616
+  AEVOUSDT               spot_ok              0.4599
+  AGLDUSDT               spot_ok              0.5094
+  AINUSDT                NO_SPOT                   —
+  AIOTUSDT               NO_SPOT                   —
+  AIOUSDT                NO_SPOT                   —
+  AIXBTUSDT              spot_ok              0.4513
+  AKTUSDT                NO_SPOT                   —
+  ALCHUSDT               NO_SPOT                   —
+  ALICEUSDT              spot_ok              0.5023
+  ALLOUSDT               spot_ok              0.5412
+  ALTUSDT                spot_ok              0.5913
+  ANIMEUSDT              spot_ok              0.4036
+  ANKRUSDT               spot_ok              0.4639
+  APEUSDT                spot_ok              0.4944
+  API3USDT               spot_ok              0.3845
+  APRUSDT                NO_SPOT                   —
+  APTUSDT                spot_ok              0.4710
+  ARBUSDT                spot_ok              0.5416
+  ARCUSDT                NO_SPOT                   —
+  ARKMUSDT               spot_ok              0.4543
+  ARKUSDT                spot_ok              0.4859
+  ARUSDT                 spot_ok              0.4531
+  ARXUSDT                NO_SPOT                   —
+  ASTRUSDT               spot_ok              0.5901
+  ATHUSDT                NO_SPOT                   —
+  ATUSDT                 spot_ok              0.5991
+  AUCTIONUSDT            spot_ok              0.3991
+  AUSDT                  spot_ok              0.5367
+  AVAUSDT                spot_ok              0.4743
+  AVNTUSDT               spot_ok              0.4381
+  AWEUSDT                spot_ok              0.3794
+  AXLUSDT                spot_ok              0.4928
+  AXSUSDT                spot_ok              0.4937
+
+[4] KẾT QUẢ SAMPLE (50 symbols):
+  spot_ok   (có Binance Spot, taker bình thường): 33
+  bsc_broken (có Binance Spot, taker broken BSC):  0
+  no_spot   (không có Binance Spot listing):       15
+
+  NO_SPOT list → KHÔNG vào alpha_bsc_symbols.txt (cùng loại IDOL):
+    IDOLUSDT
+    BRUSDT
+    AKEUSDT
+    TAGUSDT
+    NFTUSDT
+    ACUUSDT
+    AINUSDT
+    AIOTUSDT
+    AIOUSDT
+    AKTUSDT
+    ALCHUSDT
+    APRUSDT
+    ARCUSDT
+    ARXUSDT
+    ATHUSDT
+
+[5] EXTRAPOLATION (sample 50 → universe ~398 symbols):
+  Sample no_spot rate: 30.0% → ~119 tokens no_spot trong full universe
+  Sample bsc_broken rate: 0.0% → ~0 tokens sẽ vào alpha_bsc_symbols.txt
+  → Ước tính ~119 tokens "IDOL-class" thiếu trong alpha_bsc_symbols.txt
+    (no Binance Spot → collector mù với những token này)
+
+[6] CoinGecko: IDOL exchange listings (exchanges với volume):
+  Total tickers: 17
+  Exchange                  Base       Target            Vol_USD      Trust
+  ------------------------------------------------------------------------
+  PancakeSwap V3 (BSC)      0X3B4DE3C  0XBB4CDB9       5,979,394       None
+  LBank                     IDOL       USDT            1,241,989       None
+  Bitget                    IDOL       USDT            1,191,434       None
+  Gate                      IDOL       USDT            1,115,004       None
+  Hibt                      IDOL       USDT              418,400       None
+  MEXC                      IDOL       USDT              193,081       None
+  Toobit                    IDOL       USDT              170,395       None
+  Ourbit                    IDOL       USDT              126,260       None
+  BingX                     IDOL       USDT              106,754       None
+  Uniswap V4 (BSC)          0X3B4DE3C  0X8AC76A5          99,377       None
+  Phemex                    IDOL       USDT               51,929       None
+  WEEX                      IDOL       USDT               46,489       None
+  KCEX                      IDOL       USDT               41,256       None
+  Uniswap V4 (BSC)          0X3B4DE3C  0X8AC76A5          37,197       None
+  Uniswap V4 (BSC)          0X3B4DE3C  0X8AC76A5           1,392       None
+
+[7] VERDICT Z7:
+  1. alpha_bsc_symbols.txt sinh từ _probe_alpha_taker.py (chạy thủ công/1 lần)
+     Input: freshwatch_symbols.txt (~140 symbols)
+     Không có cron tự update — file có thể stale nếu universe thay đổi
+
+  2. IDOL gap là CẤU TRÚC, không phải bug:
+     IDOL = no_spot trên Binance → probe trả 400 → không classify BSC_BROKEN
+     alpha_bsc_symbols.txt chỉ cover tokens CÓ Binance Spot listing
+     → IDOL on Gate + PancakeSwap = ngoài phạm vi thiết kế collector hiện tại
+
+  3. IDOL-class tokens (no_spot, similar gap):
+     Trong sample 50: 15 no_spot → ước tính ~119 trong full 398
+     Những token này hoàn toàn mù trong store (không có price/vol data)
+     trừ khi có perp listing (venue=binance_perp qua klines_1h)
+
+  4. Đề xuất (chưa sửa — chờ operator):
+     - L-43 draft: thêm GeckoTerminal DEX probe cho BSC no_spot tokens
+     - alpha_bsc_symbols.txt: đổi tên thành binance_spot_bsc_symbols.txt
+       (tên hiện tại gây nhầm "alpha" = Binance Alpha platform)
+     - IDOL cụ thể: dùng Gate spot + DEX BSC collector riêng nếu cần track
+
+===========================================================================
+Z7 DONE

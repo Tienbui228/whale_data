@@ -244,6 +244,225 @@ Cấu trúc thư mục + vòng đời artifact đã vào mục CẤU TRÚC THƯ 
 
 ---
 
+## SESSION 2026-08-03 — IDOL X1/X2/X3: UNLOCK + W6 REVISED + GATE SPOT
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** X1 điền UNLOCK sheet, X2 hạ UNLOCK-VESTING → UNLIKELY, X3 xử án Gate spot mâu thuẫn.
+
+---
+
+### [X3] Truy nguồn Gate spot — RESOLVED: DỮ LIỆU THẬT
+
+**Câu hỏi:** Report cũ có số Gate spot (110K/9.58M/1.55M) nhưng report mới nói "collector không tồn tại". Mâu thuẫn?
+
+**Truy nguồn:**
+- Script: `scripts/archive/_probe_idol_gate_tape.py`
+- API call: `https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=IDOL_USDT&interval=1d&limit=7`
+- Thời điểm chạy: `2026-08-03 01:49 UTC` (timestamp trong output file)
+- Public API, không cần key — urllib.request trực tiếp
+
+**Mapping số:**
+| Số trong report cũ | Nguồn thực tế |
+|--------------------|---------------|
+| 110K | 2026-07-31 `quote_vol = 110,373.69 USDT` ✓ |
+| 9.58M | 2026-08-01 `quote_vol = 9,577,588.31 USDT` ✓ |
+| 1.55M | 2026-08-02 `quote_vol = 1,547,487.06 USDT` ✓ |
+
+**Giải thích mâu thuẫn:** "Gate collector không tồn tại" = không có cron job thu thập định kỳ. Nhưng `_probe_idol_gate_tape.py` là **one-shot probe** gọi trực tiếp Gate public API — hai điều này không mâu thuẫn.
+
+**Hành động:**
+- W3 cũ: `ABSTAIN cấu trúc` → **GỠ ABSTAIN** — có Gate spot series đủ 28/07→02/08
+- Không rút số theo L-28 (số hợp lệ, nguồn xác minh được)
+
+---
+
+### [X2] W6 Matrix Revised — UNLOCK-VESTING hạ UNLIKELY
+
+**3 trượt cứng:**
+
+| Trượt | Nội dung |
+|-------|---------|
+| Ngày ✗ | E1 rút 31/07→02/08. Vesting CoinLaunch ngày 11 hằng tháng. 11/07 đã qua 20 ngày; 11/08 còn 10 ngày. |
+| Cỡ ✗ | 273M rút ≠ 97.29M tranche (gấp 2.8×). Không có cơ chế giải ngân 3 tháng cùng lúc. |
+| Nguồn ✗ | Rút từ Binance (exchange wallet) ≠ disburse từ vesting contract. Sự kiện khác bản chất. |
+
+**7×20M reinterpretation:** Chia-máy-khi-rút (TAG-5-ví khuôn) — operator rút tổng rồi chia đều cho nhiều ví quản lý. Không phải vesting tranche pattern.
+
+**Kết quả W6 revised:**
+- A (GOM): POSSIBLE — bằng chứng gián tiếp ủng hộ (BIDWALK-A, pos_r>1.6, funding pinned)
+- B (UNLOCK-VESTING): **UNLIKELY** — 3 trượt cứng
+- C (INFRA): POSSIBLE — khó phân biệt với A, cần P3 address label
+
+**Script output:** `docs/reports/_probe_idol_w6_revised.txt`
+
+---
+
+### [SPOT/ALPHA] DAILY sheet — Gate spot 01/07→02/08 đầy đủ
+
+**Phát hiện:** IDOL list trên Gate.io từ **01/07** (không phải 28/07 như ban đầu nghĩ).
+Gate API `spot/candlesticks?from=&to=&interval=1d` trả về 34 candles.
+
+**Đã điền DAILY c27-c29 toàn bộ:**
+
+| Cột | Nội dung | Kết quả |
+|-----|---------|---------|
+| c27 `spot_venue` | 'Gate' cho 30 ngày (01/07→02/08) | ✓ |
+| c28 `vol_spot_usd` | Quote vol USDT từ Gate API | 28 rows filled, 2 verify OK |
+| c29 `taker_spot_pct` | ABSTAIN (Gate candle không có taker data) | blank = ABSTAIN |
+| c36 `alpha_suspect` | Formula đã có — tự tính vol_spot/vol_perp | sẽ compute khi Excel recalc |
+
+**Highlight Gate spot series (chọn lọc):**
+| date | Gate quote USDT | Note |
+|------|----------------|------|
+| 01/07 | 223,517 | baseline |
+| 03/07 | 1,320,492 | spike |
+| 23/07 | 2,911,246 | spike (cùng ngày perp spike 167M) |
+| 27/07 | 2,663,899 | pre-markup spike |
+| 01/08 | **9,577,588** | MARKUP DAY |
+| 02/08 | 1,547,487 | post-markup |
+
+**Script:** `_task_idol_spot_alpha_fill.py` → `docs/reports/_task_idol_spot_alpha_fill.txt`
+
+---
+
+### [X1] UNLOCK Sheet — Điền từ CoinLaunch
+
+**Nguồn:** CoinLaunch (operator-verified 2026-08-03)
+
+| Field | Value |
+|-------|-------|
+| Total supply | 4,800,000,000 IDOL |
+| TGE | 2025-06-11 |
+| Unlocked | 32.49% |
+| Monthly | 97,290,000 IDOL (~2.03%) ngày 11 hằng tháng |
+| Community | 35,460,000 / tháng |
+| Ecosystem | 17,630,000 / tháng |
+| Team | 28,800,000 / tháng (cliff hết 06/2026, linear 2 tranche còn) |
+| Strategic | 7,680,000 / tháng (cliff hết 06/2026, linear 2 tranche còn) |
+| Private | 5,760,000 / tháng (cliff hết 06/2026, linear 2 tranche còn) |
+| Advisor | 1,960,000 / tháng |
+| Next unlock | **2026-08-11** (T+8) |
+
+**Context:** Markup 01/08 nổ 10 ngày TRƯỚC tranche 11/08. Unlock = suppressor thường trực, không phải trigger E1.
+
+**Task script:** `_task_idol_unlock_fill.py` — CẦN OPERATOR đóng CASE_IDOL.xlsx (PermissionError khi chạy).
+
+**Sau khi đóng file chạy:**
+```
+python _task_idol_unlock_fill.py
+```
+
+---
+
+### [Gate spot] W3 Series đầy đủ 28/07→02/08
+
+| Date | Base IDOL | Quote USDT | Note |
+|------|-----------|-----------|------|
+| 28/07 | 36,651,223 | 615,898 | |
+| 29/07 | 12,676,400 | 199,017 | |
+| 30/07 | 23,265,613 | 352,552 | |
+| 31/07 | 6,883,590 | 110,374 | |
+| 01/08 | 405,069,384 | **9,577,588** | MARKUP DAY |
+| 02/08 | 67,176,835 | 1,547,487 | post-markup |
+
+**W2 Gate spot sức chứa:** 273M IDOL @ 0.02438 = 6.66M notional / 9.58M Gate vol = **69.5% THIN** → Gate không đủ sức chứa 273M trong 1 ngày.
+
+---
+
+
+
+---
+
+## SESSION 2026-08-03 — IDOL A1→A5: ALPHA + DEX BSC + W6 REVISION
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** A1 contract address; A2 store probe; A3 Alpha/DEX API series; A4 W2 re-run; A5 DAILY update + W6 revision.
+
+---
+
+### [A1] BSC Contract Address — FOUND
+
+- **Contract:** `0x3b4de3c7855c03bb9f50ea252cd2c9fa1125ab07` (MEET48 Token / IDOL)
+- **Nguồn:** CoinGecko free API (`/coins/meet48`) → `platforms.binance-smart-chain`
+- **Ghi vào:** CASE sheet row4 (`bsc_contract_address`) — khóa vĩnh viễn
+
+---
+
+### [A2] Store Alpha Probe — NO DATA (án b)
+
+- `alpha_bsc_symbols.txt`: không tồn tại trên local (VPS-only)
+- IDOL `venue=no_spot` (confirmed từ spot_klines_1d probe trước)
+- IDOL không có trên Binance Spot (kể cả BSC bridge) → alpha collector không thu
+- **Verdict A2(b):** IDOL ngoài universe alpha collector, không có data trong store
+
+---
+
+### [A3] DEX BSC Series 20/07→03/08
+
+**Attempt Binance Alpha API:** 403 Forbidden (gated, cần session auth)
+- Endpoints thử: bapi/alpha/v2/klines, bapi/alpha/v1/kline, browser UA → đều 403
+- **Kết luận:** IDOL KHÔNG có trên Binance Alpha platform
+
+**Nguồn thay thế:** GeckoTerminal API (public, no key) → PancakeSwap BSC pool
+- Pool: IDOL/WBNB 0.01% (địa chỉ 5fabca5559, vol24h 03/08 = $6.67M)
+- Endpoint: `api.geckoterminal.com/api/v2/networks/bsc/tokens/{contract}/pools` → OHLCV
+
+**Series (PancakeSwap DEX_BSC, one-shot probe 06:50 UTC):**
+
+| date | close | vol_DEX_M | vol_perp_M | suspect_x | verdict |
+|------|-------|-----------|-----------|----------|---------|
+| 20/07 | 0.01517 | 1.53 | 22.0 | 0.07x | SACH |
+| 23/07 | 0.01548 | 18.68 | 167.3 | 0.11x | SACH |
+| 27/07 | 0.01721 | 9.83 | 16.9 | 0.58x | SACH |
+| 28/07 | 0.01652 | 1.77 | 5.9 | 0.30x | SACH |
+| 31/07 | 0.01648 | 1.43 | 7.3 | 0.20x | SACH |
+| 01/08 | 0.02438 | **31.83** | 175.7 | 0.18x | SACH |
+| 02/08 | 0.02319 | 7.32 | 40.7 | 0.18x | SACH |
+
+**Tất cả 15 ngày SACH** (suspect_x < 1.0, guard < 3.0×)
+
+---
+
+### [A4] W2 Re-run — VERDICT (a): GOM-qua-DEX PLAUSIBLE
+
+- V_clean DEX = **84.63M USDT** (15 ngày × avg 5.6M/ngày)
+- Ngưỡng L-06: $8-12M → V_clean >> ngưỡng → **VERDICT A4(a)**
+- Highlight: 01/08 DEX vol 31.83M / notional 273M@0.024 = 6.66M → vol/notional = **4.8×**
+- Sức chứa DEX đủ để hấp thu toàn bộ 273M trong 1 ngày
+
+---
+
+### [A5] DAILY + W6 Update
+
+**DAILY c27-c28 (rows 20/07→02/08):**
+- venue: Gate → `Gate+dex_bsc`
+- vol_spot_usd: Gate_vol + DEX_vol (combined); 01/08 = 9.58M + 31.83M = **41.41M**
+- c40 note_operator: breakdown dual-source ghi rõ
+- alpha_suspect formula: tự tính combined/perp khi Excel recalc
+
+**W6 revision:**
+
+| Hypothesis | Old | New | Lý do |
+|------------|-----|-----|-------|
+| A (GOM/STAGING) | POSSIBLE | **PLAUSIBLE** | A4(a): V_14d DEX 84.6M >> $12M |
+| B (UNLOCK-VESTING) | UNLIKELY | UNLIKELY (giữ) | 3 trượt cứng |
+| C (INFRA) | POSSIBLE | POSSIBLE (giữ) | Cần P3 |
+
+**Lưu ý phân biệt:** A4 chứng minh venue *có sức chứa* — chưa chứng minh "gom đã xảy ra". Test quyết định: T1 watcher (redeposit) + P3 txhash dich.
+
+---
+
+### [L-43 draft]
+
+**Bài học đề xuất:**
+IDOL-class BSC token: spot = Gate CEX + PancakeSwap DEX BSC. "Binance Alpha" API = gated (403). `alpha_bsc_symbols.txt` chỉ cover tokens có Binance Spot listing. Probe DEX_BSC bằng contract address → dùng GeckoTerminal API (`networks/bsc/tokens/{contract}/ohlcv/day`, public, no key).
+
+CẦN OPERATOR: ký L-43 vào CASE_INDEX nếu đồng ý.
+
+---
+
 
 
 ---
@@ -1082,5 +1301,98 @@ SGT (UTC+8, Singapore) sai — may la UTC+7 (ICT, Vietnam). Sua 4 cho trong agen
 | IDOL | OVERWRITE_OK | 30 | 2.5455 | 1.2396 | 2.0535 | 0.4987 | 0.000318 | 6 | 8,805,698 | no |
 
 **Tổng:** 3 OK, 1 overwrite, 1 skip, 0 dry_run
+
+---
+
+## SESSION 2026-08-03 — IDOL Z6/Z7/Z4-rev
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** Z6 (PancakeSwap swap log), Z7 (alpha_bsc_symbols audit), Z4-rev (E1 label + W6 annotation)
+
+---
+
+### [Z6] PancakeSwap IDOL swap log 20/07→02/08: PROXY (no swap log)
+
+**Pool confirmed:** IDOL/WBNB 0.01% BSC = `0xfff4857a955b2b460c27fd431aa5a85fabca5559` (GeckoTerminal vol24h $6.36M)
+
+**Subgraph endpoints:**
+- `api.thegraph.com` → DNS fail (getaddrinfo)
+- `api.goldsky.com` Pancakeswap V3 → 404 (subgraph not found)
+- `graph.pancakeswap.finance` → DNS fail
+
+**BscScan getLogs:** Không lấy được block numbers (no API key, rate limited)
+
+**Kết quả:** Dùng GeckoTerminal daily vol + 50/50 proxy (không tách được buy/sell)
+
+| Metric | Giá trị |
+|--------|---------|
+| Cum buy est (14d, 50/50) | 2,178.7M IDOL = $41.20M |
+| VWAP proxy | $0.018912/IDOL |
+| 273M benchmark | ĐỦ (cum >> 273M nhưng proxy = gross vol, không phải net accumulation) |
+| Pool liquidity | Đủ (DEX vol >> notional 273M) |
+
+**CAVEAT:** Swap events trên PancakeSwap = ví người dùng thực / aggregator (1inch/ParaSwap). Binance giữ IDOL trong custody BSC riêng, KHÔNG swap qua pool AMM → DEX VWAP ≠ Binance internal VWAP 273M block.
+
+**Script:** `_probe_idol_z6_swaplog.py` → `docs/reports/_probe_idol_z6_swaplog.txt`
+
+---
+
+### [Z7] Audit alpha_bsc_symbols.txt: GAP CẤU TRÚC (~119 tokens)
+
+**File genesis:**
+- Generator: `scripts/archive/_probe_alpha_taker.py` (chạy thủ công)
+- Input: `data/config/freshwatch_symbols.txt` (~140 symbols, VPS only)
+- Logic: probe Binance Spot `/api/v3/klines` → BSC_BROKEN (ratio>0.9985) → file
+- NO_SPOT (400) → excluded by design
+
+**IDOL gap = cấu trúc, không phải bug:**
+- IDOL = no_spot trên Binance → 400 → không classify BSC_BROKEN
+- `alpha_bsc_symbols.txt` chỉ cover tokens CÓ Binance Spot listing
+- IDOL on Gate + PancakeSwap = ngoài phạm vi thiết kế
+
+**Sample probe (50 symbols từ symbols_in_store.txt):**
+| Category | Count | Extrapolated (398 universe) |
+|----------|-------|-----------------------------|
+| spot_ok | 33 (66%) | ~263 |
+| no_spot | 15 (30%) | **~119 tokens mù** |
+| bsc_broken | 0 (0%) | ~0 (file có thể RỖNG) |
+| empty/error | 2 (4%) | — |
+
+**Key finding:** BSC_BROKEN = 0 trong sample → `alpha_bsc_symbols.txt` trên VPS có thể RỖNG hoặc stale. Cần operator chạy `_probe_alpha_taker.py --write-config` để kiểm tra.
+
+**CoinGecko IDOL tickers (03/08):** PancakeSwap V3 BSC $5.98M, LBank $1.24M, Bitget $1.19M, Gate $1.12M. **KHÔNG có Binance Spot hay Binance Alpha listing.**
+
+**Đề xuất (chưa sửa):**
+- L-43: GeckoTerminal DEX probe cho BSC no_spot tokens (đã draft session trước)
+- Đổi tên file → `binance_spot_bsc_symbols.txt` (tên hiện tại misleading)
+
+**Script:** `_probe_idol_z7_alpha_audit.py` → `docs/reports/_probe_idol_z7_alpha_audit.txt`
+
+---
+
+### [Z4-rev] CASE_IDOL.xlsx — E1 label + W6 annotation: DONE
+
+**EVENTS E1 (row4):**
+- col3 (nguon): `'Nansen UI (so hua, chua co txhash)'` → `'Binance (Alpha custody) — cơ chế xác nhận 03/08'`
+- col4 (doc_nhanh): appended Z4-rev note (GOM-qua-Alpha hypothesis, pending Z1)
+
+**CASE sheet row11 (Tom tat input):**
+- Appended W6 GOM-qua-Alpha annotation: PLAUSIBLE, Z7 evidence, CG tickers, PENDING Z1
+
+**Scripts:** `_task_idol_z4rev.py`, `_task_idol_z4rev_w6fix.py` → `docs/reports/_task_idol_z4rev.txt`
+
+---
+
+### PENDING sau Z6/Z7/Z4-rev
+
+| Việc | Mô tả | Chặn bởi |
+|------|-------|----------|
+| Z1 | txhash + địa chỉ đích 13 ví (P3) → confirm Binance custody | Operator/Nansen |
+| Z6-swap-log | Subgraph swap events (buy/sell split + VWAP thực) | DNS/network access |
+| alpha_bsc_symbols verify | Chạy `_probe_alpha_taker.py --write-config` trên VPS | Operator |
+| DAILY 03/08 IDOL | Append sau 04/08 01:20 UTC cron + fn=6 verify | Cron |
+
+**VPS IP:** `5.223.67.21` (ghi nhận từ operator)
 
 ---

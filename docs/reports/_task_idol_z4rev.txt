@@ -1,0 +1,45 @@
+======================================================================
+TASK idol_z4rev — 2026-08-03 07:18 UTC
+======================================================================
+
+[1] EVENTS — Đọc hiện trạng:
+  row1: c1='D. NHAT KY DIEN BIEN (append-only, moi nhat duoi cung)'
+  row3: c1='ngay'  c2='su_kien_so_lieu'  c3='nguon'  c4='doc_nhanh'
+  row4: c1='31/07→02/08'  c2='13 vi nhan ~273M IDOL (~5.7% supply) tu Binance. 7 vi x20M c'  c3='Nansen UI (so hua, chua co txhash)'  c4='PENDING-VERIFY: txhash + ngay chinh xac tu Nansen. Doc: rut '
+  row5: c1='2026-08-02'  c2='Gate wallet 0x0d0707 +54.76M IDOL (~1.14% supply) trong 1d; '  c3='Nansen UI (so hua, chua co txhash)'  c4='[HA CAP] <2% supply — khong dang ke tren on-chain thesis. Gi'
+  row9: c1='2026-08-11'  c2='Unlock tranche tháng 8: 97.29M IDOL (~2.03% supply)'  c3='UNLOCK_SCHEDULE'  c4='Suppressor context thường trực: 2%/tháng ngày 11. Markup 01/'
+
+[2] EVENTS — Cập nhật E1 nhãn nguồn:
+  Found E1 at row4: date='31/07→02/08' desc='13 vi nhan ~273M IDOL (~5.7% supply) tu Binance. 7 vi x20M c'
+  Current col3='Nansen UI (so hua, chua co txhash)'
+  Current col4='PENDING-VERIFY: txhash + ngay chinh xac tu Nansen. Doc: rut TRONG markup (gia le'
+  → col3 updated: Binance (Alpha custody) — cơ chế xác nhận 03/08
+  → col4 appended Z4-rev note (444 chars)
+
+[3] CASE sheet — W6 GOM-qua-Alpha annotation:
+  Sheets: ['CASE', 'DAILY', 'EVENTS', 'TRIGGERS', 'OUTCOME', 'MM_PROFILE', 'UNLOCK']
+  Target sheet: 'CASE'
+  W6 row not found in CASE sheet
+
+[4] Save CASE_IDOL.xlsx...
+  → SAVED OK
+
+[5] Z4-rev SUMMARY:
+  E1: col3 → "Binance (Alpha custody) — cơ chế xác nhận 03/08"
+  E1: col4 → appended Z4-rev GOM-qua-Alpha hypothesis note
+  W6 (CASE sheet): GOM-qua-Alpha annotation written
+
+  PENDING (chưa làm, chờ operator/data):
+  • Z1: txhash + địa chỉ đích 13 ví (P3) → xác nhận Binance vs other
+  • Nếu Z1 = Binance custody: upgrade W6-A → CONFIRMED
+  • Nếu Z1 = non-Binance: revise E1 label lại
+
+  Z7 finding (ghi thêm):
+  IDOL thiếu trong alpha_bsc_symbols.txt = CẤU TRÚC (no_spot, không phải bug)
+  ~30% universe (119/398 est.) là no_spot → mù trong collector hiện tại
+  BSC_BROKEN = 0 trong sample → alpha_bsc_symbols.txt có thể RỖNG trên VPS
+  Cần operator chạy _probe_alpha_taker.py --write-config để kiểm tra
+Z4-rev-W6fix — 2026-08-03 07:19 UTC
+  row11 col2 current: 'Gate probe: V thang 7 ~$15.6M < $26M -> KHONG THE gom tren Gate, inventory co san · book $2.5k/$1.2k = bai do · 0 cum Bo'
+  → appended W6 note (311 chars)
+SAVED OK

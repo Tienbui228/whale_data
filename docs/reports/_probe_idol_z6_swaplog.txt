@@ -1,0 +1,86 @@
+===========================================================================
+PROBE idol_z6_swaplog — 2026-08-03 07:13 UTC
+IDOL contract: 0x3b4de3c7855c03bb9f50ea252cd2c9fa1125ab07
+===========================================================================
+
+[1] GeckoTerminal — pool address IDOL/WBNB:
+  'IDOL / WBNB 0.01%'             addr=0xfff4857a955b2b460c27fd431aa5a85fabca5559  vol24h=$6,360,455
+  → POOL SELECTED: 0xfff4857a955b2b460c27fd431aa5a85fabca5559
+  'vIDOL / IDOL 0.01%'            addr=0xb9b3a40d5b16f8760d45cc13766835830fa0440286f3aef9dfa7b3e7c7ead1ce  vol24h=$109
+  'IDOL / Subject 3'              addr=0x76a25f0d53853e1a4fcf2521c925611a4c186e40  vol24h=$4
+  'IDOL / WBNB'                   addr=0x46377435d96be3e68799e98fd94381a061d174e5  vol24h=$1
+  'IDOL / USDT 1%'                addr=0x1f9471d43c635071bb6d9c92e8c98ca8dbe30444  vol24h=$2
+  'IDOL / HRC'                    addr=0x8af50eeb5ebc259dad33f1510b0676f8d26180cc  vol24h=$0
+  'IDOL / USDT 0.05%'             addr=0xd39e8f0309411ae1810225c03156dcddca67db3e  vol24h=$0
+  'IDOL / USDC 0.166%'            addr=0xc98a6e6a624fb51878ce53a79e27c15b758b4ba9850348370b4cee6be8c01c6f  vol24h=$0
+  'IDOL / USDC 0.078%'            addr=0x7a255fb0362d616b36d622f3a3875aef57362c828874a0a8732c5c44b737d2e9  vol24h=$0
+  'IDOL / USDC 0.088%'            addr=0xbf29e3c05b6aac2c26656f8c5963148efa3f0c4113820ca76dbe3fc34213e681  vol24h=$0
+  'IDOL / USDC 0.149%'            addr=0xc1d890317e606684cf9cad28b5777bded32e1922c30c449493a41d48e10d019b  vol24h=$0
+  'IDOL / USD1 0.18%'             addr=0x92bd46c48aca6afeacb9cced83c0b1ee2d7cd4bd0037eb000e5158b47327c7b3  vol24h=$0
+  'IDOL / USDT 0.05%'             addr=0x7c582efb2e15561d82b5edaa4c7143d15c75af868e9f4afe91961ebcfe49e87a  vol24h=$0
+  'IDOL / USDT 5%'                addr=0x9edede2f9b7de46211ea18c69ded8ed0837f9ee2cc4c012aeeed1f425d87cd1d  vol24h=$0
+  'IDOL / USD1 0.1%'              addr=0xe6c6f9d608b6b225db93756a4905b0bde80ef32a161002730c36d27cf7950a21  vol24h=$0
+  'IDOL / USDC 0.079%'            addr=0xa6cef0d99709c0f9e44ed003d09746643602a8265445bdccffdce30d0c41d739  vol24h=$0
+  'IDOL / USDC 0.13%'             addr=0x4c49f5ed77dc8e431d868803e59eeb2ea1274a111e23c841fa4edae26d7581a4  vol24h=$0
+  'IDOL / USDC 0.146%'            addr=0x637ae6b601f94b88c10bfd5120c1006a944538c5471a3fdff849455aef431d7d  vol24h=$0
+  'IDOL / USDC 0.133%'            addr=0xb0b3f7566b56659ec3ebc8065586f587d5242b9bcdfb550e4d93b043f50ea51d  vol24h=$0
+  'IDOL / USD1 0.1%'              addr=0xe5dcd7262362be2fb3940c4623e6f3d65d3305331661cdc2271df0857747db3d  vol24h=$0
+
+[2] Subgraph GraphQL — swap events 20/07→02/08:
+
+  [thegraph_v3] https://api.thegraph.com/subgraphs/name/pancakeswap/exchange...
+    meta query: status=<urlopen error [Errno 11001] getaddrinfo failed>
+
+  [goldsky_v3] https://api.goldsky.com/api/public/project_cl2rg5pp47j3t0ztl...
+    meta query: status=404
+    Response: {"statusCode":404,"message":"Subgraph not found. Have you deleted this subgraph recently? If this er
+
+  [pancake_official] https://graph.pancakeswap.finance/v3/bsc...
+    meta query: status=<urlopen error [Errno 11001] getaddrinfo failed>
+
+  Tất cả subgraph endpoints KHÔNG ACCESSIBLE (network/DNS)
+
+[3] BscScan getLogs fallback (Swap events):
+  Getting block numbers for window...
+  Block range: None → None
+
+===========================================================================
+KẾT QUẢ Z6 — Daily buy/sell + VWAP + cumulative
+===========================================================================
+
+  Không lấy được swap log data — sử dụng GeckoTerminal daily vol làm proxy.
+
+  PROXY ESTIMATE (50/50 buy/sell split — KHÔNG CHÍNH XÁC):
+
+  date          total_DEX_M  est_buy_M   px_close    cum_buy_M
+  ------------------------------------------------------------
+  2026-07-20         1.5318M     50.488M   0.015170       50.488M
+  2026-07-21         0.5633M     18.947M   0.014865       69.435M
+  2026-07-22         0.4543M     14.775M   0.015374       84.210M
+  2026-07-23        18.6833M    603.349M   0.015483      687.559M
+  2026-07-24         4.8093M    159.122M   0.015112      846.681M
+  2026-07-25         1.3804M     46.041M   0.014991      892.722M
+  2026-07-26         0.6419M     21.514M   0.014918      914.236M
+  2026-07-27         9.8340M    285.673M   0.017212     1199.909M
+  2026-07-28         1.7706M     53.580M   0.016523     1253.489M
+  2026-07-29         1.1269M     37.079M   0.015196     1290.567M
+  2026-07-30         1.0247M     34.088M   0.015030     1324.656M
+  2026-07-31         1.4345M     43.522M   0.016480     1368.178M
+  2026-08-01        31.8311M    652.731M   0.024383     2020.910M
+  2026-08-02         7.3191M    157.787M   0.023193     2178.697M
+
+  Cumulative buy est: 2178.70M IDOL = $41.20M
+  VWAP est: $0.018912 (proxy, 50/50 split)
+  273M benchmark: cum_buy 2178.7M → ĐỦ (>273M)
+
+  CAVEAT PROXY: 50/50 split là giả định. Thực tế cần swap log để phân tách.
+
+===========================================================================
+CAVEAT — Taker = Binance omnibus:
+  Swap events trên PancakeSwap BSC: caller là ví người dùng thực hoặc
+  aggregator (1inch/ParaSwap). KHÔNG có ví Binance omnibus trong pool DEX.
+  Nguyên nhân: Binance cầm IDOL on-chain trong ví custody riêng, không phải
+  qua pool AMM trực tiếp. Người dùng mua/bán IDOL trên Binance bằng internal
+  book — không tạo on-chain swap event.
+  → Pool DEX swaps = thị trường OTC/DeFi, KHÔNG phản ánh Binance user orders.
+  → VWAP từ pool ≠ Binance internal VWAP của 273M block.
