@@ -1,0 +1,112 @@
+========================================================================
+PROBE binance_alpha_api — 2026-08-03 07:59 UTC
+Cookie present: False
+========================================================================
+
+[WARN] BNC_COOKIE rỗng — một số endpoint có thể trả 401/403
+Các endpoint public (không cần login) vẫn được thử.
+
+[1] Alpha asset list — tất cả tokens trên Binance Alpha:
+  /bapi/alpha/v1/friendly/alpha/asset/list: status=403
+    Response: <html>
+<head><title>403 Forbidden</title></head>
+<body>
+<center><h1>403 Forbidden</h1></center>
+</body>
+</html>
+<!-- a padding to disable MSIE a
+  /bapi/alpha/v2/friendly/alpha/asset/list: status=403
+    Response: <html>
+<head><title>403 Forbidden</title></head>
+<body>
+<center><h1>403 Forbidden</h1></center>
+</body>
+</html>
+<!-- a padding to disable MSIE a
+  /bapi/alpha/v1/public/alpha/asset/list: status=403
+    Response: <html>
+<head><title>403 Forbidden</title></head>
+<body>
+<center><h1>403 Forbidden</h1></center>
+</body>
+</html>
+<!-- a padding to disable MSIE a
+
+[2] Search IDOL by contract address:
+  /bapi/alpha/v1/friendly/alpha/asset/detail
+    params={'contractAddress': '0x3b4de3c7855c03bb9f50ea252cd2c9fa1125ab07'}  status=403
+    <html>
+<head><title>403 Forbidden</title></head>
+<body>
+<center><h1>403 Forbidden</h1></center>
+
+  /bapi/alpha/v1/friendly/alpha/asset/search
+    params={'keyword': 'IDOL', 'pageSize': 10}  status=403
+    <html>
+<head><title>403 Forbidden</title></head>
+<body>
+<center><h1>403 Forbidden</h1></center>
+
+  /bapi/alpha/v1/friendly/alpha/asset/search
+    params={'keyword': '0x3b4de3c7855c03bb9f50ea252cd2c9fa1125ab07', 'pageSize': 10}  status=403
+    <html>
+<head><title>403 Forbidden</title></head>
+<body>
+<center><h1>403 Forbidden</h1></center>
+
+  /bapi/alpha/v2/friendly/alpha/asset/detail
+    params={'contractAddress': '0x3b4de3c7855c03bb9f50ea252cd2c9fa1125ab07'}  status=403
+    <html>
+<head><title>403 Forbidden</title></head>
+<body>
+<center><h1>403 Forbidden</h1></center>
+
+  /bapi/alpha/v1/friendly/alpha/market/asset
+    params={'network': 'BSC', 'contractAddress': '0x3b4de3c7855c03bb9f50ea252cd2c9fa1125ab07'}  status=403
+    <html>
+<head><title>403 Forbidden</title></head>
+<body>
+<center><h1>403 Forbidden</h1></center>
+
+
+[3] Alpha klines (price/vol) — thử với IDOL:
+  /bapi/alpha/v1/friendly/alpha/market/kline: status=403
+    <html>
+<head><title>403 Forbidden</title></head>
+<body>
+<center><h1>403 Forbidden</h1></center>
+</body>
+</html>
+<!
+  /bapi/alpha/v1/friendly/alpha/market/kline: status=403
+    <html>
+<head><title>403 Forbidden</title></head>
+<body>
+<center><h1>403 Forbidden</h1></center>
+</body>
+</html>
+<!
+
+[4] Thử endpoint cần auth (sẽ 401/403 nếu không có cookie):
+  /bapi/alpha/v1/private/alpha/trade/order/history: status=403
+    <html>
+<head><title>403 Forbidden</title></head>
+<body>
+<center><h1>403 Forbi
+  /bapi/alpha/v1/private/alpha/user/balance: status=403
+    <html>
+<head><title>403 Forbidden</title></head>
+<body>
+<center><h1>403 Forbi
+  /bapi/alpha/v1/friendly/alpha/user/alpha/list: status=403
+    <html>
+<head><title>403 Forbidden</title></head>
+<body>
+<center><h1>403 Forbi
+
+========================================================================
+TÓM TẮT kết quả (xem chi tiết bên trên):
+Nếu status=401/403 và cookie rỗng → cần login session
+Nếu status=200 code="000000" → endpoint public, không cần auth
+Nếu IDOL FOUND → token có trên Binance Alpha
+Nếu IDOL NOT FOUND + 200 → IDOL không có trên Binance Alpha (confirmed)

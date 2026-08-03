@@ -1,0 +1,39 @@
+========================================================================
+PROBE addr_bscscan v2 — 2026-08-03 07:28 UTC
+Target: 0x73d8bd54f7cf5fab43fe4ef40a62d390644946db
+========================================================================
+
+[1] Contract confirmed từ probe trước:
+  is_contract = True
+  bytecode = 54 bytes → RẤT NHỎ
+  54 bytes phổ biến nhất: EIP-1167 minimal proxy clone (45 bytes + overhead)
+  Hoặc: simple forwarding / beacon proxy
+  → ĐÂY KHÔNG PHẢI full DEX pool (pool contract = 10-50KB+)
+
+[2] Transaction list — BscScan V2 (no API key):
+  status=0 msg=NOTOK → Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan
+
+[3] BEP20 IDOL transfers (V2):
+  0 NOTOK → Free API access is not supported for this chain. Please upgrade your api plan for full chain coverag
+
+[4] All BEP20 token transfers (V2, last 20):
+  0 NOTOK → Free API access is not supported for this chain. Please upgrade your api plan for full chain coverag
+
+[5] Contract ABI (V2):
+  Not verified: NOTOK
+
+[6] GeckoTerminal — check if this address is a known pool:
+  NOT a known pool address on GeckoTerminal (404)
+  → Address có thể là router, bot, hoặc proxy contract
+
+========================================================================
+VERDICT:
+  Address: 0x73d8bd54f7cf5fab43fe4ef40a62d390644946db
+  Bytecode: 54 bytes → minimal proxy (EIP-1167 clone) hoặc simple forwarder
+  → KHÔNG phải full DEX pool contract (pool = 10-50KB bytecode)
+  → Có thể là: Binance Alpha router, aggregator proxy, hoặc MEV bot proxy
+
+  Để xác định chắc chắn cần thêm:
+  a) BscScan verified ABI → function signatures → biết contract làm gì
+  b) Nansen label → nếu labeled "Binance Alpha" / "Exchange" / "MEV"
+  c) Implementation address (nếu proxy) → trace đến contract thực

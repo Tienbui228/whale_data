@@ -1396,3 +1396,85 @@ SGT (UTC+8, Singapore) sai — may la UTC+7 (ICT, Vietnam). Sua 4 cho trong agen
 **VPS IP:** `5.223.67.21` (ghi nhận từ operator)
 
 ---
+
+## SESSION 2026-08-03 — IDOL Alpha klines + Nansen label + addr probe
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** Binance Alpha API access + Alpha vol cho IDOL + addr 0x73d8... label
+
+---
+
+### [N1] Nansen AI: 0x73d8...946db label — RESOLVED
+
+**Kết quả từ Nansen AI (operator query):**
+- Label: **🤖🏦 Binance: DEX/CEX Trading Bot**
+- Tags: Token Millionaire, High Activity
+- Type: EIP-1167 minimal proxy (consistent với 54-byte bytecode)
+- Deployed: 2025-03-02
+
+**273M IDOL distribution (31/07→02/08):**
+- Source: CÙNG Binance DEX/CEX Trading Bot — KHÔNG phải hot wallet
+- Pattern: 10M chunks × 2 = 20M/ví → 7+ destination wallets confirmed
+- Giá tại phân phối: ~$239.2k/10M = **$0.02392/IDOL** (khớp 01-02/08)
+- Destinations: labeled "High Balance" — không phải exchange, không phải named fund
+- Count chưa đủ 13 (Nansen dùng $100k+ filter + page 1 cap)
+
+**Verdict:** Nguồn phân phối = Binance automation infrastructure. Destinations = large holders chưa rõ entity.
+
+---
+
+### [A-ALPHA] Binance Alpha public endpoint — DISCOVERED
+
+**Endpoint tìm được từ `D:\Check onchain fresh wallets\_calib_alpha_daily.py`:**
+```
+GET https://www.binance.com/bapi/defi/v1/public/alpha-trade/klines
+  ?symbol=ALPHA_223USDT&interval=1d&startTime=...&limit=90
+```
+- **PUBLIC** — không cần auth, không cần cookie
+- IDOL alpha_id = **ALPHA_223** (confirmed từ calib script)
+- Taker field: ABSTAIN (klines[9]==klines[5] broken by design)
+
+**Lý do `/bapi/alpha/v1/...` bị 403:** Cloudflare WAF block non-browser requests. `/bapi/defi/v1/public/...` là endpoint khác — public, không qua WAF.
+
+---
+
+### [A-KLINES] IDOL Binance Alpha klines 01/06→03/08
+
+**Số quan trọng:**
+
+| Date | Alpha vol USD | n_trades | Note |
+|------|-------------|---------|------|
+| 07-04 | $2.065M | 5,385 | Spike |
+| 07-05 | $3.410M | 7,249 | — |
+| 07-23 | $3.792M | 27,245 | Spike lớn |
+| 07-27 | $2.880M | 14,835 | Pre-markup |
+| **08-01** | **$11.655M** | **50,987** | Markup day — retail peak |
+| 08-02 | $0.621M | 2,974 | Post-markup |
+
+**alpha/perp ratio (20/07→02/08):** tất cả SACH (< 3x). Max = 0.366x (08-01).
+
+**W2 re-run với Alpha vol thực:**
+- Total Alpha vol 25/07→02/08: **$15.91M**
+- 273M notional (worst case): $7.48M = 47% của Alpha vol
+- L-06 threshold: $14.97M → **PASS** ($15.91M ≥ $14.97M)
+- Verdict: **ĐỦ SỨC CHỨA** qua Alpha (thay proxy perp cũ)
+
+**CASE_IDOL.xlsx DAILY updated:**
+- c36 (alpha_suspect): suspect ratio mỗi ngày
+- c42 (vol_alpha_usd): Alpha vol USD raw
+- c43 (n_trades_alpha): số giao dịch Alpha mỗi ngày
+- c40 (note): alpha_vol text note
+
+**Scripts:** `_probe_idol_alpha_klines.py`, `_task_idol_alpha_daily_fill.py`, `_task_idol_alpha_vol_col.py`
+
+---
+
+### PENDING cập nhật
+
+- [ ] alpha_bsc_symbols verify trên VPS: chạy `_probe_alpha_taker.py --write-config`
+- [ ] DAILY 03/08: append sau cron (fn=6 verify)
+- [ ] Z1: txhash + full 13 ví đích (Nansen page 2, không dùng $100k filter)
+- [ ] L-44 đề xuất: `ALPHA_<id>` discovery pipeline cho token mới vào universe
+
+---

@@ -1,0 +1,101 @@
+======================================================================
+TASK idol_alpha_daily_fill — 2026-08-03 08:13 UTC
+======================================================================
+
+[1] Fetch Binance Alpha klines IDOL (ALPHA_223):
+  Fetched 64 candles
+
+[2] Load CASE_IDOL.xlsx DAILY sheet:
+  max_row=32  max_col=41
+  header_row=2  date_col=1
+
+  Header scan (cols 1-50):
+    c01: 'date'
+    c02: 'px_avg'
+    c03: 'ret_1d'
+    c04: 'vol_perp_usd'
+    c05: 'taker_buy_pct'
+    c06: 'f_avg'
+    c07: 'f_min'
+    c08: 'f_max'
+    c09: 'f_n'
+    c10: 'funding_regime'
+    c11: 'pin_streak'
+    c12: 'oi_usd'
+    c13: 'oi_vs_med14'
+    c14: 'oi_cycle_pos'
+    c15: 'lsr_pos_r'
+    c16: 'lsr_acc_r'
+    c17: 'lsr_global_r'
+    c18: 'div_raw'
+    c19: 'div_avg3'
+    c20: 'glsr_slope_5d'
+    c21: 'd_pos_3d'
+    c22: 'd_acc_3d'
+    c23: 'signals_bullish'
+    c24: 'signals_suppress'
+    c25: 'screen_rank'
+    c26: 'data_bad'
+    c27: 'spot_venue'
+    c28: 'vol_spot_usd'
+    c29: 'taker_spot_pct'
+    c30: 'depth_bid2_usd'
+    c31: 'depth_ask2_usd'
+    c32: 'bid_wall_px'
+    c33: 'bid_wall_usd'
+    c34: 'ask_wall_px'
+    c35: 'ask_wall_usd'
+    c36: 'alpha_suspect'
+    c37: 'exch_balance_delta'
+    c38: 'wallet_activity'
+    c39: 'dominance_pct'
+    c40: 'note_operator'
+    c41: 'mm_note'
+
+  vol_alpha_col=None  suspect_col=36
+  → vol_alpha_col auto-detected: c36 (header='alpha_suspect')
+
+[3] Fill DAILY rows với Alpha vol:
+  date          row    alpha_USD     perp_USD   suspect_x  n_trades status
+  ------------------------------------------------------------------------
+  2026-07-01      3        0.090M        0.000M           —     1,093  
+  2026-07-02      4        0.074M        0.000M           —     1,019  
+  2026-07-03      5        0.256M        0.000M           —     2,191  
+  2026-07-04      6        2.065M        0.000M           —     5,385  
+  2026-07-05      7        3.410M        0.000M           —     7,249  
+  2026-07-06      8        0.144M        0.000M           —     1,414  
+  2026-07-07      9        0.015M        0.000M           —       201  
+  2026-07-08     10        0.002M        0.000M           —        45  
+  2026-07-09     11        0.010M        0.000M           —       150  
+  2026-07-10     12        0.018M        0.000M           —       225  
+  2026-07-11     13        0.038M        0.000M           —       509  
+  2026-07-12     14        0.048M        0.000M           —       703  
+  2026-07-13     15        0.025M        0.000M           —       378  
+  2026-07-14     16        0.011M        0.000M           —       152  
+  2026-07-15     17        0.015M        0.000M           —       199  
+  2026-07-16     18        1.237M        0.000M           —       668  
+  2026-07-17     19        0.069M        0.000M           —       770  
+  2026-07-18     20        0.067M        0.000M           —       575  
+  2026-07-19     21        0.023M        0.000M           —       228  
+  2026-07-20     22        0.065M        1.532M      0.042x       567  
+  2026-07-21     23        0.026M        0.563M      0.047x       261  
+  2026-07-22     24        0.013M        0.454M      0.028x       141  
+  2026-07-23     25        3.792M       18.683M      0.203x    27,245  
+  2026-07-27     26        2.880M        9.834M      0.293x    14,835  
+  2026-07-28     27        0.137M        1.771M      0.077x     1,463  
+  2026-07-29     28        0.112M        1.127M      0.099x     1,169  
+  2026-07-30     29        0.080M        1.025M      0.078x       775  
+  2026-07-31     30        0.176M        1.435M      0.123x     1,398  
+  2026-08-01     31       11.655M       31.831M      0.366x    50,987  
+  2026-08-02     32        0.621M        7.319M      0.085x     2,974  
+
+  Written: 30  Skipped: 0
+
+→ CASE_IDOL.xlsx SAVED
+
+[4] SUMMARY:
+  Nguồn: /bapi/defi/v1/public/alpha-trade/klines (PUBLIC)
+  Taker: ABSTAIN — không điền (klines[9]==klines[5] broken)
+  Peak: 08-01 $11.655M / 50,987 trades (markup day)
+  W2: PASS — Alpha vol 25/07→02/08 = $15.91M ≥ L-06 $14.97M
+  Alpha/perp max: 0.366x (08-01) — SACH, không suspect
