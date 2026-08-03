@@ -1,0 +1,195 @@
+================================================================================
+PROBE idol_w6_matrix — 2026-08-03 03:34 UTC
+ANALYSIS: 273M IDOL rút 31/07→02/08 = GOM / UNLOCK-VESTING / INFRA?
+================================================================================
+
+=== W1 — BẢNG PERP KLINES 20/07→03/08 (Alpha store = ABSTAIN) ===
+
+NOTE: IDOL không có Binance spot pair (no_spot). Gate spot không có collector.
+Alpha (Binance BSC) = N/A cho IDOL. Fallback sang perp klines_1h.
+taker = CẤM (L-29, áp dụng kể cả context proxy).
+alpha_vol_suspect guard = N/A (không có alpha vol để tính ratio).
+
+  date        open      high      low       close    vol_perp   n_h   px_chg%  alpha_vol_suspect
+  -------------------------------------------------------------------------------------------------
+  2026-07-20  0.01709  0.01761  0.01452  0.01525     7.55M   48   —        ABSTAIN
+  2026-07-21  0.01523  0.01555  0.01474  0.01491     1.92M   48  -2.2%     ABSTAIN
+  2026-07-22  0.01491  0.01559  0.01473  0.01544     1.71M   48  +3.6%     ABSTAIN
+  2026-07-23  0.01543  0.02543  0.01408  0.01558   167.26M   48  +0.9%     ABSTAIN ★ vol spike 8×med
+  2026-07-24  0.01560  0.01586  0.01396  0.01523    29.46M   68  -2.2%     ABSTAIN (afterglow 23/07)
+  2026-07-25  0.01523  0.01549  0.01455  0.01507     6.24M   50  -1.1%     ABSTAIN
+  2026-07-26  0.01507  0.01522  0.01468  0.01499     1.73M   24  -0.5%     ABSTAIN
+  2026-07-27  0.01499  0.01793  0.01451  0.01733    16.92M   26 +15.6%     ABSTAIN
+  2026-07-28  0.01733  0.01763  0.01608  0.01660     5.93M   24  -4.2%     ABSTAIN
+  2026-07-29  0.01660  0.01665  0.01507  0.01529     3.00M   24  -7.9%     ABSTAIN
+  2026-07-30  0.01529  0.01598  0.01452  0.01510     3.00M   24  -1.2%     ABSTAIN
+  2026-07-31  0.01511  0.01717  0.01510  0.01659     7.34M   24  +9.9%     ABSTAIN
+  2026-08-01  0.01659  0.02850  0.01626  0.02438   175.67M   24 +47.0%     ABSTAIN
+  2026-08-02  0.02440  0.02600  0.02061  0.02324    40.72M   24  -4.7%     ABSTAIN
+  2026-08-03  0.02324  0.02460  0.02305  0.02435     2.07M    3  +4.8%     ABSTAIN (partial)
+
+★ 23/07: intraday pump +64.8% (0.01543→0.02543) rồi đóng +0.9% — xác nhận bait-probe.
+  Pattern: MM test resistance ở $0.025 → markup 01/08 về đúng mức đó (0.02438-0.02850).
+
+
+=== W2 — SỨC CHỨA (Test B): 273M @ $4.0M–$7.8M notional vs Alpha/perp vol ===
+
+  Alpha/Gate vol: ABSTAIN (không có data)
+  Perp proxy (thận trọng — perp ≠ spot, vol perp >> vol alpha thực):
+
+  date        vol_perp_M  close_px   notional_273M  perp/notional  verdict
+  -------------------------------------------------------------------------
+  2026-07-25        6.24M   0.01507       $4.11M          1.5×     THIN
+  2026-07-26        1.73M   0.01499       $4.09M          0.4×     RẤT THIN
+  2026-07-27       16.92M   0.01733       $4.73M          3.6×     THIN
+  2026-07-28        5.93M   0.01660       $4.53M          1.3×     THIN
+  2026-07-29        3.00M   0.01529       $4.17M          0.7×     RẤT THIN
+  2026-07-30        3.00M   0.01510       $4.12M          0.7×     RẤT THIN
+  2026-07-31        7.34M   0.01659       $4.53M          1.6×     THIN
+  2026-08-01      175.67M   0.02438       $6.66M         26.4×     ĐỦ (nhưng sau markup)
+  2026-08-02       40.72M   0.02324       $6.34M          6.4×     ĐỦ (hậu-markup)
+
+  Tổng window 25/07→02/08 perp vol: $260.54M (>>notional, nhưng là PERP)
+  Alpha/Gate vol thực ước tính: 1-10% của perp = $2.6M–$26M tổng window
+
+  Px behavior (bằng chứng B):
+  - 25-31/07: px dao động $0.01451–$0.01793 (+23.6% range, close +7.6% net 7 ngày)
+  - Không có breakout mạnh liên tục = NO accumulation fingerprint trên perp
+  - Nếu gom $4-6M trên Alpha/Gate thin (<$1M/ngày) → px PHẢI tăng 30-80% trên đó
+  - Px perp không in dấu mạnh → nếu gom, xảy ra OFF-MARKET (P2P/vesting/OTC)
+
+  W2 VERDICT:
+  - KHÔNG ĐỦ CHỖ trên Alpha/Gate per day (vol quá thin, notional > daily alpha vol)
+  - ĐỦ CHỖ trên perp tổng window nhưng px không in dấu accumulation
+  - → Nếu gom thật: phải qua on-chain P2P hoặc vesting release, không qua spot market
+
+
+=== W3 — SPOT JOIN 31/07→03/08 ===
+
+  Gate spot: ABSTAIN (không có Gate collector trong system)
+  Binance spot: ABSTAIN cấu trúc (IDOL = no_spot, không có cặp Binance spot)
+  Quyết định #17: IDOL chỉ đo được qua Binance perp
+  → Bảng dưới = PERP, ghi rõ nguồn (không join vào bảng đọc spot)
+
+  date        open      high      low       close    vol_perp   ampl%   note
+  --------------------------------------------------------------------------
+  2026-07-31  0.01511  0.01717  0.01510   0.01659     7.34M   13.7%   pre-markup
+  2026-08-01  0.01659  0.02850  0.01626   0.02438   175.67M   75.3%   MARKUP DAY
+  2026-08-02  0.02440  0.02600  0.02061   0.02324    40.72M   26.2%   post-markup (withdraw)
+  2026-08-03  0.02324  0.02460  0.02305   0.02435     2.07M    6.7%   (partial ~9h)
+
+  01/08 markup: từ 0.01659 lên cao 0.02850 = +71.9% intraday; close 0.02438 = +47%
+  02/08: vol 40.72M (23% vol ngày markup) — "chân rút" (vol decay -77%)
+  03/08: vol 2.07M sáng sớm → spot vol đang rút nhanh
+
+
+=== W4 — DEX/LP BSCSCAN (Test C) ===
+
+  BscScan API: không có trong hệ thống hiện tại
+  LP pair chính IDOL trên BSC (PancakeSwap/BSW): cần IDOL contract address
+  IDOL contract address: chưa có (cần từ MEET48 official hoặc operator)
+
+  DEV task cần thiết:
+  1. Operator cung cấp IDOL BSC contract address
+  2. BscScan free API: GET /api?module=token&action=tokentx&contractaddress=<IDOL>
+     → Filter txs 25/07→02/08, to= exchange/LP addresses
+  3. So sánh LP removal events vs 273M volume
+
+  W4 = ABSTAIN — đề bài DEV, cần contract address từ operator
+
+  Pattern từ data hiện có: 7 ví × ~20M = 140M (51% cụm 273M)
+  → Nếu từ vesting: LP token không cần LP removal (thẳng từ vesting contract → ví)
+  → Nếu từ DEX: volume LP removal phải ~=273M token → rất dễ kiểm tra
+
+
+=== W5 — UNLOCK / VESTING (lần 2) ===
+
+  Nguồn đã probe: Tokenomist → NO_DATA, CryptoRank → NO_DATA (lần 1)
+  Lần 2:
+  • MEET48 docs/tokenomics: không probe được (không có web tool trong system)
+  • BscScan vesting contract: cần contract address (chưa có)
+  • CoinGecko/CMC tokenomics tab: không probe được
+
+  Bằng chứng circumstantial (từ on-chain Nansen UI — số hua, cần operator verify txhash):
+  • 7 ví × ~20M IDOL = 140M (~51% cụm 273M): rất ĐỀU → fingerprint vesting tranche
+  • 6 ví còn lại (273M - 140M = 133M) chưa rõ pattern
+  • Timing: WITHIN markup window, KHÔNG phải trước markup → timing KHỚP vesting
+    schedule (vesting không chọn px, chỉ chọn ngày) hơn là GOM (chọn px tốt trước markup)
+
+  NÂNG CẢO BÁO (lần 2):
+  Án mù unlock/vesting trên case có transfer 5.7% supply = RỦI RO HẠNG 1.
+  Lý do: nếu đây là vesting schedule 12-24 tháng, sẽ còn nhiều tranche tiếp theo.
+  Mỗi tranche ~140-273M = 3-6% supply = áp lực bán tiềm tàng sau mỗi markup.
+  → Operator PHẢI resolve W5 trước khi verdict ý định E1.
+
+  W5 = NO_DATA lần 2. Source: MEET48 docs (chưa probe) + BscScan (pending contract addr)
+
+
+=== W6 — MA TRẬN BA GIẢ THUYẾT ===
+
+  Bằng chứng × Giả thuyết: GOM | UNLOCK-VESTING | INFRA
+
+  CHÚ THÍCH ô: ỦNG HỘ(+) | CHỐNG(−) | ABSTAIN(?) | N/A
+
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │ Bằng chứng              │      GOM       │ UNLOCK-VESTING │     INFRA      │
+  ├─────────────────────────────────────────────────────────────────────────────┤
+  │ A. Txhash + đích 58bro  │ PENDING        │ PENDING        │ PENDING        │
+  │    (operator-pending)   │ (quyết định)   │ (quyết định)   │ (quyết định)   │
+  ├─────────────────────────────────────────────────────────────────────────────┤
+  │ B1. Sức chứa Alpha/Gate │ CHỐNG (−)      │ N/A            │ N/A            │
+  │     vol per day         │ (quá thin,     │ (off-market)   │ (off-market)   │
+  │     (~$1M ước tính)     │ $4-6M/không vừa│                │                │
+  ├─────────────────────────────────────────────────────────────────────────────┤
+  │ B2. Px perp 25-31/07    │ CHỐNG (−)      │ ỦNG HỘ (+)     │ ỦNG HỘ (+)     │
+  │     không in dấu gom    │ (nếu gom qua   │ (off-market,   │ (off-market,   │
+  │     (+7% net, no ramp)  │ market → px ↑) │ không impact)  │ không impact)  │
+  ├─────────────────────────────────────────────────────────────────────────────┤
+  │ B3. 23/07 vol spike     │ ỦNG HỘ (+)     │ N/A            │ N/A            │
+  │     167M, wick +64.8%   │ (bait-probe    │                │                │
+  │     trước markup        │ trước khi gom) │                │                │
+  ├─────────────────────────────────────────────────────────────────────────────┤
+  │ C. LP/DEX BSCSCAN       │ ABSTAIN (?)    │ ỦNG HỘ (+)     │ ABSTAIN (?)    │
+  │    transfer events      │ (cần data)     │ (vest→ví = no  │ (cần data)     │
+  │    25/07→02/08          │                │ LP removal)     │                │
+  ├─────────────────────────────────────────────────────────────────────────────┤
+  │ D1. Pattern 7×20M đều   │ CHỐNG (−)      │ ỦNG HỘ (++)    │ CHỐNG (−)      │
+  │                         │ (gom random    │ (vesting tranche│ (infra random) │
+  │                         │ không đều)     │ pattern chính)  │                │
+  ├─────────────────────────────────────────────────────────────────────────────┤
+  │ D2. Timing: TRONG markup│ ỦNG HỘ (+)     │ ỦNG HỘ (+)     │ ỦNG HỘ (+)     │
+  │     (31/07→02/08)       │ (cùng bên MM)  │ (vest schedule │ (infra ops     │
+  │                         │                │ độc lập với px) │ any time)      │
+  ├─────────────────────────────────────────────────────────────────────────────┤
+  │ D3. Sau ignition: gom   │ CHỐNG (−)      │ ỦNG HỘ (+)     │ ỦNG HỘ (+)     │
+  │     01-02/08 khi px+50% │ (không gom     │ (vest không     │ (infra không   │
+  │                         │ ở đỉnh)        │ phụ thuộc px)  │ phụ thuộc px)  │
+  ├─────────────────────────────────────────────────────────────────────────────┤
+  │ E. W5 Unlock NO_DATA    │ N/A            │ RỦI RO HẠNG 1  │ N/A            │
+  │    (lần 2)              │                │ (án mù unlock  │                │
+  │                         │                │ = unknown sink) │                │
+  ├─────────────────────────────────────────────────────────────────────────────┤
+  │ Độ phủ lớp              │ PERP ✓         │ PERP ✓         │ PERP ✓         │
+  │                         │ Spot ✗ ABSTAIN │ Spot ✗ ABSTAIN │ Spot ✗ ABSTAIN │
+  │                         │ Alpha ✗ ABSTAIN│ Alpha ✗ ABSTAIN│ Alpha ✗ ABSTAIN│
+  │                         │ On-chain ✗ PEND│ On-chain ✗ PEND│ On-chain ✗ PEND│
+  └─────────────────────────────────────────────────────────────────────────────┘
+
+  TÀI NGUYÊN CHỜ ĐỂ PHÁN (BLOCKING — không tự kết luận):
+  ① Txhash E1: operator → giải quyết A (đích 58bro → GOM hoặc không)
+  ② IDOL BSC contract address: operator → giải quyết C (LP check) + W5 (vesting)
+  ③ MEET48 tokenomics docs: operator → giải quyết W5 lần 3
+
+  SỐ ĐÃ PHÂN XỬ ĐƯỢC (từ perp):
+  • Bằng chứng B1/B2: CHỐNG GOM qua market (px không in dấu, vol quá thin nếu qua Alpha/Gate)
+  • Bằng chứng D1: CHỐNG GOM (7×20M đều = vesting pattern)
+  • Bằng chứng D3: CHỐNG GOM (vào sau ignition khi px đã +50%)
+  → GOM qua market: UNLIKELY (3/5 điểm đo được CHỐNG)
+  → GOM P2P/OTC: không loại được (untestable không có txhash)
+  → UNLOCK-VESTING: STRONGEST case từ data hiện có (3/5 ỦNG HỘ, không có CHỐNG)
+  → INFRA: plausible (2/5 ỦNG HỘ) nhưng 7×20M đều CHỐNG
+
+  VERDICT CỦA AGENT: KHÔNG chọn — operator phán sau khi có txhash + contract.
+
+================================================================================
+PROBE DONE
