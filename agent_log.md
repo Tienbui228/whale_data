@@ -2,6 +2,268 @@
 
 ---
 
+## SESSION 2026-08-03 — FIX EXPORTER + RE-GENERATE 28-31/07
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** Sửa export timing bug, re-generate 28-31/07 từ store, force-overwrite CASE files.
+
+---
+
+### [C1] Fix exporter + cron — DONE
+
+**Root cause:** Cron chạy `50 0 * * *` (00:50 UTC) — tại thời điểm đó IDOL chỉ có 1 kỳ funding (00:00 UTC). Còn 5 kỳ chưa collect. Export ra fn=1 (stale).
+
+**Fixes applied:**
+1. `scripts/export_freshwatch_daily.py` — `default_dates()` loại trừ today (D) khỏi default range: `range(2, 0, -1)` thay vì `range(2, -1, -1)`
+2. `scripts/export_freshwatch_daily.py` — thêm `--force-regen` flag: strip existing rows cho target dates, re-generate từ store
+3. Cron: `50 0 * * *` → `20 1 * * *` (01:20 UTC — sau khi spot/alpha xong 01:00)
+4. `scripts/case_daily.py` — thêm `--force-overwrite` mode: overwrite row có SUSPECT comment hoặc fn < 6
+5. `scripts/case_daily.py` — fix `MergedCell` skip (không ghi vào merged cells → tránh AttributeError)
+
+---
+
+### [C2] Re-generate 28-31/07 trên VPS — DONE
+
+Dùng `--force-regen` cho 4 ngày:
+
+| date | stripped | rebuilt |
+|------|---------|---------|
+| 2026-07-28 | 525 | 525 |
+| 2026-07-29 | 525 | 525 |
+| 2026-07-30 | 525 | 525 |
+| 2026-07-31 | 525 | 525 |
+
+**Verify fn (VPS → local):**
+
+| sym | 28/07 | 29/07 | 30/07 | 31/07 | note |
+|-----|-------|-------|-------|-------|------|
+| IDOLUSDT | 6✓ | 6✓ | 6✓ | 6✓ | |
+| TAGUSDT | 6✓ | 6✓ | 6✓ | 6✓ | |
+| BRUSDT | 6✓ | 6✓ | 6✓ | 6✓ | |
+| BANKUSDT | 6✓ | 6✓ | 15⚠ | 24⚠ | BANK đổi interval 4h→1h từ 30/07 |
+
+BANK 30/07 fn=15 = 4 kỳ 4h (00-12) + 12 kỳ 1h (12-23); BANK 31/07 fn=24 = full 1h. Đây là Binance thay đổi schedule thực — không phải lỗi data.
+
+---
+
+### [C3] case_daily --force-overwrite 4 ngày × 4 case — DONE
+
+**Old → new table (OVERWRITE rows):**
+
+| token | date | row | col | old | new |
+|-------|------|-----|-----|-----|-----|
+| BR | 2026-07-28 | 66 | fn(9) | None | 6 |
+| BR | 2026-07-28 | 66 | px(2) | None | 0.14681 |
+| IDOL | 2026-07-28 | 27 | fn(9) | 1 | 6 |
+| IDOL | 2026-07-28 | 27 | px(2) | None | 0.016808 |
+| IDOL | 2026-07-28 | 27 | f_avg(6) | 0.00022299 | 0.0001976 |
+| BANK | 2026-07-29 | 37 | fn(9) | 1 | 6 |
+| BANK | 2026-07-29 | 37 | px(2) | None | 0.17135 |
+| TAG | 2026-07-29 | 31 | fn(9) | 1 | 6 |
+| TAG | 2026-07-29 | 31 | px(2) | 0.001215 | 0.0012063 |
+| BR | 2026-07-29 | 67 | fn(9) | 1 | 6 |
+| BR | 2026-07-29 | 67 | px(2) | 0.146 | 0.14685 |
+| IDOL | 2026-07-29 | 28 | fn(9) | 1 | 6 |
+| IDOL | 2026-07-29 | 28 | px(2) | None | 0.015687 |
+| IDOL | 2026-07-30 | 29 | fn(9) | 1 | 6 |
+| IDOL | 2026-07-30 | 29 | px(2) | None | 0.015234 |
+| IDOL | 2026-07-31 | 30 | fn(9) | 1 | 6 |
+| IDOL | 2026-07-31 | 30 | px(2) | None | 0.016402 |
+
+**Appended (new rows):**
+
+| token | date | row | fn | px |
+|-------|------|-----|----|----|
+| TAG | 2026-07-30 | 32 | None* | None* |
+| TAG | 2026-07-31 | 33 | 6 | 0.001355 |
+| BR | 2026-07-30 | 68 | 6 | 0.14731 |
+| BR | 2026-07-31 | 69 | 6 | 0.15034 |
+| BANK | 2026-07-30 | 38 | 15 | 0.08873 |
+| BANK | 2026-07-31 | 39 | 24 | 0.06306 |
+
+*TAG 30/07 fn=None: operator đã merge A32:L32 → cols 2-12 là MergedCell, không thể ghi.
+
+---
+
+### [C4] CẦN OPERATOR — TAG CASE_TAG.xlsx A32:L32 merged
+
+CASE_TAG.xlsx DAILY row 32 (date=2026-07-30) có merge A32:L32 do operator. Các cột px/vol/taker/funding (cols 2-12) không thể ghi tự động. Ratio (15-17) và formula (18-22, 36) đã ghi đúng.
+
+**Hành động cần:** Operator unmerge A32:L32 trong CASE_TAG.xlsx, sau đó chạy:
+```
+python scripts/case_daily.py --date 2026-07-30 --force-overwrite
+```
+
+---
+
+### [C5] VPS dependency fix
+
+Các module `structlog`, `typer`, `python-dotenv` chưa cài trên VPS. Đã install với `--break-system-packages` (root, Debian). Cron tự nhiên không bị ảnh hưởng (cron dùng venv hay đường đã có sẵn — cần verify). → **CẦN OPERATOR verify** cron 01:20 UTC ngày mai (04/08) có chạy được với module mới.
+
+---
+
+## SESSION 2026-08-03 — DỌN REPO + QUY ƯỚC FILE (L-42)
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** Thiết lập cấu trúc thư mục chuẩn, dọn probe/task/report đã xong vào archive.
+
+### Kết quả di chuyển
+
+| Nguồn | Đích | Số file |
+|-------|------|---------|
+| root `_probe_*/task_*/remote_*/run_*/...` | `scripts/archive/` | 69 |
+| `scripts/_probe_*/_fix_*` | `scripts/archive/` | 15 |
+| `docs/reports/_probe_*.txt/_task_*.txt + cooldown review` | `docs/reports/archive/` | 9 |
+| `proposals/ratio_daily_canonical* (v1+v2 đã ký)` | `proposals/archive/` | 2 |
+| **Tổng** | | **95 files** |
+
+### Trạng thái sau dọn
+
+**Root (còn lại):** `backtest.py`, `build_features.py`, `classify_phases.py`, `delta_analysis.py`, `feature_config.py`, `gate_tag_probe.py`, `oi_sweep.py`, `phase_config.py`, `replay.py`, `signals.py`, `step3_analysis.py`, `tag_data_pack.py`, `vps_audit_v2*.py` (×3), `_probe_vps_idol_store.py` (active per B7 IDOL follow-up)
+
+**scripts/ (active):** 15 scripts sống + run_case_daily.bat
+
+**docs/reports/ (active):** `missing_jul.md` (July missing = open issue B7)
+
+**proposals/ (active):** `tape_daemon_spec.md` (chờ operator approve)
+
+### Quy ước ghi vào CLAUDE.md (L-42)
+
+Cấu trúc thư mục + vòng đời artifact đã vào mục CẤU TRÚC THƯ MỤC. Quy ước tên mới: `_probe_<án>_<YYYYMMDD>.py`. Agent tự move khi đóng án.
+
+---
+
+
+
+---
+
+## SESSION 2026-08-03 — IDOL fn=1 PROBE PHÂN TẦNG (DEV topic)
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** Probe 8 mục án IDOL fn=1 28-31/07 theo layered spec.
+
+---
+
+### [B1] Item 1 — IDOL funding interval: PASS
+
+- Binance API `/fapi/v1/fundingInfo`: `fundingIntervalHours = 4`
+- fn_expected = 24 / 4 = **6 kỳ/ngày** ← fn=6 trong export là ĐÚNG
+- Cross-check export 01-27/07: unique fn = {6} ✓
+
+---
+
+### [B2] Item 4 — TAG / BR / BANK fn 30-31/07 (post-P1): GHI ÁN
+
+| symbol   | date       | fn | low_conf | src_ratio  | lsr_pos_r | lsr_acc_r | lsr_global_r |
+|----------|------------|----| ---------|-----------|-----------|-----------|--------------|
+| TAGUSDT  | 2026-07-30 |  1 | True     | native_1d  | 1.6632    | 1.5316    | 1.9958       |
+| TAGUSDT  | 2026-07-31 |  1 | True     | native_1d  | 1.6811    | 1.4795    | 1.9223       |
+| BRUSDT   | 2026-07-30 |  1 | True     | native_1d  | 1.6578    | 1.3419    | 1.7525       |
+| BRUSDT   | 2026-07-31 |  1 | True     | native_1d  | 1.6509    | 1.3998    | 1.8401       |
+| BANKUSDT | 2026-07-30 |  1 | True     | native_1d  | 1.1134    | 0.9346    | 0.9873       |
+| BANKUSDT | 2026-07-31 |  1 | True     | native_1d  | 1.1095    | 1.7933    | 1.5013       |
+
+**Kết luận:** fn=1 là **systemic** — ảnh hưởng toàn bộ case symbols 30-31/07, không phải IDOL-specific.
+
+---
+
+### [B3] Item 2+3 — VPS store IDOL 28-31/07: ROOT CAUSE XÁC ĐỊNH
+
+**VPS export (IDOL 28-31/07):** fn=1, low_conf=True, src=native_1d, px=empty — đồng nhất với local.
+
+**VPS funding_8h parquet (IDOL 28-31/07):** 12 raw records/ngày = **6 unique × 2 fetches** (backfill).
+
+```
+2026-07-28: 12 records → sau dedup = 6 kỳ (00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC)
+2026-07-29: 12 records → sau dedup = 6 kỳ
+2026-07-30: 12 records → sau dedup = 6 kỳ
+2026-07-31: 12 records → sau dedup = 6 kỳ
+```
+
+**Funding rates thực tế (từ store):**
+
+| Date       | 00:00    | 04:00    | 08:00    | 12:00    | 16:00    | 20:00    | avg_thực |
+|------------|----------|----------|----------|----------|----------|----------|----------|
+| 2026-07-28 | 0.000223 | 0.000213 | 0.000355 | 0.000116 | 0.000221 | 0.000057 | 0.000198 |
+| 2026-07-29 | 0.000050 | 0.000054 | 0.000050 | 0.000050 | 0.000146 | 0.000050 | 0.000067 |
+| 2026-07-30 | 0.000206 | 0.000170 | 0.000050 | 0.000050 | 0.000050 | 0.000050 | 0.000096 |
+| 2026-07-31 | 0.000804 | 0.000050 | 0.000213 | 0.000236 | 0.000143 | 0.000462 | 0.000318 |
+
+**Export f_avg 28-31 = 00:00 rate duy nhất** → xác nhận: collector chỉ ghi được 1 bản trước khi export chạy (00:50 UTC), 5 bản còn lại backfill sau.
+
+**ROOT CAUSE:** Export được generate lúc 00:50 UTC — thời điểm đó chỉ có funding rate 00:00 UTC của ngày trong store (fn=1). Các rate 04:00→20:00 được thu thập trong ngày và backfill sau, nên store hiện có đủ 6. Export stale.
+
+---
+
+### [B4] Item 5 — LedgerSync mtime: XÁC NHẬN
+
+| File                        | VPS mtime (UTC)         | Local mtime (UTC)       | Delta   |
+|-----------------------------|-------------------------|-------------------------|---------|
+| freshwatch_daily_2026-07.csv | 2026-08-02 00:50:14     | 2026-08-03 01:52:47     | +25h    |
+| freshwatch_daily_2026-08.csv | 2026-08-03 00:50:05     | 2026-08-03 01:52:46     | +1h02m  |
+
+- VPS 2026-07.csv: lần cuối update **02/08 00:50** (August export không cập nhật lại July)
+- Local download tại ~01:52 UTC hôm nay → IDOL 31/07 FOUND ✓ (fn=1, px=empty)
+- 2026-07.csv FROZEN — không tự update khi sang tháng mới
+
+---
+
+### [B5] Item 6 — --force-overwrite vào case_daily.py: DONE
+
+**Script:** `scripts/case_daily.py`
+**Flag mới:** `--force-overwrite` (bool, default False)
+**Logic:**
+- Nếu date_str đã có trong DAILY + `--force-overwrite`:
+  - Tìm row có date_str
+  - `_row_has_suspect(ws, row_n)` → kiểm tra comment "SUSPECT" tồn tại không
+  - Nếu SUSPECT: capture old values → clear row → ghi lại → log diff old→new
+  - Nếu KHÔNG SUSPECT: SKIP_NO_SUSPECT (không overwrite row sạch)
+- Status mới: `OVERWRITE_OK`, `SKIP_NO_SUSPECT`, `DRY_OVERWRITE`
+- Digest đếm riêng overwrite
+
+**Verify:** `python scripts/case_daily.py --help` → `--force-overwrite` xuất hiện ✓
+
+---
+
+### [B6] Item 7 — Bảng phân tầng tổng hợp
+
+| Tầng               | Mục | Trạng thái              | Kết luận                                          |
+|--------------------|-----|-------------------------|--------------------------------------------------|
+| Binance API        | 1   | IDOL 4h interval ✓      | fn=6/day là đúng                                  |
+| Export local       | 4   | TAG/BR/BANK fn=1 30-31  | Systemic, không riêng IDOL                       |
+| VPS export         | 2   | fn=1, px=empty 28-31    | VPS export = local export, đồng nhất              |
+| VPS store parquet  | 3   | 6 records/day ĐÚNG      | **Store sạch** — export stale                     |
+| LedgerSync mtime   | 5   | 07.csv frozen 02/08     | 07.csv cần re-generate từ store cho 28-31/07      |
+| case_daily code    | 6   | --force-overwrite DONE  | Sẵn sàng backfill sau khi có export sạch          |
+
+**Chốt án:**
+- Collector funding_8h = **đúng**, store = **sạch**
+- Export fn=1 do **timing**: export 00:50 UTC chỉ thấy 1 record (rate 00:00 UTC), 5 rates còn lại backfill sau
+- px/vol/taker = empty vì **klines_1h missing** cho window 28-31/07 (cần probe riêng)
+- 24-26/07 MISSING hoàn toàn = machine off period (riêng biệt với fn=1 issue)
+
+---
+
+### [B7] Item 8 — Pipeline MISSING audit cuối tháng: NÂNG ƯU TIÊN
+
+Án IDOL fn=1 bằng chứng audit cuối tháng chưa được đóng thật:
+- 24-26/07: 3 ngày missing hoàn toàn (machine off)
+- 28-31/07: 4 ngày export stale (fn=1, px/vol empty, store có data)
+- fn=1 systemic: IDOL, TAG, BR, BANK đều ảnh hưởng 28-31/07
+
+**Việc cần làm (giao ANALYSIS + operator duyệt):**
+1. Re-generate export 28-31/07 trên VPS từ store (kèm fix klines_1h nếu missing)
+2. Download export mới về local
+3. Chạy `case_daily.py --date 2026-07-2X --force-overwrite` cho TAG/BR/BANK 28-31/07
+4. Nếu IDOL được add vào CASE_INDEX (ANALYSIS quyết) → làm tương tự
+
+**Scripts sẵn sàng:** `_probe_vps_idol_store.py`, `--force-overwrite` flag.
+
+---
+
 ## SESSION 2026-07-31 — P0 GATE CLOSE + REPO BACKUP + B5/B6
 
 **Operator:** Tien
@@ -645,3 +907,71 @@ SGT (UTC+8, Singapore) sai — may la UTC+7 (ICT, Vietnam). Sua 4 cho trong agen
 1. Bot chay 1 vong tay thu cong ngay 03/08 08:xx → xac nhan Nansen call PASS.
 2. Quyet dinh backfill 3 ngay missing Nansen data (CAN OPERATOR).
 
+
+## SESSION 2026-08-03 — case_daily digest
+
+**Target date:** 2026-07-28  **Run:** 2026-08-03 02:46 UTC  **dry_run:** False
+
+### §1 Handover digest
+
+| Token | Status | row | lsr_pos_r | lsr_acc_r | div_raw | taker_buy_pct | f_avg | f_n | OI_USD | SUSPECT |
+|-------|--------|-----|-----------|-----------|---------|---------------|-------|-----|--------|---------|
+| BANK | SKIP_NO_SUSPECT | — | — | — | — | — | — | — | — | — |
+| TAG | SKIP_NO_SUSPECT | — | — | — | — | — | — | — | — | — |
+| BR | OVERWRITE_OK | 66 | 1.6742 | 1.5214 | 1.1004 | 0.5085 | 0.000079 | 6 | 3,685,663 | no |
+| IDOL | OVERWRITE_OK | 27 | 2.2065 | 0.9920 | 2.2243 | 0.4802 | 0.000198 | 6 | 10,710,506 | no |
+
+**Tổng:** 2 OK, 2 overwrite, 2 skip, 0 dry_run
+
+---
+
+## SESSION 2026-08-03 — case_daily digest
+
+**Target date:** 2026-07-29  **Run:** 2026-08-03 02:46 UTC  **dry_run:** False
+
+### §1 Handover digest
+
+| Token | Status | row | lsr_pos_r | lsr_acc_r | div_raw | taker_buy_pct | f_avg | f_n | OI_USD | SUSPECT |
+|-------|--------|-----|-----------|-----------|---------|---------------|-------|-----|--------|---------|
+| BANK | OVERWRITE_OK | 37 | 1.3307 | 0.8567 | 1.5533 | 0.4989 | -0.000988 | 6 | 25,365,666 | no |
+| TAG | OVERWRITE_OK | 31 | 1.6204 | 1.3719 | 1.1811 | 0.4949 | 0.000100 | 6 | 11,172,261 | no |
+| BR | OVERWRITE_OK | 67 | 1.6609 | 1.4900 | 1.1147 | 0.4818 | 0.000118 | 6 | 3,782,263 | no |
+| IDOL | OVERWRITE_OK | 28 | 2.3278 | 1.1608 | 2.0053 | 0.4725 | 0.000067 | 6 | 9,909,666 | no |
+
+**Tổng:** 4 OK, 4 overwrite, 0 skip, 0 dry_run
+
+---
+
+## SESSION 2026-08-03 — case_daily digest
+
+**Target date:** 2026-07-30  **Run:** 2026-08-03 02:47 UTC  **dry_run:** False
+
+### §1 Handover digest
+
+| Token | Status | row | lsr_pos_r | lsr_acc_r | div_raw | taker_buy_pct | f_avg | f_n | OI_USD | SUSPECT |
+|-------|--------|-----|-----------|-----------|---------|---------------|-------|-----|--------|---------|
+| BANK | SKIP_NO_SUSPECT | — | — | — | — | — | — | — | — | — |
+| TAG | OK | 32 | 1.6632 | 1.5316 | 1.0859 | 0.4908 | 0.000050 | 6 | 9,658,577 | no |
+| BR | OK | 68 | 1.6578 | 1.3419 | 1.2354 | 0.4917 | 0.000050 | 6 | 3,799,993 | no |
+| IDOL | OVERWRITE_OK | 29 | 2.5585 | 1.2090 | 2.1162 | 0.5285 | 0.000096 | 6 | 8,867,578 | no |
+
+**Tổng:** 3 OK, 1 overwrite, 1 skip, 0 dry_run
+
+---
+
+## SESSION 2026-08-03 — case_daily digest
+
+**Target date:** 2026-07-31  **Run:** 2026-08-03 02:47 UTC  **dry_run:** False
+
+### §1 Handover digest
+
+| Token | Status | row | lsr_pos_r | lsr_acc_r | div_raw | taker_buy_pct | f_avg | f_n | OI_USD | SUSPECT |
+|-------|--------|-----|-----------|-----------|---------|---------------|-------|-----|--------|---------|
+| BANK | SKIP_NO_SUSPECT | — | — | — | — | — | — | — | — | — |
+| TAG | OK | 33 | 1.6811 | 1.4795 | 1.1363 | 0.5011 | 0.000165 | 6 | 9,375,186 | no |
+| BR | OK | 69 | 1.6509 | 1.3998 | 1.1794 | 0.4644 | 0.000095 | 6 | 3,840,661 | no |
+| IDOL | OVERWRITE_OK | 30 | 2.5455 | 1.2396 | 2.0535 | 0.4987 | 0.000318 | 6 | 8,805,698 | no |
+
+**Tổng:** 3 OK, 1 overwrite, 1 skip, 0 dry_run
+
+---

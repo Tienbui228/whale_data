@@ -35,6 +35,7 @@ from typing import Optional
 
 import openpyxl
 from openpyxl.comments import Comment
+from openpyxl.cell.cell import MergedCell
 import typer
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -181,6 +182,9 @@ def _append_daily_row(
     for c in range(1, max_col + 1):
         cell = ws.cell(row_n, c)
 
+        if isinstance(cell, MergedCell):
+            continue
+
         if c in FORMULA_COLS:
             cell.value = formulas.get(c)
             continue
@@ -228,6 +232,36 @@ def _compute_digest_metrics(csv_row: dict, fn_suspect: bool) -> dict:
     }
 
 
+def _row_has_suspect(ws, row_n: int) -> bool:
+    """Return True if any cell in row_n has a Comment containing 'SUSPECT'."""
+    for c in range(1, (ws.max_column or 41) + 1):
+        cell = ws.cell(row_n, c)
+        if cell.comment and "SUSPECT" in str(cell.comment.text):
+            return True
+    return False
+
+
+def _row_fn_low(ws, row_n: int) -> bool:
+    """Return True if col 9 (funding_n) is None or < 6 — stale row needing overwrite."""
+    fn_val = ws.cell(row_n, 9).value
+    return fn_val is None or (isinstance(fn_val, (int, float)) and fn_val < 6)
+
+
+def _read_row_values(ws, row_n: int) -> dict[int, object]:
+    """Read raw cell values for all columns in row_n."""
+    return {c: ws.cell(row_n, c).value for c in range(1, (ws.max_column or 41) + 1)}
+
+
+def _clear_row(ws, row_n: int) -> None:
+    """Clear values and comments from all cells in row_n."""
+    for c in range(1, (ws.max_column or 41) + 1):
+        cell = ws.cell(row_n, c)
+        if isinstance(cell, MergedCell):
+            continue
+        cell.value = None
+        cell.comment = None
+
+
 app = typer.Typer(add_completion=False)
 
 
@@ -235,6 +269,11 @@ app = typer.Typer(add_completion=False)
 def main(
     date: Optional[str] = typer.Option(None, help="YYYY-MM-DD (default=yesterday UTC)"),
     dry_run: bool = typer.Option(False, help="Preview only — no xlsx writes"),
+    force_overwrite: bool = typer.Option(
+        False,
+        "--force-overwrite",
+        help="Overwrite existing rows that have SUSPECT comment; log old→new to agent_log.",
+    ),
 ) -> None:
     """E5: Auto-append DAILY row for all OPEN cases + §1 digest to agent_log."""
     import structlog
@@ -288,9 +327,34 @@ def main(
         existing_dates, last_row = _existing_dates_and_max_row(ws)
 
         if date_str in existing_dates:
-            log.info("case_daily_skip_existing", token=token, date=date_str)
-            results.append({"token": token, "status": "SKIP_EXISTS", "date": date_str})
-            continue
+            if force_overwrite:
+                # Find the row number for date_str
+                overwrite_row = None
+                for r in range(FIRST_DATA_ROW, ws.max_row + 1):
+                    if ws.cell(r, 1).value == date_str:
+                        overwrite_row = r
+                        break
+                if overwrite_row and (_row_has_suspect(ws, overwrite_row) or _row_fn_low(ws, overwrite_row)):
+                    log.info("case_daily_overwrite_suspect", token=token, date=date_str, row=overwrite_row)
+                    # Capture old values for audit log
+                    old_vals = _read_row_values(ws, overwrite_row)
+                    # Fall through to write logic below with row_n = overwrite_row
+                    row_n = overwrite_row
+                    _clear_row(ws, row_n)
+                    # Inject sentinel so the write logic runs
+                    _overwrite_mode = True
+                    _old_vals_for_log = old_vals
+                else:
+                    log.info("case_daily_skip_no_suspect", token=token, date=date_str)
+                    results.append({"token": token, "status": "SKIP_NO_SUSPECT", "date": date_str})
+                    continue
+            else:
+                log.info("case_daily_skip_existing", token=token, date=date_str)
+                results.append({"token": token, "status": "SKIP_EXISTS", "date": date_str})
+                continue
+        else:
+            _overwrite_mode = False
+            _old_vals_for_log = {}
 
         csv_row = export_rows.get(sym)
         if csv_row is None:
@@ -311,32 +375,50 @@ def main(
         if fn_suspect:
             log.info("case_daily_fn_suspect", token=token, fn_n=fn_n, low_conf=low_conf, src_ratio=src_ratio)
 
-        row_n = last_row + 1
+        if not _overwrite_mode:
+            row_n = last_row + 1
 
         if not dry_run:
             _append_daily_row(ws, row_n, csv_row, fn_suspect, fn_n, src_ratio)
             try:
                 wb.save(str(xlsx_path))
-                log.info("case_daily_saved", token=token, row=row_n, date=date_str)
-                status = "OK"
+                if _overwrite_mode:
+                    log.info("case_daily_overwrite_saved", token=token, row=row_n, date=date_str)
+                    status = "OVERWRITE_OK"
+                    # Build diff log for agent_log
+                    _diff_lines: list[str] = []
+                    for c, old_v in _old_vals_for_log.items():
+                        new_v = ws.cell(row_n, c).value
+                        if str(old_v) != str(new_v):
+                            _diff_lines.append(f"col{c}: {old_v!r} → {new_v!r}")
+                    if _diff_lines:
+                        log.info("case_daily_overwrite_diff", token=token, date=date_str, diffs=_diff_lines[:10])
+                else:
+                    log.info("case_daily_saved", token=token, row=row_n, date=date_str)
+                    status = "OK"
             except PermissionError:
                 # L-34: cấm silent-save sang tên khác — close xlsx rồi retry
                 raise RuntimeError(
                     f"[L-34] File locked — close xlsx then retry: {xlsx_path}"
                 ) from None
         else:
-            status = "DRY_RUN"
-            log.info("case_daily_dry_run", token=token, would_append_row=row_n, date=date_str)
+            if _overwrite_mode:
+                status = "DRY_OVERWRITE"
+                log.info("case_daily_dry_overwrite", token=token, row=row_n, date=date_str, has_suspect=True)
+            else:
+                status = "DRY_RUN"
+                log.info("case_daily_dry_run", token=token, would_append_row=row_n, date=date_str)
 
         metrics = _compute_digest_metrics(csv_row, fn_suspect)
         results.append({
-            "token":      token,
-            "status":     status,
-            "date":       date_str,
-            "row":        row_n,
-            "metrics":    metrics,
-            "fn_suspect": fn_suspect,
-            "fn_n":       fn_n,
+            "token":         token,
+            "status":        status,
+            "date":          date_str,
+            "row":           row_n,
+            "metrics":       metrics,
+            "fn_suspect":    fn_suspect,
+            "fn_n":          fn_n,
+            "overwrite_mode": _overwrite_mode,
         })
 
     # §1 digest
@@ -363,9 +445,14 @@ def main(
         )
 
     digest_lines.append("")
-    digest_lines.append(f"**Tổng:** {sum(1 for r in results if r.get('status','').startswith('OK'))} OK, "
-                        f"{sum(1 for r in results if 'SKIP' in r.get('status',''))} skip, "
-                        f"{sum(1 for r in results if 'DRY' in r.get('status',''))} dry_run")
+    n_ok       = sum(1 for r in results if r.get("status", "") in ("OK", "OVERWRITE_OK"))
+    n_skip     = sum(1 for r in results if "SKIP" in r.get("status", ""))
+    n_dry      = sum(1 for r in results if "DRY" in r.get("status", ""))
+    n_overwrite = sum(1 for r in results if r.get("status", "") == "OVERWRITE_OK")
+    overwrite_note = f", {n_overwrite} overwrite" if n_overwrite else ""
+    digest_lines.append(
+        f"**Tổng:** {n_ok} OK{overwrite_note}, {n_skip} skip, {n_dry} dry_run"
+    )
     digest_lines.append("")
     digest_lines.append("---")
 
