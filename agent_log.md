@@ -2,6 +2,69 @@
 
 ---
 
+## SESSION 2026-08-04 — TUT EXIT SCORECARD + IDOL K1/K6 + ALPHA CRON VERIFY
+
+**Operator:** Tien  
+**Agent model:** claude-sonnet-4-6  
+**Nhiệm vụ:** (1) TUT exit scorecard E1-E5, funding native verify, spec gap proposals. (2) IDOL K1/K6 forensic từ freshwatch. (3) Alpha cron verify 02:00 UTC 05/08 (chain polling pending).
+
+---
+
+### [TUT-E1] TUT EXIT PROBE — Daily 20/07→03/08
+
+- Probe: `_probe_tut_exit_20260804.py` → output: `docs/reports/_probe_tut_exit_20260804.md`
+- Data: 12 rows trong window (gap 24-26/07), fn=6 toàn bộ
+- **Funding: PINNED 0.00005 MỌI NGÀY** (f_min=f_max=f_avg=0.00005) — Velo aggregate
+- Cờ bật: 1/5 (Cờ⑤ PX+OI-: 2 ngày — 29/07 px+5.6%/OI-1.4% và 03/08 px+14.1%/OI-3.3%)
+- Cờ① GHẾ RỜI: 21.0% drop (cần 25%, thiếu 4.0%)
+- Cờ② gLSR=1.685, slope=0.877 (âm nhưng còn xa 1.0)
+- px_max window: 0.01986 ngày 03/08 (+44.8% từ 20/07)
+
+### [TUT-E2] TUT FUNDING EXIT — Binance native verify
+
+- Probe: `_probe_tut_funding_exit_20260804.py` → output: `docs/reports/_probe_tut_funding_exit_20260804.md`
+- VPS store `funding_8h` decode: TUT chạy **4h funding cycle** (Binance đổi, không phải 8h chuẩn)
+- Coverage VPS: 01/08 00:00 → 04/08 00:00 UTC, 19 periods, tất cả 0.00005
+- Binance fapi real-time 03-04/08: tất cả 0.00005 (đến 04/08 04:00 UTC)
+- **Cờ (e) CHƯA BUNG** — funding_rate = min cap toàn bộ
+- Venue-scope: Velo agg và Binance native ĐỒNG THUẬN — không có divergence
+- Hourly klines TUT (fapi): px hiện tại 04/08 04:00 UTC = **0.02232** (+12.4% vs ref 0.01986)
+- px_max 01/08→04/08 04:00: **0.02242** (04/08 04:00 UTC)
+- exit_price ref: PENDING (burst chưa xảy ra)
+- T+24h/T+72h: PENDING
+
+### [TUT-E3] SPEC GAP PROPOSALS
+
+- Proposal: `proposals/spec_gap_exit_flags_20260804.md`
+- **Gap [A]**: pos_r sập "khuôn BANK" không có ngưỡng số + "đỉnh cấu trúc" không định nghĩa
+  - Đề xuất: threshold_pct=25, peak_window_days=14, confirmation_days=2
+- **Gap [B]**: cờ (e) funding — thiếu venue-scope (fapi vs velo) + ngưỡng "bùng" chưa định lượng
+  - Phát hiện thêm: Binance đổi TUT sang 4h cycle — freshwatch không track interval
+  - Đề xuất: burst = max(3× rolling_14d_avg, 15bps), canonical venue = fapi native
+
+### [TUT-E4] CASE_TUT.xlsx
+
+- CASE_TUT.xlsx CHƯA TỒN TẠI trong docs/case_files/
+- **CẦN OPERATOR**: tạo file theo template CASE_BANK.xlsx
+- OUTCOME sheet ref (F section trong probe report): T0=09/07, exit_tell=04/08 PENDING, T+7=11/08, T+14=18/08, T+30=03/09
+
+### [IDOL-K1] IDOL K1/K6 PROBE
+
+- Probe: `_probe_idol_k1_k6_20260804.py` → output: `docs/reports/_probe_idol_k1_k6_20260804.md`
+- **L-41 FAIL**: fn=1 ngày 03/08 (partial day, px_avg missing)
+- Funding regime 02-03/08: PINNED (0.000050 cả hai ngày)
+- OI: 9.84M→10.48M→9.50M (01-02-03/08)
+- gLSR: 1.489→1.144→1.636 (01-02-03/08) — bật lại 03/08 sau sụp 02/08 = bất thường
+- Suppressor dùng 02/08 px=0.02312: CHƯA THỎA (>ngưỡng 0.02138)
+- Round-trip từ build zone MID 0.01605: +44.1%
+
+### [ALPHA-VERIFY] Chain polling 02:00 UTC 05/08
+
+- PENDING — wakeup 3600s đặt mỗi giờ
+- Lần kiểm gần nhất: VPS time 04:11 UTC 04/08 → còn ~22h
+
+---
+
 ## SESSION 2026-08-03 — IDOL ANALYSIS POST-BACKFILL + CASE UPDATE
 
 **Operator:** Tien  
