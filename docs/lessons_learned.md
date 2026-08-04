@@ -1,7 +1,7 @@
 # Lessons Learned — FreshWatch
 
 > Auto-generated tu CASE_INDEX.xlsx sheet LESSONS. Khong edit file nay truc tiep.
-> Lan sinh: 2026-08-03 · Tong: 41 bai hoc (L-01 → L-41)
+> Lan sinh: 2026-08-04 · Tong: 42 bai hoc (L-01 → L-42)
 
 ## L-01 [2026-07-30] BR (+BAS,TUT,BANK) — `dinh luat` · DA VAO master plan §1 #9
 OI-floor = so vi the MM: ratio doc tai day OI trong so cao (retail da roi); pos_r nhich tai nen chet = tin hieu som dam; ratio tai OI-peak phai chiet khau
@@ -22,14 +22,17 @@ concentration_shift KHONG ban tren BANK = negative case HOP LE: level-type (div 
 ## L-05 [2026-07-30] BR + BTW — `dinh luat` · DA CO trong §1 #1 (rule dao dau M2) — BR cung co them
 Withdrawal gan dinh = MOI on-chain (bang chung #2, vong doi 4 thang truy tron: rut-tai-dinh -> phan phoi -> redeposit). Moi withdrawal cua nhom MM-BAIT phai doc ngo toi da
 *Hanh dong tiep: token dinh bai nay vao SO DEN trong MM_BOOK*
+*Pham vi / Cross-ref: [Pham vi L-42]: Loai B/C — withdrawal gan dinh = bang chung phan phoi THAT. Loai A — withdrawal la dao cu, khong vao bang chung; chuyen sang doc theo L-42.*
 
 ## L-06 [2026-07-28] TAG (Gate probe) — `rule` · GHI NHAN — dua vao khung E4/M4 khi cham diem transfer
 Inventory != gom: toan khoi luong (V_venue vs $withdrawal) phan xu duoc 'vua mua' hay 'hang co san'. Book sieu mong = BAI DO — withdrawal khoi bai do = khoa float, khong doc thanh 'chuyen di ban'
 *Hanh dong tiep: nguong nhap: V_14d >= 2x withdrawal moi coi la 'co the gom tren venue'*
+*Pham vi / Cross-ref: [Pham vi L-42]: Ap dung khi kho xac dinh duoc Loai B hoac C. Loai A — V_venue phan xu 'mua' hay 'hang co san' khong con nghia (hang KHONG thuoc MM); chuyen sang L-42.*
 
 ## L-07 [2026-07-30] BR (operator) — `thesis` · GHI NHAN — khuon moi, BR la test song
 Pump-to-distribute: kho len san = CHUAN BI DAN, khong xa tai gia hien tai — can leg keo tao hype truoc. Khong long theo khi KHONG co ghe big-long de di cung (div ~1) = vi tri con moi. Dieu kien tien quyet cua leg that: crowd long phai bi rua
 *Hanh dong tiep: neu BR keo that: doi chieu chot 1+2 co bao truoc khong*
+*Pham vi / Cross-ref: [Pham vi L-42]: Ap dung khi xac nhan Loai B/C (kho that). Loai A — kho len san = dao cu chuan bi dan, khong phai leg keo; endgame la round-trip tra no. Doc L-42 truoc L-07.*
 
 ## L-08 [2026-07-30] BANK/BTW/ESPORTS/BR — `process` · DA VAO tracker v1.1 (§I + MM_BOOK)
 MM profile la NUA verdict — moi MM danh mot kieu (bid-walk kien nhan / bait-withdrawal / squeeze muc tieu). Gan MM_ID can >=3 van tay trung; gan au te hon khong gan
@@ -166,3 +169,8 @@ Chốt chặn cấp máy có blast radius cấp máy — trước khi gạt côn
 ## L-41 [2026-08-03] IDOL/TAG/BR/BANK fn=1 28-31/07 (timing bug) — `rule` · DA SUA — cron + script fixed 03/08; 28-31/07 re-generated
 Job aggregate ngay phai chay SAU khi ngay dong tron. Export mid-day = so non co he thong: tai 00:50 UTC IDOL chi co 1/6 ky funding trong store, 5 ky con lai (04:00/08:00/12:00/16:00/20:00) collect trong ngay nhung export da freeze voi fn=1. Fix: cron export 01:20 UTC D+1 (sau khi D dong + buffer 1h20); loai D khoi default_dates() range; them --force-regen de re-generate khi can.
 *Hanh dong tiep: verify vong tu nhien: export sang 04/08 phai ra fn=6 cho ngay 03/08. Neu PASS → dong an. Quy tac: khong bao gio generate D truoc 00:05 UTC D+1.*
+
+## L-42 [2026-08-04] IDOL/TAG/BANK — kho spot MM: phan loai theo SO HUU truoc khi doc on-chain — `rule` · OPERATOR KY 04/08
+Kho spot cua MM khong tu no la 'hang se xa' — ham muc tieu phu thuoc SO HUU kho. Phan 3 loai TRUOC khi doc bat ky transfer nao: LOAI A (kho MUON tu team — khong gia tri voi MM; P&L 100% o perp; moi deposit/withdrawal la THONG DIEP nhung nguoi doc on-chain, khong phai bang chung; endgame kho round-trip nguyen dai; dong co DAP GIA hau campaign de mua lai tra no kho — canh kho hoi day o day). LOAI B (kho unlock/dau tu — so huu that, cost thap; doanh thu phai hien thuc hoa; neo lich unlock; deposit-len-san <=48h sau ngay unlock = tell hang nhat — BANK 17/07->18/07). LOAI C (tu bo tien mua tai cho — conviction that, cost basis = floor co nghia, khong deadline; loai duy nhat 'di cung thuyen' duoc). Tell phan loai: (1) NGUON kho — deployer/team wallet = nghi A; vesting contract dung lich = B; gom le nhieu nguon dai han = C; (2) nhip voi lich unlock; (3) hanh vi kho HAU DINH — round-trip nguyen = A, ban that = B; (4) do 'dien' cua transfer — chia may deu + Sent=0 trung bay = tin hieu re, nghi A. Bang chung: IDOL 3 man mot dao cu (8% vao 03-05/07 -> rut 273M staging shape 13 vi -> redeposit 102M) trong khi ket that o perp ~$1.2-1.8M; TAG 90B round-trip May->Jul; BANK chan unlock ban that (lai A+B); AKE 'perp vol 70x spot — spot la can gat'.
+*Hanh dong tiep: (a) cot mm_archetype{A/B/C/lai} + kho_nguon cham hoi to 12 case + case song; (b) BR kho 6% trace nguon = viec phan loai dau tien — neu team wallet -> Loai A -> cu flush gLSR 03/08 doc lai duoi anh sang 'dao cu man hai'; (c) moi dong PnL spot chua co sell-side xac nhan ha nhan 'unverified inference' (IDOL 111M, BANK $12-28M); (d) K3 sell-side Pancake IDOL van la test phan xu — PENDING.*
+*Pham vi / Cross-ref: Ap dung cho tat ca case co transfer on-chain. Cap nhat cho L-05/L-06/L-07: scope = Loai B/C; Loai A doc theo L-42 truoc.*

@@ -1,6 +1,7 @@
-# MM-ECON Calibration v0 → v0.1
+# MM-ECON Calibration v0 → v0.1 (+ L-42 archetype patch)
 **Date:** 04/08/2026 | **Status:** ANALYSIS ONLY — operator ký trước khi dùng vào live signal
 **Nguồn:** freshwatch_daily (probe `_probe_mm_econ_data.py`, `_probe_ake_data_20260804.py`)
+**L-42 update (04/08):** thêm cột mm_archetype + kho_nguon; hạ nhãn PnL spot → "unverified inference"
 
 ---
 
@@ -163,16 +164,26 @@
 
 ## M1 Summary Table
 
-| Token | Subtype | OI_mult | MM_mult | px_mult | gLSR_base | Status |
-|-------|---------|---------|---------|---------|-----------|--------|
-| BANK | SHORT-WASH | 6.15× | 5.00× | 10.7× | 0.39–0.46 | RESOLVED |
-| ESPORTS | 1-WHALE | 2.27× | 2.18× | 2.4× | 2.84–4.01 | RESOLVED (Jul wave) |
-| IDOL | NORMAL | 2.73× | ~1.57× | 1.6× | 0.92–1.05 | PARTIAL (crowd_flush 02/08) |
-| CLO | SHORT-WASH | ABSTAIN | ABSTAIN | 2.5× | 0.82–0.87 | ABSTAIN (T0 unconf.) |
-| TUT | CROWD-LONG | LIVE | PENDING | 1.37×* | 1.77–1.99 | LIVE |
-| AKE | SHORT-WASH-XL | 23.55× (live) | PENDING | 12.2×* | 2.97–3.26 | LIVE |
+> **Ghi chú L-42:** cột mm_archetype (A/B/C/lai) theo phân loại kho ownership (L-42).
+> MM_mult và PnL chỉ có nghĩa từ perp (Exit_VWAP / Build_VWAP).
+> PnL spot bất kỳ = **unverified inference** cho đến khi có sell-side xác nhận on-chain.
+
+| Token | Subtype | OI_mult | MM_mult | px_mult | gLSR_base | mm_archetype | kho_nguon | Status |
+|-------|---------|---------|---------|---------|-----------|-------------|-----------|--------|
+| BANK | SHORT-WASH | 6.15× | 5.00× | 10.7× | 0.39–0.46 | **lai A+B** | B: unlock 17/07→deposit 18/07; A: nghi team wallet residual | RESOLVED |
+| ESPORTS | 1-WHALE | 2.27× | 2.18× | 2.4× | 2.84–4.01 | PENDING | PENDING nguồn kho | RESOLVED (Jul wave) |
+| IDOL | NORMAL | 2.73× | ~1.57× | 1.6× | 0.92–1.05 | **A** | deployer/team wallet (3 màn đạo cụ: 8%→rút 273M→redeposit 102M) | PARTIAL (crowd_flush 02/08) |
+| CLO | SHORT-WASH | ABSTAIN | ABSTAIN | 2.5× | 0.82–0.87 | PENDING | PENDING nguồn kho | ABSTAIN (T0 unconf.) |
+| TUT | CROWD-LONG | LIVE | PENDING | 1.37×* | 1.77–1.99 | PENDING | PENDING nguồn kho | LIVE |
+| AKE | SHORT-WASH-XL | 23.55× (live) | PENDING | 12.2×* | 2.97–3.26 | PENDING | PENDING nguồn kho | LIVE |
 
 *Tính đến 04/08/2026
+
+**Hệ quả mm_archetype với việc đọc M2:**
+- IDOL mm_archetype=**A** → mọi dòng M2 của IDOL đọc là THÔNG ĐIỆP; PnL spot 111M USDT = **unverified inference** (sell-side chưa xác nhận).
+- BANK mm_archetype=**lai A+B** → dòng B (unlock) đọc bình thường; dòng A (nghi team wallet) = THÔNG ĐIỆP. PnL spot $12–28M = **unverified inference**.
+- TAG mm_archetype=**nghi A** (90B round-trip May→Jul) → toàn bộ M2 TAG = THÔNG ĐIỆP, chưa vào bằng chứng.
+- BR kho 6%: PENDING operator → chưa phân loại, đọc on-chain BR cần chờ.
 
 ---
 
@@ -388,16 +399,28 @@ Bước 6: Declare RESOLVED. OI tiếp tục tăng sau đây = CROWD TRAP, khôn
 
 ## Extended M2: Hồ Sơ Nhanh (chưa resolved)
 
-| Token | OI_mult (min→max) | gLSR range | pos_r range | Subtype est. | Notes |
-|-------|------------------|-----------|-------------|-------------|-------|
-| BAS | 8.42× | 0.78–3.19 | 1.15–3.20 | MIXED | OI đang decay (gLSR flip Long) |
-| BTW | 10.93× | 0.54–2.17 | 0.89–2.00 | SHORT-WASH? | Pha 2 suppressor L-05; OI 14.27M live |
-| TAG | 2.34× | 0.69–2.16 | 1.29–2.52 | NORMAL-SHORT | Live, OI 11.83M; gLSR 2.07 (flip?) |
-| POWER | 1.70× | 1.92–4.90 | 1.01–1.53 | 1-WHALE | gLSR cực cao 4.0+; OI stable |
-| BASED | 2.59× | 0.90–3.00 | 1.21–1.73 | MIXED | Campaign mờ, no clear T0 |
-| BULLA | 3.89× | 1.21–6.19 | 1.56–1.98 | CROWD-LONG-HIGH | gLSR 6.0+ rare; OI 9.21M |
+| Token | OI_mult (min→max) | gLSR range | pos_r range | Subtype est. | mm_archetype | Notes |
+|-------|------------------|-----------|-------------|-------------|-------------|-------|
+| BAS | 8.42× | 0.78–3.19 | 1.15–3.20 | MIXED | PENDING | OI đang decay (gLSR flip Long) |
+| BTW | 10.93× | 0.54–2.17 | 0.89–2.00 | SHORT-WASH? | PENDING | Pha 2 suppressor L-05; OI 14.27M live |
+| TAG | 2.34× | 0.69–2.16 | 1.29–2.52 | NORMAL-SHORT | **nghi A** | 90B round-trip May→Jul; M2 TAG = THÔNG ĐIỆP đến khi operator xác nhận |
+| POWER | 1.70× | 1.92–4.90 | 1.01–1.53 | 1-WHALE | PENDING | gLSR cực cao 4.0+; OI stable |
+| BASED | 2.59× | 0.90–3.00 | 1.21–1.73 | MIXED | PENDING | Campaign mờ, no clear T0 |
+| BULLA | 3.89× | 1.21–6.19 | 1.56–1.98 | CROWD-LONG-HIGH | PENDING | gLSR 6.0+ rare; OI 9.21M |
+
+---
+
+## PENDING Live (cập nhật 04/08/2026)
+
+| Task | Ưu tiên |
+|------|---------|
+| K3 sell-side Pancake IDOL: test phân xử thesis đạo cụ — IDOL mm_archetype=A còn tranh luận cho đến khi sell-side xác nhận | CAO |
+| BR kho 6% trace nguồn: operator feed → phân loại A/B/C → đọc lại flush gLSR 03/08 dưới ánh sáng đúng | CAO |
+| BANK T+30 verdict 09/08: px thực + outcome check | MED |
+| AKE / TUT RESOLVED khi có L-26 trigger → cập nhật M1 + calibrate exit clock | MED |
+| mm_archetype chấm hồi tố đủ 12 case: cần operator confirm nguồn kho cho ESPORTS/CLO/BAS/BTW/POWER/BASED/BULLA | LOW |
 
 ---
 
 *Proposal này cần operator ký để dùng vào live signal. Hiện trạng: calibration internal, research only.*
-*Next update khi AKE hoặc TUT resolved (L-26 trigger).*
+*Next update khi AKE hoặc TUT resolved (L-26 trigger) hoặc khi K3 IDOL sell-side có kết quả.*
