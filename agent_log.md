@@ -1891,3 +1891,106 @@ Cỡ BLUAI (~?) thì volume này đáp ứng L-29 pattern (vol_alpha/vol_perp >3
 | Z1: 13 ví đích + txhash | Operator/Nansen |
 
 ---
+
+## SESSION 2026-08-04 (cont.) — BANK H4/J4 + TAG CHỐT CANH T1-T6
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** (1) BANK H4: update CASE_BANK.xlsx machine columns CASE+OUTCOME. (2) BANK J4: update UNLOCK/EVENTS/OUTCOME với June + unlock cadence. (3) TAG T1-T6: chốt canh sau 5 ngày mù + append CASE_TAG.xlsx DAILY.
+
+---
+
+### [BANK-H4] CASE_BANK.xlsx — CASE + OUTCOME Update (machine)
+
+- Task: `_task_update_case_bank_h4_20260804.py`
+- CASE sheet: appended 17 rows machine-verified (px_max spike, VWAP, MM multiple, gLSR flip, pos_r window, funding PnL) — amber header fill
+- OUTCOME sheet: T+14 (24/07) filled — px=0.28339, ret=+651.1%, OI=51.12M, gLSR=0.500
+- drawup_drawdown T+14: `spike_high=0.672 ngày 27/07 (wick); close_max=0.419; daily_avg_max=0.376 (26/07)`
+- px_max correction NOTE row added dưới T+60
+
+### [BANK-J4] CASE_BANK.xlsx — UNLOCK + EVENTS + OUTCOME (June + unlock cadence)
+
+- Task: `_task_update_case_bank_j4_20260804.py`
+- UNLOCK sheet: 6 PENDING fields updated + calendar block 3 rows (17/06 PAST, 17/07 MATCHED, 17/08 UPCOMING)
+- EVENTS sheet: +4 rows (mini-pump 05-08/06, unlock 17/06 quiet, unlock 17/07 matched exit, px_max spike 27/07)
+- Key J3 findings:
+  - 17/06 ±3d: QUIET (vol 1.6M). Sau unlock: px -8% đến 22/06. Pattern: đè-sau-unlock (chưa campaign)
+  - acc_r=0.952 ngày 13/06 (T-27 trước ignition 10/07) — "tell T-11 (29/06)" là calib artifact, không phải thực
+  - Funding pin từ ≥01/05; breaks: 08/06 (23.4bps×3), 11/06 (14.7bps), 28/06 (25.3bps), 29/06 (8.2bps)
+  - 17/07 unlock TRONG đỉnh markup → MM XẢ T+2→T+4 sau unlock (khuôn L-12 XÁC NHẬN)
+  - Fingerprint #5 REJECT cho Jun: dữ liệu không đủ (06/06 mini-pump T-11 trước 17/06 nhưng vol/funding ≠ full campaign)
+
+---
+
+### [TAG-T1] Chuỗi TAGUSDT 28/07→03/08
+
+- Probe: `_probe_tag_chot_canh_20260804.py` → output: `docs/reports/_probe_tag_chot_canh_20260804.md`
+- **Funding interval: 4h** (fn=6=24h/ngày, khớp TUT). Khám phá mới cho TAG.
+- 27/07: fn=1 = SUSPECT (partial). 30/07: DAILY xlsx thiếu dữ liệu — đã fix task.
+
+| date | px | ret_3d | gLSR | pos_r | OI_M | OI_pos | key |
+|------|------|--------|------|------:|-----:|--------|-----|
+| 28/07 | 0.001330 | +28.3% | 1.298 | 1.595 | 12.2 | PEAK(87%) | spike vol 11.9M, gLSR sập từ 1.71 |
+| 29/07 | 0.001206 | +8.6% | 1.813 | 1.620 | 11.2 | PEAK(73%) | INVALIDATE đầu tiên FIRE |
+| 30/07 | 0.001099 | -2.5% | 1.996 | 1.663 | 9.7 | MID(53%) | gLSR đạt 2.00; px -8.9% |
+| 31/07 | 0.001356 | +1.9% | 1.922 | 1.681 | 9.4 | MID(49%) | px bật +23%; INVALIDATE FIRE lại |
+| 01/08 | 0.001387 | +15.0% | 1.616 | 1.591 | 12.6 | PEAK(92%) | f_avg=25.5bps BURST; Cờ③ FIRE |
+| 02/08 | 0.001387 | +26.2% | 1.956 | 1.286 | 13.2 | PEAK(100%) | OI đỉnh toàn bộ range; pos_r sập 1.29 |
+| 03/08 | 0.001260 | -7.1% | 2.067 | 1.350 | 11.8 | PEAK(82%) | gLSR>2.0; ret3d=-7.1% → v1 stop |
+
+### [TAG-T2] INVALIDATE Composite
+
+- v1 (ret_3d≥0 AND gLSR>1.5): **ĐÃ BẮN 29/07**. Tiếp: 31/07, 01/08, 02/08. Ngưng: 03/08 (ret_3d=-7.1%)
+- v2 (ret_3d≥-2% AND gLSR>1.5): Tương đương v1 (30/07 ret_3d=-2.5% → KHÔNG thỏa v2 cũng)
+- **Spec-gap A**: ngưỡng 'giá ngừng rơi' chưa số cứng trong spec → ghi proposals nếu operator muốn ký
+
+### [TAG-T3] 3 Chốt Phụ
+
+- ①Tái-ARM flush ≤1.1: gLSR min từ 01/07 = 0.6875 (11/07) — ĐÃ QUA. Hiện gLSR=2.067 (leo tiếp). Cần flush lại trước tái-ARM.
+- ②Hard floor px<0.00072: px min 01/07=0.000488 (08/07) = trước case open. Forward: px hiện 0.001260 = +75% vs floor → CHƯA chạm
+- ③pos_r vs OI-floor ref 1.661: pos_r hiện 1.350 **ĐÃ PHÁ FLOOR** (L-01 bearish). OI PEAK(82%) → crowd LONG bị trap (Định luật #9)
+
+### [TAG-T4] Bài học BANK/IDOL
+
+- L-26 crowd flush: max drop 3d = -19.7% (31/07→03/08). Cần -30%. **CHƯA ĐỦ.**
+- Exit cờ scorecard: ①pos_r -22.9% (cần 25%: CHƯA) ②gLSR=2.067 (sai chiều) ③01/08 f_avg=25.5bps ✓ ④drawdown -9.2% từ peak (chưa ≥15%) ⑤31/07 px+23.4%/OI-2.9% ✓ — **2/5 cờ bật**
+- Suppressor §5: 27/07 (-18.8% từ peak) và 30/07 (-20.8%) = SUPPRESSED window
+
+### [TAG-T5] Unlock TAG
+
+- NO_DATA lần 2. Nguồn thử: Tokenomist, CryptoRank, BscScan → không có local access.
+- Đã biết: 13-16/07 có 7% supply rút từ 5 ví mới — CÓ THỂ là unlock event, chưa xác nhận.
+- **CẦN OPERATOR**: tra TokenUnlocks.app hoặc CryptoRank; đối chiếu 08/07 crash (-25%) và 13/07 7%-rút
+
+### [TAG-T6] Verdict
+
+**INVALIDATE đã bắn (29/07), tạm ngưng 03/08. Không có crowd flush. State hiện tại: WATCH-cooling.**
+
+Đề xuất:
+- Option A (đóng án): nếu operator chọn ngưỡng ret_3d≥0, ngày 31/07 đã đủ (ret_3d=+2%, gLSR=1.92)
+- Option B (watch 2d): 31/07 + 01/08 cả 2 fire → đủ nếu spec cần 2d liên tiếp. 03/08 v1 stop.
+
+### [TAG-DAILY] CASE_TAG.xlsx DAILY Fix + Append
+
+- Task: `_task_append_tag_daily_20260804.py`
+- Row 32 (30/07): A32:L32 merged — unmerge tự động, ghi px=0.001099, vol=3.48M, OI=9.66M ✓
+- Rows 34-36 appended: 01/08 (px=0.001387, OI=12.57M, gLSR=1.616), 02/08 (px=0.001387, OI=13.20M, gLSR=1.956), 03/08 (px=0.001260, OI=11.83M, gLSR=2.067)
+- Formulas: ret_1d (col C), oi_vs_med14 (col M), div_raw (col R), div_avg3 (col S), glsr_slope_5d (col T), pos_r_delta (col U), acc_r_delta (col V)
+- Saved: CASE_TAG.xlsx max_row=36
+
+---
+
+### PENDING (cập nhật 04/08 TAG session)
+
+| Việc | Chặn bởi |
+|------|----------|
+| Verify run tự nhiên 02:00 UTC 05/08 (2026-08-04 data) | Cron 05/08 |
+| TAG T5 unlock schedule | Operator (TokenUnlocks.app / CryptoRank) |
+| TAG verdict operator ký (CASE sheet col verdict) | Operator — không phải agent |
+| TAG on-chain cluster 6 ví (redeposit?) | Operator/Nansen |
+| TAG txhash $26M vs $17.9M double-count | Operator verify |
+| TAG OUTCOME sheet (T+dates chưa thiết lập) | Operator |
+| IDOL 03/08 DAILY append | fn=6 verify 04/08 01:20 UTC |
+| BLUAI case analysis (alpha vol L-29 pattern) | — |
+
+---
