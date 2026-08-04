@@ -2050,6 +2050,41 @@ gLSR flush ≤1.1 ĐÃ XẢY RA nhưng cơ chế không phải organic flush. po
 
 ---
 
+### [MM-ECON-v0] Calibration 6 Campaign
+
+- Probes: `_probe_mm_econ_data.py`, `_probe_ake_data_20260804.py`
+- Output: `docs/proposals/mm_econ_v0.md`
+- **6 campaigns phân tích: BANK, IDOL, ESPORTS, TUT, CLO, AKE**
+- AKE symbol FIX: freshwatch dùng AKEUSDT (không phải AKUSDT)
+
+**M1 — Kết quả:**
+
+| Token | Subtype | OI_mult | MM_mult | Status |
+|-------|---------|---------|---------|--------|
+| BANK | SHORT-WASH | 6.15× | 5.00× | RESOLVED |
+| ESPORTS | 1-WHALE | 2.27× (Jul wave) | 2.18× | RESOLVED |
+| IDOL | NORMAL | 2.73× | ~1.57× | PARTIAL (crowd_flush 02/08) |
+| CLO | SHORT-WASH | ABSTAIN | ABSTAIN | T0 chưa xác nhận |
+| TUT | CROWD-LONG | LIVE +28% B | PENDING | D+13, chưa ignite |
+| AKE | SHORT-WASH-XL | 23.55× (live) | PENDING | OI 33-47M, chưa L-26 |
+
+**M2:** gLSR_base phân loại subtype OK (ranges tách rõ). MM/OI ratio: 3 điểm (0.58–0.96) — chưa đủ fit.
+
+**M3:** Exit clock: BANK D+10 (ΔOI/B=+516%), IDOL D+11 (+173%), ESPORTS D+4 (+?). SHORT-WASH nhanh và mạnh hơn NORMAL.
+
+**M4:** TUT D+13, ΔOI/B=+28% — rất thấp, chưa ignite. Trigger cần: vol >100M/ngày.
+
+**M5 — v0.1 fixes:**
+1. OI_base = cuối pre-ignition calm (≠ OI_min overall nếu OI_min xảy ra pre-campaign)
+2. Subtype classification bằng gLSR_base + pos_r_base tại T0
+3. Exit_VWAP window = [L-26 day -1, L-26 day] vol-weighted
+4. Post-exit OI tăng = crowd FOMO, KHÔNG phải MM position
+5. MM_mult confidence: HIGH (BANK, ESPORTS), MED (IDOL), ABSTAIN (others)
+
+**Cần thêm:** ≥5 RESOLVED cases để fit MM_mult vs OI_mult regression per subtype.
+
+---
+
 ### PENDING (cập nhật 04/08 TAG session)
 
 | Việc | Chặn bởi |
