@@ -2,6 +2,76 @@
 
 ---
 
+## SESSION 2026-08-04 (B) — CLO THESIS TEST + COOLDOWN VERDICT
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** C1-C6: chuỗi 22/07→04/08, săn 2 campaign lịch sử, PnL framework, đồng hồ overhang, verdict cooldown quá hạn, nháp lesson.
+
+---
+
+### [CLO-C1] SERIES 22/07→04/08
+
+- freshwatch: 53 rows (06/05→03/08). dist_wall/lsr_dist: ABSENT toàn bộ (không verify được)
+- gLSR ANOMALY: 2.6483 ngày 03/08 — cao nhất toàn bộ lịch sử 53 rows, vượt cả đỉnh Campaign 2 (2.297 ngày 06/25)
+- gLSR min trong cooldown: 0.8232 ngày 07/21 (3 lần breach 0.85: 07/08, 07/12, 07/21)
+- pos_r declining: 0.905 (07/22) → 0.854 (08/03), dưới 1.0 toàn bộ post-campaign
+- acc_r rising: 1.109 (07/22) → 2.894 (08/03) — by account rất long
+- OI stable: 4.084M→4.633M, không build không xả hết
+- vol dead: 1.7-8M/day (vs 40-80M peak campaign)
+- Funding floor 0.00005; 04/08 bắt đầu tick lên avg=0.00048 (theo dõi)
+- L-26: KHÔNG trigger trong Campaign 3 exit — exit theo price dump (07/13 -15.1%), không phải pos_r flush
+- Điều kiện tái xét cũ: 2/4 met (OI partial, 5d pin yes), 1 PENDING (on-chain), 1 FAIL (pos_r<1.0)
+
+### [CLO-C2] CAMPAIGN LỊCH SỬ — F1 PASS
+
+- F1: **3 campaigns confirmed** (Apr, May-Jun, Jul)
+- Campaign 1 (Apr): build~0.070, H=0.173, px_mult~2.3×, f_peak=0.00086, OI N/A
+- Campaign 2 (May-Jun): build~0.067, H=0.304, px_mult~3.5×, f_peak=0.00090, OI_peak est. 10.954M
+- Campaign 3 (Jul): build_VWAP=0.143, exit_VWAP=0.256, px_mult=1.79×, B_T0=3.944M, OI_peak=10.394M (2.63×)
+- ΔOI/B peak C3: D+6 = +1.64× (vs BANK D+10 5.16×, IDOL D+11 1.73×) — fast campaign
+- Pattern: gLSR dip <0.85 tại PEAK mỗi campaign (SHORT-WASH cấu trúc)
+
+### [CLO-C3] PnL FRAMEWORK — F3 PENDING
+
+- Perp proxy (K_perp ~3.1M tokens): PnL = ~$349k (proxy), + $6.6k funding = **~$356k**
+- Spot: K_spot PENDING OPERATOR — ô chờ O1-O2
+- F2 structural: YES — perp return +78.6%/token xuất hiện mọi campaign
+- F3: PENDING K_spot confirm
+
+### [CLO-C4] OVERHANG CLOCK
+
+- DEX BSC pool chính (0x8d23): liq=$1.3M, vol24h=$4.2M. CEX depth $16k
+- Absorb capacity thực (stealthy): $120k-$220k/ngày
+- Đồng hồ: K=5M tokens → 2.8-5.2 tuần; K=10M → 5.7-10.4 tuần; K=20M → 11-21 tuần
+- Terminus: on-chain balance near-zero OR capitulation OR Campaign 4 launch confirm
+
+### [CLO-C5] VERDICT — CHƯA KÝ (2 phương án chờ operator)
+
+- (a) NO_SETUP/WATCH-nhạt: chờ pos_r+vol+funding burst → Campaign 4 setup
+- (b) STAND_ASIDE có đồng hồ: K pending, overhang chặn upside, bounce = distribution sell
+- Khác biệt hành vi: bounce 0.15-0.18 → (a) LONG setup; (b) sell window
+
+### [CLO-C6] LESSON DRAFT
+
+- Draft ready: "đơn vị hạch toán MM = CAMPAIGN, archetype C-vỏ-A-ruột"
+- Chờ operator F3 confirm + ký L-4x number
+
+### PENDING OPERATOR CLO
+
+| # | Mục | Ảnh hưởng |
+|---|---|---|
+| O1 | K_spot tokens kho CLO | C3 PnL, C4 đồng hồ |
+| O2 | Giá mua spot trung bình | F2, F3 |
+| O3 | On-chain balance hiện tại | C4 terminus |
+| O4 | Verdict (a) hay (b) | CASE update |
+| O5 | F3 confirm | Lesson L-4x append |
+
+- Output: `docs/proposals/clo_thesis_20260804.md` (frozen, 645 lines)
+- Probe: `scripts/archive/_probe_clo_full_20260804.py`
+
+---
+
 ## SESSION 2026-08-04 — TUT EXIT SCORECARD + IDOL K1/K6 + ALPHA CRON VERIFY
 
 **Operator:** Tien  
