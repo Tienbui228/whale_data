@@ -107,13 +107,14 @@ Quy ước vòng đời artifact:
 \- **PROBE STORE TRƯỚC** khi fetch external API: ssh VPS → kiểm tra partition tồn tại + log collector → chỉ fetch ngoài khi (b) cần lịch sử trước ngày store bắt đầu (one-off backfill, có nhãn) hoặc (c) data type không có trong store (ghi DEV task). KHÔNG lập đường collect song song ad-hoc.
 \- **tape one-shot vào cron → cùng luật fail-behavior**: missing-dependency → ERROR + exit≠0 + alert (cấm no-op êm). (L-44)
 
-## FACTS ĐÃ CHỐT — ALPHA / BSC (03/08/2026)
+## FACTS ĐÃ CHỐT — ALPHA COLLECTOR V2 (04/08/2026)
 
-\- **Alpha daily store:** `raw/spot_klines_1d` venue=`binance_spot_bsc`, collector `collect_alpha_spot.py`, cron 01:10 UTC, chạy từ 31/07. **Price/vol only, taker=ABSTAIN** (klines[9]==klines[5] broken). Forward-only — không backfill tự động.
-\- **alpha_bsc_symbols.txt:** CHƯA TỒN TẠI trên VPS (03/08 confirm). Collector chạy 31/07→03/08 nhưng no-op (`alpha_config_missing`). DEV task cần: chạy `python3 scripts/archive/_probe_alpha_taker.py --write-config` trên VPS để sinh file.
-\- **IDOL (ALPHA_223) = no_spot Binance:** vĩnh viễn không vào `alpha_bsc_symbols.txt` (pipeline chỉ cover token CÓ Binance Spot listing). Alpha vol IDOL = one-off fetch từ `/bapi/defi/v1/public/alpha-trade/klines?symbol=ALPHA_223USDT` — đã backfill 01/06→03/08 vào CASE_IDOL DAILY (c42). KHÔNG lập lại.
-\- **Binance Alpha public endpoint:** `https://www.binance.com/bapi/defi/v1/public/alpha-trade/klines` (public, no auth). `/bapi/alpha/v1/...` bị Cloudflare WAF block (khác endpoint). alpha_id lookup: xem `D:\Check onchain fresh wallets\_calib_alpha_daily.py` CALIB_ALPHA dict.
-\- **spot_klines_1d store bắt đầu từ 30/07** — không có lịch sử trước đó trên VPS hiện tại.
-\- **venue=binance_spot_bsc = DEAD CODE (03/08 confirmed, điều tra lại 04/08):** collect_alpha_spot.py gọi `api.binance.com/api/v3/klines` (standard spot) — KHÔNG phải bapi/alpha. BSC_BROKEN=0 trong 2 probe gốc (10 fallback VPS + 50 perp-universe, agent_log 2026-08-03 AP2) VÀ trong u50_universe full scan (04/08): 137 BSC symbols → BSC_BROKEN=0, NO_SPOT=84, OK-spot=51. alpha_bsc_symbols.txt sẽ rỗng nếu generate. Collector no-op. KHÔNG backfill, KHÔNG tạo collector song song. Phân nhánh thiết kế (B1 vs B2) chờ operator ký — xem proposals/alpha_collector_redesign_20260804.md.
-\- **freshwatch_symbols.txt MISSING trên VPS** — data/config/ chưa tồn tại. Probe alpha_taker phải dùng fallback 10 symbols.
+\- **Alpha daily store:** `data/raw/spot_klines_1d` venue=`binance_alpha`, collector `scripts/collect_alpha_daily.py`, cron 02:00 UTC. **Price/vol only, taker=ABSTAIN** (klines[9]==klines[5] trên bapi/alpha). Forward-only từ 04/08.
+\- **Backfill 04/08:** 126/137 symbols OK, 27,055 candles, 481 date partitions. Lịch sử từ 2025-06-11 (IDOL), 2025-10-21 (BLUAI), 2025-06-18 (TAG). 11 symbols fail = no klines data. Không dedup issue.
+\- **collect_alpha_spot.py RETIRED 04/08:** archived → `scripts/archive/collect_alpha_spot_RETIRED_20260804.py`. Cron 01:10 UTC phải xóa trên VPS. venue=binance_spot_bsc = 0 rows toàn bộ store (no data to migrate).
+\- **Alpha endpoint:** `https://www.binance.com/bapi/defi/v1/public/alpha-trade/klines` (public, no auth). Token-list: `/bapi/defi/v1/public/wallet-direct/buw/wallet/cex/alpha/all/token/list` (659 tokens, 485 BSC indexed). Source code khai quật: `D:\Check onchain fresh wallets\_s3_v2.py`.
+\- **Alpha ID resolver:** `data/config/alpha_id_map.json` — 137/137 u50 resolved (FAIL=0). Regenerate: `python scripts/archive/_task_write_alpha_config_20260804.py`. CALIB_ALPHA dict 12 entries đã RETIRE (verify 12/12 khớp).
+\- **IDOL (ALPHA_223):** có trong resolver map. Alpha klines từ 2025-06-11 (420 nến). Alpha vol IDOL trong CASE_IDOL DAILY = one-off (c42) — store pipeline forward-fill từ 04/08.
+\- **spot_klines_1d local store:** không liên quan VPS — local machine chạy backfill + daily. Nếu VPS cần: SCP parquet sang hoặc chạy backfill script lại.
+\- **freshwatch_symbols.txt MISSING trên VPS** — data/config/ chưa tồn tại. Probe alpha_taker dùng fallback 10 symbols (không ảnh hưởng collector mới).
 

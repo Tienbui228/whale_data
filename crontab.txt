@@ -11,6 +11,13 @@
 # W2: daily-period metrics (00:35 UTC — 35 min after 1d candle closes at 00:00)
 35 0 * * * cd $WHALE_DATA_DIR && python scripts/collect_daily_metrics.py >> data/logs/$(date -u +\%Y-\%m-\%d)/collect_daily_metrics.log 2>&1
 
+# Daily spot klines (01:05 UTC — 65 min after 1d candle closes)
+5 1 * * * cd $WHALE_DATA_DIR && python scripts/collect_spot_daily.py >> data/logs/$(date -u +\%Y-\%m-\%d)/spot_daily.log 2>&1
+
+# Daily Alpha klines (02:00 UTC — after spot_daily, bapi endpoint separate)
+# Failure: ERROR + exit≠0 + Telegram alert (L-44). Missing alpha_id_map.json = fail.
+0 2 * * * cd $WHALE_DATA_DIR && python scripts/collect_alpha_daily.py >> data/logs/$(date -u +\%Y-\%m-\%d)/alpha_daily.log 2>&1
+
 # Daily: universe refresh (CoinGecko + exchangeInfo)
 30 1 * * * cd $WHALE_DATA_DIR && python scripts/collect_daily.py >> data/logs/$(date -u +\%Y-\%m-\%d)/daily.log 2>&1
 

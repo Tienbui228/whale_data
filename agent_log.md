@@ -1627,15 +1627,116 @@ AKE=ALPHA_331, CLO=ALPHA_429, ESPORTS=ALPHA_283, BTW=ALPHA_778, POWER=ALPHA_487,
 
 ---
 
-### PENDING (cập nhật 04/08)
+### PENDING (cập nhật 04/08 AP7)
 
 | Việc | Chặn bởi |
 |------|----------|
-| Token-list → resolver 84 contracts → alpha_id | **CẦN OPERATOR DevTools** (binance.com/alpha) |
-| Sau resolver: verify 12/12 CALIB_ALPHA khớp | Token-list |
-| Quyết định B1 vs B2 | Operator ký `proposals/alpha_collector_redesign_20260804.md` |
 | VPS cleanup: xóa `_probe_alpha_taker.py` khỏi VPS root | SSH |
-| DAILY 03/08 IDOL | Cron 04/08 01:20 UTC |
+| VPS: xóa cron 01:10 collect_alpha_spot.py | SSH + crontab |
+| VPS: cài cron 02:00 collect_alpha_daily.py | SSH + crontab |
+| VPS: sync backfill parquet hoặc chạy lại backfill trên VPS | SSH/SCP |
+| DAILY 03/08 IDOL | Stale fn=1 — append sau cron 04/08 |
+| Z1: 13 ví đích + txhash | Operator/Nansen |
+
+---
+
+## SESSION 2026-08-04 — Alpha Collector V2: B1 Build + Backfill
+
+**Operator:** Tien (ủy quyền kỹ thuật B1 04/08)  
+**Agent model:** claude-sonnet-4-6  
+**Nhiệm vụ:** Khai quật code có sẵn → build collector V2 → backfill toàn universe → B2 cleanup.
+
+---
+
+### [B1-1] Khai quật code có sẵn
+
+**Tìm trong `D:\Check onchain fresh wallets\`:**
+- `_s3_v2.py`: §A gọi `/bapi/defi/v1/public/wallet-direct/buw/wallet/cex/alpha/all/token/list` → index theo `contractAddress` (BSC chainId=56) → join u50_universe.bsc_address → lấy `alphaId`. §6 gọi `/bapi/defi/v1/public/alpha-trade/klines` với `limit=100`.
+- `_calib_alpha_daily.py`: CALIB_ALPHA dict 12 entries + `fetch_alpha_klines` function.
+- `u50_spot_alpha/BLUAI_spot_alpha.txt`: log mẫu, ALPHA_438, từ 04-16 → 07-24 (lịch sử sâu).
+- **Token-list endpoint tìm được:** `/bapi/defi/v1/public/wallet-direct/buw/wallet/cex/alpha/all/token/list` — không phải 10 path thử trước. **Blocker DevTools TAN**.
+
+---
+
+### [B1-2] Resolver — probe + config
+
+**Script:** `_probe_alpha_resolver_20260804.py` (archived)  
+**Kết quả:**
+- Token-list: 200 OK, 659 total, 485 BSC indexed
+- u50_universe coverage: **137/137** (FAIL=0)
+- CALIB_ALPHA: **12/12** PASS — dict retire
+- Klines depth: IDOL=420 nến (từ 2025-06-11), BLUAI=288 (2025-10-21), TAG=413 (2025-06-18)
+
+**Config ghi:** `data/config/alpha_id_map.json` — 137 entries. Script: `scripts/archive/_task_write_alpha_config_20260804.py`.
+
+---
+
+### [B1-3] Collector mới
+
+**Script:** `scripts/collect_alpha_daily.py` (sống, đã test)
+
+| Spec | Giá trị |
+|------|---------|
+| Endpoint | `/bapi/defi/v1/public/alpha-trade/klines` |
+| Symbol | `{alpha_id}USDT` (từ alpha_id_map.json) |
+| Venue | `binance_alpha` |
+| Taker | ABSTAIN (NaN + comment guard) |
+| Throttle | 0.4s/call, backoff 4xx/5xx (3 retry) |
+| Dedup | drop-and-replace binance_alpha rows cho cùng symbol+date |
+| No-trading | status=200 arr=[] → debug log, không count error |
+| Missing dep | alpha_id_map.json missing → ERROR + exit≠0 + Telegram (L-44) |
+| Cron | 02:00 UTC (crontab.txt đã cập nhật) |
+
+**Test run:** `python scripts/collect_alpha_daily.py` → 85/137 OK, 0 errors, 52 no-trading (normal).
+
+---
+
+### [B1-4] Backfill full history
+
+**Script:** `_task_backfill_alpha_20260804.py` (archived)  
+**Kết quả:**
+- 126/137 symbols OK (11 = no klines data on endpoint — no-data not error)
+- **27,055 candles** written
+- **481 date partitions** (2025-06-11 → 2026-08-03)
+- Dedup: partition write drops old binance_alpha rows for same symbol before append
+- Verify: 0 duplicates across toàn bộ 481 partitions
+
+---
+
+### [B2] Cleanup
+
+| Việc | Kết quả |
+|------|---------|
+| store scan venue=binance_spot_bsc | **0 rows** — clean, không cần migrate |
+| collect_alpha_spot.py | Archived → `scripts/archive/collect_alpha_spot_RETIRED_20260804.py` |
+| crontab.txt | Cập nhật: thêm spot_daily (01:05) + alpha_daily (02:00), ghi chú bỏ 01:10 |
+| proposals/alpha_collector_redesign_20260804.md | Archived SIGNED → proposals/archive/ |
+| CALIB_ALPHA dict | RETIRE — resolver tự động thay thế |
+| CLAUDE.md | Updated: ALPHA COLLECTOR V2 facts block |
+
+---
+
+### ANALYSIS NOTE (topic cần đọc khi có thời gian)
+
+Từ backfill BLUAI vol (dữ liệu trong u50_spot_alpha/BLUAI_spot_alpha.txt):
+- 07-16: **$129M** alpha vol
+- 07-20: **$83M**
+- 07-22: **$254M**
+
+Cỡ BLUAI (~?) thì volume này đáp ứng L-29 pattern (vol_alpha/vol_perp >3×). Cần chấm alpha_vol_suspect cột CASE_BLUAI khi mở case.
+
+---
+
+### PENDING (cập nhật 04/08 B1)
+
+| Việc | Chặn bởi |
+|------|----------|
+| VPS: xóa cron 01:10 collect_alpha_spot | SSH |
+| VPS: cài cron 02:00 collect_alpha_daily | SSH |
+| VPS: chạy `python _task_write_alpha_config_20260804.py` → rồi backfill hoặc SCP data | SSH |
+| Sáng hôm sau: kiểm run tự nhiên 02:00 log | Cron |
+| DAILY 03/08 IDOL append | Cron 04/08 chạy xong |
+| BLUAI case analysis (alpha vol 07-16 $129M, 07-22 $254M — L-29 pattern) | — |
 | Z1: 13 ví đích + txhash | Operator/Nansen |
 
 ---
