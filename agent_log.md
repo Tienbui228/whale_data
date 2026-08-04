@@ -63,6 +63,44 @@
 - PENDING — wakeup 3600s đặt mỗi giờ
 - Lần kiểm gần nhất: VPS time 04:11 UTC 04/08 → còn ~22h
 
+### [BANK-J2/J3] JUNE + UNLOCK CADENCE PROBE
+
+- Probe: `_probe_bank_june_unlock_20260804.py` → output: `docs/reports/_probe_bank_june_unlock_20260804.md`
+- freshwatch June BANK: chỉ có 6 rows (09/06, 13/06, 27-30/06). fapi 1d klines: đủ 01/06→30/06. FundingRate: 180 periods.
+
+**J3(a) — 17/06 ±3d unlock window:**
+- ABSTAIN pos_r/OI (freshwatch không có). Từ fapi: px đỉnh tháng 6 = 0.04584 (08/06) — xảy ra T-9 trước unlock, KHÔNG phải trong ±3d.
+- 17/06 chính ngày: vol **1.6M USDT** (cực thấp), funding ALL PIN, px 0.039-0.042. Unlock QUIET.
+- Sau 17/06: px giảm -8% đến 22/06 (0.042→0.039). Pattern = **đè sau unlock** (không phải kéo-trước).
+- Pump thực ra là 05-08/06 (T-12→T-9 so với unlock): bait flush 05/06 (low 0.022) → pump 50M+41M vol 07-08/06 → funding burst 08/06 (23.4bps). Đây là event ĐẦU THÁNG, không kèm unlock.
+
+**J3(b) — Ngày bất thường nhất tháng 6:**
+- **07/06**: vol 50.9M USDT (score #1), high 0.04458, body 42.5% (green candle lớn). Cùng cluster 06-08/06.
+- **08/06**: vol 41M, funding burst 17-23bps (3 periods liên tiếp HIGH) — lần "hở" đầu tiên chưa được ghi.
+- Hai ngày này = mini-pump + funding burst cluster, xảy ra T-10 trước unlock Jun.
+
+**J3(c) — Tín hiệu gom sớm hơn 29/06:**
+- acc_r = **0.901** ngày 09/06, **0.952** ngày 13/06 (ĐÃ CỰC CAO từ giữa tháng 6).
+- T-11 (29/06) trong hồ sơ = ngày tell signal theo calib window — KHÔNG phải ngày bắt đầu thực.
+- Lead-time thực của acc_r ≥ 29/06 - 13/06 = 16 ngày trước tell, hoặc T0 (10/07) - 09/06 ≈ **T-31**.
+- **SỬA lead-time**: "tell T-11" trong hồ sơ chỉ đúng cho calib window, acc_r đã cao từ ≥T-31.
+
+**J3(d) — Funding ghim từ khi nào:**
+- Data cũ nhất (01/05): đã PIN 0.000050 toàn bộ. Không xác định được ngày bắt đầu.
+- Breaks xác nhận: 08/06 (23.4bps), 11/06 (14.7bps), 28/06 (25.3bps), 29/06 (8.2bps), 02/07 (hồ sơ biết).
+- Breaks 08/06 và 11/06 = MỚI PHÁT HIỆN, chưa trong hồ sơ. Trùng với mini-pump cluster.
+
+**J3(e) — So khuôn Jun vs Jul: KHÔNG LẶP CẤU TRÚC**
+- Jun T0 (17/06) vol = 1.6M USDT; Jul T0 (17/07) vol = 1728M USDT → 1076× khác biệt.
+- Jun: không có markup quanh unlock. Jul: +65% đã xảy ra T-5→T0, rồi +165% T0→T+5.
+- Kết luận: **KHÔNG đủ bằng chứng cho Vân tay #5** từ dữ liệu Jun một mình. 17/07 là đơn điểm dữ liệu.
+- 17/08 = mốc rủi ro, KHÔNG mốc cơ hội. Token SUPPRESSED -93.6% từ spike, pos_r chưa reset.
+
+**J4: CASE_BANK.xlsx cập nhật:**
+- UNLOCK sheet: 6 fields PENDING → filled. Calendar 17/06/17/07/17/08 append.
+- EVENTS sheet: +4 rows (mini-pump 05-08/06, unlock 17/06, unlock 17/07, px_max spike correction).
+- OUTCOME sheet: T+14 drawup_drawdown ghi spike 0.672, px_max correction note thêm.
+
 ### [BANK-H1] VERIFY WINDOW 20-27/07 — kết quả probe
 
 - Probe: `_probe_bank_h1h2h3_20260804.py` → output: `docs/reports/_probe_bank_h1h2h3_20260804.md`
