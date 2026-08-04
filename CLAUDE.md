@@ -105,6 +105,7 @@ Quy ước vòng đời artifact:
 \- Lệnh bash phải TRẦN, một lệnh một call: không chain ;/&&, không pipe Out-String, không cd đầu lệnh (đứng sẵn repo root). Python luôn chạy từ file \_probe\_\*.py / \_task\_\*.py, cấm python -c. Output lớn ghi file.
 \- Tầng HUMAN không đổi: không ghi thresholds.yaml (đề xuất → proposals/), không điền verdict CASE sheet.
 \- **PROBE STORE TRƯỚC** khi fetch external API: ssh VPS → kiểm tra partition tồn tại + log collector → chỉ fetch ngoài khi (b) cần lịch sử trước ngày store bắt đầu (one-off backfill, có nhãn) hoặc (c) data type không có trong store (ghi DEV task). KHÔNG lập đường collect song song ad-hoc.
+\- **tape one-shot vào cron → cùng luật fail-behavior**: missing-dependency → ERROR + exit≠0 + alert (cấm no-op êm). (L-44)
 
 ## FACTS ĐÃ CHỐT — ALPHA / BSC (03/08/2026)
 
@@ -113,6 +114,6 @@ Quy ước vòng đời artifact:
 \- **IDOL (ALPHA_223) = no_spot Binance:** vĩnh viễn không vào `alpha_bsc_symbols.txt` (pipeline chỉ cover token CÓ Binance Spot listing). Alpha vol IDOL = one-off fetch từ `/bapi/defi/v1/public/alpha-trade/klines?symbol=ALPHA_223USDT` — đã backfill 01/06→03/08 vào CASE_IDOL DAILY (c42). KHÔNG lập lại.
 \- **Binance Alpha public endpoint:** `https://www.binance.com/bapi/defi/v1/public/alpha-trade/klines` (public, no auth). `/bapi/alpha/v1/...` bị Cloudflare WAF block (khác endpoint). alpha_id lookup: xem `D:\Check onchain fresh wallets\_calib_alpha_daily.py` CALIB_ALPHA dict.
 \- **spot_klines_1d store bắt đầu từ 30/07** — không có lịch sử trước đó trên VPS hiện tại.
-\- **venue=binance_spot_bsc = DEAD CODE (03/08 confirmed):** BSC_BROKEN taker = 0 trong 2 probe độc lập (10 symbols VPS + 50 symbols local). alpha_bsc_symbols.txt sẽ rỗng nếu generate. collect_alpha_spot.py không collect được gì cho universe hiện tại. KHÔNG backfill, KHÔNG tạo collector song song cho venue này.
+\- **venue=binance_spot_bsc = DEAD CODE (03/08 confirmed, điều tra lại 04/08):** collect_alpha_spot.py gọi `api.binance.com/api/v3/klines` (standard spot) — KHÔNG phải bapi/alpha. BSC_BROKEN=0 trong 2 probe gốc (10 fallback VPS + 50 perp-universe, agent_log 2026-08-03 AP2) VÀ trong u50_universe full scan (04/08): 137 BSC symbols → BSC_BROKEN=0, NO_SPOT=84, OK-spot=51. alpha_bsc_symbols.txt sẽ rỗng nếu generate. Collector no-op. KHÔNG backfill, KHÔNG tạo collector song song. Phân nhánh thiết kế (B1 vs B2) chờ operator ký — xem proposals/alpha_collector_redesign_20260804.md.
 \- **freshwatch_symbols.txt MISSING trên VPS** — data/config/ chưa tồn tại. Probe alpha_taker phải dùng fallback 10 symbols.
 

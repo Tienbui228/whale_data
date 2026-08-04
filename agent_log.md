@@ -1556,3 +1556,86 @@ BSC broken: 0
 | freshwatch_symbols.txt: tìm generator script | DEV |
 
 ---
+
+## SESSION 2026-08-04 — Alpha Collector Full Investigation (NHÁNH B)
+
+**Operator:** Tien  
+**Agent model:** claude-sonnet-4-6  
+**Nhiệm vụ:** 3-phần điều tra `collect_alpha_spot.py` — fetch path thật, u50 full scan, token-list endpoint discovery.
+
+---
+
+### [AP4] Phần 1 — Fetch path thật
+
+**Kết luận:** `collect_alpha_spot.py` import `SPOT_BASE = "https://api.binance.com"` và `SPOT_KLINES_PATH = "/api/v3/klines"` từ `collect_spot_daily.py` → gọi **standard Binance spot API**, không phải bapi/alpha.
+
+- URL thật: `https://api.binance.com/api/v3/klines` → **NHÁNH B** (không phải NHÁNH A)
+- Venue tag: `binance_spot_bsc` (label trong parquet)
+- Endpoint bapi alpha thật: `https://www.binance.com/bapi/defi/v1/public/alpha-trade/klines` — chưa được gọi
+- Nguồn "DEAD CODE" fact (agent_log AP2): đo BSC_BROKEN=0 trên 10 fallback VPS + 50 perp-universe symbols — **sample sai** (không phải u50_universe.csv)
+
+---
+
+### [AP5] Phần 2 — u50_universe full scan
+
+**Script:** `_probe_alpha_deadcode_20260803.py` (Part 2/3)  
+**Input:** `D:\Check onchain fresh wallets\u50_universe.csv` — 137 rows, tất cả có `bsc_address`
+
+**Kết quả scan toàn bộ 137 symbols → api.binance.com/api/v3/klines:**
+
+| Nhóm | Số lượng | Ý nghĩa |
+|------|---------|---------|
+| OK (spot hợp lệ) | 51 | collect_spot_daily đã phủ |
+| NO_SPOT (400) | **84** | không có Binance spot listing — MÙ hoàn toàn |
+| BSC_BROKEN (ratio ≥0.9985) | **0** | xác nhận lại từ sample đúng |
+| EMPTY/ZERO_VOL | 2 | — |
+
+**Kết luận mới so với AP2:** BSC_BROKEN=0 được xác nhận từ sample đúng (137 u50 symbols). 84 tokens NO_SPOT không có coverage từ bất kỳ automated source nào trong pipeline hiện tại.
+
+---
+
+### [AP6] Phần 3 — Token-list endpoint discovery + CALIB_ALPHA
+
+**IDOL ALPHA_223 endpoint confirm:**
+- `https://www.binance.com/bapi/defi/v1/public/alpha-trade/klines?symbol=ALPHA_223USDT&interval=1d&limit=2` → **200 OK**
+- Response: `{"data": [...]}` — klines[9]==klines[5] (taker=ABSTAIN, giống spot BSC)
+
+**10 candidate paths `/bapi/defi/v1/public/alpha-trade/<name>`:**
+
+| Path | Status |
+|------|--------|
+| token-list, tokens, symbol-list, symbols, config, info, tickers, list, allTokens, market | 404 tất cả |
+
+**WAF block confirm:** `/bapi/alpha/v1/public/alpha-trade/token-list` → 403 Forbidden (Cloudflare)
+
+**CALIB_ALPHA 12 entries (từ `_calib_alpha_daily.py`):**
+AKE=ALPHA_331, CLO=ALPHA_429, ESPORTS=ALPHA_283, BTW=ALPHA_778, POWER=ALPHA_487, BASED=ALPHA_837, BAS=ALPHA_328, TAG=ALPHA_233, IDOL=ALPHA_223, TUT=ALPHA_117, BULLA=ALPHA_240, BANK=ALPHA_146
+
+**Kết luận:** Token-list endpoint = 404 toàn bộ → không thể tự động map 84 contract → alpha_id → **CẦN OPERATOR DevTools** (bắt API call trên binance.com/alpha).
+
+---
+
+### [AP7] Design memo + CLAUDE.md update
+
+**Đã làm:**
+- `proposals/alpha_collector_redesign_20260804.md`: 2 options
+  - **B1**: Viết lại collector sang bapi/alpha (phủ 84 NO_SPOT, BLOCKING = token-list + resolver)
+  - **B2**: Xóa collect_alpha_spot.py (redundant với collect_spot_daily, không có giá trị)
+  - Khuyến nghị: B1 nếu 84 tokens là ưu tiên; B2 = dead code cleanup, có thể làm song song
+- `CLAUDE.md` updated: bổ sung pointer chain (AP2 sample sai, AP5 u50 full scan, thiết kế memo)
+- `docs/reports/_probe_alpha_deadcode_20260803.md`: output đầy đủ 137-symbol scan + path discovery
+
+---
+
+### PENDING (cập nhật 04/08)
+
+| Việc | Chặn bởi |
+|------|----------|
+| Token-list → resolver 84 contracts → alpha_id | **CẦN OPERATOR DevTools** (binance.com/alpha) |
+| Sau resolver: verify 12/12 CALIB_ALPHA khớp | Token-list |
+| Quyết định B1 vs B2 | Operator ký `proposals/alpha_collector_redesign_20260804.md` |
+| VPS cleanup: xóa `_probe_alpha_taker.py` khỏi VPS root | SSH |
+| DAILY 03/08 IDOL | Cron 04/08 01:20 UTC |
+| Z1: 13 ví đích + txhash | Operator/Nansen |
+
+---
