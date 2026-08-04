@@ -63,6 +63,32 @@
 - PENDING — wakeup 3600s đặt mỗi giờ
 - Lần kiểm gần nhất: VPS time 04:11 UTC 04/08 → còn ~22h
 
+### [BANK-H1] VERIFY WINDOW 20-27/07 — kết quả probe
+
+- Probe: `_probe_bank_h1h2h3_20260804.py` → output: `docs/reports/_probe_bank_h1h2h3_20260804.md`
+- **H1(a) px_max SỬA**: native 1h high = **0.67205 USDT** tại 27/07 06:00 UTC (spike wick, vol 642M base / 299.72M USDT). Trước đó dùng 0.37632 (= daily avg 26/07, KHÔNG PHẢI intraday high). Markup thực từ T0 = 0.67205/0.03773 - 1 = **+1681%** (spike basis) hoặc close-based 0.41958 = +1012%.
+- **H1(b)** pos_r flat 1.30-1.36 suốt 23-27/07 khi px tăng 0.247→0.376 (+42.7%): **XÁC NHẬN ĐÚNG**. Giai đoạn 20-22/07 có nhiễu (pos_r lên 1.477 khi px giảm 20/07→22/07).
+- **H1(c)** gLSR slope flip: đáy 20/07 tại 0.390, flip UP đầu 21/07 (tạm), flip UP bền vững **28/07** (sau spike 27/07). Giả thuyết "26-28/07" → đúng kết quả: **28/07**.
+- fn=1 ngày 27/07 trong freshwatch (partial day ghi nhận), 4h interval.
+
+### [BANK-H2] OI ACCUMULATE PRE + FUNDING PNL
+
+- OI PRE (25/06→09/07): **FLAT 4.31M→4.73M** (không xây được thêm trước markup)
+- OI nổ trong MARKUP: 4.47M (10/07) → 26.56M (19/07) = +22M trong 9 ngày
+- Funding PnL MM (gia thuyết 3-5M long, 27/06→19/07): **$26K→$43K TOTAL** (rất nhỏ vs giá)
+- Kết luận: PnL MM = giá 100%, funding income = phụ không đáng kể
+
+### [BANK-H3] VWAP EXIT + MM MULTIPLE THỰC
+
+- Build VWAP (25/06→12/07 daily approx): **0.03943 USDT**
+- Exit VWAP (19-21/07, 1h klines): **0.19710 USDT** (window pos_r sập)
+- MM multiple THỰC = 0.19710/0.03943 = **5.00× (+400%)**
+- Holder ret T0→daily_max (26/07 avg 0.37632): +897%
+- Holder ret T0→spike_high (27/07 0.67205): +1681%
+- Khoảng cách MM vs holder: **400% vs 897%** (dùng daily-max basis)
+- PnL ước tính: 4M USD position × 4.00× = **~$16M price PnL** + $35K funding ≈ **$16.0M net**
+- Note: exit window 21/07 có crash từ 0.27→0.13 (07:00-08:00 UTC), kéo VWAP xuống
+
 ---
 
 ## SESSION 2026-08-03 — IDOL ANALYSIS POST-BACKFILL + CASE UPDATE
