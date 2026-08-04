@@ -1980,6 +1980,76 @@ Cỡ BLUAI (~?) thì volume này đáp ứng L-29 pattern (vol_alpha/vol_perp >3
 
 ---
 
+---
+
+## SESSION 2026-08-04 (cont.) — BR CHỐT CANH R1-R6
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** BR chốt canh sau 5 ngày mù (28/07→04/08) + tape Gate + DEX/Alpha. ANALYSIS only.
+
+---
+
+### [BR-R1] Chuỗi 28/07→03/08
+
+- Probe: `_probe_br_chot_canh_20260804.py` + `_probe_br_part2.py` → `docs/reports/_probe_br_chot_canh_20260804.md`
+- **Funding interval: 4h** (giống TAG, TUT — fn=6=24h). Khám phá mới cho BR.
+- **25-26/07 MISSING** trong freshwatch (data gap).
+- OI floor canonical 3,782,263 USD — BR bám sát floor toàn chuỗi (×0.97-×1.16).
+
+| date | px | ret_1d | gLSR | pos_r | acc_r | OI_M | key |
+|------|------|--------|------|------:|------:|-----:|-----|
+| 27/07 | 0.15158 | — | 1.844 | 1.696 | 1.495 | 3.778 | at floor |
+| 28/07 | 0.14681 | -3.1% | **1.921** | 1.674 | 1.521 | 3.686 | below floor |
+| 29/07 | 0.14685 | +0.0% | **1.944** | 1.661 | 1.490 | 3.782 | PEAK gLSR; pos_r=ref |
+| 30/07 | 0.14731 | +0.3% | 1.753 | 1.658 | 1.342 | 3.800 | gLSR sập |
+| 31/07 | 0.15034 | +2.1% | 1.840 | 1.651 | 1.400 | 3.841 | vol thấp |
+| 01/08 | 0.15967 | +6.2% | 1.886 | 1.660 | 1.472 | 3.874 | px bật, funding 19bps |
+| 02/08 | 0.16079 | +0.7% | 1.637 | 1.665 | 1.330 | **4.383** | OI spike +15.9%, taker 42.6% |
+| 03/08 | 0.14537 | **-9.6%** | **1.079** | **1.709** | **0.841** | 3.761 | EVENT: gLSR CRASH, acc_r<1.0 |
+
+### [BR-R2] 4 Chốt Hồ Sơ
+
+- ① pos_r ≥3d tăng: **ĐỦ** (01-03/08: 1.660→1.665→1.709 = 3d). NHƯNG cơ chế = shorts-exit sau px−9.6%, không phải longs-build. acc_r cùng ngày CRASH 1.47→0.84.
+- ② gLSR crowd_flush: gLSR **1.0786 ≤1.1 ĐÃ QUA 03/08**. NHƯNG L-26 pos_r drop max 3d = **−2.1%** (cần −30%). Khoảng cách 27.9%. Verdict trần STAND_ASIDE CHƯA DỠ.
+- ③ Kho 6%: **PENDING OPERATOR**
+- ④ BTW pha 2: **CHƯA BẬT**. Biên độ px 31/07→03/08=10.6% (>7%), funding toàn dương (không có neg-div §5).
+- **L-26 5d**: gLSR ↓−44%, px ↓−1% net, pos_r ↑+2.1% — không có crowd_flush.
+
+**EVENT ĐÁNG CHÚ Ý 03/08:** gLSR crash 1.94→1.08 kèm acc_r 1.47→0.84. Giải mã: tài khoản nhỏ mở short mới, tài khoản lớn giữ long. Pattern divergence BTW pha 2 (whale long / retail short).
+
+### [BR-R3] Gate Tape
+
+**COLLECTOR CHƯA DEPLOY.** `tape_targets.json` không tồn tại local lẫn VPS. `spot_tape_1d` store = không có.
+- CẦN OPERATOR: deploy config + backfill từ 31/07 trên VPS.
+
+### [BR-R4] Alpha Layer (ALPHA_118)
+
+- Alpha vol avg: **$5,352/ngày** (NEGLIGIBLE — BR pool chết)
+- Max: $28,166 (19/07) — không gắn với OI cycle
+- alpha_vol/perp_vol ≈ 0.001-0.003 (so IDOL spike >0.5)
+- Không có controlled-fill pattern. **alpha_suspect = không bật.**
+
+### [BR-R5] So Khuôn IDOL
+
+**Verdict: BR giống BTW-trước-sập hơn IDOL-trước-ignite.**
+
+- Trajectory gLSR ngược chiều: IDOL = gLSR thấp rising (fuel). BR = gLSR cao rồi crash (fuel burned)
+- acc_r crash 0.84 (<1.0): đa số tài khoản đang short — không còn crowd fuel
+- Alpha pool chết (BR $5K/ngày vs IDOL có spike trước ignition)
+- 2+ tháng không ignite = BAIT-B pattern duy trì
+
+### [BR-R6] Unlock BR
+
+**NO_DATA lần 1.** Không có lịch unlock trong hồ sơ hoặc local data.
+- CẦN OPERATOR: TokenUnlocks.app BR → đối chiếu redeposit 6% kho (khuôn L-12: ≤48h sau unlock = xả)
+
+### [BR-VERDICT] State Hiện Tại: STAND_ASIDE
+
+gLSR flush ≤1.1 ĐÃ XẢY RA nhưng cơ chế không phải organic flush. pos_r crowd_flush L-26 CHƯA. Verdict trần giữ.
+
+---
+
 ### PENDING (cập nhật 04/08 TAG session)
 
 | Việc | Chặn bởi |
