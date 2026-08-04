@@ -1731,10 +1731,34 @@ Cỡ BLUAI (~?) thì volume này đáp ứng L-29 pattern (vol_alpha/vol_perp >3
 
 | Việc | Chặn bởi |
 |------|----------|
-| VPS: xóa cron 01:10 collect_alpha_spot | SSH |
-| VPS: cài cron 02:00 collect_alpha_daily | SSH |
-| VPS: chạy `python _task_write_alpha_config_20260804.py` → rồi backfill hoặc SCP data | SSH |
-| Sáng hôm sau: kiểm run tự nhiên 02:00 log | Cron |
+---
+
+### [B1-5] VPS Deploy + Verify (04/08 02:05 UTC)
+
+**Ba chân L-44:**
+
+| Chân | Kết quả |
+|------|---------|
+| crontab: gỡ 01:10 collect_alpha_spot / thêm 02:00 collect_alpha_daily | ✓ Done |
+| SCP alpha_id_map.json + collect_alpha_daily.py | ✓ Done |
+| Backfill VPS: 126/137 OK, 27,055 candles, 481 partitions | ✓ Khớp local |
+
+**Issue gặp:** Cron 02:00 UTC 04/08 fire → `ModuleNotFoundError: No module named 'whale_collector.alert'` (alert.py chưa có trên VPS). Fix: SCP `whale_collector/alert.py` → VPS. Dry-run PASS sau fix.
+
+**Manual verify run 02:05 UTC:**
+- `collect_alpha_daily.py` → 85 OK, 0 errors
+- VPS store 2026-08-03: 85 alpha rows, BSB=774M, O=90M, ZEST=5.4M — khớp local
+- exit code 0
+
+**Chờ verify run tự nhiên:** 02:00 UTC 05/08 → 2026-08-04 data
+
+---
+
+### PENDING (cập nhật 04/08 deploy)
+
+| Việc | Chặn bởi |
+|------|----------|
+| Verify run tự nhiên 02:00 UTC 05/08 (2026-08-04 data) | Cron 05/08 |
 | DAILY 03/08 IDOL append | Cron 04/08 chạy xong |
 | BLUAI case analysis (alpha vol 07-16 $129M, 07-22 $254M — L-29 pattern) | — |
 | Z1: 13 ví đích + txhash | Operator/Nansen |
