@@ -2,6 +2,73 @@
 
 ---
 
+## SESSION 2026-08-05 (D) — BANK SPOT AUDIT (W1-W5)
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiem vu:** W1 venue map, W2 daily series 01/07→05/08, W3 peak week audit, W4 post-peak, W5 P8 verdict.
+**Script:** `_probe_bank_spot_20260805.py` → output: `scratch/bank_spot_20260805.txt`
+
+---
+
+### [BANK-W1] VENUE MAP
+
+| Venue | Vol/ngay | Nguon | Nhan |
+|---|---|---|---|
+| **Binance Spot BANKUSDT** | $0.13M-$124M | api.binance.com klines | **VENUE CHINH** — da xac nhan |
+| BSC DEX BANK/WBNB | $0.015M-1.75M | GeckoTerminal | liq=$65-241K, vol nho |
+| Binance Alpha ALPHA_146 | 400 error | alpha endpoint | endpoint 400 — ABSTAIN |
+| CoinGecko | khong tim thay | CoinGecko search | khong co listing |
+
+**venue_top: Binance Spot BANKUSDT** (36 ngay xac nhan). BSC DEX khong dang ke ($14K/day max). Alpha ABSTAIN.
+
+### [BANK-W2] CHUOI SPOT THEO NGAY 01/07→05/08
+
+| Ngay | Perp vol | Spot BNB | sp_ratio | taker_spot | note |
+|---|---|---|---|---|---|
+| 01-14/07 (pre-launch) | $0.9-20M | $0.13-3.75M | 0.11-0.27x | 37-67% | binh thuong |
+| 15/07 (ignition T0) | $37.0M | $2.46M | 0.067x | 53.0% | bat dau pump |
+| 16/07 | $147.7M | $6.40M | 0.043x | 51.8% | perp bung |
+| 17/07 (UNLOCK) | $432.0M | $21.45M | 0.050x | 49.7% | **unlock 80M** |
+| 18/07 (DEP_80M) | $480.1M | $29.80M | 0.062x | 52.8% | deposit sang san |
+| 19/07 (exit VWAP) | $1618.3M | $114.27M | 0.071x | 52.2% | perp exit day 1 |
+| 20-27/07 (peak week) | $720-1529M | $35-124M | 0.049-0.082x | 49-53% | *xem W3* |
+| 28-31/07 (post-spike) | $563-1152M | $35-116M | 0.063-0.101x | 46-51% | giam dan |
+| 01-05/08 (hau ky) | $62-474M | $6.9-46.8M | 0.071-0.111x | 46-49% | decay |
+
+Campaign avg spot/perp: **0.113x** | Peak week avg: **0.067x**
+
+### [BANK-W3] TUAN DINH 20-27/07 (cau phan xu P8)
+
+- Total spot vol 20-27/07: **$598M** (= 8 ngay)
+- Vol-weighted taker spot: **51.2%** → NEUTRAL
+- 80M tokens at px 0.15-0.35 = $12-28M = chi **2-5%** tong spot vol → khong phat hien duoc tu taker
+- GeckoTerminal trades chi phu 2 ngay gan nhat → DEX swap log UNAVAILABLE cho 20-27/07
+- **PENDING OPERATOR:** BscScan token-transfer export cho BANK contract + pool address, 20-27/07
+
+### [BANK-W4] HAU DINH 28/07→05/08 (Cua B doi chung)
+
+- Taker spot 30-31/07: 46.5-46.6% (nhe sell-dom, nhung perp crash 0.38→0.057 la signal manh hon)
+- 04/08: spot $46.8M, taker 48.3% — vol tao ra tu pump rieng (+20% ngay), khong phai sell signal
+- 190M token deposit 30/07-01/08 (theo chart operator) = chuan bi campaign tiep theo (watch 17/08 unlock)
+- perp giam tu 0.38 (26/07) xuong 0.044 (02/08) = -88% draw — MM da exit perp truoc, khong qua spot
+
+### [BANK-W5] P8 VERDICT + OUTCOME
+
+**P8: "keo-sau-ghe-de-thoat-kho"** — ket qua kiem thu bang BANK precedent:
+- Taker spot peak week 51.2% = NEUTRAL → **P8 AMBIGUOUS** tu taker spot don thuan
+- Ly do ambiguous: spot vol ($598M/8 ngay) qua lon so kho (80M tokens = $20M max) → taker signal qua nho
+- Thay the test tot hon: on-chain exchange balance cua MM wallet (BscScan) — PENDING OPERATOR
+- Ket luan: P8 = hypothesis co can cu (perp pos_r collapse 19-21/07 phu hop exit), nhung chua co bang chung spot taker confirm
+
+**BANK T+30 = 09/08 (3 ngay nua):**
+- px_now (04/08 perp close): 0.05244
+- vs advisor_exit VWAP 19-21/07: 0.19710 → **-73.4%** (exit la dung)
+- vs T0 ref 09/06: 0.04183 → +25.4% (van tren T0)
+- Outcome: PENDING den 09/08, nhung trajectory ro = kho ban thanh cong trong peak, crowd giu tui
+
+---
+
 ## SESSION 2026-08-05 (C) — TUT CUA A AUDIT (S1-S4)
 
 **Operator:** Tien
