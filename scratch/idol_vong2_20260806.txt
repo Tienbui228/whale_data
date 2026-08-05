@@ -1,0 +1,172 @@
+========================================================================
+IDOL VONG-2 WATCH (Y1-Y3) - 2026-08-05 07:17 UTC
+========================================================================
+
+### [READ] CASE_IDOL DAILY + EVENTS
+  Sheets: ['CASE', 'DAILY', 'EVENTS', 'TRIGGERS', 'OUTCOME', 'MM_PROFILE', 'UNLOCK']
+  DAILY rows: 30
+
+  DAILY last 15 rows (col indices 0-based):
+  date               px     vol_p   taker     f_avg  fn  pos_r  acc_r   gLSR        oi data_bad
+  ------------------------------------------------------------------------------------------
+  2026-07-16    0.01546       $4M 4874.7%   0.00012   6  1.415  1.562  1.467    $6.13M     
+  2026-07-17    0.01692      $25M 4971.7%   0.00025   6  1.451  1.563  1.497    $6.12M     
+  2026-07-18    0.01718       $8M 4962.7%   0.00015   6  1.442  1.270  1.284    $7.18M     
+  2026-07-19    0.01733      $17M 4871.0%   0.00014   6  1.458  1.226  1.175    $6.98M     
+  2026-07-20    0.01583       $8M 4497.0%   0.00015   6  1.894  1.135  1.080    $4.70M     
+  2026-07-21    0.01509       $2M 4756.8%   0.00005   6  1.936  1.227  1.148    $3.92M     
+  2026-07-22    0.01514       $2M 5459.6%   0.00006   6  1.908  1.585  1.499    $3.84M     
+  2026-07-23    0.01800     $167M 4890.9%   0.00025   6  1.911  1.701  1.809    $3.95M     
+  2026-07-27    0.01568      $17M 4851.2%   0.00034   6  2.059  1.360  1.369    $6.60M     
+  2026-07-28    0.01681       $6M 4802.0%   0.00020   6  2.207  0.992  1.038   $10.71M     
+  2026-07-29    0.01569       $3M 4725.2%   0.00007   6  2.328  1.161  1.389    $9.91M     
+  2026-07-30    0.01523       $3M 5284.8%   0.00010   6  2.558  1.209  1.459    $8.87M     
+  2026-07-31    0.01640       $7M 4987.5%   0.00032   6  2.546  1.240  1.558    $8.81M     
+  2026-08-01    0.02395     $176M 5152.9%   0.00009   6  2.524  1.183  1.489    $9.84M     
+  2026-08-02    0.02312      $41M 5008.5%   0.00005   6  1.731  1.178  1.144   $10.48M     
+
+  EVENTS sheet (58bro + key wallet events):
+  D. NHAT KY DIEN BIEN (append-only, moi nhat duoi c
+  ngay | su_kien_so_lieu | nguon | doc_nhanh
+  31/07→02/08 | 13 vi nhan ~273M IDOL (~5.7% supply) tu Binance. 7 | Binance (Alpha custody) — cơ chế xác nhận 03/08 | PENDING-VERIFY: txhash + ngay chinh xac tu Nansen.
+  2026-08-02 | Gate wallet 0x0d0707 +54.76M IDOL (~1.14% supply)  | Nansen UI (so hua, chua co txhash) | [HA CAP] <2% supply — khong dang ke tren on-chain 
+  2026-08-11 | Unlock tranche tháng 8: 97.29M IDOL (~2.03% supply | UNLOCK_SCHEDULE | Suppressor context thường trực: 2%/tháng ngày 11. 
+
+### [VPS] IDOL freshwatch 01-06/08
+  Raw lines:
+  2026-08-01,IDOLUSDT,0.0239455254881411,175671534.50156,0.5152925209635985,9.492333333333332e-05,-0.00070055,0.00066625,6,9844799.29461,2.5241,1.1825,1.4888,1.0631,False,native_1d,True
+  2026-08-02,IDOLUSDT,0.023116942859698,40715280.86713,0.500848557452331,5e-05,5e-05,5e-05,6,10483341.9772,1.7314,1.1782,1.1436,1.0034,False,native_1d,True
+  2026-08-03,IDOLUSDT,0.0188683755549593,33874472.78663,0.4455533377689066,7.166e-05,5e-05,0.00017046,6,9503666.11358073,1.8049,1.6539,1.6364,0.8036,False,native_1d,True
+  2026-08-04,IDOLUSDT,0.016355572315686708,17027385.92074,0.47176588664095925,0.000238205,5e-05,0.00067558,6,8825999.1681741,1.7453,1.6274,1.4612,0.8931,False,native_1d,True
+
+### [FAPI] IDOL live data 01-06/08
+
+  Daily klines:
+  date                O        H        L        C      vol_$   taker ret_d
+  2026-07-29    0.01660  0.01665  0.01507  0.01529      $3.0M   47.3%       
+  2026-07-30    0.01529  0.01598  0.01452  0.01510      $3.0M   52.8%  -1.2%
+  2026-07-31    0.01511  0.01717  0.01510  0.01659      $7.3M   49.9%   9.9%
+  2026-08-01    0.01659  0.02850  0.01626  0.02438    $175.7M   51.5%  47.0%
+  2026-08-02    0.02440  0.02600  0.02061  0.02324     $40.7M   50.1%  -4.7%
+  2026-08-03    0.02324  0.02474  0.01558  0.01772     $33.9M   44.6% -23.8%
+  2026-08-04    0.01772  0.01797  0.01550  0.01630     $17.0M   47.2%  -8.0%
+  2026-08-05    0.01631  0.01670  0.01583  0.01608      $3.1M   40.2%  -1.3%
+
+  4h klines (last 18 bars — funding intervals):
+  datetime                  C        vol   taker
+  08-03 08:00         0.02021     $1.29M   53.9%
+  08-03 12:00         0.01803    $10.34M   42.1%
+  08-03 16:00         0.01751    $11.80M   43.3%
+  08-03 20:00         0.01772     $1.26M   47.0%
+  08-04 00:00         0.01589     $3.80M   42.2%
+  08-04 04:00         0.01630     $2.74M   46.9%
+  08-04 08:00         0.01585     $5.78M   49.4%
+  08-04 12:00         0.01587     $2.86M   48.0%
+  08-04 16:00         0.01657     $1.40M   50.2%
+  08-04 20:00         0.01630     $0.45M   47.7%
+  08-05 00:00         0.01601     $0.78M   42.4%
+  08-05 04:00         0.01608     $2.36M   39.4%
+
+  OI history (floor=3.92M from 27/07):
+  2026-07-29: OI=$9.910M  vs_floor=+152.8%
+  2026-07-30: OI=$8.868M  vs_floor=+126.2%
+  2026-07-31: OI=$8.806M  vs_floor=+124.6%
+  2026-08-01: OI=$9.845M  vs_floor=+151.1%
+  2026-08-02: OI=$10.483M  vs_floor=+167.4%
+  2026-08-03: OI=$9.504M  vs_floor=+142.4%
+  2026-08-04: OI=$8.826M  vs_floor=+125.2%
+  2026-08-05: OI=$8.866M  vs_floor=+126.2%
+
+  gLSR history (flush target: <=1.1):
+  2026-07-29: gLSR=1.389 long=58.1% short=41.9%
+  2026-07-30: gLSR=1.459 long=59.3% short=40.7%
+  2026-07-31: gLSR=1.558 long=60.9% short=39.1%
+  2026-08-01: gLSR=1.489 long=59.8% short=40.2%
+  2026-08-02: gLSR=1.144 long=53.3% short=46.7% [close]
+  2026-08-03: gLSR=1.636 long=62.1% short=37.9%
+  2026-08-04: gLSR=1.461 long=59.4% short=40.6%
+  2026-08-05: gLSR=1.236 long=55.3% short=44.7% [close]
+
+  pos_r (top trader position) — rebuild from trough?
+  2026-07-29: pos_r=2.328
+  2026-07-30: pos_r=2.558 +9.9%
+  2026-07-31: pos_r=2.546 -0.5%
+  2026-08-01: pos_r=2.524 -0.8%
+  2026-08-02: pos_r=1.731 -31.4%
+  2026-08-03: pos_r=1.805 +4.2%
+  2026-08-04: pos_r=1.745 -3.3%
+  2026-08-05: pos_r=1.841 +5.5%
+
+  acc_r (top trader account):
+  2026-07-29: acc_r=1.161
+  2026-07-30: acc_r=1.209
+  2026-07-31: acc_r=1.240
+  2026-08-01: acc_r=1.183
+  2026-08-02: acc_r=1.178
+  2026-08-03: acc_r=1.654
+  2026-08-04: acc_r=1.627
+  2026-08-05: acc_r=1.322
+
+  Funding rate (last 20 intervals — 4h each):
+  08-02 00:00: f=0.00005 [PIN x1]
+  08-02 04:00: f=0.00005 [PIN x2]
+  08-02 08:00: f=0.00005 [PIN x3]
+  08-02 12:00: f=0.00005 [PIN x4]
+  08-02 16:00: f=0.00005 [PIN x5]
+  08-02 20:00: f=0.00005 [PIN x6]
+  08-03 00:00: f=0.00005 [PIN x7]
+  08-03 04:00: f=0.00005 [PIN x8]
+  08-03 08:00: f=0.00005 [PIN x9]
+  08-03 12:00: f=0.00005 [PIN x10]
+  08-03 16:00: f=0.00017
+  08-03 20:00: f=0.00006
+  08-04 00:00: f=0.00005 [PIN x1]
+  08-04 04:00: f=0.00068
+  08-04 08:00: f=0.00005 [PIN x1]
+  08-04 12:00: f=0.00027
+  08-04 16:00: f=0.00033
+  08-04 20:00: f=0.00005 [PIN x1]
+  08-05 00:00: f=0.00005 [PIN x2]
+  08-05 04:00: f=0.00030
+  PIN streak at end: 0 intervals (target: >=4)
+
+  Live OI tokens: 581,104,154
+  Live 24h: last=0.01608 H=0.01767 L=0.01556 vol=$14.0M
+
+========================================================================
+### [Y3] 58bro LEDGER (operator 06/08 screenshot, so doi chieu)
+
+  Hanh dong 58bro tu EVENTS cu (truoc 04/08):
+  - Co the da ghi: 'rut 24M hold' -> CAN KIEM TRA SO LIEU CHINH XAC
+  - Neu EVENTS ghi 'rut 24M' nhung thuc te 58bro nhan 27.06M thi can sua
+
+  Dong moi (06/08 — operator screenshot):
+  [1] Nhan 27.06M tokens (Gate xuat -> vi 58bro?), roi NAP LAI 27.06M (04/08)
+      => net dong [1] = ZERO (nhan xong nap luon, khong hold them)
+  [2] Nhan 10M tokens (04/08)
+  [3] Nhan 14.3M tokens (04/08)
+  [4] Nhan 8.14M tokens (06/08)
+
+  Net tinh tu dong moi:
+  Nap lai (di ra): -27.06M
+  Nhan (vao):      +27.06M + 10M + 14.3M + 8.14M = +59.5M
+  NET MO'I:        +59.5M - 27.06M = +32.44M tokens
+
+  Pat tern doc:
+  Gate -> vi -> Gate: DONG 1 = 27.06M roundtrip 04/08 (nhan xong nap ngay)
+  Net giu lai: 10M + 14.3M + 8.14M = 32.44M (chua nap)
+  -> NEU 32.44M van con trong vi -> GIAM DAN KHOI GATE (gom them)
+  -> NEU da nap tiep vao Gate sau -> PHAN PHOI (con thoi day hang)
+  PENDING: kiem tra vi 58bro co phat sinh them lenh nap nao sau 06/08?
+
+  Doi chieu Gate wallet 0x0d0707:
+  PENDING operator: balance hien tai + tx log 01-06/08
+
+========================================================================
+### [Y2] EVAA CHECKLIST (se tinh sau khi co so lieu fapi ben tren)
+
+  [1] gLSR flush <= 1.1: XEM SECTION gLSR TREN
+  [2] pos_r rebuild tu day: XEM SECTION pos_r TREN
+  [3] Funding pin >=4d: XEM SECTION funding TREN (PIN streak)
+  [4] px vs nen 0.0147-0.0155: XEM daily klines TREN
+  [5] Suppressor moi: xem tren phan vol/taker pattern

@@ -2,6 +2,109 @@
 
 ---
 
+## SESSION 2026-08-06 (F) — IDOL VONG-2 WATCH: Y1-Y5 EVAA RE-STAGING AUDIT
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Scripts:** `_probe_idol_vong2_20260806.py`, `_task_idol_aug_append_20260806.py`
+**Output:** `scratch/idol_vong2_20260806.txt` | CASE_IDOL DAILY +3 rows, EVENTS +3 rows
+**State:** SUPPRESSED post_climax (bắn 01/08 +47%, OI ATH 10.48M, L-26 02/08)
+
+---
+
+### [Y1] IDOL CHUỖI 04/08→05/08 (nối sau bảng cũ)
+
+| Ngày | px | ret_1d | ret_3d | vol | taker | f_avg | fn | OI | OI vs ATH | pos_r | acc_r | gLSR | div_raw |
+|------|----|----|----|----|----|----|----|----|----|----|----|----|-----|
+| 01/08 | 0.02395 | **+47.0%** | — | $175.7M | 51.5% | +9.49e-5 | 6 | $9.84M | -6% | 2.524 | 1.183 | 1.489 | 2.133 |
+| 02/08 | 0.02312 | -4.7% | — | $40.7M | 50.1% | **+5e-5 [PIN]** | 6 | **$10.48M** ATH | 0% | **1.731** L26 | 1.178 | **1.144** | 1.469 |
+| 03/08 | 0.01887 | **-23.8%** | -21.2% | $33.9M | **44.6%** | +7.17e-5 | 6 | $9.50M | -9% | 1.805 | 1.654 | 1.636 | 1.091 |
+| 04/08 | 0.01636 | -8.0% | **-29.2%** | $17.0M | 47.2% | +2.38e-4 [spike] | 6 | $8.83M | -16% | 1.745 | 1.627 | 1.461 | 1.073 |
+| 05/08 | 0.01608 [!] | -1.7% | -14.8% | $3.1M* | **40.2%*** | ~5e-5 (fapi) | N/A | $8.87M | -15% | 1.841 | 1.322 | **1.236** | 1.392 |
+
+*Partial day 07:17 UTC. [!]=data_bad.
+
+OI floor 27/07 = 3.92M. OI vs floor hien tai: +126%. Con rat xa floor.
+OI unwind tu ATH: 10.48→8.87M = -15% tu ATH — con 8.5M tren floor (2.27× floor).
+
+**gLSR slope 01-05/08**: 1.489→1.144 (L26)→1.636 (bounce 03/08)→1.236 (05/08). Trending xuat.
+**div_raw (pos_r/acc_r) spike 04/08**: 1.073 = pos_r/acc_r ngang nhau. Hieu un to chuc/crowd binh thuong hon.
+
+### [Y2] EVAA CHECKLIST (SÓNG 2 RE-STAGING)
+
+| # | Điều kiện | Ngưỡng | Số thực (05/08) | Verdict |
+|---|-----------|--------|-----------------|---------|
+| ① | gLSR flush | ≤1.1 | **1.236** (↓ tu 1.636 ngay 03/08) | ❌ con -13% den muc tieu |
+| ② | pos_r rebuild | Sustained ↑ tu 1.73 | 1.73→1.84 oscillating | ❌ chua co xu huong ro |
+| ③ | Funding pin | ≥4d (24 intervals) lien tuc | Max 10 intervals (1.67d, 02-03/08) | ❌ vỡ 03/08 16:00 |
+| ④ | px vs nền 0.0147-0.0155 | Close > 0.0155 | 0.01608 (low 04/08=0.0155) | ✅ giu (mong manh) |
+| ⑤ | Suppressor moi | Khong co them | 11/08 unlock 97.29M (da biet) | ✅ khong phat sinh moi |
+
+**Tong: 2/5 thoa. Nhan xet:**
+- ① gLSR: 1.144 (02/08 L-26) → 1.636 (03/08 bounce — crowd bat dao) → 1.236 (05/08). DANG FLUSH DUNG HUONG. Khi price giam, gLSR giam = crowd dong long/mo short = duoc. Chua du.
+- ② pos_r: Sau L-26 (1.731) khong co rebuild bai ban. Dao dong 1.73-1.84. Chua co "ghe moi ngoi" ro rang.
+- ③ Funding: Pin 5e-5 from 02/08 00:00 den 03/08 12:00 = 10 interval lien = 1.67d. Bi pha 03/08 16:00 (spike 0.00017). 04/08 spike lon 0.00068 (FOMO buy pressure vs giam gia). Streak dau 05/08 lac tu (5e-5 xen spike). CHUA LY TUONG.
+- ④ px: 05/08 close 0.01608. Low 04/08 = 0.0155 (cham nen). Low 05/08 = 0.0158. NEN VAN DUNG NHUNG DANG BI TEST TICH CUC.
+- ⑤ 11/08 unlock 97.29M (2.03% supply) la suppressor sap xay ra — chua tac dong.
+
+### [Y3] 58bro LEDGER (operator 06/08)
+
+**Sự kiện mới (đối chiếu EVENTS sheet):**
+
+| Thời gian | Hành động | Tokens | Net | Đọc |
+|-----------|-----------|--------|-----|-----|
+| 04/08 | Nhận từ Gate | +27.06M | — | — |
+| 04/08 | Nạp lại Gate ngay | -27.06M | **NET=0** | Roundtrip: THÔNG ĐIỆP đạo cụ |
+| 04/08 | Nhận 10M + 14.3M | +24.3M | +24.3M | Chua nap ngược |
+| 06/08 | Nhận 8.14M | +8.14M | +32.44M | Chua nap ngược |
+
+**Net 04-06/08 = +32.44M tokens (PENDING confirm chua nap ngược sau 06/08)**
+
+Phân tích chiều ròng:
+- Roundtrip 27.06M = classic Loại A thủ thuật: tạo "outflow" ảo khỏi sàn = THÔNG ĐIỆP, không phải bằng chứng gom
+- 32.44M giữ lại: NEU còn trong ví = thoát khỏi Gate (gom?). NEU đã nạp tiếp = phân phối.
+- Gate wallet 0x0d0707: PENDING operator balance + tx log 01-06/08 để đối chiếu
+- Cộng sổ tổng: cần operator xác nhận EVENTS cũ có ghi đúng "rút 24M" hay thực tế khác
+
+### [Y4] SMART MONEY GOM — KHUNG CHỜ
+
+IDOL = Loại A (confirmed). Rule bất biến:
+> Mọi on-chain hành động từ hệ ví cũ (13 ví staging + 58bro + Gate 0x0d0707) = THÔNG ĐIỆP đạo cụ.
+> CHỈ ví ngoài hệ + mua qua DEX có swap log thật = bằng chứng accumulation thực.
+
+Framework đối chiếu khi operator feed địa chỉ:
+1. Khớp với cụm 13 ví đã nhận 273M từ Binance 31/07-02/08? → loại
+2. Khớp 58bro hoặc Gate 0x0d0707? → loại
+3. Không khớp + có DEX swap log (PancakeSwap/BSC) với counter ≠ hệ ví? → đếm
+4. Balance delta dương trên chain + không match staging → tạm thời tin (cần >1 ví độc lập)
+
+PENDING: dia chi cu the cac vi "smart money" operator quan sat.
+
+### [Y5] VERDICT: SÓNG 2 HỒ SƠ
+
+**Trạng thái (05/08): CHƯA CÓ GÌ — POST-CLIMAX FLUSHING đúng hướng**
+
+Tích cực:
+- gLSR đang flush (1.636→1.236, chiều đúng khi px giảm)
+- px vẫn giữ trên nền 0.0147-0.0155 (barely)
+- Taker sell-dom 03-05/08 (44-40%) = crowd đang thoát, không phải bắt dao mạnh
+- Không có suppressor mới phát sinh
+
+Tiêu cực:
+- gLSR chưa đủ flush (1.236 > mục tiêu 1.1)
+- pos_r chưa rebuild rõ ràng (1.73-1.84 oscillating)
+- Funding pin max 1.67d (cần ≥4d)
+- OI còn 8.87M = +126% trên floor 3.92M = overhead rất nặng
+- 11/08 unlock 97.29M (2.03%) = suppressor sắp tác động
+
+**Ngày sớm nhất exit SUPPRESSED: 18/08 (theo user cooldown)**
+Điều kiện tiên quyết trước 18/08:
+1. 11/08 unlock hấp thụ không gây spike sell (px giữ > 0.0147)
+2. gLSR flush về ≤1.1 (cần px tiếp tục ép hoặc crowd tự đóng long)
+3. Funding re-pin ≥4d sau khi gLSR clean
+4. pos_r rebuild bắt đầu (>1.95 = tiến vào zone từng là base)
+
+---
+
 ## SESSION 2026-08-05 (E) — BANK VONG-2 WATCH + OUTCOME T+30 + mm_econ v0.2
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
