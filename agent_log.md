@@ -2698,6 +2698,332 @@ arr = raw if isinstance(raw, list) else (
 
 ---
 
+## SESSION 2026-08-06 (G) — XPIN COLD-START PACK (X0-X6)
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Scripts:** `_probe_xpin_coldstart_20260806.py` (root → archive sau session)
+**Output:** `scratch/xpin_coldstart_20260806.txt` | Nguồn thêm: `D:\Check onchain fresh wallets\u50_data\XPIN_result.txt`
+**Boundary:** Perp/Alpha/CoinGecko/GeckoTerminal/VPS freshwatch. On-chain (BscScan/vesting) PENDING OPERATOR.
+
+---
+
+### [X0] CĂN CƯỚC — IDENTITY
+
+| Trường | Giá trị | Nguồn |
+|--------|---------|-------|
+| Tên đầy đủ | XPIN Network | CoinGecko |
+| Symbol | XPIN | Binance FAPI |
+| Chain | BSC (binance-smart-chain) | CoinGecko, Alpha |
+| Contract | `0xd955c9ba56fb1ab30e34766e252a97ccce3d31a6` | CoinGecko, Alpha |
+| CoinGecko ID | `xpin-network` | CoinGecko search |
+| Total supply | 100,000,000,000 (100B) | CoinGecko |
+| Circulating (Alpha) | 48,074,534,161 (48.07B = 48%) | Binance Alpha |
+| Circulating (CoinGecko) | ⚠️ DISCREPANCY — CG MC=FDV=$154.9M, ngụ ý ~100B | CoinGecko (nghi lỗi data) |
+| Holders | 69,318 | Binance Alpha |
+| Px hiện tại | $0.001549 (perp) / $0.001557 (Alpha) | FAPI / Alpha |
+| MC thực tế (est.) | ~$74.5M (48.07B × 0.00155) | Tính toán |
+| FDV | ~$155M | Alpha/CoinGecko |
+| Perp launch | **2025-09-12 08:00 UTC** (onboardDate fapi) | Binance FAPI |
+| Tuổi perp | **326 ngày** (≥14d = guard OK) | FAPI |
+| Spot Binance | **KHÔNG CÓ** (HTTP 400) | Binance SAPI |
+| Alpha listed | **CÓ** (ALPHA_334), listingTime ~2026-01-27 | Binance Alpha |
+
+**DISCREPANCY CG supply:** CoinGecko báo circulating=15.47B nhưng MC=$154.9M = FDV → mâu thuẫn nội bộ. Alpha cung cấp 48.07B là con số logic hơn. PENDING OPERATOR verify BscScan token supply.
+
+---
+
+### [X1] VENUE MAP
+
+| Venue | Tình trạng | Vol/ngày (est.) | Ghi chú |
+|-------|-----------|-----------------|---------|
+| Binance FAPI XPINUSDT | **ACTIVE — venue chính** | $1-10M avg (vary) | Price discovery. 326 ngày. |
+| Binance Spot | **KHÔNG CÓ** | — | HTTP 400 |
+| Binance Alpha ALPHA_334 | **CÓ** (BSC) | ~$290K (Alpha 24h) | Liquidity $958K |
+| BSC DEX (PancakeSwap V3 0.01%) | CÓ (main pool 0x08debf…) | ~$286K | Liq=$948K, tạo 2025-08-20 |
+| BSC DEX phụ | Tiny | <$1K | Liq $2.7K |
+| ETH DEX (Uniswap V3) | Tồn tại (3 pools, $1.5M-$67M liq) | $0 vol | Liq chốt, không giao dịch — likely fake/locked |
+| Solana "XPIN" | Tồn tại nhưng vol=$0-8 | Không đáng kể | Nghi khác token |
+| BitMart (CoinGecko #1) | $1.1B/24h | ⚠️ NGHI WASH | Vol 10x tất cả venue còn lại cộng lại |
+| Gate | $104M/24h | | trust_score=None |
+| MEXC | $66M/24h | | |
+| KuCoin | $37M/24h | | |
+| Biconomy, Toobit, DigiFinex | $50-161M | ⚠️ | Các sàn nhỏ, vol cao nghi ngờ |
+
+**Venue chính:** Binance FAPI (perp). Spot KHÔNG có trên Binance. BSC DEX minimal ($286K/day). CEX khác vol nghi ngờ (BitMart đặc biệt: $1.1B cho XPIN là bất thường).
+
+---
+
+### [X2] CHUỖI DÀI NHẤT CÓ THỂ
+
+| Nguồn | Range | Bars | Ghi chú |
+|-------|-------|------|---------|
+| FAPI 1d klines | 2025-09-12 → 2026-08-05 | 328 | ĐẦY ĐỦ từ ngày launch |
+| XPIN_result.txt (local) | 2025-09-12 → 2026-07-25 | 317 | Đã có sẵn (session trước) |
+| Funding rate | 2026-05-13 → 2026-08-05 | 500 intervals | API trả tối đa 500 |
+| XPIN_result.txt funding | 2026-05-03 → 2026-07-25 | ~83 ngày | Daily agg |
+| OI 1d | 2026-06-26 → 2026-08-05 | 31 bars | API trả ~31 bars gần nhất |
+| gLSR/pos_r/acc_r | 2026-07-07 → 2026-08-05 | 30 bars | API trả 30 bars |
+| XPIN_result.txt LSR | 2026-06-25 → 2026-07-25 | 30 days | Overlap + extend backward |
+| VPS freshwatch | 2026-08-01 → 2026-08-04 | 4 rows | fn=6 |
+| Alpha local store | 0 files | — | Không trong collect list |
+
+**Tổng hợp chuỗi tái tạo được:** 2025-09-12 → 2026-08-05 (327 ngày perp đầy đủ).
+
+---
+
+### [X3] GIẢI PHẪU SIDEWAY — 8 MỤC
+
+#### ① RANGE — Dải giá + xu hướng thu hẹp
+
+| Window | H | L | Band |
+|--------|---|---|------|
+| All-time | 0.010318 | 0.000313 | 3197% |
+| 30d | 0.002250 | 0.001334 | 68.7% |
+| 14d | 0.001611 | 0.001371 | 17.5% |
+
+**Weekly band trend (last 5 tuần):** 17.5% → 65.2% → 20.9% → 13.1% → 12.7%
+
+- Tuần 65.2% = 10-17/07 (failed ignition blow-off)
+- Sau ignition thất bại: band thu hẹp NHANH về 13-17%
+- Tuần 12.7% (31/07-05/08) = hẹp nhất trong 30d
+- VERDICT ①: **NÉN SAU THẤT BẠI** — không phải accumulation bandpass, mà là post-ignition compression. Phân biệt: accumulation thường kéo dài, vol giảm đều; đây thì vol spike hỏng xong tắt đột ngột.
+
+#### ② FUNDING REGIME — PIN discipline
+
+| Giai đoạn | Pattern | Ngày |
+|-----------|---------|------|
+| May 11 → Jun 1, 2026 | 100% PIN (0.00005), ALL intervals | 22 ngày liên tiếp (nguồn: XPIN_result.txt) |
+| Jun 2 → Jun 12 | Mostly PIN, 2 break days (Jun 2 avg=0.000157, Jun 9 avg=0.000096) | 10 ngày |
+| Jun 13 → Jun 30 | PIN thường xuyên bị gián đoạn (Jun 19 avg=0.000283, Jun 26 avg=0.000177) | |
+| Jul 1 → Jul 9 | Hỗn hợp (Jul 3 avg=0.000192, Jul 4 avg=0.000226, Jul 6 avg=0.000055) | |
+| Jul 10-11 (pump) | SPIKE: max=0.000938 (Jul 10), max=0.000654 (Jul 11) | crowd trả cost cao |
+| Jul 12 → Jul 25 | 100% PIN trở lại (Jul 13-25 all min=max=0.00005) | 13 ngày |
+| Aug 2-5 | Breaking lại: f_avg 0.00043-0.00058 với PIN breaks | Regime UNSTABLE |
+
+- Max streak (probe): 105 intervals = 17.5 ngày (May 15 - Jun 2)
+- Current streak (05/08): 0 (broke 08-05 00:00)
+- PIN % tổng: 353/500 = 70.6%
+- VERDICT ②: **PIN DISCIPLINE CAO trong quá khứ, đang mất ổn định.** Giai đoạn May-Jun là fingerprint cổ điển: MM hold position minimum cost. Nhưng Aug 2-5 funding oscillating cao (0.0004-0.0006) = crowd đang push, MM không còn đủ lực giữ PIN hoàn toàn.
+
+#### ③ ABSORPTION — Taker pattern
+
+| Giai đoạn | Taker avg | Nhận xét |
+|-----------|-----------|---------|
+| Launch Sep 12-18 | 44-48% | SELL BIAS ngay từ đầu — crowd dump vào MM |
+| Main pump Oct 16-26 | 50-52% | NEUTRAL — MM absorb sells trong markup |
+| Post-pump Nov 2025 | 38-53% (volatile) | Multiple sell-dominated days (38-43%) |
+| Dec pump | 48-50% | Neutral |
+| Mar 2026 (bottom) | 39-41% | SELL-SIDE (Mar 25-26) — capitulation |
+| May-Jul quiet | 43-52% (mostly 47-51%) | Absorption zone |
+| Jul 10-11 (failed ignition) | 50.2%, 50.6% | NEUTRAL — **KHÔNG CÓ CROWD BID** |
+| Jul 12-Aug 5 | 44-56% | Oscillating |
+
+- 79% ngày taker 44-50.5% (259/328 bars) — absorption mode dài hạn
+- Max consecutive: 44 ngày
+- **KEY:** Jul 10-11 failed ignition — volume $240M mà taker chỉ 50.2-50.6% = MM tự tạo vol, không có FOMO mua từ crowd
+- VERDICT ③: **ABSORPTION CHRONIC — không có FOMO.** Crowd không bao giờ thực sự "mua mạnh" vào XPIN kể từ Oct 2025. Đây là dấu hiệu thiếu narrative sức mạnh.
+
+#### ④ DIV STRUCTURE (pos_r / acc_r)
+
+**Timeline:**
+| Window | pos_r | acc_r | div | Cấu trúc |
+|--------|-------|-------|-----|----------|
+| Jun 25-Jul 9 | 1.69-1.95 | 1.49-1.81 | 1.07-1.30 | Mild A |
+| Jul 11 (pump) | 1.799 | **0.895** | **2.011** | **PEAK A** |
+| Jul 12-17 | 1.95-2.37 | 1.11-1.35 | 1.55-2.09 | Strong A |
+| Jul 17 | **2.359** | 1.129 | **2.089** | Peak pos_r 30d |
+| Jul 18-28 | 1.99-2.37 | 1.12-1.35 | 1.48-1.93 | Declining A |
+| Jul 29-30 | 1.98-1.95 | **1.537-1.800** | **1.10-1.27** | A đang xệ |
+| Jul 31-Aug 5 | 1.80-1.87 | 1.87-2.02 | **0.92-0.99** | **NEUTRAL/B** |
+
+- div < 1 (Aug 1-5): accounts MORE long-biased than top traders
+- acc_r surged from 1.13 → 2.02 trong 3 tuần: accounts pile in
+- pos_r ổn định 1.80-1.87: top traders không tăng position tương ứng
+- VERDICT ④: **CRITICAL SIGNAL — CẤU TRÚC ĐẢO NGƯỢC.** Top traders (pos_r stable) trong khi crowd accounts (acc_r surge) push lên. Kết hợp gLSR=2.24 = tất cả retail đã vào. Đây là geometry distribution không phải accumulation.
+
+#### ⑤ gLSR + SLOPE
+
+| Ngày | gLSR | %long | Đọc |
+|------|------|-------|-----|
+| Jul 11 (pump) | **0.952** | 48.7% | Crowd SHORT — nhiên liệu tốt cho ignition |
+| Jul 23 | 1.121 | 52.8% | Recovering |
+| Jul 27 | 1.072 | 51.7% | Volatile |
+| Jul 29 | 1.807 | 64.4% | SURGE bắt đầu |
+| Jul 31 | 2.017 | 66.8% | |
+| Aug 1 | 2.194 | 68.7% | |
+| Aug 5 | **2.243** | **69.2%** | **PEAK 30d** |
+
+- Slope 5d: +0.0097/day (tăng nhanh)
+- VERDICT ⑤: **gLSR Ở ĐỈNH — NHIÊN LIỆU ĐÃ CHÁY HẾT.** Irony: crowd mua mạnh nhất SAU khi ignition thất bại (Jul 11). Đây là "dip buyer" FOMO vào sideway. 69.2% accounts đang long = không còn "shorts để squeeze."
+
+#### ⑥ OI — Open Interest
+
+| Ngày | OI | Ghi chú |
+|------|----|---------| 
+| Jun 26 | $8.28M | Trước pump |
+| Jul 7 | $8.56M | Floor |
+| Jul 10 | $10.0M | Khởi động |
+| Jul 11 | **$14.88M** | +49% trong 1 ngày (pump) |
+| Jul 12 | **$15.65M** | OI PEAK |
+| Jul 13-17 | $10.9-14.1M | Unwind nhanh -30% trong 5 ngày |
+| Jul 18-Aug 5 | $11.6-12.6M | **Stable plateau** |
+
+- OI tăng 49% ngày Jul 11 = bắt buộc có lệnh build lớn
+- OI unwind Jul 12-17: -30% = deleverage sau khi ignition không thành
+- OI từ Jul 18 đến Aug 5: flat $11.6-12.6M TRONG KHI gLSR tăng từ 1.08 lên 2.24
+- **KEY:** OI không expand khi gLSR surge = không có net new position mở thêm. Crowd ROTATING positions (shorts close → longs open net-neutral on OI), không phải MM ignition mới.
+- VERDICT ⑥: **OI STAGNANT — NO IGNITION POSTURE.** OI $11-12M = maintenance, không có "kịch bản MM load perp mới."
+
+#### ⑦ BAIT-PROBE — Vol spiking events (≥8× avg)
+
+| Ngày | Vol | Multiplier | Range | taker | Kết cục |
+|------|-----|-----------|-------|-------|---------|
+| Sep 14, 2025 | $392M | 16× | 93.2% | 48.1% | Launch chaos, px -0.5% net |
+| Oct 16, 2025 | $614M | 26× | 172.7% | 50.4% | IGNITION (thật) |
+| Oct 17, 2025 | $745M | 31× | 78.5% | 51.4% | Continuation |
+| Oct 18-24 | $201-392M | 8-17× | 23-47% | 50-52% | Distribution phase |
+| Oct 23, 2025 | $1,038M | **43×** | 112.3% | 51.0% | ATH day ($0.0086-0.0103H) |
+| Dec 21-22, 2025 | $107-148M | 4-6× | 45-60% | 48-50% | CAMPAIGN 2 (nhỏ hơn, thất bại) |
+| Jul 11, 2026 | $207M | 9× | 36.4% | 50.6% | FAILED IGNITION #3 |
+
+- 3 ignition attempts: Oct 2025 (SUCCESS), Dec 2025 (PARTIAL/small), Jul 2026 (FAIL)
+- Jul 11 signal: taker 50.6% = MM vol, không phải crowd bid. OI +49% rồi unwind = test thất bại.
+- VERDICT ⑦: **3 ATTEMPTS, 1 THÀNH CÔNG.** Pattern MM đang suy yếu. Mỗi lần giảm scale (43× → 9×) và giảm net return. Oct 2025 = +150% ngày ignition; Jul 2026 = +4.3% net dù 9× vol.
+
+#### ⑧ → X6 Verdict con
+
+(Tổng hợp 7 mục trên → X6 bên dưới)
+
+---
+
+### [X4] MAJOR EVENTS TIMELINE
+
+**Phase 1 — Launch Dump (Sep-Oct 2025):**
+- **Sep 12** (launch): px=$0.00186, vol=$96M, taker=47.8% (SELL BIAS ngay từ đầu)
+- Sep 12-Oct 15: px declined 0.00186 → 0.00075 (-60% trong 33 ngày), taker 43-48%
+- **Oct 3**: $130M vol spike (5.4×), px=0.00100, range=66.4% — rescue attempt? Taker 47.5%
+
+**Phase 2 — Campaign 1 THÀNH CÔNG (Oct 16-26 2025):**
+- **Oct 16**: IGNITION — px 0.00114 → 0.00285 (+150.1%), vol $614M, taker 50.4%
+- **Oct 17**: +29.7%, vol $745M, taker 51.4%
+- **Oct 23**: ATH ngày — vol $1,038M (43×!), range 112%, C=0.00860, intraday H=0.01032, taker 51.0%
+- Oct 24-26: vol giảm, px stable $0.0081-0.0083 (distribution ổn định)
+
+**Phase 3 — Post-peak (Nov-Dec 2025):**
+- Nov 4: dump mạnh px=0.00456 ($56M vol, taker 48.7% neutral)
+- Nov 18-21: multi-day sell-side taker (38-40%)
+- **Dec 21-22**: Campaign 2 (nhỏ) — $107+$148M vol, px 0.00175 → 0.00292, taker 49-50%
+- Dec 23 onward: resume decline
+
+**Phase 4 — Deep correction (Feb-Apr 2026):**
+- **Mar 25-26**: capitulation — taker 39.6-40.8% (sell-dominated), px=0.00108-0.00117
+- Mar → bottom px=0.001000 (Apr 5)
+- **Apr 7-9**: bounce $0.001 → $0.00154 (vol $16-21M, taker ~49%)
+
+**Phase 5 — Consolidation (May-Jul 2026):**
+- May-Jun: px 0.00110-0.00148, vol $0.6-8M/day, FULL PIN funding
+- **Jul 10**: build-up day — $33M vol, px 0.00180 (+26%), taker 50.2%
+- **Jul 11**: FAILED IGNITION — $207M vol (9×), taker 50.6% (no crowd bid), OI +49% ($9.6M→$14.9M), close only +4.3%
+- Jul 12-25: px declining 0.00196 → 0.00147, funding back to full PIN, OI unwind
+
+**Phase 6 — Post-failure holding (Jul 26-Aug 5 2026):**
+- Very tight range: 0.00140-0.00157 (12.7% weekly band)
+- gLSR 1.07 → 2.24 (crowd FOMO in dip)
+- div 1.75 → 0.92 (cấu trúc đảo ngược)
+- Funding oscillating cao Aug 2-5
+
+---
+
+### [X5] UNLOCK + ARCHETYPE SEED
+
+**Supply:**
+- Total: 100B tokens
+- Circulating (Alpha, best estimate): 48.07B (48%)
+- Unlock schedule: **PENDING OPERATOR** (BscScan vesting contract)
+- listingTime Alpha: ~2026-01-27 (4.5 tháng sau perp launch)
+
+**On-chain PENDING:**
+| # | Mục | Tại sao cần |
+|---|-----|------------|
+| O1 | Vesting schedule + cliff dates | Biết khi nào unlock sẽ xảy ra |
+| O2 | Exchange balance XPIN wallet (BscScan) | Kho còn tồn hay đã distribute? |
+| O3 | Top wallet list (BscScan rich list) | Identify MM wallet cluster |
+| O4 | BSC transfer history kho wallet → CEX | Confirm distribution events |
+
+**Archetype seed (không on-chain):**
+- Perp-first token (no Binance spot) → MM kiểm soát price qua perp
+- Funding PIN discipline cao: 22 ngày 100% PIN (May-Jun 2026) = chi phí hold thấp
+- Campaign 1 (Oct 2025) = classic MM pump: build slow, spike hard, distribute at peak
+- Campaign 2 (Dec 2025) = partial attempt (vol nhỏ hơn, peak thấp hơn)
+- Campaign 3 (Jul 2026) = FAILED = thiếu crowd FOMO hoặc thiếu liquidity tốt
+- Loài A candidate (pos_r>2 sustained) nhưng div collapse gần đây gây nghi ngờ
+- CHƯA XÁC NHẬN: cần on-chain để verify wallet clustering
+
+---
+
+### [X6] OUTPUT TỔNG HỢP
+
+#### Căn cước (X0):
+XPIN Network | BSC | Contract `0xd955c9ba56fb1ab30e34766e252a97ccce3d31a6` | Perp 326 ngày | No Binance Spot | Alpha ALPHA_334 (~Jan 2026) | 100B total, ~48B circulating | $0.00155 | MC ~$74M
+
+#### Venue (X1):
+Chính = FAPI XPINUSDT. BSC DEX $286K/ngày (minimal). Không có Binance Spot. CEX khác (Gate, MEXC, KuCoin) vol có vẻ thật. BitMart $1.1B nghi wash.
+
+#### Bảng X3 — 8 mục (TRỌNG TÂM):
+
+| Mục | Chỉ số chính | Verdict con |
+|-----|-------------|------------|
+| ① Range/band | 14d=17.5%; weekly 12.7% (tightening) | NÉN sau thất bại — không phải accumulation |
+| ② Funding | 70.6% PIN; streak max 17.5d; Aug 2-5 mất ổn định | PIN discipline suy yếu, regime transition |
+| ③ Absorption | 79% ngày neutral (44-50.5%); không có FOMO bao giờ | Chronic neutral = no narrative power |
+| ④ Div struct | Đảo ngược Jul 29: pos_r=1.87 < acc_r=2.02 (div=0.92) | ⚠️ DISTRIBUTION GEOMETRY |
+| ⑤ gLSR | Peak 30d = 2.243 (69.2% long); slope +0.0097/day | ⚠️ CROWD ALL-IN — nhiên liệu hết |
+| ⑥ OI | Flat $11-12M khi gLSR surge; không expand | Không có ignition posture mới |
+| ⑦ Bait-probe | 3 attempts: Oct 2025 (OK), Dec 2025 (kém), Jul 2026 (FAIL) | MM suy yếu dần, threshold ignition tăng |
+| ⑧ Verdict | Xem dưới | POST-FAILED-IGNITION HOLD |
+
+#### Timeline sự kiện (X4):
+Sep 2025: launch dump → Oct 2025: ATH campaign (43× vol, $1.03 spike) → Nov-Dec: decay + mini-pump → Feb-Apr 2026: deep correction → May-Jun: PIN compression → Jul 11: FAILED IGNITION → Jul 26-Aug 5: tight sideway (div đảo ngược, gLSR đỉnh).
+
+#### Unlock/Archetype (X5):
+Supply 48B circulating (48%). Vesting PENDING. Loài A candidate (perp-first, PIN discipline, sustained pos_r>2 trong Jul). Nhưng div collapse + gLSR đỉnh = distribution signal hiện tại.
+
+#### KẾT — Trạng thái tổng thể:
+
+| Cờ | Trạng thái | Lý do |
+|----|-----------|-------|
+| Cờ IGNITION | ❌ KHÔNG | gLSR 2.24 (crowd hết fuel), div <1, funding oscillating |
+| Cờ DISTRIBUTION | ⚠️ POSSIBLE | div <1 (accounts > top traders), gLSR peak, vol Aug 2-5 |
+| Cờ ACCUMULATION | ❌ KHÔNG | Taker neutral toàn lịch sử, không có absorption signal mạnh |
+| Watch status | **HOLD — post-failed-ignition** | Chờ div>1.5 + gLSR<1.2 + stable PIN ≥7d |
+
+**Điều kiện để next ignition setup hợp lệ (CHƯA MET, không biết timeline):**
+1. gLSR reset về <1.2 (crowd phải đẩy short trở lại)
+2. div recover về >1.5 (top traders lại lead longs vs accounts)
+3. Funding stable PIN ≥7 ngày liên tiếp
+4. OI build thêm từ mức hiện tại $11.6M (cần signal build)
+5. On-chain: không có kho nào đang chuyển vào sàn
+
+**Earliest window estimate:** ABSTAIN. Cần 4-6 tuần minimum nếu reset bắt đầu ngay hôm nay. Không có catalyst visible từ data hiện tại.
+
+**Rủi ro downside:** nếu MM đã exit kho qua CEX kia (BitMart $1.1B — nghi) trong thời gian perp pinned, thì không có "vòng 2" thật — coin sẽ drift về 0 với gLSR cao duy trì.
+
+**PENDING OPERATOR (không block analysis nhưng cần cho verdict cuối):**
+- [ ] BscScan: kho wallet top holders + tx history
+- [ ] Vesting schedule xác nhận
+- [ ] BitMart vol xác thực (có phải wash không?)
+- [ ] Exchange balance movement (Nansen hoặc BscScan export)
+
+---
+
+### [X3→CASE] NOTE
+
+XPIN chưa có CASE file. Dựa trên X6 verdict (status=WATCH, không có ignition ngay), CHƯA TẠO CASE_XPIN.xlsx — sẽ tạo khi có on-chain data xác nhận archetype HOẶC khi ignition setup hình thành.
+
+Scripts: `_probe_xpin_coldstart_20260806.py` → archive sau session
+
+---
+
 ### [KỶ LUẬT] VI PHẠM PROBE-FIRST — 05/08/2026
 
 **Hai lần resubmit write khi điều kiện probe chưa nộp:**
