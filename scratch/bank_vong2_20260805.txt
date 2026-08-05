@@ -1,0 +1,89 @@
+======================================================================
+BANK VONG-2 WATCH - 2026-08-05 07:03 UTC
+======================================================================
+
+### [A] CASE_BANK DAILY: 01-05/08 freshwatch cols
+  Total DAILY rows: 37
+
+  date               px   vol_perp   taker     f_avg  f_n  pos_r  acc_r   gLSR         oi
+  -------------------------------------------------------------------------------------
+  2026-07-28     0.2858        N/A     N/A       N/A    6    N/A    N/A    N/A     $39.8M
+  2026-07-29     0.1713      $738M 4989.2%  -0.00099    6  1.331  0.857  0.938     $25.4M
+  2026-07-30     0.0887     $1040M 4916.6%  -0.00334   15  1.113  0.935  0.987     $21.4M
+  2026-07-31     0.0631      $563M 4915.6%  -0.00191   24  1.109  1.793  1.501     $17.3M
+
+  Aug rows in CASE_BANK DAILY: 0
+
+### [B] TRIGGERS sheet:
+  C. CHOT THEO DOI — doc moi ngay sau nen dong
+  # | chot | dieu_kien | nghia_khi_bat | trang_thai_hom_nay
+  1 | Dinh xac nhan | gLSR ->~1 hoac funding bung duong + parabol | het nhien lieu | PENDING
+  2 | Vong 2? | pin moi + outflow tai nen moi + pos re-rate | chien dich tai khoi dong | PENDING
+
+### [C] FAPI LIVE: klines 04-05/08 + OI
+
+  04/08 1H klines: 24 bars
+  04/08 O=0.0442 H=0.0619 L=0.0368 C=0.0524
+  ret O->C: 18.6%
+  vol_perp: $471.6M
+  taker_perp: 49.1%
+
+  Daily klines (recent):
+  2026-08-01: O=0.0575 H=0.0677 L=0.0501 C=0.0508 vol=$253.3M taker=48.0%
+  2026-08-02: O=0.0508 H=0.0512 L=0.0433 C=0.0447 vol=$172.6M taker=47.9%
+  2026-08-03: O=0.0447 H=0.0465 L=0.0403 C=0.0442 vol=$143.0M taker=48.8%
+  2026-08-04: O=0.0442 H=0.0619 L=0.0368 C=0.0524 vol=$471.6M taker=49.1%
+  2026-08-05: O=0.0524 H=0.0559 L=0.0456 C=0.0519 vol=$102.2M taker=48.6%
+
+  Live OI: 350,066,305 tokens (tokens, not USD)
+
+  OI history (daily snapshots, tokens):
+  2026-07-31: OI=281,877,664 tokens  OI_usd=$17.25M
+  2026-08-01: OI=313,572,517 tokens  OI_usd=$18.03M
+  2026-08-02: OI=343,953,328 tokens  OI_usd=$17.47M
+  2026-08-03: OI=386,025,172 tokens  OI_usd=$17.25M
+  2026-08-04: OI=393,135,001 tokens  OI_usd=$17.36M
+  2026-08-05: OI=344,628,102 tokens  OI_usd=$18.07M
+
+  gLSR history (daily):
+  2026-07-31: gLSR=1.501  long=60.0% short=40.0%
+  2026-08-01: gLSR=1.800  long=64.3% short=35.7%
+  2026-08-02: gLSR=1.884  long=65.3% short=34.7%
+  2026-08-03: gLSR=1.726  long=63.3% short=36.7%
+  2026-08-04: gLSR=1.649  long=62.3% short=37.8%
+  2026-08-05: gLSR=1.396  long=58.3% short=41.7%
+
+  pos_r (top trader position) history:
+  2026-07-31: pos_r=1.109
+  2026-08-01: pos_r=1.181
+  2026-08-02: pos_r=1.320
+  2026-08-03: pos_r=1.312
+  2026-08-04: pos_r=1.313
+  2026-08-05: pos_r=1.199
+
+  Funding rate history (last 15 intervals):
+  2026-08-04 20:00: f=0.00001
+  2026-08-04 21:00: f=0.00001
+  2026-08-04 22:00: f=-0.00005
+  2026-08-04 23:00: f=-0.00005
+  2026-08-05 00:00: f=-0.00004
+  2026-08-05 01:00: f=-0.00005
+  2026-08-05 02:00: f=-0.00007
+  2026-08-05 03:00: f=-0.00003
+  2026-08-05 04:00: f=0.00001
+  2026-08-05 05:00: f=0.00001
+
+### [D] 3 DIEU KIEN VONG-2 WATCH
+
+  Dieu kien 1: pos_r — tren nguong CFF-GHE-ROI (peak-14d x 0.75)?
+  [computed above from fapi pos_r history — check vs peak-14d]
+
+  Dieu kien 2: gLSR — con flush hay da phuc hoi ve >1.3?
+  [computed above from gLSR history]
+
+  Dieu kien 3: funding — van duong (positive) hay da doi sang am/zero?
+  [computed above from funding history]
+
+  Tham chieu BANK peak:
+  peak_14d (peak pos_r ~14d truoc 04/08) = peak around 19-21/07 (exit)
+  VWAP advisor exit: 0.19710 | T0 ref: 0.04183

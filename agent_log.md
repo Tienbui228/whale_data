@@ -2,6 +2,69 @@
 
 ---
 
+## SESSION 2026-08-05 (E) — BANK VONG-2 WATCH + OUTCOME T+30 + mm_econ v0.2
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Scripts:** `_probe_bank_vong2_20260805.py`, `_task_bank_aug_append_20260805.py`
+**Output:** `scratch/bank_vong2_20260805.txt` | CASE_BANK DAILY +5 rows, OUTCOME T+30 filled
+
+---
+
+### [BANK-E1] CASE_BANK DAILY APPEND 01-05/08
+
+Freshwatch 01-04/08 tu VPS (`/root/Data_back_test/whale_data/data/export/freshwatch_daily_2026-08.csv`).
+05/08 = data_bad=1 (fapi partial, 07:03 UTC).
+
+| Ngay | px | vol_perp | taker | f_avg | f_n | pos_r | acc_r | gLSR | oi |
+|------|----|----|----|----|----|----|----|----|-----|
+| 01/08 | 0.05692 | $253M | 48.0% | -0.000806 | 24 | 1.181 | 2.028 | 1.800 | $18.0M |
+| 02/08 | 0.04788 | $173M | 47.9% | -0.000349 | 24 | 1.320 | 2.266 | 1.884 | $17.5M |
+| 03/08 | 0.04316 | $143M | 48.8% | -0.000186 | 24 | 1.312 | 2.147 | 1.726 | $17.3M |
+| 04/08 | 0.05135 | $472M | 49.1% | -0.000548 | 24 | 1.314 | 2.046 | 1.649 | $17.4M |
+| 05/08 | 0.05190 | $102M | 48.6% | ~0 (fapi) | N/A | 1.199 | N/A | 1.396 | $18.1M |
+
+### [BANK-E2] 3 DIEU KIEN VONG-2 (05/08)
+
+1. **gLSR**: CHUA THOA — peak 1.884 (02/08) roi giam ve 1.396 (05/08) sau nen pump. Crowd ban longs.
+2. **pos_r re-rate**: DANG XAY RA nhung chua on dinh — tu 1.109 (31/07) len 1.313 (04/08), giam 1.199 hom nay.
+3. **Funding pin duong**: CHUA THOA — f_avg am/gan zero toan bo chuoi. Khac hoan toan Vong 1 (funding duong ky).
+
+**Ket: 0/3 dieu kien Vong 2 thoa man (05/08)**. 190M deposit la dieu kien can, chua du.
+
+### [BANK-E3] NEN +19% NGAY 04/08 (user doc la "+25%")
+
+| Metric | Gia tri | Doc |
+|--------|---------|-----|
+| O/H/L/C (perp) | 0.0442/0.0619/0.0368/0.0524 | ret O->C = +18.6%; H = +40% from O |
+| vol perp | $471.6M | 3.3x ngay truoc |
+| taker perp | 49.1% | NEUTRAL |
+| OI delta | $17.25M -> $17.36M | FLAT (+0.6%) |
+| spot vol | $46.83M | 3.8x ngay truoc |
+| gLSR sau | 1.649 -> 1.396 | Crowd ban longs post-pump |
+
+Pattern: **SHORT SQUEEZE, khong phai Ignition**. OI flat + taker neutral = liquidation cascade + profit-taking.
+
+### [BANK-E4] OUTCOME T+30
+
+T+30 = 09/08 (da fill CASE_BANK OUTCOME):
+- px = **0.0495** (operator-provided)
+- T0 ref = **0.0377** (open 09/06)
+- ret T+30 vs T0 = **+31.3%**
+- Tu +897% dinh (0.672 spike 27/07) ve +31% = FULL COLLAPSE
+- vs advisor exit VWAP (0.1971): -74.9% — crowd giu tui
+
+"Dung T-11" da san: dung tu ngay L-26 trigger (07-19) thi ro tra roi.
+
+### [BANK-E5] mm_econ v0.2
+
+Tao moi: `docs/proposals/mm_econ_v0.2.md`
+- Column moi M1: `kho_vol_ratio` = BANK = 2.6% (80M × $0.197 / $598M spot)
+- **Taker detection floor ~10%**: Neu kho_vol_ratio < 10% -> ABSTAIN taker detect, dung on-chain balance
+- M7 moi: BANK Vong 2 watch — 3 dieu kien, verdict 05/08 = 0/3
+- M6 moi: methodology kho_vol_ratio + implication cho P8 thesis
+
+---
+
 ## SESSION 2026-08-05 (D) — BANK SPOT AUDIT (W1-W5)
 
 **Operator:** Tien
