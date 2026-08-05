@@ -3192,3 +3192,82 @@ PENDING OPERATOR (không thay đổi):
 **Nguyên nhân:** Probe condition chưa đủ nhưng agent diễn giải "dry-run trông ổn → đủ điều kiện". Sai: điều kiện là paste 4 mảnh đủ bằng chứng — dry-run count không phải bằng chứng.
 
 ---
+
+## SESSION 2026-08-06 (I) — K-SERIES CONSOLIDATION (K0-K4)
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Scripts:** none (pure doc ops)
+**Output:** `docs/TASKS.md`, `docs/INDEX.md`, `docs/analysis_playbook.md` (moved + v0.2), `docs/proposals/mm_econ_v0.2.md` (CASE EVIDENCE INDEX), K4 orphan list
+
+---
+
+### [K0] TASK LEDGER
+
+Tạo `docs/TASKS.md` — task ledger từ nay. 18 dòng task hiện tại.
+Quy ước: diff đầu mỗi session để operator thấy cái gì đang rơi.
+
+---
+
+### [K1] MERGE MM-ECON → PLAYBOOK
+
+`docs/analysis_playbook.md` v0.1 → **v0.2**:
+- Thêm `**Layer coverage:** I·II·III·IV·V·VI·VII·Spot` vào header
+- Thêm **section VII MM-ECON** (M1 table n=, M6 taker floor, VII.2 subtype table, VII.4 Vòng 2 criteria)
+- Thêm **L-KNOW "ô-điền-≠-đã-trả-lời"**: ô điền PENDING không phải đã trả lời, không dùng để luận kết quả
+- Dòng cuối VII: link `docs/proposals/mm_econ_v0.2.md`
+
+---
+
+### [K2] DỌN PROPOSALS/
+
+| Hành động | File | Đích |
+|-----------|------|------|
+| git mv (superseded) | `proposals/mm_econ_v0.md` | `proposals/archive/mm_econ_v0.md` + prepend ⛔ SUPERSEDED |
+| Edit in-place | `proposals/mm_econ_v0.2.md` | Thêm version/changelog table + **CASE EVIDENCE INDEX** (11 dòng mapping M-band → file bằng chứng) |
+| Edit header | `proposals/mm_econ_tut_forward_20260804.md` | Thêm "⏰ Hạn PASS/FAIL 18/08/2026" |
+| git mv | `proposals/tut_forensic_20260805.md` | `case_files/evidence/tut_forensic_20260805.md` |
+| git mv | `proposals/clo_thesis_20260804.md` | `case_files/evidence/clo_thesis_20260804.md` |
+| copy + rm (untracked) | `proposals/analysis_playbook.md` | `docs/analysis_playbook.md` (vị trí canonical) |
+
+Tạo directories: `docs/proposals/archive/`, `docs/case_files/evidence/`
+
+**Note:** CASE_TUT EVENTS và CASE_CLO EVENTS REF chưa điền (xlsx cần session riêng khi file đóng).
+
+---
+
+### [K3] INDEX.MD
+
+Tạo `docs/INDEX.md` — cây 4 tầng:
+- Tầng 0: INDEX + TASKS
+- Tầng 1: Playbook + Lessons
+- Tầng 2: Model Spec (mm_econ)
+- Tầng 3: Case Files (xlsx + evidence)
+- Tầng 4: Reports/Probes (thư mục)
+- Cuối: bảng Orphan từ K4
+
+---
+
+### [K4] ORPHAN AUDIT
+
+Grep toàn bộ .md trong docs/ — file không được reference từ canonical nào:
+
+**10 orphan (operator quyết):**
+
+| File | Đề xuất |
+|------|---------|
+| `docs/gate_tag_probe.md` | → archive |
+| `docs/reports/_probe_idol_k2_k5_20260804.md` | → link từ CASE_IDOL EVENTS |
+| `docs/reports/_probe_alpha_deadcode_20260803.md` | → archive |
+| `docs/reports/_probe_alpha_resolver_20260804.md` | → archive |
+| `docs/reports/_probe_br_chot_canh_20260804.md` | → link từ CASE_BR EVENTS |
+| `docs/reports/_probe_tag_chot_canh_20260804.md` | → link từ CASE_TAG EVENTS |
+| `docs/reports/_probe_tut_exit_20260804.md` | → link từ CASE_TUT EVENTS |
+| `docs/reports/_probe_tut_funding_exit_20260804.md` | → link từ CASE_TUT EVENTS |
+| `docs/reports/archive/cooldown_review_2026-07-30.md` | → giữ archive (OK) |
+| `docs/reports/missing_jul.md` | → archive |
+
+**Đã linked (không orphan):** 4 bank/idol reports → linked từ mm_econ_v0.2.md CASE EVIDENCE INDEX.
+
+**PENDING OPERATOR:** Approve/reject từng đề xuất trên. Agent chờ ký mới thực thi.
+
+---

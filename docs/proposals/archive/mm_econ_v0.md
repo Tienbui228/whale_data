@@ -1,3 +1,5 @@
+> ⛔ **SUPERSEDED** by `docs/proposals/mm_econ_v0.2.md` (05/08/2026). Archived 06/08/2026. Không dùng — chỉ giữ vết lịch sử.
+
 # MM-ECON Calibration v0 → v0.1 (+ L-42 archetype patch)
 **Date:** 04/08/2026 | **Status:** ANALYSIS ONLY — operator ký trước khi dùng vào live signal
 **Nguồn:** freshwatch_daily (probe `_probe_mm_econ_data.py`, `_probe_ake_data_20260804.py`)

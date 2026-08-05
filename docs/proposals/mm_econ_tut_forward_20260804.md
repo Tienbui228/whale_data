@@ -1,5 +1,6 @@
 # MM-ECON TUT — Forward Analysis v1
 **Date:** 04/08/2026 | **Ngày T0:** 07-22 | **D hiện tại:** D+13
+> ⏰ **Hạn chấm PASS/FAIL: 18/08/2026** (T+27 từ T0). Sau khi chấm xong → archive vào `docs/proposals/archive/`.
 **Status:** ANALYSIS ONLY — bảng P1-P5 ghi predictions để chấm PASS/FAIL sau
 **Nguồn:** freshwatch_daily (35 rows), fapi klines daily+4h, probe `_probe_tut_mm_econ_20260804.py`
 

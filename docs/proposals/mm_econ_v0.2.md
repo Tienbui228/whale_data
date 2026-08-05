@@ -1,11 +1,38 @@
 # MM-ECON Calibration v0.2
-**Date:** 05/08/2026 | **Status:** ANALYSIS ONLY — operator ký trước khi dùng vào live signal
-**Supersedes:** `mm_econ_v0.md` (v0.1 patch tích hợp luôn)
-**Changes v0.2:**
-1. BANK T+30 RESOLVED (09/08): px 0.0495 vs T0 0.0377 = +31.3% — dòng ĐÓNG
-2. Thêm cột `kho_vol_ratio` vào M1 summary
-3. Thêm section M6: Taker Detection Floor + kho_vol_ratio methodology
-4. BANK Vòng 2 watch: 3 điều kiện 01-05/08
+
+**Phiên bản:** v0.2 | **Ngày:** 05/08/2026 | **Archived consolidation:** 06/08/2026
+**Status:** ANALYSIS ONLY — operator ký trước khi dùng vào live signal
+**Supersedes:** `docs/proposals/archive/mm_econ_v0.md` (v0 + v0.1 patch đã tích hợp)
+
+**Changelog:**
+
+| Ver | Ngày | Thay đổi |
+|-----|------|---------|
+| v0 | 04/08 | Baseline: M1 6 campaigns, M2-M3 analysis, M4 TUT live, M5 công thức |
+| v0.1 | 04/08 | L-42 archetype patch: thêm mm_archetype + kho_nguon; PnL spot → "unverified" |
+| v0.2 | 05/08 | BANK T+30 closed (+31.3%); kho_vol_ratio cột M1; M6 taker floor; M7 BANK Vòng 2 |
+
+---
+
+## CASE EVIDENCE INDEX
+
+Ánh xạ mục tài liệu với file bằng chứng gốc (frozen — không sửa sau ký).
+
+| Band | Token | File bằng chứng | Nội dung chứng minh |
+|------|-------|-----------------|---------------------|
+| M1 | BANK | `docs/reports/_probe_bank_autopsy_20260804.md` | OI_mult 6.15×, MM_mult 5.00×, kho_vol_ratio 2.6% |
+| M1 | BANK | `docs/reports/_probe_bank_h1h2h3_20260804.md` | H1 (SHORT-WASH), H2 (kho Loại B), H3 (round-trip) |
+| M1 | BANK | `docs/reports/_probe_bank_june_unlock_20260804.md` | Kho B: unlock 17/07, deposit 18/07 |
+| M1 | IDOL | `docs/reports/_probe_idol_k1_k6_20260804.md` | OI_mult 2.73×, MM_mult ~1.57×, mm_archetype=A |
+| M1 | TUT | `docs/case_files/evidence/tut_forensic_20260805.md` | Pháp y khung dài, Loài C phân tích |
+| M1 | TUT | `docs/proposals/mm_econ_tut_forward_20260804.md` | P1-P8 predictions (frozen 04/08), U1-U6 analysis |
+| M1 | CLO | `docs/case_files/evidence/clo_thesis_20260804.md` | Thesis test spot-đạo-cụ / két perp 2 campaign |
+| M3 | BANK | `docs/reports/_probe_bank_h1h2h3_20260804.md` | Exit clock D+10, ΔOI/B = +516% |
+| M3 | IDOL | `docs/reports/_probe_idol_k1_k6_20260804.md` | Exit clock D+11, ΔOI/B = +173% |
+| M6 | BANK | `docs/reports/_probe_bank_autopsy_20260804.md` | kho_vol_ratio 2.6% → AMBIGUOUS taker detection |
+| M7 | BANK | `docs/case_files/CASE_BANK.xlsx` DAILY | Vòng 2 series 31/07–05/08, 3 điều kiện |
+
+---
 
 ---
 
