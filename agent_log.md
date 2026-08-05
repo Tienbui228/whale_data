@@ -2,6 +2,67 @@
 
 ---
 
+## SESSION 2026-08-05 (C) — TUT CUA A AUDIT (S1-S4)
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiem vu:** S1 venue map, S2 chuoi spot, S3 Cua A audit, S4 cap nhat CASE_TUT.
+
+---
+
+### [TUT-S1] VENUE MAP
+
+| Venue | Vol/ngay | Nguon | Nhan |
+|---|---|---|---|
+| **Binance Spot TUTUSDT** | $0.23M-$7.16M | api.binance.com | **PHAT HIEN MOI** — listed, confirmed |
+| BSC DEX TUT/WBNB 1% | $0.01M-$1.02M | GeckoTerminal | liq=$2.38M, pool tao 2025-02-08 |
+| BSC DEX TUT/USDT 0.25% | ~$0.04M | GeckoTerminal | tiny, created 2026-07-21 |
+| Gate/MEXC/LBank/Ourbit | $16-84M moi san | CoinGecko | NGHI NGO — vol qua cao, co kha nang wash |
+| Binance Alpha ALPHA_117 | 400 error | alpha endpoint | co the da ngung hoac doi format |
+
+**venue_top: Binance Spot TUTUSDT** (da xac nhan qua api.binance.com klines). TUT CO SPOT LISTING — khac gia su ban dau trong cac session truoc.
+
+### [TUT-S2] CHUOI SPOT 01/07→05/08
+
+| Ngay | Perp vol | Spot BNB | DEX BSC | Spot tong | Ratio | Taker sp |
+|---|---|---|---|---|---|---|
+| 11/07 (ignition) | $42.16M | $2.00M | $0.30M | $2.30M | 0.055x | 54.9% |
+| 12/07 (local top) | $14.71M | $0.79M | $0.24M | $1.02M | 0.070x | 46.4% |
+| 21/07 (vol spike) | $15.80M | $1.65M | $0.25M | $1.90M | 0.120x | 51.8% |
+| 27-31/07 (quiet) | $1.1-2.4M | $0.35-0.78M | $0.07-0.18M | $0.42-0.96M | 0.37-0.40x | 44-58% |
+| 03/08 (vol max) | $17.95M | $5.48M | $0.74M | $6.21M | 0.346x | 56.8% |
+| 04/08 (acceleration) | $33.25M | $7.16M | $1.02M | $8.18M | 0.246x | 50.9% |
+
+- AKE-test: ratio trung binh 0.17x (campaign tong) — SPOT CO THAT, khong phai can gat. Ratio cao hon tren ngay yen lang (0.38x); thap hon ngay bung vol lon (0.055x).
+- Taker spot Binance: avg 51.1%, range 37.9-57.8%. TRUNG TINH — KHONG co tin hieu phan phoi ro rang tu taker.
+- Sell-dominated days (<45%): 19/07, 23/07, 31/07
+- Buy-dominated days (>55%): 10/07, 20/07, 28/07, 03/08
+
+### [TUT-S3] CUA A AUDIT
+
+S3a — DEX swap log: GeckoTerminal chi tra 300 giao dich gan nhat (=~1 ngay cho pool nho nay). 05/08 sang: sell=$20k vs buy=$65k (0.31 ratio — buy-dom). Khong co large sell pattern ro rang. ABSTAIN ket luan phan phoi co to chuc tu DEX.
+
+S3b — Cua A capacity (Binance spot la venue chinh):
+- Tong spot campaign (09/07->04/08): $31.6M Binance + $4.9M DEX = **$36.5M**
+- Avg/day: ~$1.4M/day
+- Taker neutral (51.1%) -> khong the phan biet buy-for-hold vs sell-via-limit
+- Stealthy sell (30% spot vol): ~$420k/ngay, 27 ngay = ~$11.3M max
+- Chuyen tokens at avg px 0.015: ~750M tokens max (PENDING O1 total supply)
+- **DEX capacity thap: $174k/day avg** (nho vs Binance spot)
+
+S3c — Exchange balance: PENDING OPERATOR (Nansen LOCKED)
+
+### [TUT-S4] VERDICT V4 UPDATE
+
+- Phien truoc: "monetize = perp 15-20%"
+- Cap nhat: "monetize = perp 15-20% (px+/OI- confirmed) + spot AMBIGUOUS (taker 51.1% neutral, vol $1.4M/day, khong co DEX sell pattern ro)"
+- On-chain balance van la so phan xu: kho tren san tang hay giam tu 09/07?
+
+CASE_TUT DAILY: da cap nhat vol_spot_usd + taker_spot_pct cho 36 rows (07/07->05/08 co data)
+Probe: scripts/archive/_probe_tut_cua_a_20260805.py, scripts/archive/_task_update_tut_spot_20260805.py
+
+---
+
 ## SESSION 2026-08-05 (B) — T0 VERIFY + CASE_TUT + T1 OUTPUT
 
 **Operator:** Tien
