@@ -2,6 +2,86 @@
 
 ---
 
+## SESSION 2026-08-05 — TUT PHÁP Y KHUNG DÀI V1-V6
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** Pháp y TUT khung dài May→05/08: Loài C, đo vốn gom thật + tiến độ monetize. V1-V6 full analysis.
+
+---
+
+### [TUT-FORENSIC-V1] DỰNG CHUỖI 01/05→04/08
+
+- Data boundary: VPS = 0 file TUT, freshwatch bắt đầu 27/06 (39 rows). OI/LSR ABSTAIN trước 27/06 per L-10.
+- fapi klines 1d: 01/05→04/08 (96 nến). FundingRate: 01/05→04/08 (toàn 0.00005 — xem V2).
+- Giai đoạn: Quiet May (px ~0.010-0.013), Bait Jun (03-07/06 spike), Consolidation Jun-Jul, Chapter 3 main (09/07→nay).
+- px_max Chapter 3 tính đến 04/08: 0.02242 (04/08 04:00 UTC). Hiện tại 04/08 ~0.02232.
+
+### [TUT-FORENSIC-V2] FUNDING FINGERPRINT
+
+- **FUNDING PINNED 0.00005 TOÀN BỘ 97 NGÀY** (01/05→05/08, mọi period). Unique van tay.
+- Không có 1 period nào burst, kể cả Chapter 3 markup +149% (09/07→04/08).
+- Xác nhận cả Velo aggregate (freshwatch) VÀ Binance fapi native (từ session hôm qua E2).
+- Kết luận: funding = controlled suppression, không phải organic.
+
+### [TUT-FORENSIC-V2b] CONTROLLED FILL — GOM PHÂN TÍCH
+
+- taker% 44–50.5% (không có session nào >51% rõ ràng trong quiet period)
+- Vol anomaly May: ngày bình thường 0.3-1.5M USDT/ngày (rất thấp)
+- Stable 7d+: px dải 0.0090-0.0135 từ T0 đến 08/06 (không phá)
+- **Controlled fill xác nhận** — pattern khớp absorption
+
+### [TUT-FORENSIC-V2c] BẢNG VỐN GOM (TẠM TÍNH)
+
+| Window | Period | VWAP (USDT) | Vol (tokens) | Capital |
+|--------|--------|-------------|--------------|---------|
+| A — May quiet | 01/05-31/05 | ~0.01164 | ~22.2M | ~$258K |
+| B — Jun consolidation | 01/06-26/06 | ~0.01030 | ~est. 30M | ~$309K |
+| C — Jul 01-06 | 01/07-06/07 | ~0.01076 | ~8.6M | ~$93K |
+| **Blend 30/50/20%** | | **0.01079** | ~61M total | **~$660K** |
+
+- Build_VWAP_total = **0.01079 USDT** (floor kinh tế)
+- B_T0 (09/07 OI = 1.922M tokens equivalent) → nominal vốn gom proxy: **~$20.7K** (nhỏ, spot kho trên DEX chính)
+- K_spot PENDING OPERATOR (on-chain BSC balance)
+
+### [TUT-FORENSIC-V3] LỊCH SỬ CAMPAIGN
+
+- **Chapter 1 (probe):** 03-04/05 — px spike từ ~0.012 → 0.018, volume surge, OI ABSTAIN. Bait nhỏ.
+- **Bait Jun:** 03-07/06 — px 0.014 → 0.021 (+50%), funding STILL PIN, OI ABSTAIN. Bẫy ngắn.
+- **Chapter 3 (MAIN):** 09/07→nay — px 0.01076 → ATH 0.02242 (+108%), OI 1.922M → 6.344M (+4.422M).
+
+### [TUT-FORENSIC-V4] TIẾN ĐỘ MONETIZE
+
+- gLSR trajectory: 3.115 (27/06) → 1.438 (04/08) — crowd adding SHORTs, MM closing longs vào đám SHORT = harvest
+- pos_r: 4.169 (01/08) → 2.830 (04/08) = **-32.1% trong 3 ngày**
+- **L-26 ALERT**: threshold ≥30%/3d → **POSSIBLY TRIGGERED 04/08** (cần 05/08 fn=6 confirm)
+- DEX: TUT/WBNB 1% pool — liq=$2.37M, vol24h=$1.17M. Absorb stealthy $117-237k/ngày.
+- Ước tính monetize: ~15-20% vốn đã xả qua DEX (PENDING on-chain confirm)
+- ΔOI/B = 6.344M/2.752M = **2.30×** tại 05/08 — campaign còn đang build OI (chưa flush)
+
+### [TUT-FORENSIC-V5] CHẤM LẠI P1-P5
+
+- P1 exit [0.025-0.035]: PENDING — px 0.02232, chưa chạm
+- P2 L-26 before 22/08: **POSSIBLE** — cần 05/08 freshwatch confirm pos_r
+- P3 OI_exit 8-12M target: OI=6.344M, còn 1.656-5.656M để lên target (~6-7 ngày tại rate hiện tại)
+- P5 TREO: nếu L-26 trigger thật → P2 về trước P1 (exit silent không burst)
+- Funding P cờ: vẫn PIN → chưa bung
+
+### PENDING OPERATOR TUT
+
+| # | Mục | Ảnh hưởng |
+|---|---|---|
+| O1 | Total supply TUT | V2c scaling |
+| O2 | Cost basis spot on-chain (BscScan) | V2c đối chứng |
+| O3 | Exchange balance 1Y (Nansen/BscScan) | K_spot xác nhận |
+| O4 | Freshwatch 05/08 fn=6 | L-26 confirm/deny |
+| O5 | Alpha_117 parquet trên VPS bapi | spot vol history |
+
+- Output: `docs/proposals/tut_forensic_20260805.md` (frozen)
+- Probe: `scripts/archive/_probe_tut_forensic_20260804.py`
+
+---
+
 ## SESSION 2026-08-04 (B) — CLO THESIS TEST + COOLDOWN VERDICT
 
 **Operator:** Tien
@@ -2167,5 +2247,115 @@ gLSR flush ≤1.1 ĐÃ XẢY RA nhưng cơ chế không phải organic flush. po
 | TAG OUTCOME sheet (T+dates chưa thiết lập) | Operator |
 | IDOL 03/08 DAILY append | fn=6 verify 04/08 01:20 UTC |
 | BLUAI case analysis (alpha vol L-29 pattern) | — |
+
+---
+
+## SESSION 2026-08-05 — DEV: FN=1 FORENSIC + ALPHA NO-KLINES + CRON VERIFY
+
+**Operator:** Tien
+**Agent model:** claude-sonnet-4-6
+**Nhiệm vụ:** (0.1) Deploy alert.py patch. (3.1) P3 narrative error → L-28 draft. (3.2) Root cause fn=1 chỉ 03/08. (3.3-b1/b2/b3) Alpha no-klines label lock. (1.1) Export cron 01:20 UTC verify. (2.1) Alpha cron 02:00 UTC verify.
+
+---
+
+### [0.1] ALERT.PY PATCH — DEPLOYED
+
+- Local + VPS: `log.warning` → `log.error` cho case env-missing
+- Docstring cập nhật: "logs ERROR every call"
+- SCP xong trước session bắt đầu. VPS mtime pre-patch: Aug 4 02:05 UTC (WARNING version)
+
+---
+
+### [3.2] ROOT CAUSE FN=1 CHỈ 03/08
+
+**Câu hỏi:** Vì sao 01/08, 02/08 không bị fn=1 nhưng 03/08 bị?
+
+**Cơ chế:**
+- 01/08 + 02/08: Export tháng 8 chưa tồn tại → exporter chạy Fix-C path (`_all_available_1h_dates()`) = backfill toàn lịch sử → KHÔNG include D=hôm nay
+- 03/08: Export tháng 8 ĐÃ TỒN TẠI (tạo hôm trước) → exporter vào `range(2,-1,-1)` = [D-2, D-1, D] (code CŨ trước L-41) → include D=03/08 (hôm nay, 00:50 UTC)
+- Tại 00:50 UTC ngày 03/08, `funding_8h` chỉ có 1 kỳ (00:00 UTC) → fn=1 ghi vào CSV
+- CSV append-only → row stale không bị update
+
+**Kết luận:** 03/08 là ngày ĐẦU TIÊN CSV tháng 8 tồn tại sẵn khi cron 00:50 UTC chạy → lần đầu tiên bug `range(2,-1,-1)` include D có thể ghi stale. L-41 fix (`range(2,0,-1)`) ngăn tái phát.
+
+---
+
+### [3.3] ALPHA NO-KLINES — LABEL LOCK SAU PHÂN XỬ
+
+**b1 — TUT (ALPHA_117), exact collector params (startTime+endTime+limit=1):**
+```
+Response: {"code":"-1121","message":"Invalid Symbol.","data":null,"success":false}
+arr = raw.get("data",[]) → None  (key tồn tại, fallback [] không kích hoạt)
+not arr = True → log.debug("alpha_no_trading") → SILENT
+```
+-1121 xuất hiện cả hai format (manual + collector). Không phải format issue.
+
+**b2 — IDOL (ALPHA_223), so sánh format:**
+| Format | ts nến | Ngày |
+|--------|--------|------|
+| Manual (no startTime) | 1785888000000 | 05/08 UTC (incomplete) |
+| Collector (startTime+endTime) | 1785801600000 | 04/08 UTC (đóng đủ) |
+
+Format collector đúng — lấy nến đã đóng của D-1. Manual trả nến mới nhất (hôm nay, chưa đóng).
+
+**b3 — Fail-silent bug trong `_bapi_get`:**
+```python
+arr = raw if isinstance(raw, list) else (
+    raw.get("data", []) if isinstance(raw, dict) else [])
+```
+`raw.get("data",[])` khi `data=null` → trả `None` (key tồn tại). `not None = True` → no_trading silent.
+**Invalid symbol = fail-silent = không phân biệt được từ no_trading thật.**
+
+**Nhãn 11 no-klines symbols → (a): endpoint -1121 "Invalid Symbol"**
+- Xác nhận sau phân xử (b1+b2+b3), không phải gộp trơn
+- TUT + BMT xác nhận -1121 cả manual lẫn collector format
+- 9 symbols còn lại: -1121 từ spot-check manual (không có startTime) → cùng pattern
+
+**Việc 2 item bổ sung:** Fix `_bapi_get` — phân biệt `None` vs `[]`:
+- `data=null` → `log.error("alpha_invalid_symbol")` + ghi vào fail-set
+- `data=[]` → `log.debug("alpha_no_trading")` (genuine no trading)
+
+---
+
+### [3.1] P3 NARRATIVE ERROR — DRAFT L-28
+
+**Lỗi xảy ra:** Probe 3.3 ban đầu label 11 symbols là (a) từ HTTP response của 2 symbols (TUT+BMT) mà không cross-check:
+1. Format manual vs collector có khác nhau không (→ b1 cần)
+2. Symbol thành công dùng format nào cho ra data (→ b2 cần)
+3. Collector xử response sai thế nào (→ b3 cần)
+
+**Narrative error**: Operator can thiệp đúng — "Nhãn có thể vẫn là (a) nhưng phải là (a) sau phân xử, không phải (a) gộp trơn."
+
+**Draft L-28** (chờ operator ký số và append vào LESSONS sheet):
+> **L-28: Probe-before-label.** Đừng lock classification trước khi có cross-check evidence đủ chiều. Probe ngắn + kết luận trên 2 datapoint = narrative error dù label cuối cùng có thể đúng. Quy trình: (1) thu thập raw response, (2) so sánh format, (3) đọc code path → chỉ sau đó mới lock nhãn.
+
+---
+
+### [1.1] EXPORT CRON 01:20 UTC — PASS
+
+**Log 05/08T01:20:03 UTC:**
+- dates=['2026-08-03','2026-08-04'] ✓ (L-41 range(2,0,-1) đúng)
+- 03/08 → export_date_all_present (rows tồn tại từ force-regen → skip) ✓
+- 04/08 → export_date_new_rows rows=526 ✓
+- taker_lag_backfill_none ✓
+- export_month_written new_rows=526 total_rows=2104 ✓
+
+**fn/lc/px/taker 04/08:**
+
+| symbol | fn | lc | px | taker |
+|--------|----|----|-----|-------|
+| BANKUSDT | 24 | False | 0.05135 | 0.4906 |
+| IDOLUSDT | 6 | False | 0.01636 | 0.4718 |
+| TAGUSDT | 6 | False | 0.00121 | 0.4819 |
+| BRUSDT | 6 | False | 0.14535 | 0.4987 |
+
+**Verdict: PASS.** L-41 + exporter hoạt động đúng kỳ vọng.
+
+---
+
+### [2.1] ALPHA CRON 02:00 UTC — PENDING
+
+Đang chờ. Sẽ check sau 1.1.
+
 
 ---
