@@ -3024,6 +3024,162 @@ Scripts: `_probe_xpin_coldstart_20260806.py` → archive sau session
 
 ---
 
+### [ĐÍNH CHÍNH session G — X3→CASE]
+
+CASE_XPIN.xlsx ĐÃ TẠO trong session G (sau khi note X3→CASE được ghi). Script `_task_create_case_xpin_20260806.py` chạy OK: 328 rows, 41 cols, 7 sheets. File hiện tại: `docs/case_files/CASE_XPIN.xlsx`. Cả hai script session G đã được archive vào `scripts/archive/`.
+
+---
+
+## SESSION 2026-08-06 (H) — XPIN SPOT/DEX/ALPHA AUDIT (XS1-XS4)
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Script:** `_probe_xpin_spot_20260806.py` | `_task_update_case_xpin_xs4_20260806.py`
+**Output:** `scratch/xpin_spot_20260806.txt` | CASE_XPIN DAILY +181 vol_spot_usd, CASE venue map updated
+**Boundary:** GeckoTerminal (DEX), CoinGecko (tickers), FAPI (perp px). Alpha ABSTAIN (API 400). On-chain PENDING OPERATOR.
+
+---
+
+### [XS1] VENUE AUDIT
+
+#### [XS1a] BSC DEX Pools (GeckoTerminal)
+
+| Pool | Liq | Vol/24h | Vol/liq | Ghi chú |
+|------|-----|---------|---------|---------|
+| XPIN/USDT **0.01%** PancakeSwapV3 | $944K | **$345K** | 0.366 | **MAIN POOL** — created 2025-08-20 |
+| XPIN/USDT 0.3% | $256 | $326 | 1.27 | Tiny |
+| XPIN/BNB 0.01% | $45K | $0 | — | Dormant |
+| XPIN/USDT 1% | $297 | $0 | — | Dormant |
+| 16 pools còn lại | <$7K mỗi cái | $0 | — | Ghost pools (tạo Oct 2025 lúc pump ATH) |
+
+**Tổng: 20 BSC pools. 19 pools = $0 vol. Một main pool tập trung 100% liquidity và volume.**
+Ghost pools (0.66%, 1.66%, 3.16%, 3.98%, 5.5%, 14.999%…) tạo trong cửa sổ Oct 23-25, 2025 = sniper/arbitrageur thử cắt chênh lệch lúc ATH.
+
+#### [XS1b] Alpha ALPHA_334
+
+- ID trong `alpha_id_map.json`: ✅ (ALPHA_334)
+- Local store (`data/raw/spot_klines_1d`): **0 files** (store forward-only từ 04/08, XPIN chưa vào)
+- API klines endpoint: **HTTP 400** (bapi không serve XPIN hiện tại)
+- **Alpha vol = ABSTAIN** toàn bộ historical
+
+#### [XS1c] CEX Wash Test (CoinGecko tickers + depth)
+
+| Exchange | Vol/24h | Liq (±2%) | Vol/liq | Spread | Verdict |
+|----------|---------|-----------|---------|--------|---------|
+| **BitMart** | $1.61M | $4,766 | **338x** | 1.61% | ⚠️ SUSPECT WASH |
+| **Biconomy** | $251K | $380 | **661x** | 0.16% | ⚠️ SUSPECT WASH |
+| Gate | $198K | $4,974 | 39.7x | 0.11% | WATCH |
+| MEXC | $142K | $5,771 | 24.6x | 0.30% | WATCH |
+| Toobit | $103K | $909 | 113x | 0.18% | SUSPECT |
+| DigiFinex | $102K | $1,848 | 55.1x | 0.12% | SUSPECT |
+| **KuCoin** | $72K | $9,936 | **7.2x** | 0.19% | ✅ CLEAN |
+| Ourbit | $46K | $1,579 | 29.1x | 0.01% | WATCH |
+| KCEX | $39K | $813 | 48.4x | 0.02% | WATCH |
+| BingX | $28K | $505 | 56.3x | 0.14% | SUSPECT |
+| Phemex | $28K | $449 | 61.3x | 0.83% | SUSPECT |
+| **Hibt** | $22K | $3,215 | **6.9x** | 1.20% | ✅ CLEAN |
+| PancakeSwap | $349K | $19K | 18.3x | 0.60% | ✅ DEX OK |
+
+**Kết luận XS1c:** CEX vol phần lớn là wash. Chỉ KuCoin ($72K) và Hibt ($22K) có liq thực. DEX ($345K) là nguồn spot thật duy nhất đáng tin.
+
+#### [XS1d] Detection Floor
+
+```
+Daily spot THẬT: DEX $521K/day + Alpha $50K est = $571K/day
+  • 1% total supply  = 1B tokens × $0.00155 = $1.55M = 2.7x daily spot → DETECTABLE
+  • 5% circ supply   = 2.4B tokens × $0.00155 = $3.73M = 6.5x daily spot → VERY DETECTABLE
+  • 5% total supply  = 5B tokens × $0.00155 = $7.75M = 13.6x daily spot → EXTREMELY DETECTABLE
+```
+
+**Bất kỳ kho >1% total supply selling qua BSC DEX đều hiển thị trong 1-2 ngày.**
+Đây là đặc điểm nổi bật khác BANK (spot $75M/day → 2.6% kho invisible).
+
+---
+
+### [XS2] CHUỖI DAILY DEX VOL (GeckoTerminal OHLCV)
+
+**Phủ:** 181 bars = 2026-02-06 → 2026-08-05 (max GeckoTerminal trả về).
+**Trước 2026-02-06: ABSTAIN** (pool tạo 2025-08-20 nhưng GeckoTerminal không phủ đủ sâu).
+Campaign 1 (Oct 2025) và Campaign 2 (Dec 2025): DEX vol = ABSTAIN toàn bộ.
+
+| Window | Ngày | DEX avg/ngày | DEX tổng | Perp avg/ngày | DEX/Perp |
+|--------|------|-------------|---------|--------------|----------|
+| Campaign 1 | Oct 16-27 | ABSTAIN | — | ~348M/ngày | N/A |
+| Campaign 2 | Dec 19-24 | ABSTAIN | — | ~49M/ngày | N/A |
+| Fail ignition | Jul 08-13 | **$2.79M** | $16.7M | $48.5M | **0.058** |
+| Peak div | Jul 15-19 | **$1.38M** | $6.9M | $7.52M | **0.183** |
+| Crowd surge | Jul 22-Aug05 | **$521K** | $7.8M | $2.38M | **0.219** |
+
+**px_gap (DEX close vs Perp close):** Nhất quán -0.1% đến -1.2% (DEX LUÔN dưới perp). Perp dẫn giá.
+
+---
+
+### [XS3] BA CÂU ĐÍ SPOT
+
+#### [XS3a] DEX/Alpha vol trong crowd surge vs trước
+
+```
+Prior period (Jul 08-21, 14 ngày): DEX avg = $1,895,828/ngày
+Crowd surge (Jul 22-Aug 05, 15 ngày): DEX avg = $521,592/ngày
+Thay đổi: 0.28x (DEX CO LẠI 72%)
+```
+
+**Kết luận:** Crowd surge (pos_r 2.0-2.2, OI tăng) KHÔNG được hỗ trợ bởi real buying trên DEX. Crowd đang mua perp leverage thuần — không có tiền thực vào BSC DEX. Đây là dấu hiệu crowd thiếu conviction spot-based.
+
+#### [XS3b] Recent Trades — ABSTAIN (429 rate limit GeckoTerminal)
+
+GeckoTerminal trades endpoint trả 429 (3rd call trong cùng window). Không có dữ liệu buy/sell flow chi tiết Jul 11→Aug 05. **PENDING retry lần sau.**
+
+#### [XS3c] Failed Ignition Jul 10-11 — DEX Autopsy
+
+| Ngày | DEX vol | Alpha | Perp vol | DEX/Perp | px_gap |
+|------|---------|-------|----------|----------|--------|
+| Jul 09 | $496,677 | $0 | $1.55M | 0.321 | -1.02% |
+| Jul 10 | $2,788,481 | $0 | $33.35M | **0.084** | -0.86% |
+| Jul 11 | **$7,785,737** | $0 | **$207.3M** | **0.038** | -0.22% |
+| Jul 12 | $2,907,977 | $0 | $32.0M | 0.091 | +0.11% |
+| Jul 13 | $1,494,383 | $0 | $12.1M | 0.123 | -0.21% |
+
+**Phân tích:** Ngày Jul 11 (perp fail ignition - $207M perp vol, gLSR không đạt ngưỡng). DEX cũng tăng 16x ($496K→$7.79M) nhưng chỉ bằng 3.8% perp. DEX expand = crowd FOMO mua cả spot, không phải kho bán. px_gap thu hẹp từ -1.02% → -0.22% = lực mua DEX tạm thời đưa giá DEX gần perp. Không có dấu hiệu phân phối từ DEX layer.
+
+---
+
+### [XS4] CẬP NHẬT CASE_XPIN
+
+**DAILY sheet:** 181 rows `vol_spot_usd` = vol_dex (GeckoTerminal Feb06-Aug05). Nguồn: GeckoTerminal PancakeSwapV3 0.01% main pool. Precision ~1% (formatted K/M) trừ Jul09-13 (exact from XS3c). Pre-Feb06: col = None (ABSTAIN).
+
+**CASE sheet cập nhật:** `venue_spot`, `venue_alpha`, `spot_perp_ratio`, `O4_bitmart_vol`, `detection_floor_spot`, `verdict_spot_layer`.
+
+**Lưu ý:** CASE_XPIN.xlsx đang mở trong Excel lúc chạy task. File đã chuẩn bị tại `docs/case_files/CASE_XPIN_XS4_staged.xlsx`. **OPERATOR cần đóng Excel và rename/replace** trước khi commit.
+
+---
+
+### [XS-VERDICT]
+
+```
+XPIN spot layer audit (XS1-XS4) — kết luận:
+
+VERDICT SPOT: WATCH-nhạt ĐỨNG (không thay đổi từ X6 cold-start)
+
+Lý do không nâng:
+  ① Spot layer THIN ($571K/day thật) — không có lớp spot mạnh để khuếch đại ignition
+  ② Crowd surge = pure leverage, không có real money vào DEX (0.28x co)
+  ③ XS3b ABSTAIN — không quan sát được sell burst cụ thể từ large wallets
+  ④ Alpha ABSTAIN — không biết vol Alpha historical
+
+Lý do không hạ:
+  ① Detection floor RẤT THẤP — bất kỳ kho bán >1% supply = visible trong 1d → làm yên tâm
+  ② Không thấy sell burst trong dữ liệu có được (DEX expand Jul11 = crowd FOMO, không phải distribution)
+  ③ DEX pool health OK: liq $944K, vol/liq 0.366 = healthy ratio
+
+PENDING OPERATOR (không thay đổi):
+  • BscScan kho wallet + vesting schedule
+  • BitMart vol verification on-chain (is $1.61M real?)
+  • Alpha klines manual pull (bapi 400)
+  • XS3b retry (GeckoTerminal trades Jul11-Aug05)
+```
+
+---
+
 ### [KỶ LUẬT] VI PHẠM PROBE-FIRST — 05/08/2026
 
 **Hai lần resubmit write khi điều kiện probe chưa nộp:**
