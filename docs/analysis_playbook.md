@@ -215,6 +215,106 @@ Sau khi campaign RESOLVED + kho tiếp tục nạp, cần 3/3 điều kiện đ�
 
 **BANK Vòng 2 status (05/08):** 0/3 thỏa — funding âm, gLSR đang giảm. Theo dõi tiếp.
 
+### VII.5 — ĐỒNG HỒ THEO LOÀI (L-42 archetype quyết định band)
+
+> **GATE:** Phân loại xong Loại A/B/C (§ III.1) MỚI được tra bảng. Chưa phân loài → output = bảng nhánh, CẤM gán số band.
+
+| Loại | Band ΔOI/B | Exit clock | n= | Đặc trưng |
+|------|-----------|------------|----|-----------| 
+| **A — kho-mượn** | ~1–2× | flip ≤2 tuần | n=2 (IDOL/CLO, partial) | Cửa ghế sập khi OI tăng 1-2× build; MM trả kho nên exit nhanh; không có "nạp lại" |
+| **B — kho-unlock** | ~5–7× | ignite T−7±3 · deposit ≤48h hậu-unlock | n=1 (BANK 6.15×) | Neo lịch vesting cứng; chân-3 = short-hedge tranche tương lai (kho chưa unlock); tell hạng nhất: deposit ≤48h sau event |
+| **C — kho-tự-mua** | calib đang chạy (TUT) | cost basis = floor thật | n=0 resolved | Không deadline; conviction genuine; "đi cùng thuyền" duy nhất có nghĩa |
+
+**Nếu chưa phân loài:** xuất bảng nhánh (3 cột A/B/C × giá trị tương ứng) — không chọn một số.
+
+**Nguồn band:** [n=2 IDOL/CLO] Loại A partial-resolved · [n=1 BANK] Loại B. CI chưa đủ → dùng định hướng, không cắt lỗ/chốt lời theo band cứng.
+
+---
+
+### VII.6 — CÔNG THỨC FORWARD
+
+#### B — Sổ Perp MM (Base OI)
+
+```
+B = OI_base = OI tại điểm MM bắt đầu build vị thế
+   Dấu hiệu build: OI tăng trong nến xanh + pos_r tăng + funding pin
+
+Trần cứng (hard ceiling):
+  ΔOI tổng trong cửa sổ build (chỉ đếm nến đỏ ngày MM ép short)
+  = trần lý thuyết của fuel có thể chiết từ crowd
+
+Không có trần (seat-rotation build):
+  OI phẳng + pos_r leo = MM rotate ghế (mua long / short đồng thời)
+  → không đếm được ΔOI → ước qua pos/acc share [nhãn: INFERENCE]
+```
+
+#### Quan hệ ① — exit-VWAP ≈ build_VWAP × (ΔOI/B tại pos_r sập) [n=2]
+
+```
+MM_mult = exit_VWAP / build_VWAP ≈ ΔOI/B tại thời điểm pos_r sập ≥30%
+
+BANK (n=1): build=0.0394 · exit=0.1971 · MM_mult=5.00× · ΔOI/B=6.15×  ✓ gần đúng
+IDOL (n=1): MM_mult≈1.57× · ΔOI/B=2.73×  (partial — L-26 chưa hoàn tất)
+
+Lưu ý: ΔOI/B ≠ MM_mult — ΔOI đo lượng fuel crowd, MM_mult đo lợi nhuận MM.
+Hai số gần nhau khi kho/vol nhỏ (crowd là nguồn lợi chính).
+```
+
+#### Trần Fuel từ Crowd Structure
+
+```
+SHORT-RICH  (gLSR ≤ 0.6 AND div_avg3 ≥ 3):
+  Fuel multiplier est. 3–10× từ nạp gần nhất
+  Chạy được cả hậu-ghế (fuel chưa cạn sau exit)
+  Mỗi crowd_flush RESET quota mới
+
+LONG-HEAVY  (gLSR ≥ 1.2):
+  Fuel multiplier est. 1.2–2× TỪ LẦN NẠP GẦN NHẤT
+  Không có flush = không có quota (crowd đã loaded, không còn gì để chiết)
+  Crowd_flush phải xảy ra TRƯỚC khi fuel được tái sinh
+```
+
+#### Kho/Vol-Regime (chương thoát-kho)
+
+```
+kho_vol_ratio = (kho_tokens × avg_px_at_exit) / total_spot_vol_campaign
+
+≤ 3–10%  → xả tàng hình được (BANK 2.6% — không phát hiện qua taker)
+10–30%   → taker signal nghi ngờ được (cần taker <45% sustained ≥2d)
+≥ 50–100% → chương bán CHƯA THỂ mở (thoát kho lộ tay)
+             → phải kéo dài campaign HOẶC chuyển Cửa B:
+               Cửa B = short-hedge kho (funding âm sâu + OI cao + pos thấp hậu đỉnh)
+```
+
+---
+
+### VII.7 — BA CÂU KẾT ĐỊNH LƯỢNG
+
+> Mọi case sống phải trả lời bằng số (hoặc ABSTAIN có lý do). KHÔNG chấp nhận "có vẻ như" hay "có thể".
+
+```
+□ Q1: Loài gì → đồng hồ nào?
+      [Loại A/B/C hoặc "UNKNOWN + bảng nhánh"]
+      Nguồn: III.1 + VII.5
+
+□ Q2: ΔOI/B hiện tại = ? · cách band (A:1-2× / B:5-7×) còn bao nhiêu ×?
+      B = OI lúc MM bắt đầu build (VII.6)
+      [số thực / ABSTAIN nếu T0 chưa xác định]
+
+□ Q3: kho/vol-regime → chương thoát-kho mở được chưa?
+      kho_vol_ratio = ? → regime (tàng-hình / nghi ngờ / chưa-thể-mở)
+      [số thực / ABSTAIN nếu kho data LOCKED]
+```
+
+**Mốc invalidate của dự đoán (IV.3 áp cho VII):**
+- pos_r drop ≥30% từ peak trong 3d = fuel đã dùng, reset Q2
+- funding âm sâu ≥-15bps xuất hiện SAU PIN = Cửa B pattern, re-read VII.6
+- OI break dưới floor30d = B mới cần thiết lập lại
+
+---
+
+*fit/residual/evidence: `docs/proposals/mm_econ_v0.2.md` — playbook thắng khi hai bản lệch, mm_econ là nơi sửa band TRƯỚC rồi sync vào đây (một chiều: mm_econ → playbook).*
+
 ---
 
 ## Phụ lục: Cross-reference Lessons theo Lớp
