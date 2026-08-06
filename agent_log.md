@@ -126,13 +126,14 @@ python _task_create_case_zbt_20260806.py   # tạo CASE_ZBT.xlsx 14 rows
 python _probe_verify_case_zbt_20260806.py  # verify output OK
 ```
 
-### [L6] CASE_ZBT.xlsx đã tạo (06/08)
+### [L6] CASE_ZBT.xlsx — rebuild 36 rows (01/07→05/08)
 
-DAILY: 14 rows (23/07→05/08), schema 41 cols khớp CASE_BR.  
-3 rows data_bad=1 (24-26/07 klines-only, LSR/funding=MISSING).  
-Derived filled: pin_streak, oi_vs_med14, oi_cycle_pos, div_raw, div_avg3, glsr_slope_5d, d_pos/acc_3d.  
-alpha_suspect="DELISTED" toàn bộ. spot_venue="binance_spot". taker_spot=ABSTAIN.  
-Verdict = blank (HUMAN layer). Commit: xem phần commit.
+DAILY ban đầu 14 rows. Rebuild sau khi operator chỉ ra thiếu: export July CSV bị bỏ sót.  
+**_task_rebuild_case_zbt_20260806.py:** merge export Jul+Aug + fapi 30d (LSR/OI/klines) → 36 rows.  
+data_bad=1 chỉ còn 3 ngày (24-26/07 thiếu export funding/LSR, fapi không đủ history).  
+Event 14-16/07: vol spike 168M → 133M, f_avg âm (-0.000401 ngày 15/07), OI peak 11.2M → flush event lớn.  
+Pin streak 10d kết thúc 05/08. pos_r≥3.0 từ 01/08.  
+Verdict = blank. Commit: xem bên dưới.
 
 ---
 
