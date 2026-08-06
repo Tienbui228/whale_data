@@ -40,6 +40,8 @@ import typer
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from whale_collector.alert import telegram_error
+
 WHALE      = Path(r"D:\Data back test\whale_data")
 CASE_DIR   = WHALE / "docs" / "case_files"
 EXPORT_DIR = Path(r"D:\Check onchain fresh wallets\data\export")
@@ -120,7 +122,9 @@ def _formulas_for_row(n: int) -> dict[int, str]:
     }
 
 
-def _load_index() -> list[dict]:
+def _load_index(log=None) -> list[dict]:
+    import structlog as _sl
+    _log = log or _sl.get_logger()
     wb = openpyxl.load_workbook(str(CASE_DIR / "CASE_INDEX.xlsx"), data_only=True)
     ws = wb["INDEX"]
     cases = []
@@ -128,9 +132,14 @@ def _load_index() -> list[dict]:
         file_val = ws.cell(r, 1).value
         token    = ws.cell(r, 2).value
         status   = ws.cell(r, 3).value
-        if not file_val or not token or not status:
+        if not file_val or not token:
             continue
-        if str(file_val).startswith("("):
+        # REGISTERED-NOT-OPEN: placeholder or non-xlsx file value
+        if not str(file_val).endswith(".xlsx"):
+            _log.info("case_registered_not_open",
+                      token=str(token), file=str(file_val))
+            continue
+        if not status:
             continue
         status_s = str(status).upper()
         if "OPEN" in status_s or "TRACKING" in status_s:
@@ -143,12 +152,21 @@ def _load_index() -> list[dict]:
     return cases
 
 
-def _load_export_csv(date_str: str) -> dict[str, dict]:
-    """Load {symbol: row_dict} from freshwatch_daily_YYYY-MM.csv for given date."""
+def _load_export_csv(date_str: str, log=None) -> dict[str, dict]:
+    """Load {symbol: row_dict} from freshwatch_daily_YYYY-MM.csv for given date.
+
+    Raises RuntimeError if the monthly CSV is completely absent (missing-dependency,
+    not just a missing row for this date — per L-44 missing-dep rule).
+    """
+    import structlog as _sl
+    _log = log or _sl.get_logger()
     ym = date_str[:7]
     csv_path = EXPORT_DIR / f"freshwatch_daily_{ym}.csv"
     if not csv_path.exists():
-        return {}
+        _log.error("export_csv_missing",
+                   path=str(csv_path),
+                   hint="export_freshwatch_daily_vps.py chưa chạy hoặc bị lỗi")
+        raise RuntimeError(f"export_csv_missing: {csv_path}")
     result: dict[str, dict] = {}
     with open(csv_path, encoding="utf-8") as f:
         for row in csv.DictReader(f):
@@ -195,6 +213,10 @@ def _append_daily_row(
         field, parse_type = EXPORT_COL_MAP[c]
         raw = csv_row.get(field, "")
         cell.value = _parse_val(raw, parse_type)
+
+        # 2.5(a): taker_buy_pct (col 5) stored as percent; CSV is fraction r/(1+r)
+        if c == 5 and isinstance(cell.value, (int, float)):
+            cell.value = round(cell.value * 100, 6)
 
         # fn<6: ratio cols get SUSPECT comment; taker/px/vol/OI write native unchanged
         if fn_suspect and c in _RATIO_COLS:
@@ -291,10 +313,23 @@ def main(
 
     log.info("case_daily_start", date=date_str, dry_run=dry_run)
 
-    cases = _load_index()
+    cases = _load_index(log=log)
     log.info("case_daily_cases", count=len(cases), tokens=[c["token"] for c in cases])
 
-    export_rows = _load_export_csv(date_str)
+    # Orphan check: xlsx in CASE_DIR not registered in INDEX
+    indexed_files = {c["file"] for c in cases}
+    for xlsx_f in sorted(CASE_DIR.glob("CASE_*.xlsx")):
+        if xlsx_f.name == "CASE_INDEX.xlsx":
+            continue
+        if xlsx_f.name not in indexed_files:
+            log.warning("orphan_case_file", path=str(xlsx_f))
+
+    try:
+        export_rows = _load_export_csv(date_str, log=log)
+    except RuntimeError as e:
+        log.error("case_daily_abort", reason=str(e))
+        telegram_error(f"case_daily_abort: {e}")
+        raise typer.Exit(1)
     log.info("case_daily_export", date=date_str, symbols_found=len(export_rows))
 
     digest_lines: list[str] = []
@@ -303,6 +338,7 @@ def main(
     digest_lines.append("")
 
     results: list[dict] = []
+    n_missing_xlsx = 0
 
     for case in cases:
         token  = case["token"]
@@ -313,7 +349,9 @@ def main(
 
         xlsx_path = CASE_DIR / cfile
         if not xlsx_path.exists():
-            log.warning("case_daily_missing_xlsx", path=str(xlsx_path))
+            log.error("case_daily_missing_xlsx", path=str(xlsx_path))
+            telegram_error(f"case_daily_missing_xlsx: {cfile} không tồn tại — check CASE_DIR")
+            n_missing_xlsx += 1
             results.append({"token": token, "status": "SKIP_NO_FILE", "note": str(xlsx_path)})
             continue
 
@@ -469,7 +507,7 @@ def main(
              ok=sum(1 for r in results if r.get("status", "").startswith("OK")),
              skip=sum(1 for r in results if "SKIP" in r.get("status", "")))
 
-    raise typer.Exit(0)
+    raise typer.Exit(1 if n_missing_xlsx > 0 else 0)
 
 
 if __name__ == "__main__":
