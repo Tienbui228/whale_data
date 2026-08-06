@@ -1,6 +1,6 @@
 # TASKS — FreshWatch Task Ledger
 
-Cập nhật: 06/08/2026. **Mỗi session mở đầu bằng diff file này.**
+Cập nhật: 08/08/2026. **Mỗi session mở đầu bằng diff file này.**
 Format cột Status: `QUEUED` / `DOING` / `DONE <commit>` / `BLOCKED <lý do>`
 
 | ID | Ngày giao | Tóm tắt | Status |
@@ -23,3 +23,4 @@ Format cột Status: `QUEUED` / `DOING` / `DONE <commit>` / `BLOCKED <lý do>`
 | XPIN-ONCHAIN | - | XPIN on-chain: kho wallet + vesting + BitMart verify (BscScan) | BLOCKED — Nansen LOCKED + PENDING OPERATOR |
 | MM-ECON-SIG | - | mm_econ_v0.2 operator ký → dùng vào live signal | BLOCKED — ANALYSIS ONLY, chờ operator ký |
 | XS3B-RETRY | - | XPIN XS3b retry: GeckoTerminal trades endpoint (rate-limited 06/08) | QUEUED |
+| HANDOVER | 08/08 | Lưu handover bản 08/08 + tạo prompt_analysis_topic.md + đóng topic analysis 03→08/08 | DONE — commit pending |
