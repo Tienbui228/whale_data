@@ -119,12 +119,20 @@ alpha_vol = MISSING (ZBT delisted từ Alpha)
 ### [L5] Lệnh chạy
 
 ```
-python _probe_zbt_20260806.py           # Z1-Z5: export, perp klines, derived, spot
-python _probe_zbt_alpha2_20260806.py    # Z6 debug alpha endpoint → 400 + fullyDelisted
-python _probe_zbt_alpha3_20260806.py    # check local alpha store structure
-python _probe_zbt_alpha4_20260806.py    # read store partition structure
-python _probe_zbt_alpha5_20260806.py    # confirm ZBT not in store 84/85 symbols
+python _probe_zbt_20260806.py              # Z1-Z5: export, perp klines, derived, spot
+python _probe_zbt_alpha2-5_20260806.py     # debug alpha endpoint → 400 + confirm not in store
+python _probe_case_schema_20260806.py      # đọc schema CASE_BR.xlsx (41 cols)
+python _task_create_case_zbt_20260806.py   # tạo CASE_ZBT.xlsx 14 rows
+python _probe_verify_case_zbt_20260806.py  # verify output OK
 ```
+
+### [L6] CASE_ZBT.xlsx đã tạo (06/08)
+
+DAILY: 14 rows (23/07→05/08), schema 41 cols khớp CASE_BR.  
+3 rows data_bad=1 (24-26/07 klines-only, LSR/funding=MISSING).  
+Derived filled: pin_streak, oi_vs_med14, oi_cycle_pos, div_raw, div_avg3, glsr_slope_5d, d_pos/acc_3d.  
+alpha_suspect="DELISTED" toàn bộ. spot_venue="binance_spot". taker_spot=ABSTAIN.  
+Verdict = blank (HUMAN layer). Commit: xem phần commit.
 
 ---
 
