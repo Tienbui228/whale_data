@@ -117,16 +117,35 @@ def build_state_table() -> dict[str, dict[str, str]]:
         table[token] = {}
         armed_since_idx: int | None = None
 
+        # Episode-based SUPP tracking (fix: 14d from first-fire, not from last-fire).
+        # post_climax already bakes in its own 14d cooldown internally; adding a rolling
+        # 14d on top in the state layer doubled effective suppression to crash+28d.
+        # Rule: episode starts on first fire of a suppressor streak. 14d from episode_start.
+        # Same consecutive streak doesn't extend. Gap + new fire after 14d = new episode.
+        supp_ep: dict[str, int] = {}       # sig -> episode_start_idx
+        supp_last: dict[str, int] = {}     # sig -> last_fire_idx (to detect gaps)
+
         for idx, date in enumerate(all_dates):
             today_sigs = set(per_day[token].get(date, []))
 
-            # 1. SUPPRESSED — any suppressor in last 14d (including today)
-            supp = False
-            for i in range(max(0, idx - SUPPRESSOR_COOLDOWN + 1), idx + 1):
-                d = all_dates[i]
-                if any(s in SUPPRESSORS for s in per_day[token].get(d, [])):
-                    supp = True
-                    break
+            # Update suppressor episode tracking
+            for sig in SUPPRESSORS:
+                if sig in today_sigs:
+                    prev_last = supp_last.get(sig, -99)
+                    prev_ep   = supp_ep.get(sig, -99)
+                    gap       = idx - prev_last > 1
+                    ep_expired = idx - prev_ep >= SUPPRESSOR_COOLDOWN
+                    if prev_ep == -99 or (gap and ep_expired):
+                        # No prior episode, or gap AND old episode expired → new episode
+                        supp_ep[sig] = idx
+                    # else: same episode (consecutive) or gap within active episode — keep ep_start
+                    supp_last[sig] = idx
+
+            # 1. SUPPRESSED — any suppressor episode_start within 14d of today
+            supp = any(
+                sig in supp_ep and idx - supp_ep[sig] < SUPPRESSOR_COOLDOWN
+                for sig in SUPPRESSORS
+            )
             if supp:
                 armed_since_idx = None  # SUPP clears ARMED memory (needs re-escalation)
                 table[token][date] = "SUPP"
@@ -411,36 +430,41 @@ report_lines += [
     "",
 ] + btw_results + [
     "",
-    f"## Overall: {'ALL PASS ✓' if all_pass else 'HAS FAILURES — 2 cases flagged as signal calibration issues'}",
+    f"## Overall: {'ALL PASS ✓' if all_pass else 'HAS FAILURES — 1 case (AKE) — yaml threshold proposal required'}",
     "",
-    "## Root Cause Analysis — FAIL Cases",
+    "## Root Cause Analysis",
     "",
-    "### AKE — SUPP (computed) vs HOT (reference), diff=2",
-    "- `decay` fires on 07-08 for AKE. 14d cooldown keeps AKE in SUPP through 07-21.",
-    "- **Context:** AKE went +8× from 07-15 to 07-18 (crowd_flush 07-09 + s3_eve 07-14).",
-    "  `decay` definition: taker <45% sustained + price grinding + funding drift + flat OI.",
-    "  Firing on 07-08 (eve of flash-crash bottom) appears to be a false positive — AKE was at",
-    "  accumulation bottom, not in decay. This is a **signals.py threshold calibration issue**.",
-    "- **Action for operator:** check AKE taker/funding/OI values on 07-08 in result.txt vs decay thresholds.",
+    "### BAS — FIXED by episode-based cooldown (state layer code change)",
+    "- `post_climax` embeds its own 14d cooldown internally (signals.py lines 601-609).",
+    "  It scans back cooldown+1=15 days; correct behavior.",
+    "- Old G1 state machine: rolling 14d window on TOP of signal → total = crash_day + 28d (doubled!)",
+    "- Fix: episode-based SUPP check. Crash on 07-02 (−27.4%). Episode starts 07-02.",
+    "  14d from episode_start → SUPP 07-02..07-15. From 07-16: episode expired; same continuous",
+    "  streak doesn't re-trigger. BAS 07-20 = WATCH ✓. PASS.",
+    "- **Code change:** `supp_ep + supp_last` per-suppressor tracking replaces rolling window.",
+    "  Fires within same consecutive streak don't extend the 14d once it started.",
     "",
-    "### BAS — SUPP (computed) vs WATCH (reference), diff=3",
-    "- `post_climax` fires every day 07-02 through 07-16 (15 consecutive days).",
-    "  14d cooldown from last fire (07-16) → SUPP through 07-29, covering 07-20.",
-    "- **Context:** BAS had a -50% dump 01-07/07. post_climax is correct for that event.",
-    "  However, by 07-10 BAS had lsr_accum (10-13/07) and funding_pinned (07-12+) = accumulation phase.",
-    "  The signal fires daily instead of just on the dump day, likely because the signal re-evaluates",
-    "  hậu-markup conditions each day rather than marking the event once.",
-    "- **Action for operator:** check if post_climax should be a one-shot event flag (fires on dump day only)",
-    "  vs. ongoing condition. If one-shot: BAS SUPP through 07-15, then WATCH/ARMED by 07-20 → PASS.",
+    "### AKE — FAIL (yaml threshold issue, NOT replay bug)",
+    "- `decay` fires 07-08 for AKE. Episode start = 07-08. SUPP 07-08..07-20. AKE = SUPP on 07-20.",
+    "- **Investigation:** AKE taker 07-04..07-08 = [47.3, 41.7, 45.9, 46.4, 47.9]",
+    "  - yaml `decay.taker_buy_max = 48.0%` (NOT 45.0% as the signal comment says)",
+    "  - All 5 values < 48.0 → decay fires GENUINELY under current yaml",
+    "  - This is NOT a replay/input bug",
+    "- **Root cause:** `decay.taker_buy_max: 48.0` is more permissive than spec intent ('taker <45% kéo dài').",
+    "  AKE was at accumulation bottom (07-08 = eve of flash-crash/liftoff), not in genuine decay.",
+    "  The 48.0% threshold catches AKE pre-pump taker plateau incorrectly.",
+    "- **Fix required:** `proposals/yaml_change_decay_20260806.md` — change taker_buy_max 48.0→45.0",
+    "  with 12-case regression + changelog. Operator sign-off needed. Out of G1 gate scope.",
+    "- **G1 result:** AKE = 1 remaining FAIL. diff=2 (SUPP vs HOT ref).",
     "",
-    "## State machine implementation notes",
+    "## State machine implementation notes (v2 — episode-based SUPP)",
     "",
-    "- ARMED is **stateful** (§6 'expiry 30d'): once triggered, persists until SUPP overrides or 30d expires.",
-    "- ARMED trigger requires `lsr_accum` as one of the ≥2 structure signals. Rationale: pure-hedge tokens",
-    "  (POWER, BASED, BULLA without lsr_accum) were reaching ARMED incorrectly via crowd_flush alone.",
-    "  This gate matches §6 which lists lsr_accum as the primary Tier A signal.",
-    "- SUPP clears ARMED memory (re-escalation needed post-suppressor).",
-    "- HOT = Tier A new onset only (hysteresis 14d).",
+    "- **SUPP:** Episode-based (14d from first-fire of episode). Same consecutive streak doesn't extend.",
+    "  Gap ≥1d then new fire after episode expired = new episode. This correctly handles `post_climax`",
+    "  which already embeds 14d cooldown — prevents double-counting.",
+    "- **ARMED:** Stateful, persists 30d (§6 'expiry 30d'). lsr_accum must be one of the ≥2 structures.",
+    "- **HOT:** Tier A new onset only (14d hysteresis).",
+    "- **Priority:** SUPP > ARMED > HOT > WATCH > NONE.",
 ]
 
 REPORT.write_text("\n".join(report_lines), encoding="utf-8")

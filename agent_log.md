@@ -2,40 +2,31 @@
 
 ---
 
-## SESSION 2026-08-06 (K2/chiều) — DEV: G1 state machine thật 12 case
+## SESSION 2026-08-06 (K2/chiều+tối) — DEV: G1 state machine thật 12 case (FINAL)
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6  
-**Script:** `_probe_g1_state_20260806.py`  
-**Output:** `docs/reports/g1_state_per_day_20260806.md`  
-**Commit:** 1b3b0cc
+**Scripts:** `_probe_g1_state_20260806.py` · `_probe_g1_fail_20260806.py`  
+**Output:** `docs/reports/g1_state_per_day_20260806.md` (v2 — episode-based SUPP fix)  
+**Commits:** 1b3b0cc (v1) + commit K2-final (v2 + proposals)
 
-### Việc 1 — E-làm-lại: G1 STATE MACHINE THẬT
+### Việc 1 — E-làm-lại: G1 STATE MACHINE THẬT (kết quả cuối)
 
-Buổi sáng E-probe bị TRẢ LẠI vì chỉ là signal matrix, không phải G1 state machine. Thực hiện lại với NONE/WATCH/HOT/ARMED/SUPP per §6 master plan.
-
-**Thiết kế:**
-- Stateful: ARMED persists 30d sau khi set (§6 "expiry 30d")
-- ARMED trigger: ≥2 structure signals alive (7d) + lsr_accum là một trong đó + timing tell hôm nay
-- lsr_accum requirement ngăn false ARMED trên pure-hedge tokens (POWER, BULLA)
-- SUPP clears ARMED memory; HOT = Tier A new onset (14d hysteresis)
-- Priority: SUPP > ARMED > HOT > WATCH > NONE, SUPPRESSOR_COOLDOWN=14d
-
-**Kết quả validation:**
+**Kết quả FINAL (sau episode-based SUPP fix):**
 
 | Check | Kết quả |
 |-------|---------|
-| (a) State 07-20 vs reference ±1 | 10/12 PASS (AKE, BAS FAIL) |
-| (c) ESPORTS 07-19 = SUPP | PASS |
-| (d) BTW 07-02..05 = SUPP | PASS |
+| (a) State 07-20 vs reference ±1 | **11/12 PASS** (AKE còn FAIL) |
+| (c) ESPORTS 07-19 = SUPP | PASS ✓ |
+| (d) BTW 07-02..05 = SUPP | PASS ✓ |
 
-**State 07-20 chi tiết:**
+**State 07-20 chi tiết (FINAL):**
 
 | Token | Computed | Reference | Diff | Result |
 |-------|----------|-----------|------|--------|
 | BANK | ARMED | HOT | 1 | PASS |
 | AKE | SUPP | HOT | 2 | **FAIL** |
 | TAG | ARMED | ARMED | 0 | PASS |
-| BAS | SUPP | WATCH | 3 | **FAIL** |
+| BAS | **WATCH** | WATCH | 0 | **PASS** ← fixed |
 | POWER | WATCH | WATCH | 0 | PASS |
 | BASED | WATCH | WATCH | 0 | PASS |
 | CLO | SUPP | SUPP | 0 | PASS |
@@ -45,21 +36,52 @@ Buổi sáng E-probe bị TRẢ LẠI vì chỉ là signal matrix, không phải
 | ESPORTS | SUPP | SUPP | 0 | PASS |
 | IDOL | ARMED | ARMED | 0 | PASS |
 
-**Root cause FAIL (CẦN OPERATOR xác nhận):**
-- **AKE**: `decay` mis-fire ngày 07-08 — AKE đang ở đáy tích lũy trước khi +8× (07-14 to 07-18). 14d cooldown giữ SUPP đến 07-21. Nghi threshold decay quá lỏng → signals.py calibration issue.
-- **BAS**: `post_climax` fires mỗi ngày 07-02 to 07-16 (15 ngày liên tiếp). 14d cooldown từ ngày cuối (07-16) → SUPP đến 07-29. Nhưng BAS đã vào accumulation từ 07-10 (lsr_accum + funding_pinned). Khả năng post_climax nên là one-shot (chỉ fire ngày dump) không phải ongoing.
+### G1-FAIL phân tích
+
+**BAS — FIXED (episode-based cooldown, state-layer code change):**
+- `post_climax` baked-in 14d cooldown (signals.py lines 601-609, scans back cooldown+1=15d).
+- Bug: state machine thêm rolling 14d NỮA on top → crash_day + 28d tổng (doubled!).
+- Fix: episode-based SUPP. Crash 07-02 (-27.4%). Episode start=07-02. SUPP 07-02..07-15.
+  Từ 07-16: episode expired. Consecutive streak không extend. BAS 07-20 = WATCH ✓.
+- Code: `supp_ep + supp_last` dict tracking per-suppressor, thay rolling window.
+
+**AKE — FAIL còn lại (yaml threshold issue, không phải replay bug):**
+- `decay` fires 07-08 cho AKE. Episode start=07-08. SUPP 07-08..07-21. AKE 07-20 = SUPP.
+- Window 07-04..07-08 takers: [47.3, 41.7, 45.9, 46.4, 47.9]
+  - yaml `decay.taker_buy_max = 48.0%` → all < 48.0 → genuine fire dưới yaml hiện tại.
+  - spec comment signals.py nói "< 45%" — mâu thuẫn với yaml 48.0.
+  - AKE lúc này ở đáy tích lũy trước liftoff +8×, không phải decay thực.
+- **Kết luận:** threshold 48.0 quá permissive so với spec. NOT a replay/input bug.
+- **Action:** `proposals/yaml_change_decay_20260806.md` — đề xuất 48.0→45.0 + regression đủ 12 case + operator sign-off. **KHÔNG tự apply.**
+
+**Thiết kế state machine v2 (đã implement):**
+- SUPP: episode-based (14d từ first-fire). Gap ≥1d AND old episode expired → new episode mới.
+- ARMED: stateful, persists 30d. lsr_accum bắt buộc là một trong ≥2 structure signals (ngăn false ARMED trên pure-hedge).
+- HOT: Tier A new onset (14d hysteresis).
+- Priority: SUPP > ARMED > HOT > WATCH > NONE.
 
 **Transition TAG:**
 - 06-25: NONE → WATCH [funding_pinned]
-- 07-12: WATCH → ARMED [lsr_accum + crowd_flush + oi_ignition] ← lsr_accum bật sau cú flush (08-09/07)
+- 07-12: WATCH → ARMED [lsr_accum + crowd_flush + oi_ignition]
 
 **Transition BANK:**
 - 06-25: NONE → WATCH [absorption]
-- 06-29: WATCH → HOT [lsr_accum new onset] ← first day HOT
-- 06-30: HOT → WATCH [lsr_accum tiếp tục, không còn new onset]
-- 07-02: WATCH → ARMED [lsr_accum + absorption + crowd_flush] ← bait-probe = timing tell, ARMED
+- 06-29: WATCH → HOT [lsr_accum new onset]
+- 06-30: HOT → WATCH [lsr_accum tiếp, không còn new onset]
+- 07-02: WATCH → ARMED [lsr_accum + absorption + crowd_flush]
 
-Probe đã commit. Operator xác nhận/TRẢ LẠI AKE/BAS calibration issues.
+### Lệnh chạy
+
+```
+python _probe_g1_fail_20260806.py     # BAS crash series + AKE decay window analysis
+python _probe_g1_state_20260806.py    # G1 state machine v2 + report
+```
+
+### Kết luận
+
+G1 gate = **11/12 PASS**. 1 FAIL (AKE) = yaml threshold issue, proposal đã soạn, cần operator ký trước khi apply.
+
+---
 
 ---
 
