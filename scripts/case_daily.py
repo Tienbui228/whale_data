@@ -269,6 +269,12 @@ def _row_fn_low(ws, row_n: int) -> bool:
     return fn_val is None or (isinstance(fn_val, (int, float)) and fn_val < 6)
 
 
+def _row_data_bad(ws, row_n: int) -> bool:
+    """Return True if col 26 (data_ok → invert_bool) = 1 — row written with bad data."""
+    val = ws.cell(row_n, 26).value
+    return val == 1 or val is True
+
+
 def _read_row_values(ws, row_n: int) -> dict[int, object]:
     """Read raw cell values for all columns in row_n."""
     return {c: ws.cell(row_n, c).value for c in range(1, (ws.max_column or 41) + 1)}
@@ -387,6 +393,16 @@ def main(
                     results.append({"token": token, "status": "SKIP_NO_SUSPECT", "date": date_str})
                     continue
             else:
+                # T4-detect: check if existing row has data_bad=1 → warn operator
+                existing_row_n = None
+                for r in range(FIRST_DATA_ROW, ws.max_row + 1):
+                    if ws.cell(r, 1).value == date_str:
+                        existing_row_n = r
+                        break
+                if existing_row_n and _row_data_bad(ws, existing_row_n):
+                    log.warning("stale_row_detected",
+                                token=token, date=date_str, row=existing_row_n,
+                                hint="data_bad=1; re-run with --force-overwrite to refresh")
                 log.info("case_daily_skip_existing", token=token, date=date_str)
                 results.append({"token": token, "status": "SKIP_EXISTS", "date": date_str})
                 continue
@@ -503,9 +519,30 @@ def main(
         for dl in digest_lines:
             print(dl)
 
-    log.info("case_daily_complete",
-             ok=sum(1 for r in results if r.get("status", "").startswith("OK")),
-             skip=sum(1 for r in results if "SKIP" in r.get("status", "")))
+    n_ok_final  = sum(1 for r in results if r.get("status", "").startswith("OK"))
+    n_skip_final = sum(1 for r in results if "SKIP" in r.get("status", ""))
+    log.info("case_daily_complete", ok=n_ok_final, skip=n_skip_final)
+
+    # D2: write session_state.json for dashboards / next-run context
+    import json as _json
+    session_state = {
+        "run_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "target_date": date_str,
+        "dry_run": dry_run,
+        "n_ok": n_ok_final,
+        "n_skip": n_skip_final,
+        "n_missing_xlsx": n_missing_xlsx,
+        "results": [
+            {"token": r["token"], "status": r.get("status", "")}
+            for r in results
+        ],
+    }
+    session_state_path = WHALE / "scratch" / "session_state.json"
+    session_state_path.parent.mkdir(parents=True, exist_ok=True)
+    session_state_path.write_text(
+        _json.dumps(session_state, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    log.info("session_state_written", path=str(session_state_path))
 
     raise typer.Exit(1 if n_missing_xlsx > 0 else 0)
 
