@@ -2,6 +2,44 @@
 
 ---
 
+## SESSION 2026-08-06 (K) — DEV: A1–E deliverables
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Run time:** 2026-08-06T03:20–03:42 UTC
+**Commits:** b5ebf01 (A2) · c719d79 (A1-D2) · 8da3502 (E)
+
+### Kết quả
+
+| Item | Kết quả |
+|------|---------|
+| A1 BANK 08/05 | KHÔNG WRITE: vol=102M vs CSV 226M (54.87%), taker Δ=0.001198. Pre-29/07 manual backfill confirmed. |
+| A2 Commit | b5ebf01: case_daily 2.1+2.5(a) + alert.py + CASE_BR/TAG taker convert |
+| A3 Negative tests | 4/4 PASS: csv_missing exit=1 · placeholder INFO · fake_xlsx exit=1 · orphan WARNING |
+| A4 Vol note | docs/reports/vol_anomaly_bank_br_20260806.md: BANK pre-29/07 manual backfill, 18+25/07 placeholder 1.9B |
+| B1 | Alpha _parse_alpha_row: taker_buy_pct=NaN, taker_abstain=True. Freshwatch taker từ taker_ratio_1d (tape), KHÔNG từ klines |
+| B2 | k[9]==k[5] CONFIRMED IDOL/TAG/BR/XPIN (4/4 live symbols). 2026-08-03 partition: 85/85 rows taker_abstain=True |
+| B3 | Consumer impact: NONE trên freshwatch pipeline. taker_buy_pct NaN visible, không poison |
+| C1 | 84 data_bad=1 rows total: BANK 1 (08/05) · BR 3 (24-26/07) · CLO 17 · IDOL 1 (08/05) · TUT 61 · XPIN 1 (08/05) |
+| C2 T4-detect | case_daily: stale_row_detected WARNING khi skip_existing + col26=1. _row_data_bad() helper. Tested BANK+IDOL 08/05 PASS |
+| D1 | scratch/data_manifest.json: 7 cases, stale counts, date ranges |
+| D2 | case_daily writes scratch/session_state.json sau mỗi run |
+| E P2 G1 | 33-day × 12-case state matrix · 43/43 PASS · docs/reports/e_replay_state_20260806.md |
+
+### Lệnh chạy
+
+```
+python _probe_a1_taker15_20260806.py       # A1: 15-sample BANK/BR
+python _probe_a3_negtests_20260806.py      # A3: negative tests
+python _probe_a4_vol_20260806.py           # A4: vol data
+python _probe_alpha_b1b2b3_20260806.py     # B1/B2/B3: klines k[9]
+python _probe_c1_databad_20260806.py       # C1: data_bad scan
+python _task_data_manifest_20260806.py     # D1: manifest
+python scripts/case_daily.py --date 2026-08-05 --dry-run  # C2 verify
+python _probe_e_replay_20260806.py         # E: state machine
+```
+
+---
+
 ## SESSION 2026-08-06 (J) — DATA COLLECT: TUT T+30 · BANK T+30+VÒNG-2 · COOLDOWN PARTI/EVAA/BLUAI
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
