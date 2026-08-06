@@ -2,6 +2,71 @@
 
 ---
 
+## SESSION 2026-08-06 (L) — DATA COLLECT: ZBT cold-refresh 23/07→05/08
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6  
+**Scripts:** `_probe_zbt_20260806.py`, `_probe_zbt_alpha2-5_20260806.py`  
+**Output:** `docs/reports/_collect_zbt_20260806.md`  
+**Boundary:** freshwatch_daily_2026-08/07.csv (00:00 UTC) · Binance fapi klines 1d · fapi OI hist · api/v3 spot klines  
+**Scope:** Cold-refresh ZBT — chỉ collect + paste raw, không verdict.
+
+### [L1] PHÁT HIỆN QUAN TRỌNG
+
+| Vấn đề | Chi tiết |
+|--------|---------|
+| Export gap 24-26/07 | missing_jul.md xác nhận. run_log chạy OK 3 ngày nhưng 1 skip/ngày → không có LSR/funding 3 ngày này |
+| ZBT Alpha DELISTED | `fullyDelisted=True` từ token-list API. Alpha klines endpoint → HTTP 400. Local store không có ZBT (1 trong 11 fail backfill 04/08). vol_alpha = MISSING tất cả window |
+| Spot taker ABSTAIN | k[9]/k[7] spot = 346% → units base, không phải USDT. ABSTAIN spot taker |
+| Depth mỏng | Depth ±2% snapshot 06/08T06:56 UTC: bid=$11,723 ask=$17,857 tổng ≈$29K [U50 ref: $164K] |
+| OI floor 05/08 | OI 05/08=7,889,446 = min của window 14d → floor_flag=YES trên 14d. Nhưng 06/08 OI hist=10,084,563 → trên 30d window floor_flag=NO |
+
+### [L2] Z1 Export — ngày đủ data (fn=6, data_ok=True)
+
+```
+date         px_avg     vol_q_usdt  taker%    f_avg     fn   oi_usd       pos_r   gLSR
+2026-07-23   0.10840   22,092,107   50.6%   5e-05    6    8,725,833   2.3707  0.3951
+2026-07-27   0.11458    6,418,842   47.1%   5e-05    6    8,786,963   2.7540  0.4482
+2026-07-28   0.11276    4,704,342   49.0%   5e-05    6    8,860,722   2.7491  0.4575
+2026-07-29   0.11268    4,983,027   47.1%   5e-05    6    8,609,763   2.6781  0.4626
+2026-07-30   0.11659    6,910,711   51.7%   5e-05    6    8,476,904   2.7421  0.4535
+2026-07-31   0.11598    4,394,032   48.6%   5e-05    6    9,143,286   2.9249  0.4643
+2026-08-01   0.11646    2,541,983   45.8%   5e-05    6    8,981,809   3.0691  0.5140
+2026-08-02   0.12222    6,211,662   49.4%   5e-05    6    8,718,627   3.4081  0.5117
+2026-08-03   0.11848    3,507,809   47.1%   5e-05    6    9,297,648   3.2607  0.5586
+2026-08-04   0.11158    3,564,479   50.0%   5e-05    6    8,579,454   3.3595  0.5571
+2026-08-05   0.11764   15,060,833   50.6%   5e-05    6    7,889,446   3.4072  0.4914
+```
+
+Klines fallback 24-26/07: vol_q=10.5M/4.6M/9.3M USDT · LSR/funding=MISSING
+
+### [L3] Derived metrics tóm tắt
+
+| Metric | Kết quả |
+|--------|---------|
+| Pin streak | 10 ngày (27/07→05/08). 24-26/07 thiếu data → không rõ streak thực. Không có ngày f âm |
+| pos_r ≥3.0 | 5 ngày liên tục: 01/08→05/08 (max=3.4081 ngày 02/08) |
+| div_avg3 | 3.85-4.21, xu hướng tăng từ 29/07 (ổn định 4.1-4.2 sau 02/08) |
+| glsr_slope_5d | >1.0 tất cả ngày đủ data (range 1.06-1.23) |
+| OI floor 14d | YES (05/08 = min window 14d) |
+| OI floor 30d | NO (06/08 OI=10.1M, ratio=1.31 vs min30) |
+
+### [L4] Spot layer
+
+vol_spot/vol_perp max = 0.317 (05/08) → L-29 guard: CLEAR, không ngày nào vượt 3×  
+alpha_vol = MISSING (ZBT delisted từ Alpha)
+
+### [L5] Lệnh chạy
+
+```
+python _probe_zbt_20260806.py           # Z1-Z5: export, perp klines, derived, spot
+python _probe_zbt_alpha2_20260806.py    # Z6 debug alpha endpoint → 400 + fullyDelisted
+python _probe_zbt_alpha3_20260806.py    # check local alpha store structure
+python _probe_zbt_alpha4_20260806.py    # read store partition structure
+python _probe_zbt_alpha5_20260806.py    # confirm ZBT not in store 84/85 symbols
+```
+
+---
+
 ## SESSION 2026-08-06 (K) — DEV: A1–E deliverables
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
