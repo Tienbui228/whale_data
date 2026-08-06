@@ -2,6 +2,67 @@
 
 ---
 
+## SESSION 2026-08-06 (K2/chiều) — DEV: G1 state machine thật 12 case
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6  
+**Script:** `_probe_g1_state_20260806.py`  
+**Output:** `docs/reports/g1_state_per_day_20260806.md`  
+**Commit:** 1b3b0cc
+
+### Việc 1 — E-làm-lại: G1 STATE MACHINE THẬT
+
+Buổi sáng E-probe bị TRẢ LẠI vì chỉ là signal matrix, không phải G1 state machine. Thực hiện lại với NONE/WATCH/HOT/ARMED/SUPP per §6 master plan.
+
+**Thiết kế:**
+- Stateful: ARMED persists 30d sau khi set (§6 "expiry 30d")
+- ARMED trigger: ≥2 structure signals alive (7d) + lsr_accum là một trong đó + timing tell hôm nay
+- lsr_accum requirement ngăn false ARMED trên pure-hedge tokens (POWER, BULLA)
+- SUPP clears ARMED memory; HOT = Tier A new onset (14d hysteresis)
+- Priority: SUPP > ARMED > HOT > WATCH > NONE, SUPPRESSOR_COOLDOWN=14d
+
+**Kết quả validation:**
+
+| Check | Kết quả |
+|-------|---------|
+| (a) State 07-20 vs reference ±1 | 10/12 PASS (AKE, BAS FAIL) |
+| (c) ESPORTS 07-19 = SUPP | PASS |
+| (d) BTW 07-02..05 = SUPP | PASS |
+
+**State 07-20 chi tiết:**
+
+| Token | Computed | Reference | Diff | Result |
+|-------|----------|-----------|------|--------|
+| BANK | ARMED | HOT | 1 | PASS |
+| AKE | SUPP | HOT | 2 | **FAIL** |
+| TAG | ARMED | ARMED | 0 | PASS |
+| BAS | SUPP | WATCH | 3 | **FAIL** |
+| POWER | WATCH | WATCH | 0 | PASS |
+| BASED | WATCH | WATCH | 0 | PASS |
+| CLO | SUPP | SUPP | 0 | PASS |
+| BTW | SUPP | SUPP | 0 | PASS |
+| TUT | WATCH | HOT | 1 | PASS |
+| BULLA | HOT | HOT | 0 | PASS |
+| ESPORTS | SUPP | SUPP | 0 | PASS |
+| IDOL | ARMED | ARMED | 0 | PASS |
+
+**Root cause FAIL (CẦN OPERATOR xác nhận):**
+- **AKE**: `decay` mis-fire ngày 07-08 — AKE đang ở đáy tích lũy trước khi +8× (07-14 to 07-18). 14d cooldown giữ SUPP đến 07-21. Nghi threshold decay quá lỏng → signals.py calibration issue.
+- **BAS**: `post_climax` fires mỗi ngày 07-02 to 07-16 (15 ngày liên tiếp). 14d cooldown từ ngày cuối (07-16) → SUPP đến 07-29. Nhưng BAS đã vào accumulation từ 07-10 (lsr_accum + funding_pinned). Khả năng post_climax nên là one-shot (chỉ fire ngày dump) không phải ongoing.
+
+**Transition TAG:**
+- 06-25: NONE → WATCH [funding_pinned]
+- 07-12: WATCH → ARMED [lsr_accum + crowd_flush + oi_ignition] ← lsr_accum bật sau cú flush (08-09/07)
+
+**Transition BANK:**
+- 06-25: NONE → WATCH [absorption]
+- 06-29: WATCH → HOT [lsr_accum new onset] ← first day HOT
+- 06-30: HOT → WATCH [lsr_accum tiếp tục, không còn new onset]
+- 07-02: WATCH → ARMED [lsr_accum + absorption + crowd_flush] ← bait-probe = timing tell, ARMED
+
+Probe đã commit. Operator xác nhận/TRẢ LẠI AKE/BAS calibration issues.
+
+---
+
 ## SESSION 2026-08-06 (L) — DATA COLLECT: ZBT cold-refresh 23/07→05/08
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6  
