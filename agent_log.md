@@ -2,6 +2,120 @@
 
 ---
 
+## SESSION 2026-08-06 (J) — DATA COLLECT: TUT T+30 · BANK T+30+VÒNG-2 · COOLDOWN PARTI/EVAA/BLUAI
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Scripts:** `_probe_d1_tut_20260808.py`, `_probe_d2_bank_20260808.py`, `_probe_d3_cooldown_20260808.py`, `_probe_export_check_20260808.py`
+**Output:** `docs/reports/_probe_d[123]_*_20260808.txt`, `docs/reports/_probe_export_check_20260808.txt`, `docs/reports/_collect_20260806.md`
+**Boundary:** freshwatch_daily_2026-08.csv (snapshot 00:00 UTC) · Binance fapi klines 1d · Binance OI hist · Binance Global LSR
+**Scope:** Chỉ collect + paste raw — không verdict, không ghi OUTCOME.
+
+---
+
+### [J1] PHÁT HIỆN QUAN TRỌNG
+
+| Vấn đề | Chi tiết |
+|--------|---------|
+| TUT KHÔNG trong case_daily | CASE_INDEX đăng ký TUT = `(hang cho)`. case_daily output: `case_registered_not_open token=TUT`. CASE_TUT DAILY được điền manual. |
+| CASE_TUT row 05/08 STALE | data_bad=1, fn=None, LSR=None trong CASE — export CSV có data_ok=True, fn=6, LSR đầy đủ. Export là canonical. |
+| CASE_BANK row 05/08 STALE | case_daily skip_existing — export 05/08 có fn=10, data_ok=True. |
+| case_daily run | 2026-08-06T02:59 UTC · ok=2 (TAG+BR) · skip=2 (BANK+IDOL) |
+
+---
+
+### [J2] TUT — DAILY 05/08 (từ export CSV canonical)
+
+| Ngày | px_avg | oi_usd | pos_r | acc_r | gLSR | f_avg | f_min | f_max | fn | taker | vol_quote |
+|------|--------|--------|-------|-------|------|-------|-------|-------|----|-------|-----------|
+| 02/08 | 0.01741 | 4,997,476 | 3.4581 | 2.1027 | 1.7211 | +5.0e-05 | +5.0e-05 | +5.0e-05 | 6 | 47.6% | 3,062,632 |
+| 03/08 | 0.01986 | 4,830,838 | 4.0144 | 2.2062 | 1.6853 | +5.0e-05 | +5.0e-05 | +5.0e-05 | 6 | 52.7% | 17,947,839 |
+| 04/08 | 0.02249 | 5,671,593 | 2.8299 | 1.5913 | 1.4384 | +4.26e-05 | +1.22e-05 | +5.0e-05 | 6 | 48.6% | 33,252,326 |
+| 05/08 | **0.02603** | **6,343,787** | **2.0739** | **1.1920** | **1.1119** | +4.20e-05 | +2.53e-05 | +5.0e-05 | 6 | 51.9% | 24,157,157 |
+
+**klines close TUTUSDT perp:** 05/08 c=0.02865 · 06/08 c=0.02857 (partial) · px now=0.02863 @ 2026-08-06T02:52 UTC.
+**Spot 05/08 (CASE row 99, stale):** venue=Binance_spot+BSC_DEX, vol_spot=1,479,152, taker_spot=44%.
+**EVENTS 02/08 row 18:** `CO GHE-ROI LAN 1: pos_r=3.4581 <= 3.81 (25% drop tu peak 5.083). px=0.01741. OI=4.997M` → `!!! EXIT TRIGGER FIRE - lan 1`.
+**Alpha band:** ABSTAIN — schema CASE_TUT không có cột alpha_vol.
+**06–07/08:** PENDING (ngày chưa đóng).
+
+---
+
+### [J3] BANK — DAILY 01–05/08 (từ export CSV) + nến 06/08
+
+| Ngày | px_avg | oi_usd | pos_r | acc_r | gLSR | f_avg | f_min | f_max | fn | taker | vol_quote |
+|------|--------|--------|-------|-------|------|-------|-------|-------|----|-------|-----------|
+| 01/08 | 0.05691 | 18,027,284 | 1.1805 | 2.0276 | 1.7996 | −8.06e-04 | −2.36e-03 | −1.39e-04 | 24 | 48.0% | 253,304,478 |
+| 02/08 | 0.04788 | 17,469,390 | 1.3197 | 2.2658 | 1.8843 | −3.49e-04 | −7.22e-04 | −9.66e-05 | 24 | 47.9% | 172,554,826 |
+| 03/08 | 0.04316 | 17,252,550 | 1.3123 | 2.1466 | 1.7263 | −1.86e-04 | −8.21e-04 | +3.5e-06 | 24 | 48.8% | 143,022,585 |
+| 04/08 | 0.05135 | 17,356,910 | 1.3135 | 2.0460 | 1.6490 | −5.48e-04 | −2.35e-03 | +1.25e-05 | 24 | 49.1% | 471,564,742 |
+| 05/08 | 0.04859 | 18,068,851 | 1.1988 | 1.6357 | 1.3958 | −5.59e-05 | −3.50e-04 | +5.00e-05 | **10** | 48.5% | 226,476,484 |
+
+Tất cả data_ok=True. fn=10 ngày 05/08 (partial funding periods khi export chạy).
+
+**klines close BANKUSDT perp:** 04/08 c=0.05244 · 05/08 c=0.04311 · 06/08 c=0.04185 (partial 02:52 UTC) · px now=0.04185.
+**Nến 06/08 (partial):** o=0.04312, h=0.04320, l=0.04145, c=0.04185, vol=13,029,303 USDT. taker=ABSTAIN (units mismatch klines BANK).
+**ΔOI 05→06/08:** OI_token +30.2M (+8.8%) · OI_usd −$1.9M (−10.5%). OI hist endpoint.
+**On-chain balance 02–08/08:** MISSING — Nansen LOCKED (CẦN OPERATOR), BscScan chưa probe.
+
+---
+
+### [J4] COOLDOWN (03–05/08, nguồn: freshwatch_daily_2026-08.csv, tất cả fn=6, data_ok=True)
+
+**PARTI (PARTIUSDT):**
+
+| Ngày | px_avg | oi_usd | pos_r | acc_r | gLSR | f_avg | taker | vol_quote |
+|------|--------|--------|-------|-------|------|-------|-------|-----------|
+| 03/08 | 0.02397 | 2,808,993 | 2.0803 | 1.8106 | 1.3041 | +4.65e-05 | 49.3% | 1,600,801 |
+| 04/08 | 0.02408 | 2,727,422 | 2.0813 | 2.0157 | 1.4606 | +5.00e-05 | 48.9% | 1,652,689 |
+| 05/08 | 0.02413 | 2,677,260 | 2.0924 | 2.0075 | 1.4882 | +2.25e-05 | 50.5% | 1,630,930 |
+
+Intraday 06/08: px=0.02394, gLSR=1.5536.
+
+**EVAA (EVAAUSDT):**
+
+| Ngày | px_avg | oi_usd | pos_r | acc_r | gLSR | f_avg | taker | vol_quote |
+|------|--------|--------|-------|-------|------|-------|-------|-----------|
+| 03/08 | 0.8673 | 6,677,302 | 1.4312 | 1.4361 | 1.5867 | +8.97e-05 | 48.4% | 4,818,972 |
+| 04/08 | 0.8570 | 6,706,833 | 1.4302 | 1.5504 | 1.7049 | +5.00e-05 | 49.9% | 3,437,517 |
+| 05/08 | 0.8714 | 6,393,416 | 1.3980 | 1.6281 | 1.7563 | +1.17e-04 | 49.1% | 9,272,591 |
+
+Intraday 06/08: px=0.8583, gLSR=1.5753.
+**Unlock:** UNVERIFIED — không có API endpoint. Cần project site hoặc multi-source (L-28).
+
+**BLUAI (BLUAIUSDT) — 5 ngày slope (01–05/08):**
+
+| Ngày | px_avg | oi_usd | pos_r | acc_r | gLSR | f_avg | taker | vol_quote |
+|------|--------|--------|-------|-------|------|-------|-------|-----------|
+| 01/08 | 0.011574 | 4,974,690 | 1.4622 | 2.5162 | 3.0568 | +4.43e-04 | 48.1% | 1,237,655 |
+| 02/08 | 0.011662 | 5,121,152 | 1.5088 | 2.6062 | 3.0519 | +4.52e-04 | 45.1% | 830,681 |
+| 03/08 | 0.011824 | 5,224,056 | 1.5260 | 2.6738 | 3.1034 | +3.21e-04 | 47.0% | 1,215,956 |
+| 04/08 | 0.012423 | 5,609,076 | 1.5231 | 2.6036 | 3.0193 | +4.00e-04 | 43.7% | 1,805,543 |
+| 05/08 | 0.012087 | 5,718,305 | 1.5035 | 2.7425 | 3.2427 | +4.05e-04 | 47.6% | 2,688,246 |
+
+Intraday 06/08: px=0.01243, gLSR=2.5448 ↓.
+gLSR slope 01–05/08: 3.0568→3.0519→3.1034→3.0193→3.2427 (oscillating, không có wrong-side sustained).
+
+---
+
+### [J5] LAYER COVERAGE
+
+| Lớp | TUT | BANK | PARTI | EVAA | BLUAI |
+|-----|-----|------|-------|------|-------|
+| px_close klines | ✓ 05/08 | ✓ 01–05/08 | ✓ 03–05/08 | ✓ 03–05/08 | ✓ 01–05/08 |
+| LSR pos/acc/gLSR | ✓ 05/08 | ✓ 01–05/08 | ✓ 03–05/08 | ✓ 03–05/08 | ✓ 01–05/08 |
+| Funding avg/min/max/fn | ✓ fn=6 | ✓ fn=24 (01-04) · fn=10 (05) | ✓ fn=6 | ✓ fn=6 | ✓ fn=6 |
+| OI | ✓ | ✓ OI hist endpoint | ✓ | ✓ | ✓ |
+| taker_buy_pct | ✓ (export) | ✓ (export) | ✓ | ✓ | ✓ |
+| vol_spot / spot venue | STALE 05/08 · ✗ 06–07 | MISSING | N/A | N/A | N/A |
+| Alpha vol | ABSTAIN (schema) | ABSTAIN (schema) | N/A | N/A | N/A |
+| On-chain balance | N/A | MISSING (Nansen LOCKED) | N/A | N/A | N/A |
+| Unlock schedule | N/A | N/A | N/A | UNVERIFIED | N/A |
+| 06–07/08 tất cả | PENDING | PENDING | PENDING | PENDING | PENDING |
+
+**DỪNG chờ operator duyệt. Không commit gì ngoài agent_log.**
+
+---
+
 ## SESSION 2026-08-06 (F) — IDOL VONG-2 WATCH: Y1-Y5 EVAA RE-STAGING AUDIT
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
@@ -3269,5 +3383,22 @@ Grep toàn bộ .md trong docs/ — file không được reference từ canonica
 **Đã linked (không orphan):** 4 bank/idol reports → linked từ mm_econ_v0.2.md CASE EVIDENCE INDEX.
 
 **PENDING OPERATOR:** Approve/reject từng đề xuất trên. Agent chờ ký mới thực thi.
+
+---
+
+## SESSION 2026-08-06 — case_daily digest
+
+**Target date:** 2026-08-05  **Run:** 2026-08-06 02:59 UTC  **dry_run:** False
+
+### §1 Handover digest
+
+| Token | Status | row | lsr_pos_r | lsr_acc_r | div_raw | taker_buy_pct | f_avg | f_n | OI_USD | SUSPECT |
+|-------|--------|-----|-----------|-----------|---------|---------------|-------|-----|--------|---------|
+| BANK | SKIP_EXISTS | — | — | — | — | — | — | — | — | — |
+| TAG | OK | 37 | 1.3450 | 1.4594 | 0.9216 | 0.5067 | 0.000050 | 6 | 9,602,961 | no |
+| BR | OK | 70 | 1.7023 | 1.3613 | 1.2505 | 0.4932 | 0.000403 | 6 | 3,623,386 | no |
+| IDOL | SKIP_EXISTS | — | — | — | — | — | — | — | — | — |
+
+**Tổng:** 2 OK, 2 skip, 0 dry_run
 
 ---
