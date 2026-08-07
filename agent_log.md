@@ -2,6 +2,53 @@
 
 ---
 
+## SESSION 2026-08-08 (5) — DEPLOY --daily: fw_loader_utils + gom_scan (Việc 3)
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Việc 3: Implement gom_scan --daily
+
+| Hạng mục | Kết quả |
+|---|---|
+| `scripts/fw_loader_utils.py` | Mở rộng: thêm `taker_scale_check_df()` (DataFrame-level), `load_fw_csvs()`, `load_funding_intervals()`, `build_token_days()` |
+| S-rules trong `build_token_days` | S1 `_partial_day`: fn<expected→skip Q1; S2 `_skip_eval`: data_ok=False→_false_result(); S-missing `_suspect`: NaN row |
+| `scripts/gom_scan.py` — S1 in `update_chain` | `if d.get("_partial_day"): counts_q1 = False` sau assignment |
+| `scripts/gom_scan.py` — `_false_result()` | Synthetic result cho S2/S-missing: gom=False, no suppressors |
+| `scripts/gom_scan.py` — `run_daily()` | Trailing window re-run từ scratch; date_from clamped to CSV coverage start |
+| `scripts/gom_scan.py` — `--daily` stub | Replace bằng `run_daily()` call + save_state + heartbeat |
+| scripts_dir → sys.path | `_SCRIPTS_DIR` added before fw_loader_utils import |
+
+### Test offline Việc 3.5
+
+**Probe:** `_probe_daily_test_20260808.py` (SCP CSV từ VPS → local scratch/)
+
+| Run | Kết quả |
+|---|---|
+| `--date 2026-08-05` | 92 open chains / 526 symbols |
+| `--date 2026-08-06` | 91 open chains / 526 symbols (91 open + nhiều CLOSED TODAY) |
+| Window | 2026-07-01→target (clamped to CSV start; June pre-store NaN noise loại bỏ) |
+| S-MISSING genuine | 3 dates: 2026-07-24/25/26 (store gap toàn universe) |
+| Format xác nhận | Q1_cum, VWAP_gom, chương, LAYER COVERAGE, break_streak, peak_pos_r, footer |
+
+**Mẫu output (2026-08-06):**
+- `1000BONK`: chương 1, start=2026-07-27, n_days=9, Q1_cum=$1,997,876, VWAP=$0.002895
+- `ASTER`: chương 1, start=2026-08-02, n_days=5, Q1_cum=$887,041, VWAP=$0.606598
+- `BAN`: chương 2, start=2026-07-31, n_days=3, Q1_cum=$96,126, VWAP=$0.072862
+
+### Artifacts
+
+| File | Trạng thái |
+|---|---|
+| `scripts/fw_loader_utils.py` | MỞ RỘNG (backward-compatible) |
+| `scripts/gom_scan.py` | SỬA: S1, _false_result, run_daily, --daily stub |
+| `_probe_daily_test_20260808.py` | Probe test 3.5 (→ archive sau commit) |
+
+### Chờ duyệt
+
+Format output 2-3 token mẫu trên ← operator cần duyệt trước khi tiếp Việc 4 (--backfill 137).
+
+---
+
 ## SESSION 2026-08-09 — LESSONS L-46/47/48 + Phụ lục A.5 (ĐÓNG)
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6

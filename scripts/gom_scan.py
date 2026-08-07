@@ -53,7 +53,11 @@ build_days        = _replay_mod.build_days
 CASE_DIR = BOT_ROOT / "docs" / "case study"
 
 # ── Config paths ─────────────────────────────────────────────────────────────
-REPO_ROOT   = Path(__file__).resolve().parent.parent
+REPO_ROOT    = Path(__file__).resolve().parent.parent
+_SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
+
 SCREEN_CFG  = REPO_ROOT / "screen_thresholds.yaml"
 STATE_PATH  = REPO_ROOT / "data" / "gom_state.json"
 HB_PATH     = REPO_ROOT / "data" / "gom_heartbeat.txt"
@@ -436,6 +440,9 @@ def update_chain(
     ret = _ret_1d(days, i)
     ret_max = g.get("ret_1d_max", 0.01)
     counts_q1 = not math.isnan(ret) and ret <= ret_max
+    # S1: PARTIAL_DAY (insufficient funding settlements) → skip Q1 this day
+    if d.get("_partial_day"):
+        counts_q1 = False
 
     if counts_q1:
         # ΔOI⁺ = max(OI_today - OI_prev, 0)
@@ -754,6 +761,177 @@ def run_backtest6(cfg: dict, sc: dict) -> None:
             print(f"  {token}: {evs}")
 
 
+# ── Daily mode helpers ────────────────────────────────────────────────────────
+
+def _false_result() -> dict:
+    """Synthetic eval_gom result for S2/S-missing days: gom=False, no suppressors fired."""
+    dq_keys = ["dist_wall", "lsr_dist", "funding_neg_div",
+               "funding_extreme", "decay", "post_climax"]
+    pd_keys = ["wrong_side", "slope_dq", "toi_dq"]
+    return {
+        "gom_day":       False,
+        "gom_a":         {k: False for k in ["A1", "A2", "A3", "A4", "A5"]},
+        "gom_b":         {k: False for k in ["B1", "B2", "B3", "B4"]},
+        "supp_dq":       {k: False for k in dq_keys},
+        "perday_dq":     {k: False for k in pd_keys},
+        "any_supp_dq":   False,
+        "any_perday_dq": False,
+        "any_dq":        False,
+        "disqualifier":  {k: False for k in dq_keys + pd_keys},
+        "low_conf":      True,
+        "crowd_flush":   False,
+    }
+
+
+def run_daily(
+    cfg: dict,
+    sc: dict,
+    store: Path,
+    target_date: str | None = None,
+    token_filter: str | None = None,
+    lookback_days: int = 60,
+) -> dict:
+    """Run daily GOM scan from freshwatch CSV store.
+
+    Strategy: re-run chain state from scratch over trailing window per token.
+    This is idempotent and avoids state divergence issues.
+
+    S-rules applied (via fw_loader_utils.build_token_days):
+      S1: _partial_day → skip Q1 (handled in update_chain)
+      S2: _skip_eval   → _false_result() (no eval_gom call)
+      S-missing        → _false_result() (break_streak increments naturally)
+
+    Returns all_state dict (also saved to STATE_PATH).
+    """
+    from fw_loader_utils import (
+        taker_scale_check_df, load_fw_csvs,
+        load_funding_intervals, build_token_days,
+    )
+
+    if target_date is None:
+        target_date = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+
+    # ── Load CSV data ─────────────────────────────────────────────────────────
+    df_all = load_fw_csvs(store, target_date, lookback_days=lookback_days)
+    if df_all.empty:
+        print(f"ERROR: no freshwatch CSV data found in {store} up to {target_date}",
+              file=sys.stderr)
+        sys.exit(1)
+
+    # Apply taker scale check on whole dataset (raise if mixed)
+    df_all = taker_scale_check_df(df_all)
+
+    # ── Funding intervals (for S1) ────────────────────────────────────────────
+    config_dir = REPO_ROOT / "data" / "config"
+    if store.is_dir():
+        candidate = store.parent / "config"
+        if candidate.exists():
+            config_dir = candidate
+    intervals = load_funding_intervals(config_dir)
+
+    # ── Symbol list ───────────────────────────────────────────────────────────
+    all_symbols = sorted(df_all["symbol"].unique())
+    if token_filter:
+        # Accept "BANK" → "BANKUSDT", or exact match
+        tf = token_filter.upper()
+        matched = [s for s in all_symbols
+                   if s == tf or s == tf + "USDT" or s.startswith(tf)]
+        if not matched:
+            print(f"ERROR: no symbols matching '{token_filter}' in store", file=sys.stderr)
+            sys.exit(1)
+        all_symbols = matched
+
+    date_from = (datetime.strptime(target_date, "%Y-%m-%d")
+                 - timedelta(days=lookback_days)).strftime("%Y-%m-%d")
+    date_to   = target_date
+
+    # Clamp date_from to actual CSV coverage (avoids synthetic NaN noise from pre-store period)
+    if not df_all.empty:
+        csv_start = str(df_all["date"].min())
+        if csv_start > date_from:
+            date_from = csv_start
+
+    # ── Header ────────────────────────────────────────────────────────────────
+    print(f"GOM Daily — {datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}")
+    print(f"Date: {target_date}  Window: {date_from}→{date_to}  "
+          f"Symbols: {len(all_symbols)}  Store: {store}")
+    print()
+
+    # ── Load existing state (carry over DQ episode fields if any) ─────────────
+    all_state = load_state()
+
+    open_chains:   list[tuple[str, dict, dict | None]] = []  # (token, chain, last_result)
+    closed_today:  list[str] = []
+    opened_today:  list[str] = []
+    suspect_summary: list[str] = []
+
+    for sym in all_symbols:
+        token = sym[:-4] if sym.endswith("USDT") else sym
+
+        days, suspect_dates = build_token_days(df_all, sym, date_from, date_to, intervals)
+        if not days:
+            continue
+
+        chain: dict     = {}
+        last_result     = None
+        prev_open       = False
+        event_on_target = False
+
+        for i, d in enumerate(days):
+            was_open = chain.get("chain_open", False)
+            skip     = d.get("_skip_eval") or d.get("_suspect")
+
+            if skip:
+                result = _false_result()
+            else:
+                result = eval_gom(days, i, cfg, sc)
+
+            chain = update_chain(chain, token, days, i, result, cfg, sc)
+
+            if d.get("date", "") == target_date:
+                last_result = result
+                event_on_target = (
+                    chain.get("chain_open") != was_open  # open↔close transition
+                    or (chain.get("chain_open") and result.get("gom_day"))
+                )
+
+        all_state[token] = chain
+
+        if suspect_dates:
+            suspect_summary.append(
+                f"  {token}: {len(suspect_dates)} suspect/missing date(s) "
+                f"({', '.join(suspect_dates[:3])}{'…' if len(suspect_dates) > 3 else ''})"
+            )
+
+        if chain.get("chain_open"):
+            open_chains.append((token, chain, last_result))
+        elif event_on_target:
+            closed_today.append(token)
+
+    # ── Output ────────────────────────────────────────────────────────────────
+    if open_chains:
+        print(f"━━ OPEN CHAINS ({len(open_chains)}) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        for token, chain, result in open_chains:
+            print(format_chain_report(token, chain, result, target_date))
+            print()
+    else:
+        print("(no open chains)")
+
+    if closed_today:
+        print(f"\n━━ CLOSED TODAY: {', '.join(closed_today)}")
+
+    if suspect_summary:
+        print(f"\n━━ S-MISSING / BAD DATA:")
+        for s in suspect_summary:
+            print(s)
+
+    print(format_footer(all_state, sc))
+    print(f"\n[{len(open_chains)} open / {len(all_symbols)} symbols scanned]")
+    print(f"State → {STATE_PATH}")
+
+    return all_state
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -762,7 +940,7 @@ def main() -> None:
     grp.add_argument("--backfill",  action="store_true", help="Run on 12 calibration cases")
     grp.add_argument("--daily",     action="store_true", help="Run on daily store CSV")
     grp.add_argument("--backtest6", action="store_true", help="Print §6 gate table")
-    parser.add_argument("--token",  help="Filter to single token (--backfill only)")
+    parser.add_argument("--token",  help="Filter to single token (--backfill / --daily)")
     parser.add_argument("--store",  help="Path to daily store CSV (--daily only)")
     parser.add_argument("--date",   help="Target date YYYY-MM-DD (--daily, default=latest)")
     args = parser.parse_args()
@@ -792,17 +970,19 @@ def main() -> None:
 
     elif args.daily:
         if not args.store:
-            print("ERROR: --daily requires --store <path>", file=sys.stderr)
+            print("ERROR: --daily requires --store <path_to_export_dir_or_csv>",
+                  file=sys.stderr)
             sys.exit(1)
         store = Path(args.store)
         if not store.exists():
             print(f"ERROR: store not found: {store}", file=sys.stderr)
             sys.exit(1)
-        # IMPLEMENT: load freshwatch CSV, apply fw_loader_utils.taker_scale_check()
-        # before passing DayData to eval_gom. freshwatch stores taker as decimal (0.47);
-        # signals.py expects pct (47.0). Mixed scale → raise, not suppress silently.
-        print("--daily mode: not yet implemented (awaiting VPS daily CSV path)", file=sys.stderr)
-        sys.exit(2)
+        final_state = run_daily(cfg, sc, store,
+                                target_date=args.date,
+                                token_filter=args.token)
+        save_state(final_state)
+        HB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        HB_PATH.write_text(datetime.now(timezone.utc).isoformat())
 
 
 if __name__ == "__main__":
