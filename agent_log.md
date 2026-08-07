@@ -43,9 +43,50 @@
 | `scripts/gom_scan.py` | SỬA: S1, _false_result, run_daily, --daily stub |
 | `_probe_daily_test_20260808.py` | Probe test 3.5 (→ archive sau commit) |
 
+### Việc 4: --daily 526 symbols → gom_state baseline
+
+**Probe:** `_probe_backfill137_20260808.py`  
+**Date:** 2026-08-06  **Window:** 2026-07-01 → 2026-08-06  **Symbols:** 526
+
+| Metric | Value |
+|---|---|
+| OPEN chains | 91 |
+| CLOSED | 435 |
+| Q1 > $2M | FF ($3.7M), UB ($6.6M), XPL ($2.4M), ZEC ($29.6M), 币安人生 ($2.5M) |
+| S-MISSING universal | 2026-07-24/25/26 (3-day store gap toàn universe) |
+
+**OPEN SERIES FULL LIST 2026-08-06 (91 chains):**  
+0G (ch2,n=4), 1000000MOG (ch1,n=3), 1000BONK (ch1,n=9,Q1=$2.0M★), 1000RATS (ch2,n=2),  
+AAVE (ch1,n=1), ACU (ch1,n=2), ACX (ch2,n=1), AIGENSYN (ch1,n=2), ALLO (ch1,n=4),  
+APR (ch1,n=1), APT (ch1,n=2), ASTER (ch1,n=5), AVNT (ch2,n=4), AWE (ch1,n=2),  
+BABY (ch2,n=1), BAN (ch2,n=3), BAS (ch1,n=3), BEAT (ch3,n=1), BRETT (ch1,n=1),  
+BTW (ch1,n=0), CAP (ch2,n=1), CATI (ch1,n=4), CELR (ch1,n=0), CFG (ch1,n=8),  
+COAI (ch1,n=1), CRV (ch2,n=2), DASH (ch1,n=6,Q1=$382K), DRIFT (ch1,n=3),  
+ENS (ch1,n=4), ENSO (ch1,n=5), EPIC (ch2,n=1), ETC (ch1,n=2,Q1=$1.8M),  
+ETHFI (ch2,n=6,Q1=$1.9M), ETHW (ch1,n=0),  
+FF (ch2,n=6,Q1=$3.7M★), GIGGLE (ch2,n=2), GOAT (ch1,n=1), GPS (ch2,n=5),  
+GRAM (ch2,n=1), HEI (ch2,n=0), HOLO (ch2,n=4), HUMA (ch2,n=0),  
+IN (ch1,n=1), INX (ch1,n=1), JASMY (ch2,n=1), JST (ch1,n=1), JTO (ch1,n=6),  
+KAITO (ch2,n=3), LDO (ch2,n=6), LIT (ch1,n=0), M (ch1,n=2),  
+MANTA (ch1,n=6), MEGA (ch1,n=4), MET (ch2,n=1), MORPHO (ch2,n=2),  
+MOVE (ch2,n=6), NEAR (ch1,n=7), ON (ch1,n=0), OP (ch1,n=6),  
+ORDI (ch3,n=2), PENGU (ch1,n=1,Q1=$1.0M), PLUME (ch1,n=1), POWER (ch1,n=3),  
+PRL (ch2,n=2), PROM (ch2,n=2), PYTH (ch1,n=1), RE (ch1,n=7), RECALL (ch2,n=2),  
+RENDER (ch2,n=5), ROBO (ch1,n=2), SENT (ch1,n=2), SKY (ch1,n=7),  
+SKYAI (ch2,n=0), SOPH (ch1,n=1), SPK (ch1,n=2), STAR (ch2,n=1), STRK (ch1,n=1),  
+STX (ch2,n=1), SYRUP (ch3,n=1), UB (ch2,n=1,Q1=$6.6M★),  
+US (ch1,n=0), USELESS (ch2,n=4), VVV (ch3,n=1),  
+WIF (ch1,n=4), WLFI (ch1,n=8), XPL (ch1,n=7,Q1=$2.4M★),  
+ZAMA (ch2,n=1), ZEC (ch1,n=4,Q1=$29.6M★), ZEST (ch2,n=3),  
+ZRO (ch2,n=3), 币安人生 (ch1,n=9,Q1=$2.5M★)
+
+★ = Q1_cum > $2M (5 tokens: FF, UB, XPL, ZEC, 币安人生)
+
+**DỪNG — chờ operator duyệt open series list trước khi tiếp Việc 5.**
+
 ### Chờ duyệt
 
-Format output 2-3 token mẫu trên ← operator cần duyệt trước khi tiếp Việc 4 (--backfill 137).
+Format output 2-3 token mẫu + OPEN SERIES list ← operator duyệt trước Việc 5 (deploy cron).
 
 ---
 
