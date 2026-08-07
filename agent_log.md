@@ -2,6 +2,46 @@
 
 ---
 
+## SESSION 2026-08-09 — LESSONS L-46/47/48 + Phụ lục A.5 (ĐÓNG)
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Commit 1:** 62bea5e — lessons: L-46/47/48 BANANAS31 (operator signed 09/08)
+**Commit 2:** 999a638 — playbook A.5 + case cross-ref: video-not-photo pair
+
+### Việc đã làm
+
+| Hạng mục | Kết quả |
+|---|---|
+| L-46 (ARM) | Video vs Photo: 3-derivative check — pos_r level không đủ, cần sign-corr + dist_wall + gLSR |
+| L-47 (ARM) | Đồng hồ cụm: BTW có expiry — BANANAS31 cụm #4 Aug-Oct/26, gLSR=1.20 block |
+| L-48 (DATA) | fullyDelisted Alpha → ABSTAIN taker_alpha (klines[9]==klines[5]) confirmed IDOL+BANANAS31 |
+| LESSONS sheet | Rows 49/50/51 written, 47 lessons total, L-43 gap (chưa bao giờ ghi) |
+| lessons_learned.md | Regen 47 lessons L-01→L-48 |
+| Phụ lục A.5 | Bảng ba-đạo-hàm inserted vào analysis_playbook.md (456 lines) |
+| CASE_BANANAS31 CASE | verdict=NO_SETUP-TRACKING-passive, archetype=MM-BAIT-B-shape serial |
+| CASE_BANANAS31 TRIGGERS | T1/T2/T3 WAIT, INV=BLOCK (gLSR≥1.2) |
+| CASE_BANANAS31 OUTCOME | Case giáo khoa L-46/47/48, đồng hồ cụm #4 Aug-Oct/26 |
+| CASE_HEI EVENTS | Row 13: cross-ref đối chứng DƯƠNG cặp L-46 |
+| docs/INDEX.md | Fixed broken HEI/BANANAS31 table row, L-01→L-48, version 09/08 |
+| Q1/Q2/Q3 check | PASS (đường học THÔNG: INDEX→playbook→lessons→case) |
+| L-32 verify | PASS 503 data rows (2025-03-23→2026-08-07) |
+| Backup | scratch/CASE_BANANAS31_bak_20260809.xlsx |
+
+### Kỷ luật session
+
+- L-34 raise-before-save: agent RAISE vì CASE_BANANAS31.xlsx bị lock (operator xác nhận đóng trước)
+- Thi trước commit sau: Q1/Q2/Q3 PASS trước khi commit cả hai commit
+- Probe scripts: 7 files archived vào scripts/archive/ trong commit đóng án
+- scripts/_task_regen_lessons.py: giữ ở scripts/ (reusable, không archive)
+
+### Số cần nhớ
+
+- **L-43**: không tồn tại (never written) — mapping 47 lessons trong 48 slots L-01→L-48
+- **BANANAS31 gLSR hiện tại**: 1.20 > 1.1 → INV BLOCK → TRACKING-passive
+- **Đồng hồ cụm #4**: Aug-Oct/26 (trigger: gLSR drop về ≤0.7 + pos rebuild 3d)
+
+---
+
 ## SESSION 2026-08-08 — FIX-PACK v2: Án CSV born-wrong (ĐÓNG)
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6  
@@ -59,6 +99,18 @@ BRUSDT 2026-07-24/07-25/07-26 **không thể regen**:
 Không có job backup nào cho freshwatch CSVs trong crontab VPS. Canonical data không có lineage backup.
 
 **Đề xuất:** Thêm weekly cron SCP freshwatch_daily_*.csv về local hoặc git bundle. Operator xác nhận mechanism ưa thích (SCP local / git bundle / rsync) → agent implement.
+
+### GATE 0 — Reconcile (08/08/2026)
+
+**0a Tolerant-match:** 9/9 pairs OK. BRUSDT exact_count=6 (4h/8h era mix), tolerant=3 khớp 8h — moot vì CSV MISSING PERMANENT do 1d-store lag, không phải funding store.
+
+**0b Timeline:** Log 07-27T08:10Z `funding_start symbols=525` xác nhận BANK in universe. Mechanism exact của fn=1 không reconstruct được từ log (log không per-symbol). Best hypothesis: backfill 01:30 chỉ catch 1 settlement, export 01:20 chạy TRƯỚC khi các collector poll sau bổ sung đủ. Documented L-35 (incomplete log).
+
+**0c _build_funding_for_day:** `groupby()["funding_rate"].agg(funding_n="count")` — simple row count sau `[day_start, day_end)` window + dedup. KHÔNG phải exact-ms boundary. Probe audit false positives là lỗi probe, không phải exporter.
+
+**0d L-28 (ghi sổ):** Probe audit 18,734 gaps = false positives. Dùng exact-ms boundary check nhưng Binance trả offset 1-10ms → không có intersection. Cross-check tay 1 mẫu sau mới phát hiện. Quy tắc: audit timestamp exchange → tolerance ≥50ms.
+
+**ÁN CSV ĐÓNG:** "store-trẻ-tại-cửa-universe; mutation loại trừ có bằng chứng; lineage đã vá."
 
 ### Artifacts
 
