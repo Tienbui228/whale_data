@@ -1,0 +1,18 @@
+/tmp/funding_backfill.py:73: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now_ms = int(datetime.utcnow().replace(tzinfo=timezone.utc).timestamp() * 1000)
+  Progress: 50/526 syms, 35 rows queued
+  Progress: 100/526 syms, 73 rows queued
+  Progress: 150/526 syms, 110 rows queued
+  Progress: 200/526 syms, 149 rows queued
+  Progress: 250/526 syms, 187 rows queued
+  Progress: 300/526 syms, 228 rows queued
+  Progress: 350/526 syms, 270 rows queued
+  Progress: 400/526 syms, 311 rows queued
+  Progress: 450/526 syms, 353 rows queued
+  Progress: 500/526 syms, 393 rows queued
+  WARN: fapi failed for 币安人生USDT
+  WARN: fapi failed for 我踏马来了USDT
+  WARN: fapi failed for 龙虾USDT
+  Fetch complete: 526 syms had gaps, 410 backfill rows
+  Wrote 410 new rows to /root/Data_back_test/whale_data/data/raw/funding_8h/month=2026-08/part-0.parquet (total 19227)
+BACKFILL DONE: 410 rows inserted
