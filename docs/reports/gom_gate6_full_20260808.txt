@@ -1,177 +1,115 @@
-§6 BACKTEST GATE TABLE ĐỦ — gom_detect_spec v1.1
-Generated: 2026-08-08  Probe: _probe_gom_gate6_full_20260808.py
-Screen: screen_thresholds.yaml v1.1 (crowd_flush_gap_min_days=3 added)
+
+================================================================================
+§6 GATE FULL v3 — GOM scan backtest (gom_detect_spec v1.2)
+Fixes: B1 persist ≥7d · structural GOM-B · wrong_side DQ · DQ cooldown 14d · chapter guard removed
 ================================================================================
 
-══════════════════════════════════════════════════════════════════════════════════
-MẢNH SỐ 1 — B1-B4 breakdown tại ngày GOM-B mở (TAG 06-26 + BULLA 07-02)
-══════════════════════════════════════════════════════════════════════════════════
+================================================================================
+MẢNH SỐ 1 — B1-B4 breakdown (structural formula) tại ngày GOM-B mở sớm
+================================================================================
 
 TAG 06-26:
-  lsr_pos_r=NaN  lsr_acc_r=NaN  lsr_global=NaN  (LSR data absent ngày này)
-  taker=49.9%  oi_usd=NaN
-  funding_avg=0.00005  funding_min=0.00005
-  B1(hedge_structure) = False
-  B2(funding_pinned)  = True   ← funding_avg=0.00005 pinned ~0
-  B3(absorption)      = True   ← taker 49.9% (near-balanced = hấp thụ)
-  B4(oi_ignition)     = False
-  A1(lsr_accum)=False  A2(stealth)=False  A3(s3e)=False  A4=False  A5=False
-  → GOM=True (B2+B3=2 ≥ gom_b_min_count=2)  DQ=False
-  Ghi chú: TAG mở sớm 06-26 qua GOM-B (không có GOM-A). Nếu muốn chặt hơn:
-           tăng gom_b_min_count=3 → cần thêm một B-cond nữa để mở.
+  lsr_pos_r=nan  lsr_acc_r=nan  lsr_global=nan
+  taker=49.9%  funding_avg=0.00005
+  B1_today=False  B1_persist(7d)=False  [7 days all=False]
+  B2(fp/fps)=True  B3(absorption)=True  B4(oi_ign)=False
+  GOM-B old(count≥2)=True  GOM-B new(structural)=False
+  wrong_side=False
+  → GOM=False  DQ=False  [GOM-A=False]
 
 BULLA 07-02:
-  lsr_pos_r=1.8200  lsr_acc_r=5.2500  lsr_global=5.8200  div=0.3467
-  taker=48.1%  oi_usd=4,764,654
-  funding_avg=0.00031  funding_min=0.00005
-  B1(hedge_structure) = True   ← lsr_pos < lsr_acc (lsr_pos_r 1.82 < lsr_acc_r 5.25)
-  B2(funding_pinned)  = False  ← funding_avg=0.00031 > pinned threshold
-  B3(absorption)      = True   ← taker 48.1%
-  B4(oi_ignition)     = False
-  A1(lsr_accum)=False  A2=False  A3=False  A4=False  A5=False
-  → GOM=True (B1+B3=2)  DQ=False
-  Ghi chú: BULLA mở sớm 07-02 qua B1+B3. Cùng vấn đề gom_b_min_count=2.
+  lsr_pos_r=1.8200  lsr_acc_r=5.2500  lsr_global=5.8200
+  taker=48.1%  funding_avg=0.00031
+  B1_today=True  B1_persist(7d)=False  [7 days all=False]
+  B2(fp/fps)=False  B3(absorption)=True  B4(oi_ign)=False
+  GOM-B old(count≥2)=True  GOM-B new(structural)=False
+  wrong_side=False
+  → GOM=False  DQ=False  [GOM-A=False]
 
-══════════════════════════════════════════════════════════════════════════════════
-MẢNH SỐ 2 — BANK pos_r series 07-10→07-21 + rolling peak (rule iv diagnosis)
-══════════════════════════════════════════════════════════════════════════════════
+================================================================================
+MẢNH SỐ 2 — BANK pos_r series 07-10→07-21 + rolling peak
+================================================================================
+    date   lsr_pos_r                      unit check   peak_so_far        drop  rule_iv?
+   07-10       3.710                     share=0.788         3.710       +0.0%  
+   07-11       3.450                     share=0.775         3.710       +7.0%  
+   07-12       2.770                     share=0.735         3.710      +25.3%  
+   07-13       2.720                     share=0.731         3.710      +26.7%  
+   07-14       2.740                     share=0.733         3.710      +26.1%  
+   07-15       2.640                     share=0.725         3.710      +28.8%  
+   07-16       1.590                     share=0.614         3.710      +57.1%  CLOSE
+   07-17       1.610                     share=0.617         3.710      +56.6%  CLOSE
+   07-18       1.890                     share=0.654         3.710      +49.1%  CLOSE
+   07-19       1.310                     share=0.567         3.710      +64.7%  CLOSE
+   07-20       1.170                     share=0.539         3.710      +68.5%  CLOSE
+   07-21         nan                       share=NaN         3.710       +nan%  
 
-  date    lsr_pos_r    peak_so_far   drop_from_peak  rule_iv?
-  07-10       3.710          3.710           +0.0%
-  07-11       3.450          3.710           +7.0%
-  07-12       2.770          3.710          +25.3%
-  07-13       2.720          3.710          +26.7%
-  07-14       2.740          3.710          +26.1%
-  07-15       2.640          3.710          +28.8%
-  07-16       1.590          3.710          +57.1%   ← CLOSE (≥30% từ peak)
-  07-17       1.610          3.710          +56.6%     (chain đã đóng)
-  07-18       1.890          3.710          +49.1%
-  07-19       1.310          3.710          +64.7%
-  07-20       1.170          3.710          +68.5%
-  07-21        NaN           3.710           NaN
+================================================================================
+MẢNH SỐ 3 — TAG post-07-21 GOM diagnosis (A2/wrong_side)
+================================================================================
+    date   GOM    A2   ws_dq      avg_px      gLSR    px_chg5d    gLSR_chg5d
+   07-21     .     .       .      0.0011       nan      +33.2%         +nan%
+   07-22     .     .       .      0.0011    1.5349      +15.8%        +40.8%
+   07-23     .     .       .      0.0010    1.5589       +6.0%        +27.8%
+   07-24     .     .       .      0.0010    1.5253      -11.1%         +nan%
+   07-25     .     .       .      0.0010    1.5800      -12.8%         +nan%
+   07-26     .     .       .      0.0011    1.6774       -1.8%         +nan%
+   07-27     .     .       .      0.0011    1.7071       +4.5%        +11.2%
+   07-28     G     Y       .      0.0013    1.2978      +25.5%        -16.7%
+   07-29     G     Y       .      0.0012    1.8129      +17.2%        +18.9%
+   07-30     G     Y       .      0.0011    1.9958       +6.0%        +26.3%
+   07-31     G     Y       .      0.0014    1.9223      +22.0%        +14.6%
+   08-01     G     Y       .      0.0014    1.6157      +23.1%         -5.4%
+   08-02     .     .       .      0.0014    1.9560       +6.7%        +50.7%
+   08-03     .     .       .      0.0013    2.0665       +4.4%        +14.0%
+   08-05     .     .       .      0.0012    1.8670      +13.3%         -6.5%
 
-Peak 3.710 đặt tại 07-10. Drop 57.1% tại 07-16 → rule (iv) kích hoạt đúng thiết kế.
+==========================================================================================
+§6 BACKTEST GATE TABLE — gom_detect_spec v1.2 (structural B1 AND (B2|B3) AND B4)
+==========================================================================================
 
-══════════════════════════════════════════════════════════════════════════════════
-MẢNH SỐ 3 — POWER GOM-B series (negative case diagnosis)
-══════════════════════════════════════════════════════════════════════════════════
+ #   Token  Type             Kết quả thực tế                                     PASS/FAIL
+--------------------------------------------------------------------------------------------------------------
+ 1    BANK  open             chain_open 06-29                                    PASS
+ 2    BANK  chapter          new_chapter 07-02 ch2                               PASS
+ 3    BANK  close-iv         closed 07-16 [pos_r_drop:57%_from_peak:3.71]        PASS
+ 4     TAG  open             chain_open 07-10                                    PASS
+ 5     BAS  supp             15 DQ events, no open                               PASS
+ 6     BAS  open-after       no chain_open post-suppression                      FAIL
+ 7   BULLA  open             no chain_open                                       FAIL
+ 8     CLO  supp-neg         chain_open 07-12 despite expected DQ                MIXED
+ 9   POWER  b-pos            no chain_open                                       FAIL
+10    BANK  close-iv-gate    closed 07-16 [pos_r_drop:57%_from_peak:3.71]        PASS
+11     AKE  supp-then-open   evts=[('07-08', 'dq')]                              WARN
 
-  date    GOM    A1   B1   B2   B3   B4   DQ
-  06-27     .     .    Y    .    .    .    .
-  06-28     G     .    Y    .    Y    .    .   ← GOM fires! B1+B3=2 ≥ min_count
-  06-29     .     .    Y    .    .    .    .
-  06-30     G     .    Y    .    Y    .    .
-  07-01     G     .    Y    .    Y    .    .
-  07-02     G     .    Y    .    Y    .    .
-  07-03     G     .    Y    .    Y    .    .
-  07-04     G     .    Y    .    Y    .    .
-  07-05     G     .    Y    .    Y    .    .
-  07-06     .     .    Y    .    .    .    .
-  07-07     .     .    Y    .    .    .    .
-  07-08     G     .    Y    .    .    Y    .
-  07-12     G     .    Y    .    .    Y    .
-  07-18     G     .    Y    .    Y    .    .
+── ZBT ×2 ─────────────────────────────────────────────────────────────────────
+  Z1 ZBT open:  07-01 — PASS
+  Z2 ZBT close: 07-02 [pos_r_drop:34%_from_peak:3.99] — PASS
+  All events: [('07-01', 'chain_open'), ('07-02', 'chain_closed'), ('07-03', 'chain_open'), ('07-06', 'new_chapter'), ('07-14', 'chain_closed'), ('07-15', 'dq'), ('07-16', 'dq'), ('07-17', 'dq')]
 
-Diagnosis: POWER có hedge_structure (B1) persistent. Khi B3=absorption bật (taker
-balanced) thì B1+B3=2 đủ trigger GOM mà không cần GOM-A.
-→ POWER là "wrong-side hedge" (không phải tích lũy long) nhưng scanner không phân biệt.
-→ Fix: tăng gom_b_min_count=3 HOẶC thêm điều kiện "B-only requires A1 (lsr_accum)".
+── PARTI ─────────────────────────────────────────────────────────────────────
+  PARTI: MISSING locally — case file and result.txt both absent
+  Source xác định: VPS perp daily store (freshwatch_daily), PARTI trong universe 525/137
+  Store từ 18/05 → đủ cover PARTI episode nếu ngày crash sau 18/05
+  Action: SCP freshwatch_daily_2026-07.csv từ VPS → load PARTI rows
+  Sẽ chạm PARTI gate sau khi có VPS data
 
-══════════════════════════════════════════════════════════════════════════════════
-§6 GATE TABLE ĐỦ — 10 rows chuẩn + ZBT×2 + PARTI + TAG-hậu + AKE bonus
-══════════════════════════════════════════════════════════════════════════════════
+── TAG post-07-21 wrong-side? ──────────────────────────────────────────────────
+  TAG_EXT events: [('07-10', 'chain_open'), ('07-15', 'chain_closed'), ('07-15', 'dq'), ('07-16', 'dq'), ('07-30', 'chain_open'), ('08-05', 'chain_closed')]
+  Post-07-21: [('07-30', 'chain_open', ''), ('08-05', 'chain_closed', 'gom_gap>2d')]
+  TAG wrong-side firing: [('07-30', 'chain_open', '')] — wrong_side DQ status in mảnh số 3
 
-#   Token   Type            Ngày kỳ vọng   Ngày thực tế   Result    Evidence / Diagnosis
---- ------- --------------- -------------- -------------- --------- -----------------------------------------------
- 1  BANK    open            06-27~29       06-27          PASS      chain_open 06-27 (B2+B3 trước A1)
- 2  BANK    chapter         07-02          —              FAIL*     Q1_cum=0 tại 07-02 → chapter guard chặn
- 3  BANK    close-iv        07-16~21       07-16          PASS      pos_r_drop:57% từ peak 3.71 (07-10)
- 4  TAG     open            07-12~14       06-26          PASS**    chain_open 06-26 B2+B3 (sớm hơn kỳ vọng)
- 5  BAS     supp            07-02→07-15    07-02→15       PASS      15 DQ days (post_climax), no chain_open
- 6  BAS     open-after      07-16+         —              FAIL†     BAS không re-open sau suppression trong data range
- 7  BULLA   open            07-02~17       07-02          PASS      chain_open 07-02 B1+B3
- 8  CLO     supp-neg        (no GOM)       07-12 open     MIXED§    DQ days có nhưng chain mở 07-12 — CLO không chặn đủ
- 9  POWER   b-only-neg      (no GOM)       06-28 open     FAIL‡     B1+B3=2 fires GOM (gom_b_min_count=2 quá permissive)
-10  BANK    close-iv-gate   07-16~21       07-16          PASS      Duplicate confirm rule (iv): chain_closed 07-16
+==========================================================================================
+TỔNG KẾT §6 v3
+==========================================================================================
+Rows 1-11: PASS=6  FAIL=3  MIXED=1  WARN=1
 
---- ZBT ×2 ---
-Z1  ZBT     open            07-01~07       07-01          PASS      chain_open 07-01 (A1+B1+B3 theo ZBT data)
-Z2  ZBT     close-iv        07-02~07       07-02          PASS      chain_closed 07-02 pos_r_drop:34% (peak=3.99→2.63)
-    (ZBT also: re-open 07-03, close 07-14 pos_r_drop:33%; re-open 07-30 → active at end)
+Dự đoán operator (ghi trước): rows 2/4/6/7/9 sẽ tự lành sau structural formula fix
+Kết quả thực tế:
+  Row 2 BANK/chapter: PASS — new_chapter 07-02 ch2
+  Row 4 TAG/open: PASS — chain_open 07-10
+  Row 6 BAS/open-after: FAIL — no chain_open post-suppression
+  Row 7 BULLA/open: FAIL — no chain_open
+  Row 9 POWER/b-pos: FAIL — no chain_open
 
---- PARTI ---
-P   PARTI   (any)           ?              —              MISSING   Không có CASE_PARTI.xlsx, không có result.txt
-    Nguồn đề xuất:
-    (a) cooldown_review_2026-07-30.md — kiểm tra PARTI có trong review
-    (b) VPS freshwatch_daily_2026-07.csv nếu PARTI trong 137 SCREEN
-    (c) Binance API backfill nếu PARTI trong alpha token list
-
---- TAG hậu 29/07 ---
-T2  TAG     post-07-21      no-GOM-wrong   07-28 GOM-A    WRONG-SIDE?  A2(stealth_grind) fires 07-28→08-01
-    Post-07-21 signal breakdown:
-    07-21..07-27: GOM=False (cả A và B đều 0, chain đóng 07-23 by gap)
-    07-28→08-01:  A2(stealth_grind) fires → chain_open 07-28
-    08-05: chain_closed (gom_gap>2d)
-    → Nếu TAG dump post-29/07 = "wrong-side", stealth_grind vẫn detect = false positive
-    → Kỳ vọng: TAG-hậu-29/07 GOM không bật hoặc bật rồi bị DQ
-    → Thực tế: A2 bật (stealth accumulation at lower levels?), không DQ
-    → VERDICT: cần operator xác nhận intent — A2 fire đúng (có ai mua đáy?) hay false positive?
-
---- AKE (bonus #11) ---
-11  AKE     supp-then-open  DQ then open   07-08 DQ → 07-14 open   PASS  decay SUPP 07-08; lsr_accum → chain_open 07-14
-
-══════════════════════════════════════════════════════════════════════════════════
-PHÂN TÍCH FAIL / MIXED
-══════════════════════════════════════════════════════════════════════════════════
-
-* Row 2 BANK chapter FAIL:
-  Cause: Q1_cum=0 tại 07-02 crowd_flush (BANK price đang pump, ret>1% → 0 Q1-days counted trước flush).
-  Spec §8.2: "crowd_flush → new chapter" — không mention Q1_cum pre-condition.
-  Implementation adds `Q1_cum > 0` guard (logically defensible: no accumulation = no chapter to reset).
-  → SPEC CLARIFICATION cần: does rule (ii) require Q1_cum > 0?
-  → Options: (A) remove guard = chapter always on flush (per literal spec); (B) keep guard + update row-2 expectation
-
-† Row 6 BAS open-after FAIL:
-  BAS result.txt ends at 07-21. After post_climax suppression clears (~07-15), no GOM-A/B fires in remaining 07-16→07-21 data.
-  Possible causes: (a) BAS lsr data stays in suppressed zone; (b) result.txt không có data từ 07-16 trở đi đủ để fire.
-  → Cần check BAS result.txt date range + lsr_accum values post-07-15
-  → Row 6 is a DATA RANGE issue, not a gate logic issue.
-
-§ Row 8 CLO MIXED:
-  CLO DQ fires in early days but chain_open on 07-12. Means CLO's dist_wall/lsr_dist DQ only covers some window.
-  NOTE: probe's DQ evidence readout has a field-order bug (shows "B4" instead of real DQ name).
-  Real DQ signals need direct eval check for CLO on 07-12.
-  → CLO design: if CLO eventually gets clear DQ → opens chain = correct behavior (dist_wall clears when price stabilizes)
-  → If spec says CLO should never open chain = design mismatch
-  → VERDICT: SPEC CLARIFICATION — does "dist_wall SUPP" mean permanent or just during floor proximity?
-
-‡ Row 9 POWER FAIL (confirmed design issue):
-  POWER = wrong-side hedge (short hedge, not long accumulation). B1(hedge_structure) TRUE = persistent.
-  When B3 blinks on (taker balanced), B1+B3=2 triggers GOM with NO A-conditions.
-  → Fix required before deploy:
-    Option A: gom_b_min_count = 3 (need ≥3 B-conditions without GOM-A)
-    Option B: B-only path requires A1 (lsr_accum) as mandatory
-    Option C: hedge_structure direction-check (requires lsr divergence sign)
-  → RECOMMEND Option A (gom_b_min_count=3): minimal change, broadens filter across all wrong-side cases
-
-══════════════════════════════════════════════════════════════════════════════════
-TỔNG KẾT GATE §6
-══════════════════════════════════════════════════════════════════════════════════
-
-Rows PASS (confirm design):       1, 3, 4, 5, 7, 10, Z1, Z2, AKE#11 = 9 rows
-Rows FAIL (design issue):         2 (spec clarify), 6 (data range), 9 (gom_b_min_count) = 3 rows
-Rows MIXED/UNCLEAR:               8 (CLO — spec clarify), T2 (TAG post-29/07 — operator decision) = 2 rows
-Rows MISSING (no data):           PARTI = 1 row
-
-GATE STATUS: KHÔNG ĐỦ PASS cho deploy
-→ POWER (row 9) là blocker cứng: scanner phải không fire với wrong-side hedge
-→ Spec clarifications cần trước khi re-run gate: rule (ii) Q1_cum guard + CLO suppress semantics
-→ PARTI cần data source để chấm
-
-PENDING OPERATOR:
-[A] gom_b_min_count: 2→3 approve? (blocks POWER false positive)
-[B] Rule (ii) literal vs guarded (chapter only when Q1_cum>0)?
-[C] CLO dist_wall = permanent SUPP hay sliding window?
-[D] TAG-hậu-29/07 A2=stealth_grind: false positive hay correct detection?
-[E] PARTI data source: operator có file/export?
-[F] BAS post-suppression: extend result.txt hay accept row-6 as data-range limitation?
+ZBT: check output trên | PARTI: MISSING (VPS source identified)
+TAG post-07-21: xem mảnh số 3 — wrong_side DQ kết quả

@@ -95,23 +95,30 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     any_a  = any(gom_a.values())
 
     # GOM-B signals
-    b1 = hedge_structure(days, i, cfg)
+    # B1: hedge_structure bền ≥ hedge_lookback_days (all days in window must satisfy)
+    b1 = all(
+        hedge_structure(days, j, cfg)
+        for j in range(max(0, i - hedge_lb + 1), i + 1)
+    )
     b2 = funding_pinned(days, i, cfg) or funding_pinned_strong(days, i, cfg)
     b3 = absorption(days, i, cfg)
     b4 = oi_ignition(days, i, cfg)
     gom_b = {"B1": b1, "B2": b2, "B3": b3, "B4": b4}
-    b_count = sum(gom_b.values())
 
-    gom_b_min = g.get("gom_b_min_count", 2)
+    # §1 structural formula: GOM-B = B1 AND (B2 OR B3) AND B4
+    # B1 (hedge_structure bền ≥7d) is MANDATORY — not interchangeable with other B-conditions
+    # (gom_b_min_count removed; count formula was incorrect)
+    gom_b_fire = b1 and (b2 or b3) and b4
 
-    # Disqualifiers
+    # Disqualifiers (canonical from signals.py + wrong_side_dq local)
     dq = {
-        "dist_wall":        dist_wall(days, i, cfg),
-        "lsr_dist":         lsr_dist(days, i, cfg),
-        "funding_neg_div":  funding_neg_div(days, i, cfg),
-        "funding_extreme":  funding_extreme(days, i, cfg),
-        "decay":            decay(days, i, cfg),
-        "post_climax":      post_climax(days, i, cfg),
+        "dist_wall":       dist_wall(days, i, cfg),
+        "lsr_dist":        lsr_dist(days, i, cfg),
+        "funding_neg_div": funding_neg_div(days, i, cfg),
+        "funding_extreme": funding_extreme(days, i, cfg),
+        "decay":           decay(days, i, cfg),
+        "post_climax":     post_climax(days, i, cfg),
+        "wrong_side":      _wrong_side_dq(days, i, sc),   # L-26: price↓ + gLSR↑
     }
     any_dq = any(dq.values())
 
@@ -124,7 +131,7 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
 
     cf_today = crowd_flush(days, i, cfg)
 
-    gom_day = (any_a or b_count >= gom_b_min) and not any_dq
+    gom_day = (any_a or gom_b_fire) and not any_dq
 
     return {
         "gom_day":      gom_day,
@@ -146,6 +153,33 @@ def _ret_1d(days: list[DayData], i: int) -> float:
     if math.isnan(p_prev) or math.isnan(p_now) or p_prev <= 0:
         return float("nan")
     return (p_now - p_prev) / p_prev
+
+
+def _wrong_side_dq(days: list[DayData], i: int, sc: dict) -> bool:
+    """Price drop + gLSR rising = distribution not accumulation (L-26).
+    Implemented in gom_scan (not signals.py) as GOM-screen-specific suppressor.
+    """
+    g = _scfg(sc)
+    c = g.get("wrong_side_dq", {})
+    if not c:
+        return False
+    n        = c.get("lookback_days", 5)
+    px_drop  = c.get("px_drop_min", 0.10)
+    glsr_min = c.get("glsr_rise_min", 0.15)
+    if i < n:
+        return False
+    px0  = days[i-n].get("avg_px",     float("nan"))
+    px1  = days[i].get("avg_px",       float("nan"))
+    g0   = days[i-n].get("lsr_global", float("nan"))
+    g1   = days[i].get("lsr_global",   float("nan"))
+    for v in (px0, px1, g0, g1):
+        if math.isnan(v):
+            return False
+    if px0 <= 0 or g0 <= 0:
+        return False
+    px_chg   = (px1 - px0) / px0
+    glsr_chg = (g1 - g0) / g0
+    return px_chg <= -px_drop and glsr_chg >= glsr_min
 
 
 # ── Chain state machine ───────────────────────────────────────────────────────
@@ -222,11 +256,34 @@ def update_chain(
 
     chain = state  # top-level dict is the chain (we pass token's chain state)
 
-    # ── Rule (i): disqualifier = reset/close ─────────────────────────────────
+    # ── Rule (i): DQ → close chain + update DQ episode + cooldown ───────────
+    DQ_EP_GAP = 3  # ≥3d clean = new DQ episode (same rule as flush gap)
     if dq:
+        last_fire = state.get("dq_last_fire", "")
+        if last_fire:
+            try:
+                gap_dq = (datetime.strptime(date_str[:10], "%Y-%m-%d") -
+                          datetime.strptime(last_fire[:10], "%Y-%m-%d")).days
+            except ValueError:
+                gap_dq = 0
+        else:
+            gap_dq = 99
+        if gap_dq >= DQ_EP_GAP or not last_fire:
+            # New DQ episode — cooldown starts from today
+            state["dq_episode_start"] = date_str
+            state["dq_cooldown_end"]  = (datetime.strptime(date_str[:10], "%Y-%m-%d")
+                                          + timedelta(days=14)).strftime("%Y-%m-%d")
+        state["dq_last_fire"] = date_str
         if chain.get("chain_open"):
             fired = [k for k, v in result["disqualifier"].items() if v]
             state = _close_chain(chain, f"disqualifier:{'+'.join(fired)}", date_str)
+        return state
+
+    # ── Cooldown block: within 14d of DQ episode first-fire ─────────────────
+    cooldown_end = state.get("dq_cooldown_end", "")
+    if cooldown_end and date_str <= cooldown_end:
+        if chain.get("chain_open"):
+            state = _close_chain(chain, f"dq_cooldown_until:{cooldown_end}", date_str)
         return state
 
     # ── If no GOM and chain open: break_streak logic ─────────────────────────
@@ -240,9 +297,12 @@ def update_chain(
 
     # ── GOM fires today ───────────────────────────────────────────────────────
 
-    # Open new chain if none open
+    # Open new chain if none open — preserve DQ episode fields across open
     if not chain.get("chain_open", False):
+        dq_save = {k: state.get(k, "") for k in
+                   ("dq_episode_start", "dq_last_fire", "dq_cooldown_end")}
         state = _empty_chain(date_str)
+        state.update(dq_save)
         chain = state
 
     chain["break_streak"] = 0

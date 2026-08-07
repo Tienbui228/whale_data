@@ -4,6 +4,8 @@
 #
 # Changelog:
 # 2026-08-08 v1.0: khởi tạo theo spec gom_detect_spec.md v1.1
+# 2026-08-08 v1.1: GOM-B structural formula (B1 AND (B2|B3) AND B4); xóa gom_b_min_count;
+#                  wrong_side_dq (L-26); DQ cooldown 14d from-first-fire
 
 gom:
   # §8.3 — ngày đếm Q1: ret_1d (price return 1d) phải ≤ max này
@@ -21,8 +23,8 @@ gom:
   # §8.3 — VWAP fallback sang vol-weighted khi ΔOI ≈ 0 (seat-rotation)
   vwap_fallback_seats: true
 
-  # §1 — GOM-B: cần ≥ bao nhiêu B-conditions để trigger (nếu không có GOM-A)
-  gom_b_min_count: 2
+  # §1 — GOM-B: structural formula B1 AND (B2|B3) AND B4 — không dùng count nữa
+  # (gom_b_min_count REMOVED — count formula sai; B1 mandatory không thay thế được)
 
   # §2 — guards
   vol_low_conf_usd: 200_000   # vol_quote < 200K → low_conf flag
@@ -33,5 +35,11 @@ gom:
   hedge_lookback_days: 7
 
   # §8.2 rule (ii) — crowd_flush chỉ trigger chapter mới nếu ≥ N ngày sạch kể từ flush trước
-  # Fix: tránh consecutive-flush → multi-chapter trong cùng cluster (BANK 07-02→05)
+  # Chương rỗng (Q1=0) hợp lệ — không dùng Q1_cum guard nữa
   crowd_flush_gap_min_days: 3
+
+  # §8.1 wrong-side DQ (L-26): giá rơi + gLSR tăng = distribution, không phải tích lũy
+  wrong_side_dq:
+    lookback_days:  5      # window đo price + gLSR thay đổi
+    px_drop_min:    0.10   # giá rơi ≥ 10% trong lookback
+    glsr_rise_min:  0.15   # gLSR tăng ≥ 15% trong lookback

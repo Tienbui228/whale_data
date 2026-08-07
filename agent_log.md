@@ -106,14 +106,53 @@ Diagnose FAIL:
 - `§` Row 8: CLO dist_wall/lsr_dist không cover toàn bộ window (chain mở 07-12) → spec clarify permanent SUPP hay sliding window.
 - `‡` Row 9 (blocker cứng): POWER B1+B3=2 fires GOM → FIX cần: gom_b_min_count=3 hoặc A1 required for B-only.
 
-### CẦN OPERATOR
+### SESSION 2026-08-08 tiếp — Operator phán §6 v2: fix công thức cấu trúc GOM-B
 
-- **[A] gom_b_min_count: 2→3** (blocker — POWER row 9 fix)
-- **[B] Rule (ii) Q1_cum guard**: chapter bất kỳ flush hay chỉ khi Q1_cum>0?
-- **[C] CLO dist_wall semantics**: permanent SUPP hay sliding window?
-- **[D] TAG post-29/07**: A2=stealth_grind 07-28→08-01 là false positive hay correct?
-- **[E] PARTI data**: có file/export không?
-- **[F] BAS post-suppression**: chấp nhận data-range limitation hay cần extend result.txt?
+**Phán nhận:** (1) GOM-B = B1 AND (B2|B3) AND B4 — B1 bền ≥7d mandatory; xóa gom_b_min_count; (2) chapter Q1 guard bỏ; (3) DQ cooldown 14d from-first-fire-đợt (đợt mới ≥3d sạch); (4) wrong_side DQ (L-26) — implement; (5) PARTI đọc VPS daily store; (6) TAG A2: số phải tự bảo vệ.
+
+**Thực hiện:**
+- `scripts/gom_scan.py` v1.2: B1 persistence all(7d) + structural formula + wrong_side_dq + DQ cooldown 14d + chapter guard removed + dq_save preserved khi chain opens ✓
+- `screen_thresholds.yaml` v1.1: xóa gom_b_min_count, thêm wrong_side_dq section ✓
+- `gom_detect_spec.md` v1.2: §1 structural GOM-B + §8.4(i)(ii) laws ✓
+- Probe v3: import trực tiếp eval_gom/update_chain từ gom_scan ✓
+
+### §6 Gate v3 — Kết quả sau structural fix
+
+| # | Token | Type | Result | Ghi chú |
+|---|-------|------|--------|---------|
+| 1 | BANK | open | **PASS** | chain_open 06-29 A1 |
+| 2 | BANK | chapter | **PASS** ← healed | new_chapter 07-02 ch2 |
+| 3 | BANK | close-iv | **PASS** | closed 07-16 drop:57% |
+| 4 | TAG | open | **PASS** ← healed | chain_open 07-10 A1 |
+| 5 | BAS | supp | **PASS** | 15 DQ, no open |
+| 6 | BAS | open-after | **FAIL** | GOM signals không fire 07-17→21 (signals thật không bật) |
+| 7 | BULLA | open | **FAIL** | B1_persist(7d)=False tại 07-02; B4=False; no GOM-A |
+| 8 | CLO | supp-neg | **MIXED** | chain_open 07-12 (DQ cooldown expired trước 07-12?) |
+| 9 | POWER | b-pos | **FAIL** | B3(06-28→07-05) ∩ B4(07-08→12) = ∅ |
+| 10 | BANK | close-iv-gate | **PASS** | confirm rule iv |
+| Z1-Z2 | ZBT | open+close | **PASS** | 07-01 open, 07-02 close rule-iv |
+| P | PARTI | — | **MISSING** | VPS perp daily store |
+| T2 | TAG-hậu | wrong-side | **Not wrong** | A2 fires 07-28 px+25.5% gLSR↓ — secondary breakout hợp lệ |
+| 11 | AKE | supp-then-open | **WARN** | DQ cooldown 14d→07-22 ngoài data range (data ends 07-21) |
+
+**Dự đoán operator: rows 2/4/6/7/9 tự lành. Thực: 2,4 lành ✓; 6,7,9 không lành — 3 vấn đề mới.**
+
+### Diagnose FAIL còn lại
+
+- **Row 6 BAS**: Cooldown hết 07-16 đúng, nhưng 07-17→21 không có signal nào fire (lsr_accum, A2, GOM-B đều False). Không phải data range.
+- **Row 7 BULLA**: B1_persist(7d) chưa đủ ở 07-02 (chỉ 1 ngày div≤0.5 single-day = True). B4=False. GOM-A=False. Cần check khi nào B1_persist đầu tiên đạt ≥7d AND B4 fire.
+- **Row 9 POWER**: B3 và B4 windows không overlap. Structural formula không đạt ngày nào. Mâu thuẫn với "TRUE POSITIVE" claim.
+- **Row 11 AKE WARN**: decay DQ 07-08 + cooldown 14d = 07-22. Data ends 07-21. Cooldown quá dài?
+- **Row 8 CLO MIXED**: Cần biết ngày first-fire DQ để tính cooldown_end. Nếu first-fire ≤ 06-28, cooldown hết 07-12 → chain mở 07-12 = đúng luật.
+
+### CẦN OPERATOR (v3)
+
+- **[G]** BAS 07-17→21 không fire GOM = correct (không tái tích lũy)? Hay extend data?
+- **[H]** BULLA: B1_persist ≥7d đạt từ ngày nào + B4 overlap? Hay BULLA fires via GOM-A?
+- **[I]** POWER: TRUE POSITIVE qua path nào (A4 pos_rerate+hedge? hay B spec cần sửa expectation)?
+- **[J]** AKE: decay DQ cooldown 14d có quá dài? AKE re-open real tại 07-22+ (ngoài calib)?
+- **[K]** CLO: first-fire DQ ngày nào → cooldown_end trước hay sau 07-12?
+- **[L]** PARTI: SCP freshwatch_daily_2026-07.csv từ VPS
 
 ---
 
