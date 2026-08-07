@@ -51,7 +51,8 @@
 | `docs/case_files/CASE_BANK.xlsx` | BANK | RESOLVED + T+30 CLOSED |
 | `docs/case_files/CASE_BR.xlsx` | BR | TRACKING |
 | `docs/case_files/CASE_CLO.xlsx` | CLO | ABSTAIN (T0 unconf.) |
-| `docs/case_files/CASE_HEI.xlsx` | HEI | COLD_START — PENDING |
+| `docs/case_files/CASE_HEI.xlsx
+  - [CASE_BANANAS31.xlsx](case_files/CASE_BANANAS31.xlsx) — COLD_START PENDING (Alpha fullyDelisted, dump 91 ngày ret<-5%)` | HEI | COLD_START — PENDING |
 | `docs/case_files/CASE_IDOL.xlsx` | IDOL | PARTIAL (post-climax) |
 | `docs/case_files/CASE_TAG.xlsx` | TAG | TRACKING |
 | `docs/case_files/CASE_TUT.xlsx` | TUT | LIVE (T+30=08/08) |

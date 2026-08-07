@@ -2,6 +2,73 @@
 
 ---
 
+## SESSION 2026-08-07 (2) — BANANAS31 COLD-START PACK
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Commit:** "CASE_BANANAS31: cold-start pack (B-0→B-7)"
+
+### B-0 — Script
+`build_case.py` tạo mới, refactor từ `_task_patch_gom_spec_20260808.py`:
+- Nhận `SYMBOL_PERP` + `DATE_TAG` từ sys.argv
+- GOM-A/B copy nguyên văn từ _task_patch_gom_spec commit d74016e
+- 50 cols = 43 HEI template + 7 B-2 diagnostic flags
+
+### B-1 — LSR persist ngay (time-sensitive)
+LSR 4 endpoints: 31 rows → `scratch/bananas31_lsr_raw_20260807.csv` (2026-07-08 → 2026-08-07)
+Extend qua freshwatch: tổng 68 ngày LSR (2026-06-01 → 2026-08-07)
+pos_r=6.71, acc_r=1.46, gLSR=1.20 ngày 07/08
+
+DAILY: 503 rows (2025-03-23 → 2026-08-07), 50 cols, L-32 PASS
+
+### B-2 — Diagnostic flags
+| Flag | Count | Ghi chú |
+|---|---|---|
+| flag_dist_wall_day (taker≥50&ret<0) | 57 ngày | 11.3% — cao |
+| flag_knife_crowd (gLSR↑&ret<-3%) | 9 ngày | nguy hiểm — crowd nạp long vào dump |
+| flag_hedge_struct (div_avg3≤0.5) | 0 ngày | div_avg3 luôn ~4-5 |
+Build-check: pos_r slope +0.0363 ↑ RISING (tích lũy long dù giá dump); sign correlation 52/47 (non-conclusive)
+
+### B-3 — Dump anatomy
+ATH close: 0.037270 (2025-07-10); intraday ATH high: 0.082783
+Hiện tại: 0.007143 → -80.83% từ ATH close
+Dump days (ret≤-5%): 91 ngày tổng. Vol≥8x: 31 ngày (clusters: Jun-Jul 2025, Nov 2025, Mar 2026)
+Red days last 30: 17/30 (57%)
+
+### B-4 — Spot + Alpha
+Spot TRADING. Alpha ALPHA_21 **fullyDelisted=True** (offsell+offline). Alpha klines ABSTAIN.
+Depth snap #1: 2026-08-07 13:09 UTC | Bid±2%=$70,718 | Ask±2%=$48,709 | px=0.007143
+**CẦN OPERATOR:** Depth snap #2 ≥ 17:09 UTC 07/08 (L-23)
+
+### B-5 — On-chain
+Contract BSC: 0x3d4f0513e8a29669b960f9dbca61861548a9a760 (verified từ BAPI)
+Supply: 10B = circulating = total. Holders: 158,024.
+BscScan 0-credit NOTOK. **CẦN OPERATOR:** API key / manual.
+
+### B-6 — VPS + cross-ref
+freshwatch 2026-06: 17 ngày, 2026-07: 28 ngày BANANAS31USDT. gom_scan: sạch. screen_thresholds: không có.
+
+### Output
+| File | Nội dung |
+|---|---|
+| `docs/case_files/CASE_BANANAS31.xlsx` | 7 sheets, 503 DAILY rows (2025-03-23→08-07), 50 cols |
+| `_collect_bananas31_20260807.md` | Collect report B-1→B-6 |
+| `build_case.py` | Reusable script (symbol param) |
+| `docs/case_files/CASE_INDEX.xlsx` | BANANAS31 thêm row 14 |
+| `docs/INDEX.md` | BANANAS31 thêm |
+
+### GOM-A fires (25 ngày)
+2026-06-06→08, 06-16→18, 06-20→22, 06-28→30, 07-01→02, 07-07, 07-14, 07-16→17, 07-28→31, 08-01→03
+→ A1 luôn TRUE (div_avg3~4-5 >> 1.5); A2+A3 điều phối (gLSR level + direction)
+
+### CẦN OPERATOR
+1. Depth snap #2 ≥ 17:09 UTC 07/08/2026 (L-23)
+2. BscScan top holders (API key)
+3. Nansen holders (LOCKED)
+4. Contract verify nguồn 2 (L-28 — chỉ có BAPI)
+5. T0, B_ref OI, Archetype (L-42 — ANALYSIS)
+
+---
+
 ## SESSION 2026-08-07 (1) — HEI GOM-A/B Patch per Spec v1.4
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6  
