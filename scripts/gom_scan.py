@@ -272,7 +272,9 @@ def update_chain(
             # New DQ episode — cooldown starts from today
             state["dq_episode_start"] = date_str
             state["dq_cooldown_end"]  = (datetime.strptime(date_str[:10], "%Y-%m-%d")
-                                          + timedelta(days=14)).strftime("%Y-%m-%d")
+                                          + timedelta(days=13)).strftime("%Y-%m-%d")
+        # 13 = window-1: fire_day(day0) + days 1..13 = 14 days total. clear from day14 = fire+14.
+        # Matches G1 formula: clear when idx - ep_start_idx >= 14.
         state["dq_last_fire"] = date_str
         if chain.get("chain_open"):
             fired = [k for k, v in result["disqualifier"].items() if v]

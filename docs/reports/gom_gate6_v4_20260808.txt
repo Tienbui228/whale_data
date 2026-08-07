@@ -1,0 +1,267 @@
+
+================================================================================
+§6 GATE FULL v4 — GOM scan backtest (gom_detect_spec v1.2)
+Fixes vs v3: CLO PASS, off-by-one cooldown bug fixed, TAG-hậu FAIL (đúng đề)
+================================================================================
+
+==========================================================================================
+§6 BACKTEST GATE TABLE v4 — gom_detect_spec v1.2 (structural B1 AND (B2|B3) AND B4)
+==========================================================================================
+
+ #   Token  Type             Kết quả thực tế                                     PASS/FAIL
+--------------------------------------------------------------------------------------------------------------
+ 1    BANK  open             chain_open 06-29 (A1 lsr_accum)                     PASS
+ 2    BANK  chapter          new_chapter 07-02 ch2                                PASS
+ 3    BANK  close-iv         closed 07-16 [pos_r_drop:57%_from_peak:3.71]        PASS
+ 4     TAG  open             chain_open 07-10 (A1)                               PASS
+ 5     BAS  supp             15 DQ events, no open                               PASS
+ 6     BAS  open-after       no chain_open post-suppression                      FAIL
+ 7   BULLA  open             no chain_open (xem chẩn đoán)                      FAIL
+ 8     CLO  supp-neg         chain_open 07-12 trước DQ starts 07-14             PASS ← v3 MIXED
+ 9   POWER  b-pos            no chain_open (xem chẩn đoán)                      FAIL
+10    BANK  close-iv-gate    closed 07-16 [pos_r_drop:57%_from_peak:3.71]        PASS
+
+── ZBT ×2 ─────────────────────────────────────────────────────────────────────
+  Z1 ZBT open:  07-01 — PASS
+  Z2 ZBT close: 07-02 [pos_r_drop:34%_from_peak:3.99] — PASS
+
+── PARTI ─────────────────────────────────────────────────────────────────────
+  PARTI: MISSING (VPS perp daily store — SCP chưa thực hiện)
+
+── TAG-hậu 29/07 ───────────────────────────────────────────────────────────────
+  T2 TAG-hậu: wrong_side_dq(5d) KHÔNG chặn được — GOM fires 07-29/07-30       FAIL
+  Xem chẩn đoán T2 bên dưới.
+
+── AKE ─────────────────────────────────────────────────────────────────────────
+11    AKE  supp-then-open    DQ 07-08, cooldown 14d — hết data trước clear      WARN
+
+==========================================================================================
+TỔNG KẾT §6 v4
+==========================================================================================
+Rows 1-10 + Z1+Z2: PASS=9  FAIL=3 (6,7,9)
+WARN=1 (AKE-11)  MISSING=1 (PARTI)  TAG-hậu=FAIL (1)
+
+Dự đoán v3: rows 2/4 healed ✓; 6/7/9 chưa heal.
+v4 thay đổi vs v3:
+  Row 8 CLO: MIXED → PASS (chain_open 07-12 hợp lệ — trước DQ episode bắt đầu)
+  Tag-hậu: "Not wrong" → FAIL (wrong_side_dq không catch 07-29/07-30)
+  Bug fix: cooldown off-by-one (timedelta 14→13, xem [J])
+
+==========================================================================================
+CHẨN ĐOÁN TỪNG ROW
+==========================================================================================
+
+────────────────────────────────────────────────────────────────────────
+[G] ROW 6 — BAS open-after: FAIL (correct behavior)
+────────────────────────────────────────────────────────────────────────
+DQ cooldown first-fire=07-02 → cd_end=07-15 (FIXED formula); clear từ 07-16.
+A1–A5 breakdown 07-17→21 (sau cooldown cleared):
+
+    date    A1   A2/SG    A3    A4    A5   any_A   GOM-B     DQ  GOM
+   07-17     .       .     .     .     .       .       .       .  .
+         lsr_pos=1.290  lsr_global=1.050  taker=48.9%
+   07-18     .       .     .     .     .       .       .       .  .
+         lsr_pos=1.300  lsr_global=1.130  taker=50.9%
+   07-19     .       .     .     .     .       .       .       .  .
+         lsr_pos=nan  lsr_global=nan  taker=50.9%
+   07-20     .       .     .     .     .       .       .       .  .
+         lsr_pos=nan  lsr_global=nan  taker=50.6%
+   07-21     .       .     .     .     .       .       .       .  .
+         lsr_pos=nan  lsr_global=nan  taker=58.4%
+
+Kết luận: BAS không tái tích lũy trong window data. lsr_global 1.05–1.13 (gần 1.0),
+taker 49–58%. Không signal nào đạt ngưỡng. FAIL = correct behavior.
+→ Câu hỏi operator: BAS thực tế có re-open sau 07-21 không? Data calib kết thúc ở đây.
+
+────────────────────────────────────────────────────────────────────────
+[H] ROW 7 — BULLA open: FAIL (data range + wrong_side DQ)
+────────────────────────────────────────────────────────────────────────
+Timeline:
+  B1_persist(7d) first True = 07-05 (6 ngày liên tiếp B1=Y từ 06-29).
+  GOM-B structural: không fire (B4 = oi_ignition chưa bao giờ ≥1.5×med14 khi B1p=Y+B3=Y).
+  GOM-A fires: A2=stealth_grind bắt đầu từ 07-17→07-21.
+  DQ: wrong_side fires 07-09 (gLSR tăng mạnh + price drop 5d).
+  DQ cooldown: 07-09 + 13d (FIXED) = 07-22. Clear từ 07-23. Data ends 07-21.
+  → Chain blocked toàn bộ 07-17→07-21 (cooldown). Không open được.
+
+Với bug cũ (timedelta=14): cd_end=07-23. Clear từ 07-24.
+Với FIXED (timedelta=13): cd_end=07-22. Clear từ 07-23. Data vẫn kết thúc 07-21.
+→ Kết quả không đổi: FAIL = data range limited.
+
+Bối cảnh: wrong_side DQ 07-09 cho BULLA = đúng (BULLA pump xong → phân phối).
+Kỳ vọng: BULLA mở ≥07-06 per spec. Thực: GOM-B structural không đủ (B4 không overlap),
+GOM-A chỉ bật ở 07-17 nhưng bị DQ cooldown chặn.
+→ BULLA FAIL không phải lỗi spec logic. Calib case này có thể cần data range dài hơn
+  hoặc kỳ vọng của row 7 cần re-eval.
+
+────────────────────────────────────────────────────────────────────────
+ROW 8 — CLO supp-neg: PASS ← upgraded từ MIXED
+────────────────────────────────────────────────────────────────────────
+CLO DQ fire dates + cooldown per episode:
+
+    date     DW     LD   any_DQ    ep_start      cd_end    in_cd
+   07-08      .      .        .           .           .    clear
+   07-09      .      .        .           .           .    clear
+   07-10      .      .        .           .           .    clear
+   07-11      .      .        .           .           .    clear
+   07-12      .      .        .           .           .    clear  ← chain_open here
+   07-13      .      .        .           .           .    clear
+   07-14      Y      .        Y       07-14       07-27       IN  ← DQ episode starts
+   07-15      Y      .        Y       07-14       07-27       IN
+   07-16      Y      .        Y       07-14       07-27       IN
+   07-17      Y      Y        Y       07-14       07-27       IN
+   07-18      .      Y        Y       07-14       07-27       IN
+   07-19      .      Y        Y       07-14       07-27       IN
+   07-20      .      Y        Y       07-14       07-27       IN
+   07-21      .      Y        Y       07-14       07-27       IN
+
+chain_open 07-12: 2 ngày TRƯỚC first DQ (07-14). Hoàn toàn hợp lệ.
+"Expected DQ" trong mô tả v2/v3 là SAI — DQ bắt đầu 07-14, không phải trước 07-12.
+→ CLO = PASS. row 8 MIXED → PASS.
+
+────────────────────────────────────────────────────────────────────────
+[I] ROW 9 — POWER b-pos: FAIL (B3∩B4 không overlap)
+────────────────────────────────────────────────────────────────────────
+POWER funding series 06-25→07-13:
+
+    date      f_avg      f_min      f_max     FN          OI_usd        med14_oi     B4     B3   B1p7d
+   06-25    0.00016    0.00005    0.00026      .             nan             nan      .      .       .
+   06-26    0.00005    0.00005    0.00005      .             nan             nan      .      .       .
+   06-27    0.00010    0.00005    0.00022      .       3,105,569       3,105,569      .      .       .
+   06-28    0.00015    0.00005    0.00036      .       3,023,972       3,064,770      .      Y       .
+   06-29    0.00020    0.00005    0.00044      .       3,102,878       3,102,878      .      .       .
+   06-30    0.00016    0.00005    0.00045      .       3,206,660       3,104,224      .      Y       .
+   07-01    0.00016    0.00005    0.00026      .       3,271,417       3,105,569      .      Y       .
+   07-02    0.00027    0.00009    0.00036      .       3,243,965       3,156,114      .      Y       .
+   07-03    0.00020    0.00014    0.00027      .       3,310,190       3,206,660      .      Y       Y
+   07-04    0.00016    0.00007    0.00026      .       3,356,170       3,225,312      .      Y       Y
+   07-05    0.00011    0.00005    0.00029      .       2,933,080       3,206,660      .      Y       Y
+   07-06    0.00005    0.00005    0.00005      .       2,930,943       3,156,114      .      .       Y
+   07-07    0.00009    0.00005    0.00021      .       2,925,755       3,105,569      .      .       Y
+   07-08    0.00005    0.00005    0.00005      .       5,106,488       3,156,114      Y      .       Y  ← OI spike
+   07-09    0.00007    0.00005    0.00014      .       4,157,672       3,206,660      Y      .       .
+   07-10    0.00005    0.00005    0.00005      .       3,831,242       3,225,312      Y      .       .
+   07-11    0.00007    0.00005    0.00010      .       3,393,207       3,257,691      Y      .       .
+   07-12    0.00012    0.00005    0.00023      .       3,290,878       3,281,148      Y      .       .
+
+Structural B1p AND (B2|B3) AND B4 per day:
+  B1p=Y ∩ B3=Y: 07-03→07-05  (B4='.') → GOM-B không fire
+  B1p=Y ∩ B4=Y: 07-08 (B3='.') → GOM-B không fire
+  B1p=Y ∩ B3=Y ∩ B4=Y: KHÔNG CÓ ngày nào → structural GOM-B = FAIL mọi ngày
+
+FN (funding_neg_div) = NEVER fires trên POWER trong window này.
+Giả thuyết "FN chặn B4" = SAI (FN là SUPPRESSOR, không liên quan đến B4 calculation).
+OI spike 07-08: 5.1M vs med14 ≈ 3.16M → 5.1/3.16 = 1.6 > 1.5 → B4=True đúng.
+B3 kết thúc 07-05 (absorption kết thúc). B4 bắt đầu 07-08. Gap 3 ngày.
+
+POWER TRUE POSITIVE qua path nào? Cần operator chỉ rõ:
+  (a) Chấp nhận FAIL (structural formula không cover POWER correctly)?
+  (b) POWER fires via A4 (pos_rerate + hedge_alive)? → cần check A4 trên POWER
+  (c) B3∩B4 window cần relax (B3 lookback dài hơn)?
+  → KHÔNG tự sửa spec khi chưa có phán.
+
+────────────────────────────────────────────────────────────────────────
+[J] COOLDOWN OFF-BY-ONE — gom_scan bug fix + AKE
+────────────────────────────────────────────────────────────────────────
+Công thức hiện tại (sai): dq_cooldown_end = first_fire + timedelta(days=14)
+  → block khi date <= cd_end → 15 ngày tổng (fire + 14 ngày sau)
+  → clear từ first_fire + 15
+
+Spec "14d từ first-fire" + G1 formula ("clears khi idx - ep_start >= 14"):
+  → fire=day0; cooldown days 0-13 (14 ngày); clear từ day14 = first_fire + 14
+  → cd_end = first_fire + timedelta(days=13) (inclusive last day)
+  → block khi date <= cd_end → 14 ngày tổng; clear từ first_fire + 14
+
+Fix đã áp (gom_scan.py): timedelta(14) → timedelta(13)
+
+Cross-check bằng probe:
+  fire=07-02: sai cd_end=07-16 → FIXED=07-15; clear: sai=07-17 → FIXED=07-16
+  fire=07-07: sai cd_end=07-21 → FIXED=07-20; clear: sai=07-22 → FIXED=07-21
+  fire=07-08: sai cd_end=07-22 → FIXED=07-21; clear: sai=07-23 → FIXED=07-22
+  fire=07-14: sai cd_end=07-28 → FIXED=07-27; clear: sai=07-29 → FIXED=07-28
+
+Ảnh hưởng lên gate rows:
+  BAS (fire=07-02): FIXED clear=07-16 (sai=07-17). BAS không có signal 07-16→21 → FAIL unchanged.
+  BULLA (fire=07-09): FIXED clear=07-23 (sai=07-24). Data ends 07-21 → FAIL unchanged.
+  AKE (fire=07-08): FIXED clear=07-22 (sai=07-23). Data ends 07-21 → WARN unchanged.
+  CLO (fire=07-14): FIXED clear=07-28 (sai=07-29). Chain opened 07-12 trước DQ → PASS unchanged.
+
+→ Không thay đổi bất kỳ kết quả gate row nào. Fix thuần code correctness.
+
+Shared cooldown function (đồng nhất G1 + gom_scan):
+  Probe: cooldown_end_date(fire, window=14) = fire + timedelta(13) → clear từ fire+14.
+  G1:    clear khi idx - ep_start >= 14 → first clear idx = ep_start + 14 = fire+14. ✓
+  gom_scan (FIXED): cd_end = fire + timedelta(13) → block ≤ cd_end → clear từ fire+14. ✓
+
+AKE series với FIXED formula:
+  DQ fire=07-08; cd_end=07-21 (FIXED); in_cooldown(07-21)=True; clear từ 07-22.
+  Data ends 07-21 → AKE không thể open trong data range.
+  WARN = correct (bị cooldown, không phải off-by-one data cutoff).
+
+────────────────────────────────────────────────────────────────────────
+[K] ROW 8 — CLO cooldown: đã giải ở trên (PASS)
+────────────────────────────────────────────────────────────────────────
+DQ first-fire = 07-14. chain_open = 07-12. Open trước DQ → không liên quan cooldown.
+cd_end (FIXED) = 07-27. Nếu chain chưa đóng trước 07-27 thì DQ 07-14 đóng ngay.
+
+────────────────────────────────────────────────────────────────────────
+TAG-HẬU 29/07 — FAIL (wrong_side_dq(5d) không catch)
+────────────────────────────────────────────────────────────────────────
+Bối cảnh: TAG rơi 07-29 -7.2%, 07-30 -8.9%; gLSR leo từ 1.30 → 2.00.
+Kỳ vọng spec: wrong_side_dq chặn GOM tại 07-29/07-30.
+
+avg5(gLSR) + wrong_side + GOM per day:
+
+    date    ret_1d    gLSR_today     avg5_gLSR     A2=SG    A2=gLSR?     ws_dq  GOM
+   07-28    +15.4%        1.2978        1.5575         Y  False(1.558)         .  G
+   07-29     -7.2%        1.8129        1.6150         Y  False(1.615)         .  G  ← SHOULD be blocked
+   07-30     -8.9%        1.9958        1.6982         Y  False(1.698)         .  G  ← SHOULD be blocked
+   07-31    +23.3%        1.9223        1.7472         Y  False(1.747)         .  G
+   08-01     +2.3%        1.6157        1.7289         Y  False(1.729)         .  G
+   08-02     -0.0%        1.9560        1.8605         .  False(1.861)         .  .
+
+[A2 nhãn] — Cần operator xác nhận:
+  Code eval_gom: A2 = stealth_grind(price breakout ≥15% + OI + taker<55%)
+  Operator spec: A2 = avg5(gLSR) ≤ 1.1
+  → Hai định nghĩa KHÁC NHAU. avg5(gLSR) tại 07-29→08-01: ~1.56→1.74 (toàn >1.1).
+    Nếu A2=gLSR def → A2=False những ngày này. Nhưng A2 alone không quyết định GOM
+    nếu A1/A3/A4/A5 vẫn fire.
+  → Cần remap eval_gom nếu A2=gLSR. SG (stealth_grind) nên là A? nếu không map vào A2.
+
+[wrong_side_dq] — Tại sao 5d lookback không catch 07-29/07-30:
+  07-29: px_chg5d = (px_07-29 - px_07-24) / px_07-24. px_07-24 thấp (sau correction),
+         px_07-29 vẫn cao hơn → 5d cumulative > 0 → threshold -10% chưa đạt.
+  07-30: tương tự — nhìn về 5 ngày trước vẫn có net appreciation.
+  → 5d window không capture "2 ngày rơi liên tiếp sau peak".
+
+Options cho operator:
+  (a) Thay wrong_side_dq lookback_days=5 → 2:
+      07-30: px_chg2d có thể ≤ -10% (07-28=0.0013 → 07-30=0.0011 = -15.4%). Catches 07-30.
+      07-29: px_chg2d = (07-29 - 07-27) / 07-27 = ~+9%. Does NOT catch.
+      → Partial fix.
+  (b) Thêm 1d check: ret_1d ≤ -7% AND gLSR_chg1d ≥ +25%:
+      07-29: ret=-7.2% AND gLSR +39.7% → fires ✓
+      07-30: ret=-8.9% AND gLSR +10.1% → fires ✓ (nếu glsr_min=0.10)
+      07-28: ret=+15.4% → không fire ✓
+      → Catches cả hai ngày. Cần kiểm các token khác không bị false-positive.
+  (c) A2=gLSR định nghĩa → A2 False khi avg5>1.1. Nhưng phải remap SG vào slot khác.
+      Nếu SG bị xóa khỏi A-conditions → GOM-A path hẹp hơn.
+  → Cần operator phán trước khi sửa thresholds.
+
+==========================================================================================
+MỞ THEO DÕI — CÁC ĐIỂM CHỜ OPERATOR
+==========================================================================================
+
+[I]  POWER path: B3∩B4 = ∅ → TRUE POSITIVE spec qua path nào? (a) FAIL chấp nhận?
+     (b) check A4 trên POWER? (c) relax B3 window?
+[L]  PARTI: SCP freshwatch_daily_2026-07.csv từ VPS 5.223.67.21 → chạy PARTI gate row.
+[A2] A2 label: stealth_grind hay avg5(gLSR)≤1.1? Nếu SG = A2, thì SG làm TAG T2 fire sai.
+     Nếu A2=gLSR, cần remap SG vào A-slot khác hoặc bỏ hẳn.
+[T2] wrong_side_dq fix: (a) lookback=2? (b) thêm 1d check? (c) dùng A2=gLSR fix?
+     Operator chọn option trước khi agent sửa screen_thresholds.yaml.
+
+==========================================================================================
+BUG ĐÃ FIX (session này)
+==========================================================================================
+[J-fix]  gom_scan.py cooldown off-by-one: timedelta(14) → timedelta(13). Không đổi gate rows.
+[CLO]    Row 8 reclassified: MIXED → PASS (chain_open 07-12 trước DQ 07-14).

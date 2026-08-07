@@ -145,14 +145,46 @@ Diagnose FAIL:
 - **Row 11 AKE WARN**: decay DQ 07-08 + cooldown 14d = 07-22. Data ends 07-21. Cooldown quá dài?
 - **Row 8 CLO MIXED**: Cần biết ngày first-fire DQ để tính cooldown_end. Nếu first-fire ≤ 06-28, cooldown hết 07-12 → chain mở 07-12 = đúng luật.
 
-### CẦN OPERATOR (v3)
+### CẦN OPERATOR (v3) — đã trả lời trong v4
 
-- **[G]** BAS 07-17→21 không fire GOM = correct (không tái tích lũy)? Hay extend data?
-- **[H]** BULLA: B1_persist ≥7d đạt từ ngày nào + B4 overlap? Hay BULLA fires via GOM-A?
-- **[I]** POWER: TRUE POSITIVE qua path nào (A4 pos_rerate+hedge? hay B spec cần sửa expectation)?
-- **[J]** AKE: decay DQ cooldown 14d có quá dài? AKE re-open real tại 07-22+ (ngoài calib)?
-- **[K]** CLO: first-fire DQ ngày nào → cooldown_end trước hay sau 07-12?
-- **[L]** PARTI: SCP freshwatch_daily_2026-07.csv từ VPS
+- **[G]** ✅ BAS 07-17→21: FAIL = correct (lsr_global 1.05–1.13, không đạt ngưỡng A1)
+- **[H]** ✅ BULLA: B1p first True=07-05; GOM-A(A2/SG) fires 07-17; wrong_side DQ 07-09 → cd_end=07-22(FIXED); data ends 07-21 → FAIL = data-limited
+- **[I]** OPEN POWER: FN red herring. B3∩B4 = ∅. Cần operator chỉ path.
+- **[J]** ✅ off-by-one: timedelta(14→13) FIXED. Không đổi gate rows. AKE WARN correct.
+- **[K]** ✅ CLO: first-fire DQ=07-14. chain_open=07-12 (trước DQ). PASS.
+- **[L]** OPEN PARTI: VPS source=freshwatch_daily_2026-07.csv; SCP chưa thực hiện.
+
+### §6 Gate v4 — Kết quả sau diagnostic
+
+| # | Token | Type | Result | Ghi chú |
+|---|-------|------|--------|---------|
+| 1 | BANK | open | **PASS** | chain_open 06-29 |
+| 2 | BANK | chapter | **PASS** | new_chapter 07-02 |
+| 3 | BANK | close-iv | **PASS** | closed 07-16 drop:57% |
+| 4 | TAG | open | **PASS** | chain_open 07-10 |
+| 5 | BAS | supp | **PASS** | 15 DQ, no open |
+| 6 | BAS | open-after | **FAIL** | No A1-A5 fire 07-17→21. lsr_global 1.05–1.13. |
+| 7 | BULLA | open | **FAIL** | GOM-A fires 07-17 (A2/SG) blocked by wrong_side DQ 07-09; data ends 07-21 |
+| 8 | CLO | supp-neg | **PASS** ← healed | chain_open 07-12 trước DQ starts 07-14 |
+| 9 | POWER | b-pos | **FAIL** | B3∩B4 = ∅; FN không liên quan; no structural path |
+| 10 | BANK | close-iv-gate | **PASS** | confirm rule iv |
+| Z1-Z2 | ZBT | open+close | **PASS** | 07-01 open, 07-02 close |
+| P | PARTI | — | **MISSING** | VPS perp daily store |
+| T2 | TAG-hậu | wrong-side | **FAIL** | GOM fires 07-29/07-30; wrong_side_dq(5d) miss; cần fix |
+| 11 | AKE | supp-then-open | **WARN** | cooldown correct (off-by-one fixed); data ends 07-21 |
+
+Rows 1-10+Z1+Z2: PASS=9  FAIL=3 (6,7,9)  WARN=1 (11)  MISSING=1 (PARTI)  T2=FAIL
+
+### Bug đã fix
+
+- `gom_scan.py`: cooldown timedelta(14) → timedelta(13), +comment. Match G1 formula.
+
+### CẦN OPERATOR (v4)
+
+- **[I]** POWER: TRUE POSITIVE qua path nào? (a) chấp nhận FAIL? (b) check A4 pos_rerate? (c) relax B3?
+- **[A2]** A2 label: stealth_grind hay avg5(gLSR)≤1.1? Nếu SG=A2 gây false open tag T2, cần quyết.
+- **[T2]** wrong_side_dq fix options: (a) lookback=2 (partial); (b) thêm 1d check ret≤-7%+gLSR+25%; (c) A2=gLSR remap. Operator phán.
+- **[L]** PARTI: SCP freshwatch_daily từ VPS.
 
 ---
 
