@@ -2,6 +2,75 @@
 
 ---
 
+## SESSION 2026-08-08 (3) — HEI COLD-START PACK
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Nhiệm vụ
+
+Collect + build CASE_HEI.xlsx cho HEIUSDT. Cold-start: không verdict, không interpretation.  
+L-21: 08-08 không vào DAILY. L-38: LSR 30d → persisted khẩn cấp đầu session.
+
+### H0 — Identity
+
+HEIUSDT perp + spot cùng listing date 2025-02-13 (541 ngày lịch sử tại thời điểm collect).  
+underlyingType=COIN, underlyingSubType=Infrastructure. Alpha: KHÔNG có trong alpha_id_map.json (grep confirm).  
+Contract candidate: 0xf8f173e20e15f3b6cb686fb64724d370689de083 (CoinGecko heima rank=910, BSC+ETH) — **UNVERIFIED**.
+
+### H1 — LSR + Funding + OI (nguồn fapi)
+
+- **LSR** (4 endpoints): 31 rows, 2026-07-08 → 2026-08-07. File: `scratch/hei_lsr_raw_20260808.csv`
+  - gLSR range: 0.38–1.04 (crowd net short toàn bộ cửa sổ)
+  - pos_r range: 1.10–2.78
+- **Funding**: 82 ngày (~2026-05-18 → 2026-08-07). fn=6 (4h interval).
+  - Deepest NEG: -0.000566 (2026-08-06 12:00 UTC)
+- **OI hist**: 30 ngày. OI snapshot: 50,666,136 tokens ~$7.05M (2026-08-07 07:15 UTC).
+- **Perp klines**: 540 rows (2025-02-13 → 2026-08-06), 2 page. File: `scratch/hei_perp_full_20260808.csv`
+- **Spot klines**: 540 rows (cùng window). File: `scratch/hei_spot_full_20260808.csv`
+
+### H2-H3 — Klines + Derived + GOM
+
+- px_min=0.0221, px_max=1.2801 (listing day), recent high=0.545 (2026-08-06)
+- vol_max=$1,244M (2026-08-06). 55 ngày |ret|>10%. 28 ngày vol≥8×med14 (L-15 bait-probe).
+- **GOM-A fires: 1 ngày (2026-08-01)**. GOM-B fires: 0. Spec v1.1 CHƯA KÝ.
+
+### H4 — Spot + L-29
+
+- L-29 guard: spot/perp ratio max=0.688, avg=0.341 — toàn bộ 540 ngày CLEAR.
+- Depth snapshot #1: 2026-08-07 07:18 UTC — Bid±2%=$47,875, Ask±2%=$39,062 (ONE SHOT — L-23 cần #2).
+
+### H5 — On-chain
+
+Nansen: LOCKED. BscScan: deprecated v1, v2 404. CMC: 404. **On-chain layer: ABSTAIN.**  
+**CẦN OPERATOR:** confirm contract + Nansen top holders.
+
+### H6 — VPS
+
+premium_1h: 12 parquet files (2026-07-27 → 2026-08-07). Schema: mark_price, last_funding_rate.  
+Tất cả store khác (spot_klines_1d, freshwatch, archive, docs): không có HEI.
+
+### Output
+
+| File | Nội dung |
+|---|---|
+| `docs/case_files/CASE_HEI.xlsx` | 7 sheets, 540 DAILY rows, L-32 PASS |
+| `_collect_hei_20260808.md` | Collection report (H0→H6, layer coverage, missing) |
+| `docs/case_files/CASE_INDEX.xlsx` | HEI row thêm (row 13) |
+| `docs/INDEX.md` | CASE_HEI.xlsx thêm vào Tầng 3 |
+
+### CẦN OPERATOR
+
+1. Depth snapshot #2 ≥ 11:18 UTC 2026-08-07 (L-23 compliance)
+2. Confirm contract address 0xf8f173e20e15f3b6cb686fb64724d370689de083
+3. Top holders (Nansen unlock hoặc BscScan paid tier)
+4. T0 + B_ref OI + archetype Loai A/B/C
+
+### Scripts (probe chain)
+
+`_probe_hei_h0_h1_20260808.py` → `_probe_hei_h2_h4_20260808.py` → `_probe_hei_h5_h6_20260808.py` → `_probe_hei_h5b_vps_premium_20260808.py` → `_task_build_case_hei_20260808.py` → `_task_register_hei_case_20260808.py`
+
+---
+
 ## SESSION 2026-08-08 (2) — TUT DOCTRINE: TWO-LEGGED KHO + DURATION SCALING
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
