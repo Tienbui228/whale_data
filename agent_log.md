@@ -60,6 +60,84 @@ Audit script: `_probe_funding_audit_20260808.py` (VPS, 37 ngày 01/07→06/08, 1
 
 **Pending 3b (fapi backfill + oi_usd fix → re-regen):** Cần script fetch fapi /fundingRate × 139 syms × 3 dates + fix column mapping + re-regen. → Task tiếp.
 
+### Task 3b-v2 — fapi backfill + oi_usd fix (hoàn tất)
+
+**Script:** `_task_regen_funding_oi_20260808.py`
+
+- fapi /fundingRate: 139 syms × 3 dates (24-26/07) → **417 rows**
+- oi_usd column fix: detect `sum_open_interest_value` → 417/417 > 0
+- funding_n: 411/417 > 0 (6 NaN = 2 Chinese-char symbols × 3 dates — URL encoding)
+- Inject: fw137_test/freshwatch_daily_2026-07.csv → **4306 rows**
+
+### Task 4 — Bảng 4.2-v3 (sau fix NaN + regen v2)
+
+**Script:** `_probe_table42v3_20260808.py`
+
+| Metric | Value |
+|---|---|
+| Date | 2026-08-06 |
+| Universe | fw137@139 |
+| Open chains | **7 / 139** |
+| All via | GOM-B (B1+B3+B4) — A2=False toàn bộ (avg5gLSR 2.8–4.2) |
+| ★ Q1>$2M | NONE |
+
+**Bảng 4.2-v3 được operator approve.** Điều kiện mở Việc 5 đã PASS.
+
+### Việc 5 — Deploy GOM cron trên VPS (HOÀN TẤT 2026-08-08)
+
+#### 5.1 — .env VPS credentials
+
+Telegram ping test → **OK** (message "GOM ping OK — deploy 2026-08-08" đã nhận).
+
+#### 5.2 — Cron setup (run_gom_daily.py)
+
+| Hạng mục | Giá trị |
+|---|---|
+| Script | `scripts/run_gom_daily.py` |
+| Cron | `25 1 * * *` (01:25 UTC) |
+| Lý do 01:25 thay 01:00 | Export freshwatch xong lúc 01:20 UTC; cron 01:00 sẽ lấy data D-2 thay vì D-1 |
+| Log | `/root/Data_back_test/whale_data/data/logs/gom_daily.log` |
+| Missing dep | → ERROR + exit 1 + Telegram alert (L-44 compliant) |
+| Heartbeat | `data/gom_heartbeat.txt` (initialized) |
+
+**fw-filter:** `--fw-filter data/config/freshwatch_symbols.txt` → scan 139 syms (không phải full 526).
+
+**Live test kết quả (2026-08-06, fw-filtered 139):**
+```
+Symbols: 139 (fw filtered)
+6 open chains:
+  ACU ch1 start=2026-08-02 n=2 brk=2 Q1=$103k
+  COAI ch1 start=2026-08-02 n=1 brk=1 Q1=$0 (DQ: slope_dq)
+  IN ch1 start=2026-08-06 n=1 Q1=$44k
+  INX ch1 start=2026-08-06 n=1 Q1=$163k
+  POWER ch1 start=2026-08-02 n=3 Q1=$39k
+  SOPH ch1 start=2026-08-06 n=1 Q1=$51k
+```
+Chú ý: VPS scan cho 6 chains (TAIKO vắng — brk=1 ngày 08-06, state diff giữa local regen và VPS production CSV).
+
+#### 5.3 — Chờ report Telegram tự nhiên đầu tiên
+
+**Cron fire:** 01:25 UTC ngày 2026-08-08 (sáng 08:25 VN).  
+**Tiêu chí xác nhận hệ SỐNG:**
+- Header: `universe=fw137@139 | Formula: A1∧A2∧A3∧(A4∨A5) | B1∧(B2∨B3)∧B4`
+- Open chains khớp bảng v3 baseline ± delta ngày mới
+- Footer: PARTI + ZBT notes
+- Đây là chân L-44 thứ ba — hệ được tuyên bố SỐNG tại thời điểm đó, không sớm hơn.
+
+#### Artifacts Việc 5
+
+| File | Trạng thái |
+|---|---|
+| `scripts/run_gom_daily.py` | LIVE — cron entry point, Telegram wrapper |
+| `scripts/gom_scan.py` | `--fw-filter` arg mới + fw_filter_path trong run_daily() |
+| `_task_deploy_gom_vps_20260808.py` | Done → archive |
+| `_task_fix_gom_cron2_20260808.py` | Done → archive |
+| `_task_fix_gom_cron_20260808.py` | Done → archive |
+| `_task_redeploy_gom_20260808.py` | Done → archive |
+| `_probe_env_keys_20260808.py` | Done → archive |
+| `_probe_gom_vps_test_20260808.py` | Done → archive |
+| `_probe_vps_deploy_check_20260808.py` | Done → archive |
+
 ---
 
 ## SESSION 2026-08-08 (5) — DEPLOY --daily: fw_loader_utils + gom_scan (Việc 3)

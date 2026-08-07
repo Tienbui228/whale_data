@@ -817,6 +817,7 @@ def run_daily(
     target_date: str | None = None,
     token_filter: str | None = None,
     lookback_days: int = 60,
+    fw_filter_path: Path | None = None,
 ) -> dict:
     """Run daily GOM scan from freshwatch CSV store.
 
@@ -858,6 +859,12 @@ def run_daily(
 
     # ── Symbol list ───────────────────────────────────────────────────────────
     all_symbols = sorted(df_all["symbol"].unique())
+    if fw_filter_path and fw_filter_path.exists():
+        fw_syms = {l.strip() for l in fw_filter_path.read_text(encoding="utf-8").splitlines() if l.strip()}
+        all_symbols = [s for s in all_symbols if s in fw_syms]
+        if not all_symbols:
+            print(f"ERROR: --fw-filter {fw_filter_path} matched 0 symbols in store", file=sys.stderr)
+            sys.exit(1)
     if token_filter:
         # Accept "BANK" → "BANKUSDT", or exact match
         tf = token_filter.upper()
@@ -967,9 +974,10 @@ def main() -> None:
     grp.add_argument("--backfill",  action="store_true", help="Run on 12 calibration cases")
     grp.add_argument("--daily",     action="store_true", help="Run on daily store CSV")
     grp.add_argument("--backtest6", action="store_true", help="Print §6 gate table")
-    parser.add_argument("--token",  help="Filter to single token (--backfill / --daily)")
-    parser.add_argument("--store",  help="Path to daily store CSV (--daily only)")
-    parser.add_argument("--date",   help="Target date YYYY-MM-DD (--daily, default=latest)")
+    parser.add_argument("--token",     help="Filter to single token (--backfill / --daily)")
+    parser.add_argument("--store",     help="Path to daily store CSV (--daily only)")
+    parser.add_argument("--date",      help="Target date YYYY-MM-DD (--daily, default=latest)")
+    parser.add_argument("--fw-filter", help="Path to freshwatch_symbols.txt — restrict --daily to listed symbols")
     args = parser.parse_args()
 
     # Dependency gate: screen_thresholds.yaml must exist
@@ -1004,9 +1012,11 @@ def main() -> None:
         if not store.exists():
             print(f"ERROR: store not found: {store}", file=sys.stderr)
             sys.exit(1)
+        fw_filter_path = Path(args.fw_filter) if args.fw_filter else None
         final_state = run_daily(cfg, sc, store,
                                 target_date=args.date,
-                                token_filter=args.token)
+                                token_filter=args.token,
+                                fw_filter_path=fw_filter_path)
         save_state(final_state)
         HB_PATH.parent.mkdir(parents=True, exist_ok=True)
         HB_PATH.write_text(datetime.now(timezone.utc).isoformat())
