@@ -215,6 +215,12 @@ Sau khi campaign RESOLVED + kho tiếp tục nạp, cần 3/3 điều kiện đ�
 
 **BANK Vòng 2 status (05/08):** 0/3 thỏa — funding âm, gLSR đang giảm. Theo dõi tiếp.
 
+**ĐIỀU KIỆN KẾT THÚC CAMPAIGN (L-xx(a) draft):**
+- **Loài A:** ghế-rời perp = kết thúc campaign (kho là đạo cụ, MM mất incentive duy trì giá sau khi out).
+- **Loài B/C:** ghế-rời perp = CHUYỂN PHA, không phải kết thúc (kho chưa monetize, campaign tiếp tục qua chương kho). Kết thúc thật khi:
+  - **Cửa A:** kho/vol-regime ≤ 10% (tàng hình được → xả tự nhiên không lộ tay)
+  - **Cửa B:** funding âm sâu + OI cao + pos thấp hậu đỉnh = campaign kết thúc qua short-hedge (TUT pattern 08-06)
+
 ### VII.5 — ĐỒNG HỒ THEO LOÀI (L-42 archetype quyết định band)
 
 > **GATE:** Phân loại xong Loại A/B/C (§ III.1) MỚI được tra bảng. Chưa phân loài → output = bảng nhánh, CẤM gán số band.
@@ -228,6 +234,11 @@ Sau khi campaign RESOLVED + kho tiếp tục nạp, cần 3/3 điều kiện đ�
 **Nếu chưa phân loài:** xuất bảng nhánh (3 cột A/B/C × giá trị tương ứng) — không chọn một số.
 
 **Nguồn band:** [n=2 IDOL/CLO] Loại A partial-resolved · [n=1 BANK] Loại B. CI chưa đủ → dùng định hướng, không cắt lỗ/chốt lời theo band cứng.
+
+**Ghế-rời vs. Kết thúc campaign (L-xx(a) draft):**
+- Loài A: ghế rời = hết ngay. Loài B/C: ghế rời = chuyển pha (kho là bên quyết định đồng hồ, không phải perp book).
+- Cửa A exit: kho/vol ≤ 10% → xả tàng hình được → MM bán mà không lộ tay.
+- Cửa B exit: MM short-hedge toàn bộ kho qua perp (funding âm sâu + OI cao + pos thấp hậu đỉnh) = campaign kết thúc mà không bán spot.
 
 ---
 
@@ -304,6 +315,16 @@ kho_vol_ratio = (kho_tokens × avg_px_at_exit) / total_spot_vol_campaign
 □ Q3: kho/vol-regime → chương thoát-kho mở được chưa?
       kho_vol_ratio = ? → regime (tàng-hình / nghi ngờ / chưa-thể-mở)
       [số thực / ABSTAIN nếu kho data LOCKED]
+
+□ Q4: build-window dài bao nhiêu → kỳ vọng thời lượng campaign?
+      build_window_days = OI_floor → T0 · kho_size_est ≈ ?
+      Tham chiếu draft n=4 (L-xx(b)):
+        BANK  (Loại B): build ~17d → campaign D+17 (chain_close 07-16)
+        IDOL  (Loại A partial): build ~7d → campaign D+11 (partial)
+        CLO   (Loại A partial): build TBD → campaign ongoing
+        TUT   (Loại C): build 13d (07-09→07-22) → campaign D+16+ ongoing
+      Hypothesis: campaign_days ∝ build_window × kho_size (chưa đủ n để calib)
+      [ABSTAIN nếu T0 chưa xác định]
 ```
 
 **Mốc invalidate của dự đoán (IV.3 áp cho VII):**
@@ -312,6 +333,19 @@ kho_vol_ratio = (kho_tokens × avg_px_at_exit) / total_spot_vol_campaign
 - OI break dưới floor30d = B mới cần thiết lập lại
 
 ---
+
+### VII.8 — DURATION SCALING (L-45 draft, n=4)
+
+> Hypothesis: campaign_days ∝ build_window_days × kho_size. Chưa đủ n để calib — dùng định hướng.
+
+| Token | Loại | build_window | kho_size est. | campaign_days | ratio | Ghi chú |
+|-------|------|-------------|--------------|--------------|-------|---------|
+| BANK | B (unlock) | ~17d (OI_floor→T0 est.) | kho vesting | D+17 close-iv | 1.0× | Baseline (n=1 fully resolved) |
+| IDOL | A partial | ~7d est. | kho mượn | D+11 partial | 0.65× | Partial — exit chưa clean |
+| CLO  | A partial | TBD | TBD | ongoing | — | ABSTAIN |
+| TUT  | C (tự-mua) | 13d (07-09→07-22) | ~83% supply | D+16+ ongoing | >1.0× | Ongoing — final số chưa có |
+
+**Kết luận tạm:** Với n=4 (2 partial, 2 ongoing), build 13d (TUT) > build 7d (IDOL) → TUT kỳ vọng dài hơn. Số ratio chưa thể calib bởi TUT/CLO chưa resolved. Update khi TUT closed.
 
 *fit/residual/evidence: `docs/proposals/mm_econ_v0.2.md` — playbook thắng khi hai bản lệch, mm_econ là nơi sửa band TRƯỚC rồi sync vào đây (một chiều: mm_econ → playbook).*
 

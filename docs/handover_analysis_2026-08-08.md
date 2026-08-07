@@ -14,7 +14,7 @@ CASE_INDEX.xlsx sheet LESSONS → regen lessons_learned.md sau khi thêm)
 
 **Case sống:**
 
-- **TUT** — TRACKING-WITH-POSITION (nếu operator còn giữ). Cờ ghế-rời ĐÃ BẮN 02/08 @0.0174, pos_r 5.08→2.83. Kho Loài C chưa monetize; kho/vol ~250% = chương bán chưa mở được [số 05/08]. Scorecard 2 lớp chấm tại **T+30 = HÔM NAY (08/08)**.
+- **TUT** — TRACKING-WITH-POSITION (nếu operator còn giữ). **GHẾ-RỜI LẦN 1** bắn 02/08 @0.0174 (pos_r 5.08→2.83). **GHẾ-RỜI LẦN 2 = HARVEST-INTO-STRENGTH 08-05** (giá +33%, pos_r 4.01→2.07 −48%, gLSR GIẢM 1.44→1.11 — KHÔNG phải L-26). Kho Loài C chưa monetize; kho/vol ~50% [08-05: spot ~6.8M vs perp ~24M] = chương bán vẫn chưa mở. Scorecard T+30 = PENDING operator. **7 chốt 08/08:** ① CHƯA (pos_r 2.72, cần ≥3.81) · ② HỞ (funding NEG 08-06 ×2) · ③ GẦN (spot close-to-close −14.6% 08-06, vol 23.8M) · ④ GẦN (gLSR min 1.1119 chưa flush bền) · ⑤ 3× BAND ĐÃ CHẠM (OI ATH 7.873M 08-06 → co còn 6.07M) · ⑥ CHƯA (spot max 7.2M, taker ≥51%) · ⑦ CHƯA (mới 1 ngày đỏ 08-06). [08/08]
 - **BANK** — SUPPRESSED + vòng-2 watch. +185M token nạp đáy 29/07-01/08. 3 điều kiện: gLSR-flush/pos-rebuild/tái-ghim — 0/3 thỏa [05/08, cần refresh 08/08]. Unlock 17/08 = T−9. Verdict T+30 = 09/08 (ngày mai).
 - **IDOL** — SUPPRESSED → cooldown hết 18/08. EVAA checklist 2/5 thỏa [05/08] — con DUY NHẤT đang rửa đúng chiều. Unlock-test 11/08 (T−3): nền 0.0147 = hard-line. 58bro net 32.44M đang canh chiều.
 - **XPIN** — WATCH-nhạt. Full spot/DEX coverage xong. Crowd 2.24 thuần đòn bẩy [05/08], ghế 1.87 còn. Chốt duy nhất = crowd_flush ≥30%. Spot $571K/day = detection floor thấp.

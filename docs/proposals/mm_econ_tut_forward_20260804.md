@@ -282,6 +282,8 @@ Thêm 2 dòng vào bảng chốt canh hằng ngày của TUT:
 > Bảng này là cam kết prediction tại 04/08/2026 D+13.
 > Không sửa sau khi commit. Chấm tại deadline bên dưới.
 
+> **⚠ UPDATE INTERIM 08/08/2026:** Sự kiện 08-05 (pos_r −48%, giá +33%, gLSR GIẢM 1.44→1.11) = **HARVEST-INTO-STRENGTH / GHẾ-RỜI LẦN 2** — KHÔNG phải L-26 (L-26 đòi giá sập + gLSR tăng). **L-26 chưa fired** tại 08/08. P2 = đang track (CHƯA PASS/FAIL). P4 window 12/08→25/08 còn nguyên.
+
 ### P1 — Exit Ceiling (px_max kỳ vọng)
 
 **Build_VWAP canonical: 0.01285 USDT** (07-09→22/07, OI_floor to T0, F2 khuôn)

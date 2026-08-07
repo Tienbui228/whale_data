@@ -2,6 +2,53 @@
 
 ---
 
+## SESSION 2026-08-08 (2) — TUT DOCTRINE: TWO-LEGGED KHO + DURATION SCALING
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Commit:** "TUT doctrine: two-legged kho + duration scaling" (whale_data master)
+
+### U1 — Sửa án nhãn (chặn lan)
+
+Sự kiện 08-05 (giá +33%, pos_r −48%, gLSR GIẢM 1.44→1.11) = HARVEST-INTO-STRENGTH / GHẾ-RỜI LẦN 2 (khuôn BANK 19-21/07). KHÔNG phải L-26 (L-26 đòi giá sập + gLSR tăng).
+
+Files sửa:
+- `docs/reports/tut_t30_analysis_20260808.md`: 8 chỗ "L-26 FIRED" → HARVEST-INTO-STRENGTH. Chốt ③ convention: close-to-close (không VWAP). D6 phán quyết, kịch bản (c), signal table đều đã sửa.
+- `docs/proposals/mm_econ_tut_forward_20260804.md`: Thêm UPDATE INTERIM 08/08 note trước bảng P1-P5.
+
+### U2 — CASE_TUT.xlsx cập nhật
+
+Script: `_task_tut_doctrine_update_20260808.py`
+
+- EVENTS: +3 rows (08-05 HARVEST_INTO_STRENGTH, 08-06 FUNDING_NEG_SPOT_DUMP, 08-07 POS_REBUILD_INTRADAY)
+- CASE: thesis_1line → "Campaign HAI CHAN KHO: perp book ~$2M VWAP 0.0108 + spot kho ~83% supply Loai C. Ket thuc qua Cua A hoac Cua B."
+- TRIGGERS: row 9 thêm CUA_B_CAMPAIGN_END (funding âm sâu + OI cao + pos thấp hậu đỉnh)
+
+### U3 — Draft 2 lessons
+
+Script: `_task_tut_doctrine_fix_lessons_20260808.py` (fix số sau initial run)
+
+- CASE_INDEX.xlsx LESSONS row 47: **L-44(a)** — Điều kiện kết thúc campaign = kho không phải perp (Loài B/C ghế-rời ≠ kết thúc)
+- CASE_INDEX.xlsx LESSONS row 48: **L-45(b)** — Duration scaling (build_window → campaign_days)
+- **L-43 slot giữ trống** cho operator pending lesson "không suy diễn đã-ký từ im lặng"
+
+### U4 — Playbook sync
+
+`docs/analysis_playbook.md` cập nhật:
+- VII.4: Thêm "ĐIỀU KIỆN KẾT THÚC CAMPAIGN (L-xx(a) draft)" — Loài A/B/C khác nhau về đồng hồ thoát
+- VII.5: Thêm "Ghế-rời vs. Kết thúc campaign" note — Loài A: hết ngay; Loài B/C: chuyển pha
+- VII.7: Thêm Q4 (build-window → kỳ vọng thời lượng) với tham chiếu n=4
+- VII.8 mới: Duration scaling table (BANK/IDOL/CLO/TUT)
+
+### U5 — Duration scaling table
+
+Added to `docs/analysis_playbook.md` §VII.8 (draft n=4, 2 partial, 2 ongoing). Hypothesis: campaign_days ∝ build_window × kho_size. Chưa đủ n — định hướng.
+
+### U6 — Handover update
+
+`docs/handover_analysis_2026-08-08.md` TUT section: ghế-rời lần 2 label sửa, kho/vol ~50% updated, 7-chốt bảng 08/08 inline, "Scorecard T+30 = PENDING operator".
+
+---
+
 ## SESSION 2026-08-08 — DEV: BUILD GOM_SCAN (Bước 1-3, chờ duyệt Bước 4)
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6  

@@ -151,7 +151,7 @@ Chuỗi pos_r:
 
 → **CHƯA THỎA.** pos_r hiện tại 2.72, còn 41% dưới 3.81.
 → **Có nến rebuild:** 08-03 (vượt 3.81 một ngày) và 08-06+07/08 (đang leo từ 2.07).
-→ **Quan trọng:** 08-03→08-05: pos_r sập từ 4.0144→2.0739 = **-48.4%/3 ngày → L-26 FIRED.**
+→ **[⚠ ÁN NHÃN SỬA]** 08-03→08-05: pos_r sập 4.0144→2.0739 = **-48.4%/3 ngày → HARVEST-INTO-STRENGTH / GHẾ-RỜI LẦN 2** (khuôn BANK 19-21/07). Giá đồng thời +33%, gLSR GIẢM 1.44→1.11 = đối lập L-26. **L-26 chưa fired** (L-26 đòi giá SẬP + gLSR TĂNG).
 → Rebuild hiện tại (2.22→2.72) = kịch bản kéo-tiếp nếu giữ được; invalidate nếu pos_r sập lần 2 dưới 2.07.
 
 ---
@@ -184,7 +184,7 @@ Chuỗi pos_r:
 
 → **Số gần nhất:** 08-06 spot close-to-close = -14.6% từ 08-05 đỉnh, vol 23.8M = ĐỎ LỚN.
 → Nhưng tính theo px_avg export (VWAP): 08-06 = +5.2% xanh. Hai cách đọc khác nhau vì intraday spike.
-→ **Cần operator xác nhận:** dùng close-to-close hay VWAP cho định nghĩa "ngày đỏ" trong chốt ③.
+→ **Chốt ③ convention (chốt):** close-to-close daily klines (KHÔNG dùng px_avg VWAP — VWAP smooths intraday spike cho ra số tốt hơn thực). 08-06 = ĐỎ -14.6% close-to-close (0.02870→0.02450).
 → 08-07 (3h): taker cao (63.97% spot), giá đang lên từ 0.02449→0.02565 = chưa đỏ.
 
 ---
@@ -299,7 +299,7 @@ Chuỗi pos_r:
 | pos_r | 2.7185 (intraday) / 2.2014 (daily 06/08) | L-38 | Giảm từ 4.0144 (08-03) |
 | gLSR | 1.1801 (intraday) / 1.2878 (daily 06/08) | L-38 | Giảm từ 1.6853 (08-03) — gần wash zone |
 | OI | ~6.073M (intraday) / 7.873M (daily 06/08) | L-38 | OI tăng mạnh rồi co từ ATH |
-| L-26 status | **FIRED** (08-03→08-05: -48.4%/3d) | Export canonical | Chưa có trong mm_econ_forward |
+| GHẾ-RỜI LẦN 2 | **HARVEST-INTO-STRENGTH 08-05** (pos_r −48%, giá +33%, gLSR GIẢM 1.44→1.11) | Export canonical | KHÔNG phải L-26; L-26 chưa fired (L-26 = giá sập + gLSR tăng) |
 
 **Verdict: Ô TRỐNG — Operator ký.**
 
@@ -337,12 +337,12 @@ Chuỗi pos_r:
 | ID | Prediction | Trạng thái interim 07/08 |
 |----|-----------|--------------------------|
 | P1 | Exit_px ∈ [0.025, 0.035] | **GẦN P1-mid** — 0.02565 vs 0.02570. px_max 0.02870 (spot 08-05) trong [0.025,0.035] ✓ |
-| P2 | L-26 trước 22/08 | **FIRED** (08-03→08-05, -48.4%/3d) → deadline 22/08 PASS interim |
-| P3 | OI_exit ∈ [8M, 12M] tại L-26 | **PARTIAL:** OI tại L-26 fire (08-05) = 6.343M — dưới band [8M,12M]; nhưng 08-06=7.873M. Cần theo dõi OI tại L-26 confirmation. |
-| P4 | L-26 trigger 12/08→25/08 | **TRƯỚC window** — L-26 fired 08-05, trước 12/08. FAIL interim nếu không có L-26 thêm |
+| P2 | L-26 trước 22/08 | **CHƯA** — 08-05 = HARVEST-INTO-STRENGTH (không phải L-26). L-26 chưa fired, vẫn trong track. |
+| P3 | OI_exit ∈ [8M, 12M] tại L-26 | **CHỜ** — L-26 chưa fired. OI ATH 08-06 = 7.873M (trong band [8M,12M]); đọc OI tại L-26 thật khi có. |
+| P4 | L-26 trigger 12/08→25/08 | **ĐÚNG window** — L-26 chưa fired. Window 12-25/08 còn nguyên. Monitor pos_r drop ≥30%/3d kèm giá sập. |
 | P5 | Kho loại A/B/C | ABSTAIN — PENDING operator |
 
-> **Ghi chú P2/P4:** L-26 fired ngày 08-05 (pos_r 4.0144→2.0739 trong 3 ngày). Nhưng pos_r đang rebuild (2.22→2.72). Nếu rebuild thành công và sau đó có L-26 lần 2 trong 12-25/08 → P4 vẫn có thể PASS. Nếu không có L-26 lần 2 → P4 FAIL.
+> **Ghi chú P2/P4 [SỬA ÁN NHÃN]:** 08-05 = HARVEST-INTO-STRENGTH / GHẾ-RỜI LẦN 2 (giá +33%, pos_r −48%, gLSR GIẢM 1.44→1.11 — đối lập L-26). **L-26 chưa fired.** P2 tiếp tục track. P4 window 12/08→25/08 còn nguyên — cần pos_r drop ≥30%/3d kèm giá sập để fired.
 
 ---
 
@@ -358,7 +358,7 @@ Chuỗi pos_r:
 | Funding (08-06 12-16h) | NEG ×2 → phục hồi PIN | Vỡ rồi sửa |
 | Taker spot (08-03→08-06) | 51–56% | Buyers net liên tục |
 | px (08-05→08-07) | 0.02870→0.02450→0.02565 | Spike→pullback→mild recovery |
-| L-26 | FIRED 08-05 | Xác nhận → đang rebuild |
+| GHẾ-RỜI LẦN 2 | HARVEST-INTO-STRENGTH 08-05 | pos_r −48% + giá +33% + gLSR giảm = KHÔNG phải L-26; L-26 chưa fired |
 
 ---
 
@@ -375,7 +375,7 @@ Chuỗi pos_r:
 - Xác suất định tính: TRUNG BÌNH. Tùy vào việc OI có ổn định hay tiếp tục co.
 
 **(c) Gãy (chốt ③ bắn / pos rơi tiếp không rebuild)**
-- Signal ủng hộ: L-26 đã fired; OI co mạnh; funding NEG trên 08-06 (distribution signal); 08-06 spot close -14.6%
+- Signal ủng hộ: GHẾ-RỜI LẦN 2 đã có (08-05, HARVEST-INTO-STRENGTH); OI co mạnh; funding NEG trên 08-06 (distribution signal); 08-06 spot close -14.6%
 - Phản bác: pos_r đang rebuild (không sập tiếp); giá 07/08 đang lên; taker cao
 - Xác suất định tính: THẤP ngay bây giờ nếu rebuild tiếp. Tăng nếu 08/08 UTC pos_r sập lần 2.
 
@@ -383,9 +383,9 @@ Chuỗi pos_r:
 
 **Phán quyết định tính:**
 
-Tín hiệu mâu thuẫn nhau đặc trưng của giai đoạn chuyển tiếp post-L-26. Pattern đọc được:
+Tín hiệu mâu thuẫn nhau đặc trưng của giai đoạn chuyển tiếp post-ghế-rời. Pattern đọc được:
 
-> OI đỉnh 08-06 (7.873M, 3× band) + funding NEG + pos_r crash L-26 (08-05) = **sự kiện phân phối lớn nhất từ T0 đến nay.** Nhưng pos_r rebuild ngay (08-06,07) = MM/smart money KHÔNG rời ghế.
+> OI đỉnh 08-06 (7.873M, 3× band) + funding NEG + GHẾ-RỜI LẦN 2 (08-05: pos_r −48%, giá +33%) = **sự kiện phân phối lớn nhất từ T0 đến nay.** Nhưng pos_r rebuild ngay (08-06,07) = MM/smart money KHÔNG rời hẳn.
 
 **Kịch bản nhiều khả năng nhất (theo tín hiệu, KHÔNG kết luận):**
 → Hybrid (a)+(b): wash nhỏ đang diễn ra (gLSR về 1.1-1.3), sau đó leg mới nếu OI ổn định và gLSR flush bền. Kịch bản (c) cần pos_r sập lần 2 dưới 2.07.
