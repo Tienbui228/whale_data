@@ -1,0 +1,182 @@
+================================================================================
+GOM Gate §6 v6 — spec v1.4
+Code: gom_scan.py (A2=avg5(gLSR)≤1.1 | B4=NOT FN | per-day DQ | rule-iv mọi ngày)
+Run: 2026-08-07 14:45
+================================================================================
+
+── DATA PROVENANCE ─────────────────────────────────────────────────────────
+
+  Token     Source                                                   Path
+  ----------------------------------------------------------------------------
+  BANK      BANK_result.txt                                          D:\Data back test\binance-bot-signals\docs\case study\BANK_result.txt
+  TAG       TAG_result.txt                                           D:\Data back test\binance-bot-signals\docs\case study\TAG_result.txt
+  BAS       bas_result.txt                                           D:\Data back test\binance-bot-signals\docs\case study\bas_result.txt
+  BULLA     bulla_result.txt                                         D:\Data back test\binance-bot-signals\docs\case study\bulla_result.txt
+  CLO       clo_result.txt                                           D:\Data back test\binance-bot-signals\docs\case study\clo_result.txt
+  POWER     power_result.txt                                         D:\Data back test\binance-bot-signals\docs\case study\power_result.txt
+  AKE       ake_result.txt                                           D:\Data back test\binance-bot-signals\docs\case study\ake_result.txt
+  ZBT       CASE_ZBT.xlsx DAILY (v4, carried) — no result.txt (DELISTED)  whale_data/docs/case_files/
+  PARTI     freshwatch_daily_2026-06/07.csv (VPS→scratch/)           scratch/freshwatch_daily_2026-0[67].csv
+
+── GATE TABLE ──────────────────────────────────────────────────────────────
+
+    #  Token    Type              Result    Evidence
+  ------------------------------------------------------------------------
+    1  BANK     open              PASS      chain_open=2026-06-29
+    2  BANK     chapter           PASS      ch2_start=2026-07-02
+    3  BANK     close-iv          PASS      closed=2026-07-16 reason=pos_r_drop:57%_from_peak:3.71
+    4  TAG      open              PASS      chain_open=2026-07-10
+    5  BAS      supp              PASS      pc_days=15 no_early_open=Y
+    6  BAS      open-after        PASS      GOM_post-07-16=['2026-07-18', '2026-07-19', '2026-07-20']
+    7  BULLA    open              PASS      chain_open=2026-07-08
+    8  CLO      supp-neg          PASS      chain_open=2026-06-29 first_supp=2026-07-14
+    9  POWER    b-pos             PASS      chain_open=2026-07-05 B-fire=['2026-07-03', '2026-07-04', '2026-07-05']
+   10  BANK     close-iv-gate     PASS      confirm rule-iv: 2026-07-16
+   Z1  ZBT      open              PASS*     v4: chain_open=07-01
+   Z2  ZBT      close-iv          PASS*     v4: closed=07-02 pos_r_drop:34%
+    P  PARTI    open+close        PARTIAL   open=None close=None(None)
+   T2  TAG      wrong-side        PASS      GOM_07-28→31=none
+   11  AKE      supp-then-open    WARN      decay=2026-07-08 cd_end=2026-07-21 data_end=2026-07-18
+
+  TOTAL: PASS=11  PASS*=2(carried)  FAIL=0  WARN=1  PARTIAL=1
+
+── CHANGES VS v4 (with numbers) ────────────────────────────────────────────
+
+  Row 3 BANK close-iv:
+    v4: closed=07-16 pos_r_drop:57% (rule-iv inside GOM section only)
+    v5: closed=07-18 gom_gap>2d (rule-iv NOT checked on gap days → BUG)
+    v6: closed=2026-07-16 pos_r_drop:57%_from_peak:3.71 (rule-iv now checks mọi ngày mở)
+    BANK pos_r series 07-10→07-21 (source: BANK_result.txt, field: lsr_pos_r):
+      date   pos_r   drop_from_peak_3.71
+      2026-07-10  3.7100   +0.0%
+      2026-07-11  3.4500   +7.0%
+      2026-07-12  2.7700  +25.3%
+      2026-07-13  2.7200  +26.7%
+      2026-07-14  2.7400  +26.1%
+      2026-07-15  2.6400  +28.8%
+      2026-07-16  1.5900  +57.1% *** RULE-IV FIRES
+      2026-07-17  1.6100  +56.6% *** RULE-IV FIRES
+      2026-07-18  1.8900  +49.1% *** RULE-IV FIRES
+      2026-07-19  1.3100  +64.7% *** RULE-IV FIRES
+      2026-07-20  1.1700  +68.5% *** RULE-IV FIRES
+      2026-07-21     nan   +nan%
+
+  Row 6 BAS open-after:
+    v4: FAIL — no GOM signal fires 07-17→21 with old A2=stealth_grind
+    v5/v6: PASS — A2=avg5(gLSR)≤1.1 fires when gLSR returns to ≤1.1
+    BAS gLSR 07-16→07-22 (from bas_result.txt):
+    2026-07-15  gLSR=0.970  avg5(gLSR)=0.958  A2=True  GOM=False
+    2026-07-16  gLSR=0.990  avg5(gLSR)=0.988  A2=True  GOM=False
+    2026-07-17  gLSR=1.050  avg5(gLSR)=1.018  A2=True  GOM=False
+    2026-07-18  gLSR=1.130  avg5(gLSR)=1.046  A2=True  GOM=True
+    2026-07-19  gLSR=nan  avg5(gLSR)=nan  A2=True  GOM=True
+    2026-07-20  gLSR=nan  avg5(gLSR)=nan  A2=True  GOM=True
+    2026-07-21  gLSR=nan  avg5(gLSR)=nan  A2=True  GOM=True
+
+  Row 7 BULLA open:
+    v4: FAIL — wrong_side 07-09 → 14d cooldown → chain blocked 07-23
+    v5/v6: PASS — wrong_side=per-day (no cooldown). Chain opens via B1+B3+B4
+    BULLA: A2=avg5(gLSR) ALWAYS >1.1 (crowd already long). GOM via B only.
+    FN fires Jun-24 (suppressor) → cd_end=07-07 → chain opens 07-08 via B1+B3+B4
+    07-09: wrong_side DQ fires (per-day only) → blocks 07-09 only, chain holds
+
+  Row 9 POWER b-pos:
+    v4: FAIL — B4=oi_ignition, B3(06-28→07-05) ∩ B4(07-08→12) = ∅
+    v5/v6: PASS — B4=NOT FN. FN never fires for POWER → B4=True all window
+    B1+B3+B4 fires: ['2026-07-03', '2026-07-04', '2026-07-05', '2026-07-18']
+    Chain opens: 2026-07-05
+
+  T2 TAG wrong-side:
+    v4: FAIL — GOM fires 07-29/30 (A2=stealth_grind active, wrong_side_dq(5d) missed)
+    v5/v6: PASS — Source: TAG freshwatch CSV (07-28→31). A2=avg5(gLSR)>1.1 all days:
+    Note: TAG_result.txt ends 07-21; freshwatch 2026-07.csv extends to 07-31
+      2026-07-26  gLSR=1.677  avg5=1.575  A2=False  GOM=False
+      2026-07-27  gLSR=1.707  avg5=1.610  A2=False  GOM=False
+      2026-07-28  gLSR=1.298  avg5=1.558  A2=False  GOM=False
+      2026-07-29  gLSR=1.813  avg5=1.615  A2=False  GOM=False
+      2026-07-30  gLSR=1.996  avg5=1.698  A2=False  GOM=False
+      2026-07-31  gLSR=1.922  avg5=1.747  A2=False  GOM=False
+
+── PARTI EPISODE 20/06→15/07 ───────────────────────────────────────────────
+
+  Source: freshwatch_daily_2026-06.csv + 2026-07.csv (VPS /data/export/ → scratch/)
+  Token: PARTIUSDT. Data range: 2026-06-27 → 2026-07-31
+
+  NOTE: data starts 06-27 (VPS export — no earlier data).
+  toi_dq (i<13) blocks i=0→12 = 06-27→07-08. First toi-free day = 07-09.
+  Operator kỳ vọng (a): GOM-A bật trước 09/07. Status: BLOCKED-toi_dq
+  (GOM CANNOT fire 06-27→07-08 per toi guard. If VPS has 06-20 data, need re-run.)
+
+  PARTI GOM series 07-06→07-13:
+            date    gom     A2     A1     B1     B3     B4  supp                  perday              
+      2026-07-06  False   True   True  False  False   True  {'decay': True}       {'slope_dq': True, 'toi_dq': True}  pos_r=3.5341
+      2026-07-07  False   True   True  False  False   True  {'decay': True}       {'toi_dq': True}      pos_r=3.6493
+      2026-07-08  False   True   True  False  False   True  {'decay': True}       {'toi_dq': True}      pos_r=3.5028
+      2026-07-09  False   True   True  False  False   True  {'decay': True}       {'toi_dq': True}      pos_r=3.5715
+      2026-07-10  False   True   True  False  False   True  {'decay': True}       {'wrong_side': True, 'slope_dq': True}  pos_r=2.7396
+      2026-07-11  False   True   True  False  False   True  {'funding_extreme': True, 'decay': True, 'post_climax': True}  {'wrong_side': True, 'slope_dq': True}  pos_r=1.4872
+      2026-07-12  False   True   True  False  False   True  {'decay': True, 'post_climax': True}  {'wrong_side': True, 'slope_dq': True}  pos_r=1.2225
+      2026-07-13  False   True   True  False  False   True  {'decay': True, 'post_climax': True}  {'wrong_side': True, 'slope_dq': True}  pos_r=1.5867
+      2026-07-14  False   True   True  False  False   True  {'decay': True, 'post_climax': True}  -                     pos_r=1.8465
+
+  Operator kỳ vọng (b): chuỗi ĐÓNG 11/07 theo luật (iv) pos_r drop 64%
+  PARTI closes: []
+
+  PARTI pos_r series 07-06→07-14:
+            date     pos_r    drop_from_peak
+      2026-07-06    3.5341             0.0%
+      2026-07-07    3.6493             0.0%
+      2026-07-08    3.5028             4.0%
+      2026-07-09    3.5715             2.1%
+      2026-07-10    2.7396            24.9%
+      2026-07-11    1.4872            59.2% *** ≥30%
+      2026-07-12    1.2225            66.5% *** ≥30%
+      2026-07-13    1.5867            56.5% *** ≥30%
+      2026-07-14    1.8465            49.4% *** ≥30%
+
+── AKE 4-LEG DECAY VERIFICATION (nợ G1-AKE, lần cuối) ────────────────────
+
+  Source: ake_result.txt. signals.py decay() checks ONLY taker_buy_pct < 48.0 for 5d.
+  'Taker + price mòn + funding trôi + OI phẳng' = master_plan commentary, NOT code conditions.
+
+    date   taker%   taker<48   ret_1d%      f_avg        oi_usd  decay_leg
+   07-04     47.3          Y    -24.8%    0.00032     4,803,025  .
+   07-05     41.7          Y    -11.6%    0.00054     4,579,461  .
+   07-06     45.9          Y     +0.9%    0.00034     4,776,381  .
+   07-07     46.4          Y    -22.9%    0.00056     4,013,227  .
+   07-08     47.9          Y    -18.2%    0.00020     3,963,740  FIRE
+
+  Conclusion: all 5 days taker < 48.0% → decay fires 07-08 (5th consecutive day).
+  signals.py decay() = single-leg check (taker only). LEGITIMATE.
+  G1 AKE SUPP=CORRECT. WARN in gom_gate = data cutoff (ake data ends 07-18).
+  G1 AKE DEBT: CLOSED.
+
+── SPEC-MUTATION ÁN — DIFF §1 FIRST-COMMIT vs BẢN GỐC ────────────────────
+
+  First commit: c4c9b61d (gom_detect_spec.md v1.1, 08/08/2026)
+  §1 A2 (first-commit): | stealth_grind | stealth_grind(days, i, cfg) |
+  §1 B4 (first-commit): | oi_ignition   | oi_ignition(days, i, cfg)   |
+
+  Bản gốc đã ký (operator phán, primary source):
+  §1 A2: avg5(lsr_global) ≤ 1.1 — crowd chưa long nặng, đất cho squeeze
+  §1 B4: NOT funding_neg_div — môi trường sạch (FN không bắn)
+
+  Diff §1 (first-commit → bản gốc):
+  - A2: stealth_grind(days, i, cfg) → avg5(lsr_global) ≤ 1.1 [inline check]
+  - B4: oi_ignition(days, i, cfg)   → NOT funding_neg_div(days, i, cfg)
+
+  Search kết quả: không có file tiền-commit nào trong project ghi A2=avg5(gLSR)≤1.1.
+  Checked: whale_data/docs/, binance-bot-signals/docs/ (excl. spec), proposals/,
+           Check onchain fresh wallets/Doc/ (master_plan + amendments 21/07 & 22/07).
+  master_plan §5: avg5(globalLSR)≤1.1 xuất hiện trong lsr_accum (A1), KHÔNG phải A2.
+  stealth_grind và oi_ignition = signal registry entries — agent gán nhầm vào A2/B4
+  khi reconstruct §1 từ master_plan (không có GOM-A2 definition rõ ràng trong master_plan).
+
+  Kết luận có chứng cứ: reconstruction error phát sinh tại giai đoạn viết §1-§7
+  từ master_plan (không có GOM-spec riêng lúc đó). §8 'verbatim từ LỆNH' là đúng;
+  §1-§7 là agent-reconstructed và không được review riêng trước khi ký. Không có
+  evidence của post-commit mutation (git diff c4c9b61d..f3e764a8 không đổi A2/B4).
+
+  Bài học (họ L-43): chép tài liệu ký vào repo = phải diff với nguồn trước commit.
+  Chữ ký không truyền qua trí nhớ người chép — mỗi §1..§N phải được operator
+  review riêng trước khi commit, không chỉ §8 (phần mới).

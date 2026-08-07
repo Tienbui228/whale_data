@@ -340,6 +340,22 @@ def update_chain(
             state = _close_chain(chain, f"dq_cooldown_until:{cooldown_end}", date_str)
         return state
 
+    # ── Rule (iv): check pos_r drop on ALL open days — including gap days ────
+    # §8.4(iv) "ĐÓNG NGAY" = close immediately whenever chain is open, not just GOM days.
+    # Rule (iv) wins over rule (iii): same day → label "chuyển pha phân phối", not "hết tín hiệu".
+    if chain.get("chain_open"):
+        _pos_r = d.get("lsr_pos", float("nan"))
+        if math.isnan(_pos_r):
+            _pos_r = d.get("lsr_pos_r", float("nan"))
+        _peak = chain.get("peak_pos_r", float("nan"))
+        if not math.isnan(_pos_r) and not math.isnan(_peak) and _peak > 0:
+            _drop = (_peak - _pos_r) / _peak
+            if _drop >= g.get("pos_r_drop_close", 0.30):
+                state = _close_chain(chain,
+                    f"pos_r_drop:{_drop:.0%}_from_peak:{_peak:.2f}", date_str)
+                state["close_note"] = "chuyển pha phân phối"
+                return state  # rule (iv) wins — return before rule (iii) gap check
+
     # ── If no GOM and chain open: break_streak logic ─────────────────────────
     if not gom:
         if chain.get("chain_open"):
@@ -380,7 +396,7 @@ def update_chain(
             chain = state
         chain["last_flush_date"] = date_str
 
-    # ── Update peak pos_r ────────────────────────────────────────────────────
+    # ── Update peak pos_r (on GOM days only — non-GOM gaps don't set new highs) ─
     pos_r = d.get("lsr_pos", float("nan"))
     if math.isnan(pos_r):
         pos_r = d.get("lsr_pos_r", float("nan"))
@@ -388,15 +404,7 @@ def update_chain(
         peak = chain.get("peak_pos_r", float("nan"))
         if math.isnan(peak) or pos_r > peak:
             chain["peak_pos_r"] = pos_r
-
-    # ── Rule (iv): pos_r sập ≥30% từ peak → close immediately ──────────────
-    peak = chain.get("peak_pos_r", float("nan"))
-    if not math.isnan(peak) and not math.isnan(pos_r) and peak > 0:
-        drop = (peak - pos_r) / peak
-        if drop >= g.get("pos_r_drop_close", 0.30):
-            state = _close_chain(chain, f"pos_r_drop:{drop:.0%}_from_peak:{peak:.2f}", date_str)
-            state["close_note"] = "chuyển pha phân phối"
-            return state
+    # (rule iv already handled above for all open days, before this GOM section)
 
     # ── Q1 counting ──────────────────────────────────────────────────────────
     ret = _ret_1d(days, i)
