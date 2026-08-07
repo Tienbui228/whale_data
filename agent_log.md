@@ -2,6 +2,66 @@
 
 ---
 
+## SESSION 2026-08-07 (1) — HEI GOM-A/B Patch per Spec v1.4
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6  
+**Commit:** "CASE_HEI: GOM-A per spec verbatim + rows 08-07/08-08"
+
+### Nhiệm vụ
+
+Vá GOM-A (A1-A5) + GOM-B (B1-B4) trong CASE_HEI.xlsx theo đúng gom_detect_spec.md v1.4 §1
++ append 07/08 row + thêm oi_cycle_pos col 43.
+
+### Kết quả
+
+**Script:** `_task_patch_gom_spec_20260808.py`  
+**L-32:** 541 rows PASS (2025-02-13 → 2026-08-07, 43 cols)
+
+**GOM-A re-score (spec v1.4 operator CASE adaptation):**
+- A1 = div_avg3 >= 1.5
+- A2 = avg5(gLSR) <= 1.1  ← SỬA từ slope<1.0
+- A3 = glsr_slope_5d <= 1.15  ← SỬA từ pos_r>1.5 + ngưỡng 1.0→1.15
+- A4 = d_pos_3d >= 0 OR pos_rerate (pos_r +0.25 vs avg5, ≥3d)
+- A5 = oi_cycle_pos <= 0.5  ← MỚI (col 43)
+- GOM-A = A1 AND A2 AND A3 AND (A4 OR A5)
+
+**GOM-B re-score (spec §1):**
+- B1 = div_avg3_low_streak >= 7 (div_avg3 ≤ 0.5 liên tục)
+- B2 = pin_streak >= 5
+- B3 = taker_absorb_streak >= 7 AND range_7d <= 10%
+- B4 = NOT funding_neg_div (f_avg<0 AND |ret_1d|<2%)
+
+**Fires sau patch:**
+| Signal | Trước | Sau |
+|---|---|---|
+| GOM-A | 1 ngày (08-01) | 9 ngày (20-24/07, 30-31/07, 01/08, 03/08) |
+| GOM-B | 0 | 0 |
+
+**07/08 row:** included, fn=3 (intraday partial — script chạy 08:35 UTC), low_conf=True, data_ok=False.  
+LSR canonical 00:00 UTC 07/08: pos_r=1.4638, acc_r=1.1128, gLSR=1.0387, div_avg3=1.738, slope=1.133.  
+GOM-A KHÔNG fire (A3 slope=1.133>1.15? NO: 1.133<1.15 → A3=✓, nhưng A5=0.526>0.5 → A5=✗, A4=✗ → (A4|A5)=✗).
+
+**08/08 row:** KHÔNG append — ngày chưa đóng (08:35 UTC < 00:00 UTC+1). Per operator spec.
+
+**EVENTS:** row 13 — line 244 spec-drift (A2/A3 gán nhầm + ngưỡng 1.0 thay 1.15) phát hiện 08/08, vá 09/08.
+
+**Intraday snapshot 07/08 08:35 UTC:** px=0.21939, OI=51,004,817.5 tokens. Không ghi DAILY.
+
+**oi_cycle_pos (col 43):** rolling 30d OI window. Non-null từ 2026-07-09 (21 giá trị).
+
+**EVENTS:** Spec-drift entry: `_task_rebuild_hei_daily_20260808.py` line 234-247 gán nhầm A2/A3.
+
+**Bằng chứng GREP (toàn repo):**
+- `pos_r * glsr`: `_probe_hei_h2_h4_20260808.py:340` + `_task_build_case_hei_20260808.py:212` (probe/build đã cam kết, không phải live)
+- `mean(div_raw)`: `scripts/archive/_build_outputs.py:185` (archived)
+- `slope * 100` / `%chg slope`: 2 files probe trên (không phải live)
+- `_task_rebuild_hei_daily_20260808.py` + `gom_scan.py`: CLEAN
+
+**Lesson draft (chưa ghi LESSONS sheet — operator duyệt):**
+"Fix theo spec phải trích NGUYÊN VĂN điều kiện + số điều kiện vào comment — không dịch lại ngưỡng từ trí nhớ. A2=1.1, A3=1.15, không phải 1.0."
+
+---
+
 ## SESSION 2026-08-08 (4) — GOM Gate §6 v6 + Deploy Pre-Check
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
