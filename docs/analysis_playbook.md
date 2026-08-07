@@ -351,6 +351,58 @@ kho_vol_ratio = (kho_tokens × avg_px_at_exit) / total_spot_vol_campaign
 
 ---
 
+## Phụ lục A — ĐỊNH NGHĨA BIẾN DẪN XUẤT (canonical)
+
+> Ba biến dưới đây đều từng bị tính sai ít nhất một lần trong sổ.
+> Mọi script build case file BẮT BUỘC import/đối chiếu công thức từ đây
+> (hoặc signals.py canonical) — CẤM viết lại từ trí nhớ (L-31).
+> Khi số trong file lệch định nghĩa này → file sai, định nghĩa thắng.
+
+### A.1 div_raw — tham khảo / cảnh báo sớm
+
+```
+div_raw(t) = pos_r(t) / acc_r(t)
+```
+
+- Tử = topLSR theo GIÁ TRỊ vị thế · Mẫu = topLSR theo SỐ tài khoản.
+  Nguồn câu chữ: U50 "divergence ratio between topLSR_pos and topLSR_acc".
+- Vai: tham khảo + cảnh báo sớm (bắt div-flip <1 kiểu L-16 sớm một nhịp).
+- **KHÔNG dùng chấm ngưỡng.** Nhạy nhiễu một-ngày của mẫu số.
+
+### A.2 div_avg3 — canonical cho MỌI so sánh ngưỡng
+
+```
+div_avg3(t) = avg3(pos_r) / avg3(acc_r)   [avg 3 ngày TỪNG THÀNH PHẦN, rồi chia]
+```
+
+- Áp cho: lsr_accum ≥1.5 · hedge_structure ≤0.5 · GOM-A điều kiện A1 ·
+  mọi band mục VII.
+- **Bẫy toán (CẤM):** `mean(div_raw, 3d) ≠ div_avg3` — trung bình của tỷ số
+  ≠ tỷ số của trung bình; lệch mạnh đúng những ngày mẫu số giật.
+
+### A.3 glsr_slope_5d — ratio, không phải %chg
+
+```
+glsr_slope_5d(t) = gLSR(t) / gLSR(t−5)   [ratio; 1.00 = phẳng]
+```
+
+- Ngưỡng tham chiếu: >1.15 = nhiên liệu đang xả (GOM-A A3 chặn);
+  <1.0 = crowd bò về short (fuel nạp).
+- Format %chg (+16.6) không hợp lệ — ngưỡng 1.15 chỉ có nghĩa trên ratio.
+
+### A.4 Tiền lệ án (lý do phụ lục này tồn tại)
+
+| Biến | Án | Ngày | Bài |
+|------|----|------|-----|
+| div_raw dùng chấm ngưỡng | IDOL: raw phồng 2.22 vì acc_r sập MỘT ngày (1.36→0.99), avg3 mượt — suýt chấm lsr_accum sai | 28/07 | Ngưỡng chỉ chấm trên avg3 |
+| div sai công thức nền | HEI: build script tự viết div = pos_r × gLSR (tái định nghĩa thuật ngữ) | 08/08 | L-31: import từ canonical, không viết lại |
+| div_avg3 sai cách avg | HEI: mean(div_raw 3d) thay vì avg3-thành-phần | 08/08 | Bẫy trung-bình-của-tỷ-số |
+| glsr_slope format | HEI: %chg thay vì ratio t/t−5 | 08/08 | Ngưỡng gắn với format |
+
+*Cross-ref: L-16 (div-flip) · L-25 (một-nhà-một-data) · L-31 (câu chữ nguồn) · gom_detect_spec §1 (A1/A3/B1 tiêu thụ các biến này).*
+
+---
+
 ## Phụ lục: Cross-reference Lessons theo Lớp
 
 | Lớp | Lessons chính |
@@ -367,5 +419,5 @@ kho_vol_ratio = (kho_tokens × avg_px_at_exit) / total_spot_vol_campaign
 
 ---
 
-*Playbook v0.2 — cập nhật 06/08/2026: thêm section VII (MM-ECON), LAYER COVERAGE header.*
+*Playbook v0.2 — cập nhật 06/08/2026: thêm section VII (MM-ECON), LAYER COVERAGE header. cập nhật 08/08/2026: Phụ lục A biến dẫn xuất (án HEI div/slope).*
 *Vị trí canonical: `docs/analysis_playbook.md`. Cập nhật: khi thêm case RESOLVED → update VII.1 + VII.2 n=.*
