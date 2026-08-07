@@ -1,0 +1,265 @@
+
+================================================================================
+GOM CONFORMANCE TABLE — spec nguyên văn vs code thật
+(Gửi operator duyệt TRƯỚC khi fix v5)
+================================================================================
+
+Cột:
+  SPEC = spec file gom_detect_spec.md v1.2 (nguyên văn, paste hàm/công thức)
+  CODE = biểu thức thật trong scripts/gom_scan.py + signals.py (paste)
+  K/L  = KHỚP / LỆCH + ghi chú
+
+Lưu ý nội tâm: spec file do agent reconstruct (agent_log "§1-§7 reconstruct từ
+master_plan + signals.py"). Hai chỗ trong spec file có thể là reconstruction
+error (được chỉ ra trong cột K/L). Operator duyệt = phán quyết cuối.
+
+================================================================================
+§1 GOM-A SIGNALS
+================================================================================
+
+ID   Spec nguyên văn                          Code thật                                   K/L
+──────────────────────────────────────────────────────────────────────────────────────────────
+A1   lsr_accum(days, i, cfg)                  a1 = lsr_accum(days, i, cfg)                KHỚP
+     "div_ratio ≥ 1.5 AND avg5(gLSR) ≤ 1.1"
+     Hàm: return geq(dr, c["div_ratio_min"])
+           and leq(g5, c["global_lsr_max"])
+
+A2   stealth_grind(days, i, cfg)              a2 = stealth_grind(days, i, cfg)            KHỚP
+     "Breakout ≥15% khỏi range 14d trong     Hàm: kiểm price >= range_hi*(1+brk_pct)     ← OPERATOR PHÁN:
+     ≤5d + OI ≥1.5×med14 + taker<55%"        AND oi_window trong 5d ≥ oi_mult*med        A2 = avg5(gLSR) ≤ 1.1
+                                              AND max(tb%) < tb_max                        SG = cờ khác.
+                                                                                           Spec file có thể
+                                                                                           reconstruction error.
+
+A3   s3_eve(days, i, cfg)                     a3 = s3_eve(days, i, cfg)                   KHỚP
+     "takerBUY ≥55% + vol ≥med14 +           Hàm: check tb >= tb_min AND vol ratio
+     OI drop ≥12% post-plateau OR             AND OI plateau THEN OI drop
+     withdrawal"
+
+A4   pos_rerate(days, i, cfg)                 hedge_alive = any(                          KHỚP
+     AND hedge_structure alive (7d)             hedge_structure(days, j, cfg)
+     "lsr_pos +≥0.25 từ nền, giữ ≥3d,         for j in range(max(0,i-hedge_lb+1),i+1))
+     trên nền hedge"                          a4 = pos_rerate(days, i, cfg) and hedge_alive
+                                              (any() = alive somewhere in 7d window)
+
+A5   funding_unpin(days, i, cfg)              a5 = funding_unpin(days, i, cfg)            KHỚP
+     "Sau pin ≥10d, xuất hiện ≥2 kỳ          Hàm: count unpin streak >= unpin_n
+     >0.0001 — pivot regime"                  AND before_streak >= prior_pin
+
+================================================================================
+§1 GOM-B SIGNALS + CÔNG THỨC
+================================================================================
+
+ID   Spec nguyên văn                          Code thật                                   K/L
+──────────────────────────────────────────────────────────────────────────────────────────────
+B1   hedge_structure(days, j, cfg)            b1 = all(                                   KHỚP
+     bền ≥7d (ALL j trong 7d cuối)             hedge_structure(days, j, cfg)
+     "div_ratio ≤ 0.5 persistent"              for j in range(max(0,i-hedge_lb+1),i+1))
+                                              hedge_lb = gom.get("hedge_lookback_days",7)
+
+B2   funding_pinned(days, i, cfg)             b2 = funding_pinned(days, i, cfg)           KHỚP
+     OR funding_pinned_strong(days, i, cfg)       or funding_pinned_strong(days, i, cfg)
+     "≥5d pin tuyệt đối (STRONG ≥10d)"
+
+B3   absorption(days, i, cfg)                 b3 = absorption(days, i, cfg)               KHỚP
+     "≥7d taker [44,50.5]% + range ≤10%"     Hàm: check all tb in [tb_lo,tb_hi] 7d
+                                              AND px range <= px_rng over 7d
+
+B4   oi_ignition(days, i, cfg)               b4 = oi_ignition(days, i, cfg)              KHỚP
+     "OI ≥1.5×med14 in ≤5d"                  Hàm: any(oi >= oi_mult*med14                ← OPERATOR PHÁN:
+                                              in 5d window)                               B4 = NOT funding_neg_div
+                                                                                          Spec file có thể
+                                                                                          reconstruction error.
+
+GOM-B Spec: "B1 AND (B2 OR B3) AND B4"       gom_b_fire = b1 and (b2 or b3) and b4       KHỚP
+formula  "B1 MANDATORY, count ≥2 KHÔNG đủ"   (gom_b_min_count removed after v3 fix)
+
+GOM    Spec: "(≥1 GOM-A OR GOM-B fires)       gom_day = (any_a or gom_b_fire)            KHỚP
+ngày   AND không disqualifier cứng bật"           and not any_dq
+
+================================================================================
+§1 DISQUALIFIERS — 6 SUPPRESSOR-DQ (cooldown 14d)
+================================================================================
+
+Signal         Spec nguyên văn (hàm)                Code thật                           K/L
+──────────────────────────────────────────────────────────────────────────────────────────────
+dist_wall      dist_wall(days, i, cfg)               "dist_wall": dist_wall(...)         KHỚP
+               "≥4d taker ≥50% + giá ≤−10%"         Hàm: all(tb>=tb_min, 4d) AND
+                                                     (px1-px0)/px0 <= px_drop
+
+lsr_dist       lsr_dist(days, i, cfg)                "lsr_dist": lsr_dist(...)           KHỚP
+               "avg5(lsr_pos) ≤ 0.95 AND             Hàm: leq(pos5, c["lsr_pos_max"])
+               avg5(lsr_acc) ≥ 1.1"                  and geq(acc5, c["lsr_acc_min"])
+
+funding_neg_   funding_neg_div(days, i, cfg)         "funding_neg_div": fneg(...)        KHỚP
+div            "funding âm + biên giá phẳng"         Hàm: leq(avg OR mn) AND
+                                                     leq(price_range_3d)
+
+funding_       funding_extreme(days, i, cfg)         "funding_extreme": fext(...)        KHỚP
+extreme        "funding ≥1% one settlement"          Hàm: geq(abs(mx) OR abs(mn),
+                                                     threshold)
+
+decay          decay(days, i, cfg)                   "decay": decay(...)                 KHỚP
+               "taker <thr kéo dài"                  Hàm: all(tb < tb_max, 5d)
+               taker_buy_max=48.0, hold_n=5
+
+post_climax    post_climax(days, i, cfg)             "post_climax": post_climax(...)     KHỚP
+               "sau crash ≥25% + cooldown 14d"       Hàm: scan back ≤14d for crash
+                                                     AND funding_extreme on crash day
+
+================================================================================
+§1 DISQUALIFIERS — per-day vs cooldown phân lớp
+================================================================================
+
+Spec §8.4(i) text (nguyên văn §8 v1.1):
+  "(i) Suppressor CỨNG bật = đóng chuỗi + cooldown 14d từ first-fire của đợt;
+       đợt mới = sau ≥3d sạch (không suppressor bắn).
+       low_conf = flag không reset."
+
+Spec §1 note (thêm vào v1.2 — có thể reconstruction error):
+  "Cooldown §8.4(i): mọi DQ bật → đóng chuỗi + cooldown 14d kể từ first-fire."
+
+⚠ NỘI TÂNG §8.4(i) ≠ §1 NOTE: §8 nói "Suppressor CỨNG"; §1 note nói "mọi DQ".
+  Code follow §1 note ("mọi DQ"). Nếu đúng là §8 ("Suppressor CỨNG") thì code LỆCH.
+
+Signal         Spec (§8.4(i) text)     Code thật                       K/L vs §8.4(i)
+──────────────────────────────────────────────────────────────────────────────────────────────
+wrong_side     §1 table: "giá rơi      "wrong_side": _wrong_side_dq()  LỆCH (cooldown)
+(L-26)         ≥10%/5d + gLSR ≥15%"   → trong dq dict → goes          ← OPERATOR PHÁN:
+               Cooldown nhận: KHÔNG    through cooldown 14d path        per-day block only,
+               (per operator phán)     DQ_COOLDOWN_END set              NO 14d cooldown.
+                                                                        BULLA bị locked 07-09
+                                                                        +14d oan.
+
+slope>1.15     KHÔNG có trong spec     KHÔNG có trong code              LỆCH (thiếu)
+               file v1.2               (không implement)                ← OPERATOR PHÁN: là
+                                                                        per-day DQ condition
+
+tuổi           KHÔNG có trong spec     KHÔNG có trong code              LỆCH (thiếu)
+               file v1.2               (không implement)                ← OPERATOR PHÁN: là
+                                                                        per-day DQ condition
+
+low_conf       §8.4(i): "flag không    lc = (vol<200K OR oi<1M)        KHỚP (flag only)
+               reset"                  Chỉ là flag trong output,        ← OPERATOR PHÁN:
+               Spec §3: gom.q1_cum...  KHÔNG block gom_day             per-day DQ (block
+                                                                        hôm đó, no cooldown)
+
+================================================================================
+§1 CỜ PHỤ (flags — không reset chuỗi)
+================================================================================
+
+Flag           Spec nguyên văn                      Code thật                           K/L
+──────────────────────────────────────────────────────────────────────────────────────────────
+low_conf       "vol_quote < 200K OR oi_usd < 1M"    lc = (vol_q < 200_000) or          KHỚP (flag)
+               "flag không reset"                    (oi < 1_000_000)
+                                                    → "low_conf": lc trong return dict
+
+data_bad       "funding_n < expected OR bad"         KHÔNG implement trong eval_gom      LỆCH (thiếu)
+               Là flag không reset                   (không có trong code)
+
+suspect        "Token trong danh sách án"            chain["suspect_flag"] = True        KHỚP
+               "flag không reset"                    khi token in SUSPECT_TOKENS
+
+crowd_flush_   crowd_flush(days, i, cfg)             cf_today = crowd_flush(days, i, cfg) KHỚP
+today          "chapter mới §8.4.ii"                 → "crowd_flush": cf_today
+
+================================================================================
+§8 BỐN LUẬT RESET CHUỖI
+================================================================================
+
+Luật   Spec nguyên văn (§8.4)                 Code thật                           K/L
+──────────────────────────────────────────────────────────────────────────────────────────────
+(i)    "Suppressor CỨNG bật = đóng chuỗi      if dq:                              LỆCH
+       + cooldown 14d từ first-fire của đợt"    state["dq_cooldown_end"] = \       (wrong_side
+       "đợt mới = ≥3d sạch (không suppressor    date + timedelta(days=13) ← FIXED  không phải
+       bắn)"                                   (FIXED: was timedelta(14))           Suppressor CỨNG
+       "low_conf = flag không reset"            DQ_EP_GAP = 3 ✓                    nhưng vẫn đi
+                                               All 7 DQ (incl. wrong_side)         qua cooldown)
+                                               through cooldown path
+
+(i)    Cooldown duration:                      timedelta(days=13)                  KHỚP
+offset "14d từ first-fire" = 14 total days     → cd_end = first_fire + 13d        (post-fix)
+       (fire day = day 0, clear từ day 14)     → clear when date > cd_end
+       Matches G1: clear tại ep_start+14       → first clear = first_fire+14 ✓
+
+(ii)   "crowd_flush mới (sau ≥3d sạch         if cf:                              KHỚP
+       kể từ flush trước) = chương mới"          cf_gap_min = gom.get(
+       "chương rỗng (Q1=0) hợp lệ"              "crowd_flush_gap_min_days", 3)
+       "không có guard Q1>0"                    → if gap_days >= cf_gap_min:
+                                                   _new_chapter(chain, date_str)
+                                               (guard Q1_cum removed ✓)
+
+(iii)  "GOM tắt >2 ngày liên tục = đóng"      if not gom:                         KHỚP
+                                                 chain["break_streak"] += 1
+                                                 if break_streak > break_gap_max(2):
+                                                   _close_chain("gom_gap>2d")
+
+(iv)   "pos_r sập ≥30% từ peak-của-chuỗi      drop = (peak - pos_r) / peak        KHỚP
+       → ĐÓNG NGAY, nhãn 'chuyển pha          if drop >= pos_r_drop_close(0.30):
+       phân phối'"                               _close_chain("pos_r_drop:...")
+
+================================================================================
+TÓM TẮT LỆCH
+================================================================================
+
+  #   Điều kiện     Spec nói          Code làm          Loại lệch
+  ─────────────────────────────────────────────────────────────────
+  1   A2            stealth_grind     stealth_grind      KHỚP file; OPERATOR PHÁN avg5(gLSR)≤1.1
+  2   B4            oi_ignition       oi_ignition        KHỚP file; OPERATOR PHÁN NOT funding_neg_div
+  3   wrong_side    per-day DQ        14d cooldown DQ    LỆCH (operator §8.4(i): Suppressor CỨNG không
+                    (§8.4(i) intent)                     bao gồm wrong_side)
+  4   slope>1.15    (missing)         (missing)          LỆCH thiếu — operator: per-day DQ
+  5   tuổi          (missing)         (missing)          LỆCH thiếu — operator: per-day DQ
+  6   low_conf      flag (§8.4.i)     flag only          KHỚP file; OPERATOR PHÁN: per-day DQ
+  7   data_bad      flag (§8.4.i)     missing            LỆCH thiếu
+  8   §8.4(i)       "Suppressor CỨNG" "any dq → cd"     LỆCH: spec file §1 note nói "mọi DQ"
+                    vs §1 note        (follows §1 note)  nhưng §8 text nói "Suppressor CỨNG"
+                    inconsistency                        = nội mâu trong spec file
+  9   cooldown      14 total days     13+1 = 14 total    KHỚP (post fix [J])
+      duration      (fire=day0)       ✓ (fixed)
+
+Dự đoán hậu-fix (ghi trước):
+  - wrong_side per-day → BULLA 07-09 DQ không lock 14d → GOM-A 07-17 mở → BULLA PASS
+  - B4 = NOT FN (FN never fires POWER) → B4=True mọi ngày → B3∩B4=trọn window → POWER PASS 06-28+
+  - A2 = avg5(gLSR)≤1.1 → TAG 07-29/30: avg5~1.6>1.1 → A2=False → cần check A1/A3/A4/A5 còn fire không
+
+================================================================================
+PARTI — tình trạng store
+================================================================================
+
+spot_klines_1d (local alpha store): PARTI = 0 rows. Date range 2025-04-10→2026-08-03.
+Store này là ALPHA venue (binance_alpha), KHÔNG phải freshwatch perp daily.
+PARTI dùng perp daily data (freshwatch universe 525).
+
+Freshwatch daily CSV local: KHÔNG có (chỉ có scratch/BANK_daily.csv + scratch/BR_daily.csv).
+CASE_PARTI.xlsx: KHÔNG tồn tại.
+PARTI_result.txt: KHÔNG tồn tại.
+
+→ PARTI 100% MISSING locally. Nguồn duy nhất: VPS 5.223.67.21
+  File: freshwatch_daily_2026-07.csv (và 2026-08.csv nếu có)
+  Store đã xác nhận phủ PARTIUSDT (universe 525 include PARTI).
+  Date range cần: PARTI episode đặc thù — cần xác nhận episode date trước khi SCP.
+  Action: operator cho biết ngày episode PARTI → agent SCP đúng file → chạy gate row.
+
+================================================================================
+AKE — G1 decay series (đáp nợ G1)
+================================================================================
+
+AKE data range: 06-30 → 07-18 (19 ngày)
+decay config: taker_buy_max=48.0, decay_days_min=5
+
+5-day series kết thúc 07-08 (ngày decay fire):
+  07-04: 47.3%  < 48.0 ✓
+  07-05: 41.7%  < 48.0 ✓
+  07-06: 45.9%  < 48.0 ✓
+  07-07: 46.4%  < 48.0 ✓
+  07-08: 47.9%  < 48.0 ✓  → DECAY FIRES (5 consecutive days all < 48%)
+
+→ KHÔNG phải mis-fire. Decay 07-08 = hợp lệ.
+  07-09: 48.6% > 48 → decay clears. Episode kết thúc sau 1 ngày fire.
+  DQ cooldown (FIXED): first-fire=07-08, cd_end=07-21, clear từ 07-22.
+  GOM fires ở 07-14 và 07-18 (bị cooldown chặn). Data ends 07-21 = last cooldown day.
+  AKE WARN = correct. Không có mis-fire.
+
+Kết luận AKE: nếu data extend đến 07-22+, AKE mở (GOM-A fires at 07-14/07-18, clear 07-22).
+Án G1 AKE: decay NOT mis-fire → DQ legitimate → WARN = spec-correct behavior.
