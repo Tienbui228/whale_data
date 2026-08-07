@@ -1,5 +1,5 @@
 # docs/ INDEX — FreshWatch Knowledge Base
-**Version:** 1.0 · **Ngày:** 06/08/2026 · **Cập nhật:** khi thêm/xóa file canonical
+**Version:** 1.0 · **Ngày:** 06/08/2026 · **Cập nhật:** 09/08/2026 (L-46/47/48 + Phụ lục A.5)
 
 > **Luật mồ côi:** File `.md` trong `docs/` không được tham chiếu từ tầng Playbook/Lessons/Model-spec/INDEX này → liệt kê vào mục "Orphan" → operator quyết archive hoặc link.
 > Cron review: mỗi khi K-series consolidation.
@@ -20,7 +20,7 @@
 | File | Mô tả | Phủ lớp |
 |------|-------|---------|
 | `docs/analysis_playbook.md` | **Playbook chính** — 7 lớp phân tích I→VII + lessons cross-ref | I–VII |
-| `docs/lessons_learned.md` | View sinh từ CASE_INDEX.xlsx sheet LESSONS (không edit trực tiếp) | All |
+| `docs/lessons_learned.md` | View sinh từ CASE_INDEX.xlsx sheet LESSONS (không edit trực tiếp) · L-01→L-48 | All |
 | `docs/lessons_rev2_source.md` | Source draft lessons (sửa vào CASE_INDEX sheet LESSONS) | All |
 
 ---
@@ -51,8 +51,8 @@
 | `docs/case_files/CASE_BANK.xlsx` | BANK | RESOLVED + T+30 CLOSED |
 | `docs/case_files/CASE_BR.xlsx` | BR | TRACKING |
 | `docs/case_files/CASE_CLO.xlsx` | CLO | ABSTAIN (T0 unconf.) |
-| `docs/case_files/CASE_HEI.xlsx
-  - [CASE_BANANAS31.xlsx](case_files/CASE_BANANAS31.xlsx) — COLD_START PENDING (Alpha fullyDelisted, dump 91 ngày ret<-5%)` | HEI | COLD_START — PENDING |
+| `docs/case_files/CASE_HEI.xlsx` | HEI | TRACKING (doi chung DUONG cap L-46) |
+| `docs/case_files/CASE_BANANAS31.xlsx` | BANANAS31 | COLD_START — PENDING (doi chung AM cap L-46, TRACKING-passive) |
 | `docs/case_files/CASE_IDOL.xlsx` | IDOL | PARTIAL (post-climax) |
 | `docs/case_files/CASE_TAG.xlsx` | TAG | TRACKING |
 | `docs/case_files/CASE_TUT.xlsx` | TUT | LIVE (T+30=08/08) |

@@ -400,6 +400,38 @@ glsr_slope_5d(t) = gLSR(t) / gLSR(t−5)   [ratio; 1.00 = phẳng]
 | glsr_slope format | HEI: %chg thay vì ratio t/t−5 | 08/08 | Ngưỡng gắn với format |
 
 *Cross-ref: L-16 (div-flip) · L-25 (một-nhà-một-data) · L-31 (câu chữ nguồn) · gom_detect_spec §1 (A1/A3/B1 tiêu thụ các biến này).*
+### A.5 Bảng ba-đạo-hàm: Video vs Photo
+
+> Phân biệt "Video" (build thật) vs "Photo" (snapshot đẹp nhưng static) bằng ba tầng kiểm tra.
+> Áp dụng khi pos_r >4 hoặc có câu hỏi "BTW hay phân phối?".
+
+| Đạo hàm | Biến | Video (HEI) | Photo (BANANAS31) | Kết luận nếu Photo |
+|---------|------|------------|------------------|--------------------|
+| 1 — Level | pos_r hiện tại | ~2–4 (vừa) | 6.7 (rất cao) | Level cao ≠ bullish — cần check đạo hàm 2+3 |
+| 2 — Slope | Δpos_r 30d OLS | Dương + đồng-trend giá | +0.036/ngày trong dump | Slope dương trong dump = Photo suspect |
+| 3 — Sync | sign(Δpos_r) vs sign(ret_1d) | ≥55% đồng hướng | ~50/50 (47.7% opposite) | <55% → pos_r không predict giá |
+
+**Cặp đối chứng (ký 09/08/2026):**
+
+| Chỉ tiêu | CASE_HEI (đối chứng DƯƠNG) | CASE_BANANAS31 (đối chứng ÂM) |
+|----------|--------------------------|-------------------------------|
+| Verdict | BUILD-setup VALID | NO_SETUP — TRACKING-passive |
+| pos_r level | Bình thường | 6.7 (cực cao) |
+| Sign-corr Δpos_r/ret | Đồng bộ (>55%) | ~50/50 (47.7% opposite) |
+| dist_wall_day / tổng | Thấp | 11.3% (57/503 ngày) |
+| flag_knife_crowd | Hiếm | 9 ngày |
+| gLSR hiện tại | Trong ngưỡng | 1.20 > 1.1 (block GOM-A A2) |
+| Đồng hồ cụm | Active | Hết hạn 06/26, cụm #4 dự kiến Aug-Oct/26 |
+
+**Quy trình khi thấy pos_r cao (>4):**
+1. Check **đạo hàm 3** (sign-corr 30d). Nếu <55% → Photo → bước 2.
+2. Check **dist_wall_streak** ≥ 3d. Nếu có → MM đang bán vào tăng.
+3. Check **gLSR vs 1.1** (GOM-A A2). Nếu gLSR > 1.1 → crowd đã long → mất fuel.
+4. Kết: TRACKING-passive, không vào setup đến khi **đồng hồ cụm** kế tiếp trigger (xem L-47).
+
+*Cross-ref: L-46 (Video vs Photo) · L-47 (đồng hồ cụm) · L-48 (Alpha ABSTAIN) · CASE_HEI.xlsx · CASE_BANANAS31.xlsx*
+
+
 
 ---
 
@@ -412,12 +444,13 @@ glsr_slope_5d(t) = gLSR(t) / gLSR(t−5)   [ratio; 1.00 = phẳng]
 | III (M2/On-chain) | **L-42**, L-05*, L-06*, L-07*, L-27, L-29, L-31 |
 | IV (Funding) | L-10, L-20, L-22, L-23 |
 | V (External) | L-06, L-28, L-29, L-30 |
-| VI (ARM) | L-02, L-03, L-04, L-08, L-12, L-13, L-18, L-38 |
+| VI (ARM) | L-02, L-03, L-04, L-08, L-12, L-13, L-18, L-38, **L-46, L-47** |
 | VII (MM-ECON) | L-42 (archetype), L-26 (exit clock), L-05/B/C (kho classification) |
+| DATA | **L-48** (Alpha fullyDelisted ABSTAIN) |
 
 *L-05/06/07: áp dụng khi xác nhận Loại B/C; Loại A xem L-42 trước.*
 
 ---
 
-*Playbook v0.2 — cập nhật 06/08/2026: thêm section VII (MM-ECON), LAYER COVERAGE header. cập nhật 08/08/2026: Phụ lục A biến dẫn xuất (án HEI div/slope).*
+*Playbook v0.2 — cập nhật 06/08/2026: thêm section VII (MM-ECON), LAYER COVERAGE header. cập nhật 08/08/2026: Phụ lục A biến dẫn xuất (án HEI div/slope). cập nhật 09/08/2026: Phụ lục A.5 bảng ba-đạo-hàm (Video vs Photo, cặp đối chứng HEI/BANANAS31).*
 *Vị trí canonical: `docs/analysis_playbook.md`. Cập nhật: khi thêm case RESOLVED → update VII.1 + VII.2 n=.*
