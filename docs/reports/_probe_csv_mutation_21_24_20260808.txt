@@ -1,0 +1,231 @@
+
+========================================================================
+2.1 — LỊCH SỬ GHI CSV THÁNG 7-8
+========================================================================
+  File                                       Size(MB)  mtime (local)               ctime (local)
+  ------------------------------------------  --------  --------------------------  --------------------------
+  freshwatch_daily_2026-06.csv                   1.77  2026-08-07 14:29:01         2026-08-07 14:29:00
+  freshwatch_daily_2026-07.csv                   2.62  2026-08-07 14:29:03         2026-08-07 14:29:02
+  freshwatch_daily_2026-08.csv                MISSING
+
+  NOTE: mtime = ngày SCP về local (không phải ngày ghi trên VPS).
+  Export history thật nằm trong agent_log.md — trích entries bên dưới:
+
+  Export-related log entries (38 found):
+  L  386: - **[L]** OPEN PARTI: VPS source=freshwatch_daily_2026-07.csv; SCP chưa thực hiện.
+  L  418: - **[L]** PARTI: SCP freshwatch_daily từ VPS.
+  L  510: **Boundary:** freshwatch_daily_2026-08/07.csv (00:00 UTC) · Binance fapi klines 1d · fapi OI hist · 
+  L  622: **Boundary:** freshwatch_daily_2026-08.csv (snapshot 00:00 UTC) · Binance fapi klines 1d · Binance O
+  L  674: ### [J4] COOLDOWN (03–05/08, nguồn: freshwatch_daily_2026-08.csv, tất cả fn=6, data_ok=True)
+  L  844: Freshwatch 01-04/08 tu VPS (`/root/Data_back_test/whale_data/data/export/freshwatch_daily_2026-08.cs
+  L 1035: - freshwatch_daily_2026-08.csv updated 01:20 UTC 05/08 (đúng lịch)
+  L 1051: - 05/08 fn=6: CHƯA CÓ (export 01:20 UTC quá sớm cho 1 ngày đầy đủ)
+  L 1365: | 03/08 | — | MISSING | — | — | Stale fn=1 — append sau 04/08 01:20 UTC |
+  L 1373: Không append hôm nay: export 2026-08.csv có 03/08 nhưng fn=1 (stale — generated 00:50 UTC bởi old cr
+  L 1465: **Root cause:** Cron chạy `50 0 * * *` (00:50 UTC) — tại thời điểm đó IDOL chỉ có 1 kỳ funding (00:0
+  L 1468: 1. `scripts/export_freshwatch_daily.py` — `default_dates()` loại trừ today (D) khỏi default range: `
+  L 1469: 2. `scripts/export_freshwatch_daily.py` — thêm `--force-regen` flag: strip existing rows cho target 
+  L 1470: 3. Cron: `50 0 * * *` → `20 1 * * *` (01:20 UTC — sau khi spot/alpha xong 01:00)
+  L 1478: Dùng `--force-regen` cho 4 ngày:
+  L 1480: | date | stripped | rebuilt |
+  L 1552: Các module `structlog`, `typer`, `python-dotenv` chưa cài trên VPS. Đã install với `--break-system-p
+  L 1864: **Export f_avg 28-31 = 00:00 rate duy nhất** → xác nhận: collector chỉ ghi được 1 bản trước khi expo
+  L 1866: **ROOT CAUSE:** Export được generate lúc 00:50 UTC — thời điểm đó chỉ có funding rate 00:00 UTC của 
+  L 1874: | freshwatch_daily_2026-07.csv | 2026-08-02 00:50:14     | 2026-08-03 01:52:47     | +25h    |
+  L 1875: | freshwatch_daily_2026-08.csv | 2026-08-03 00:50:05     | 2026-08-03 01:52:46     | +1h02m  |
+  L 1913: - Export fn=1 do **timing**: export 00:50 UTC chỉ thấy 1 record (rate 00:00 UTC), 5 rates còn lại ba
+  L 1965: - `freshwatch_daily_2026-07.csv`: BULLA 07-20 `lsr_pos_r=1.981`, `src_ratio=derived_1h`
+  L 2054: **Export job (export_freshwatch_daily.py):** 00:50 UTC ← dependency của case_daily
+  L 2571: - Neu khong backfill duoc: danh dau data_bad cho window 31/07–02/08 trong store freshwatch_daily.
+  L 2735: | DAILY 03/08 IDOL | Append sau 04/08 01:20 UTC cron + fn=6 verify | Cron |
+  L 2872: - `collect_alpha_spot.py`: cron 01:10 UTC, chạy từ 31/07 nhưng no-op toàn bộ 4 run
+  L 2895: | DAILY 03/08 IDOL | Cron 04/08 01:20 UTC |
+  L 3312: | IDOL 03/08 DAILY append | fn=6 verify 04/08 01:20 UTC |
+  L 3321: **Nhiệm vụ:** (0.1) Deploy alert.py patch. (3.1) P3 narrative error → L-28 draft. (3.2) Root cause f
+  L 3339: - 03/08: Export tháng 8 ĐÃ TỒN TẠI (tạo hôm trước) → exporter vào `range(2,-1,-1)` = [D-2, D-1, D] (
+  L 3340: - Tại 00:50 UTC ngày 03/08, `funding_8h` chỉ có 1 kỳ (00:00 UTC) → fn=1 ghi vào CSV
+  L 3343: **Kết luận:** 03/08 là ngày ĐẦU TIÊN CSV tháng 8 tồn tại sẵn khi cron 00:50 UTC chạy → lần đầu tiên 
+  L 3398: ### [1.1] EXPORT CRON 01:20 UTC — PASS
+  L 3402: - 03/08 → export_date_all_present (rows tồn tại từ force-regen → skip) ✓
+  L 3403: - 04/08 → export_date_new_rows rows=526 ✓
+  L 3405: - export_month_written new_rows=526 total_rows=2104 ✓
+  L 4131: - **PARTI**: SCP freshwatch_daily từ VPS 5.223.67.21 để chạy episode 20/06→15/07.
+
+  === Force-regen table (từ log C2) ===
+  Đây là lần ghi lại duy nhất được ghi nhận trong agent_log:
+  date       | stripped | rebuilt | trigger
+  -----------|----------|---------|--------
+  2026-07-28 |   525    |   525   | --force-regen (VPS, sau khi phát hiện fn=1 28-31/07)
+  2026-07-29 |   525    |   525   | --force-regen
+  2026-07-30 |   525    |   525   | --force-regen
+  2026-07-31 |   525    |   525   | --force-regen
+  2026-08-04 |     -    |   526   | cron 01:20 UTC (new_rows=526, total=2104)
+
+  27/07: KHÔNG nằm trong force-regen window → giá trị 27/07 là
+  từ export gốc (cron chạy lần đầu, không bị ghi đè).
+
+========================================================================
+2.2 — BANK 27/07: VOL QUA TỪNG BẢN
+========================================================================
+  BANK rows 07-20→07-31 from freshwatch_daily_2026-07.csv (CURRENT):
+          date        vol_quote   taker_buy_pct    fn  data_ok      px_avg
+  ------------  ---------------  --------------  ----  -------  ----------
+    2026-07-20    5,394,944,695  0.5141393843459684     6     True  0.2636372235261238
+    2026-07-21    5,589,442,700  0.503767062427789     6     True  0.1911772420867153
+    2026-07-22    4,906,300,297  0.5041803126651523     6     True  0.1806632115314076
+    2026-07-23    3,557,964,767  0.505621477742909     6     True  0.2472365847794209
+    2026-07-24    4,318,709,050  0.5078740157480315     6     True  0.2833889648785279
+    2026-07-25    1,884,962,034  0.5156212157907484     6     True  0.3221049596960486
+    2026-07-26      721,232,744  0.5117902650978859     6     True  0.376320028275879
+    2026-07-27      144,539,447  0.5063678546746964     1     True  0.3743293912863641
+    2026-07-28    1,152,230,682  0.5014706615484321     6     True  0.285173254526511
+    2026-07-29      738,355,606  0.4989226837701057     6     True  0.1713490368477554
+    2026-07-30    1,039,593,900  0.491663277755185    15     True  0.0887329722906726
+    2026-07-31      562,696,138  0.49155989424445795    24     True  0.0630603801681764
+
+  === Spotlight 2026-07-27 ===
+  vol_quote    = 144539447.3782
+  taker_buy_pct= 0.5063678546746964
+  funding_n    = 1  ← fn=1 = partial day (4h interval only)
+  data_ok      = True
+  px_avg       = 0.3743293912863641
+  oi_usd       = 70833436.9388
+
+  === Nguồn độc lập: CASE_BANK.xlsx DAILY (col vol_perp_usd / col 4) ===
+  Headers row1 cols 1-15: ['PERP (may)', 'SPOT/ALPHA (may)', 'ON-CHAIN (ban tu dong)', 'MANUAL (operator)']
+   row      date(c1)          vol(c4)     taker(c5)  fn(c9)  data_bad(c26)
+  ----  ------------  ---------------  ------------  -----  -------------
+    28    2026-07-20    5,400,000,000        0.5141      6           None
+    29    2026-07-21    5,600,000,000        0.5038      6           None
+    30    2026-07-22    4,900,000,000        0.5042      6           None
+    31    2026-07-23    3,600,000,000        0.5056      6           None
+    32    2026-07-24    4,300,000,000        0.5079      6           None
+    33    2026-07-25    1,900,000,000        0.5156      6           None
+    34    2026-07-26      721,232,744         51.21      6           None
+    35    2026-07-27    1,529,118,313         50.85      6           None
+    36    2026-07-28             None          None      6           None
+    37    2026-07-29      738,355,606     49.892268      6           None
+    38    2026-07-30    1,039,593,900     49.166328     15           None
+    39    2026-07-31      562,696,138     49.155989     24           None
+
+  === Store gốc: parquet klines 27/07 ===
+  Note: parquet store = alpha spot klines (venue=binance_alpha),
+  KHÔNG phải freshwatch perp data. Freshwatch vol_quote từ fapi klines,
+  không lưu trong local parquet. Store chỉ có spot klines 1d.
+  Để verify vol_quote 27/07 từ nguồn gốc: cần đọc fapi trực tiếp hoặc VPS log.
+
+========================================================================
+2.3 — 84 ROWS data_bad=1 BREAKDOWN
+========================================================================
+  Nguồn: data_manifest.json (generated 2026-08-06T03:38:56Z)
+  (stale_count trong manifest = col 26 data_bad=1 trong CASE_*.xlsx DAILY)
+
+  Token  | stale_count | stale_dates                       | fn_low | Nguyên nhân
+  -------|-------------|-----------------------------------|--------|-------------
+  BANK   |           1 | 2026-08-05                        |      ? | Partial day 07:03 UTC — fapi bị interrupt (fn=N/A)
+  BR     |           3 | 2026-07-24, 2026-07-25, 2026-07-26 |      ? | Freshwatch missing 24-26/07 (export gap — dates này không có trong CSV July)
+  CLO    |          17 | 2026-04-01..2026-06-04 (17 dates) |      ? | Pre-freshwatch era: manual backfill thiếu funding (fn<6)
+  IDOL   |           1 | 2026-08-05                        |      ? | Partial day 07:03 UTC — cùng sự kiện BANK/XPIN
+  TUT    |          61 | 2026-05-01..2026-07-26 (61 dates) |      ? | 61 rows pre-freshwatch (05/01→07/26): fn<6 hoặc không có LSR/OI từ fapi
+  XPIN   |           1 | 2026-08-05                        |      ? | Partial day 07:03 UTC — cùng sự kiện BANK/IDOL
+   TOTAL |          84 |
+
+  === Phân loại theo họ ===
+  Họ PARTIAL-DAY (08/05): BANK+IDOL+XPIN (3 token, 1 row mỗi)
+    → Cùng ngày 2026-08-05, partial day 07:03 UTC. fn=N/A.
+    → Không phải CSV-mutation. Là partial export (VPS interrupted).
+
+  Họ EXPORT-GAP (24-26/07): BR (3 rows)
+    → 3 ngày này không có trong freshwatch_daily_2026-07.csv.
+    → data_manifest stale_dates = ngày CASE_BANK.xlsx có nhưng CSV không có.
+    → Nguyên nhân: export exporter bỏ qua (date exclusion bug? D+1 lag?).
+    → Không phải CSV-mutation: thiếu hẳn row, không phải row sai giá trị.
+
+  Họ PRE-FRESHWATCH: CLO 17 rows (04/01→06/04), TUT 61 rows (05/01→07/26)
+    → Dữ liệu trước khi freshwatch pipeline chạy → fn<6, LSR/OI từ fapi (hạn chế)
+    → Đây là data_bad đúng thiết kế (trước pipeline). Không phải CSV-mutation.
+
+  KẾT LUẬN: Không có row nào trong 84 rows thuộc họ 'CSV-mutation'
+  (giá trị tự thay đổi sau ghi). Tất cả có nguyên nhân kỹ thuật xác định.
+  CSV-mutation nghi vấn nằm ở vol_quote BANK 27/07 — chưa trong 84 rows này
+  (vì CASE_BANK row 27/07 fn=1 nhưng chưa rõ data_ok status).
+
+========================================================================
+2.4 — TAKER CROSS-CHECK: CSV vs CASE_BANK DAILY
+========================================================================
+  So sánh taker_buy_pct: freshwatch CSV (decimal) vs CASE_BANK DAILY (percent)
+  Giai đoạn nghi vấn: 2026-07-20→07-31
+
+  freshwatch CSV: taker_raw (0.47 = 47%)
+  CASE_BANK DAILY col 5: stored as percent after ×100 conversion
+
+          date    csv_raw   csv×100%  xlsx_taker%    Δtaker         xlsx_vol  fn
+  ------------  ---------  ---------  -----------  --------  ---------------  --
+    2026-07-20    0.51414     51.41%        0.51%   50.900    5,400,000,000  6 *** MISMATCH
+    2026-07-21    0.50377     50.38%        0.50%   49.873    5,600,000,000  6 *** MISMATCH
+    2026-07-22    0.50418     50.42%        0.50%   49.914    4,900,000,000  6 *** MISMATCH
+    2026-07-23    0.50562     50.56%        0.51%   50.057    3,600,000,000  6 *** MISMATCH
+    2026-07-24    0.50787     50.79%        0.51%   50.280    4,300,000,000  6 *** MISMATCH
+    2026-07-25    0.51562     51.56%        0.52%   51.047    1,900,000,000  6 *** MISMATCH
+    2026-07-26    0.51179     51.18%       51.21%    0.031      721,232,744  6
+    2026-07-27    0.50637     50.64%       50.85%    0.213    1,529,118,313  6
+    2026-07-28    0.50147     50.15%         nan%      nan              nan  6
+    2026-07-29    0.49892     49.89%       49.89%    0.000      738,355,606  6
+    2026-07-30    0.49166     49.17%       49.17%    0.000    1,039,593,900  15
+    2026-07-31    0.49156     49.16%       49.16%    0.000      562,696,138  24
+    2026-08-01        nan       nan%        0.48%      nan      253,304,478  24
+    2026-08-02        nan       nan%        0.48%      nan      172,554,826  24
+    2026-08-03        nan       nan%        0.49%      nan      143,022,585  24
+    2026-08-04        nan       nan%        0.49%      nan      471,564,742  24
+    2026-08-05        nan       nan%        0.49%      nan      102,200,000  None
+
+  PHÂN TÍCH: Nếu vol mutate (CSV → CASE_BANK DAILY khác nhau) nhưng
+  taker khớp → mutation chỉ ở vol_quote (aggregation lỗi), không phải
+  re-export toàn cột. Nếu taker cũng lệch → có thể export khác nhau.
+
+========================================================================
+APPENDIX — VPS ARCHIVE STATUS
+========================================================================
+  Operator đề cập: bundle VPS /root/archive/ (refresh 31/07)
+  → Bản CSV cũ (trước force-regen 28-31/07) có thể diff được với bản hiện tại
+
+  Để đọc VPS archive cần SSH probe riêng. Cần operator cấp:
+  ssh 5.223.67.21 'ls -la /root/archive/ | grep freshwatch'
+  ssh 5.223.67.21 'grep BANKUSDT /root/archive/freshwatch_daily_2026-07.csv | grep 2026-07-27'
+
+  Nếu /root/archive/ có bản cũ hơn → diff vol 27/07 trực tiếp.
+
+========================================================================
+EXPORT LOG ENTRIES (from export_freshwatch_daily.py logs)
+========================================================================
+  Xem thêm trong docs/reports/_collect_20260806.md (nếu tồn tại):
+  L4: **Scope:** TUT T+30 · BANK T+30+vòng-2 · Cooldown PARTI/EVAA/BLUAI
+  L15: | **CASE_TUT row 05/08 STALE** | data_bad=1, fn=None, LSR=None trong CASE file — nhưng export CSV có
+  L16: | **CASE_BANK row 05/08 STALE** | case_daily_skip_existing (date đã có, không update). Export cho BA
+  L17: | **case_daily chạy** | 2026-08-06T02:59 UTC · date=2026-08-05 · ok=2 (TAG+BR) · skip=2 (BANK+IDOL) 
+  L18: | **Ngày hôm nay** | Aug 6, 2026. 05/08 = ngày đóng gần nhất có export. 06/08 = ngày đang chạy (part
+  L41: ### D1b. DAILY band perp — CASE_TUT.xlsx + export CSV
+  L45: **Dùng export CSV làm canonical cho 05/08** (freshwatch_daily_2026-08.csv · boundary: snapshot 00:00
+  L65: **Tham chiếu 3 ngày trước (từ CASE DAILY / export, đủ fn=6):**
+  L69: | 2026-08-02 | 0.01741 | 4,997,476 | 3.4581 | 2.1027 | 1.7211 | +5.0e-05 | 6 | 47.6% |
+  L73: ### D1c. Band spot 05-07/08 (CASE_TUT DAILY cols 27–35)
+  L75: **Lưu ý:** row 99 (05/08) stale — vol_spot_usd có thể không khớp export. Paste nguyên văn từ CASE ro
+  L112: ## D2 — BANK (T+30 deadline: 09/08 · Vòng-2 check)
+  L118: | 2026-08-01 | 0.05691 | 18,027,284 | 1.1805 | 2.0276 | 1.7996 | −8.06e-04 | −2.36e-03 | −1.39e-04 |
+  L125: **05/08 fn=10:** không SUSPECT (fn≥6) nhưng < 24 — export chạy trước khi đủ 24 funding periods.
+  L127: 06/08, 07/08: MISSING từ export (ngày chưa đóng / export chưa có).
+  L129: **Binance fapi klines BANKUSDT (canonical px close):**
+  L138: **px snapshot hiện tại:** 0.04185 tại 2026-08-06T02:52:17 UTC (nguồn: fapi ticker BANKUSDT)
+  L150: | taker_buy_pct | ABSTAIN | klines k[9] units mismatch BANK — dùng export khi có |
+  L153: **Ghi chú "+25%":** Tính đến 02:52 UTC, BANK không có move +25% trong ngày 06/08. Label từ operator 
+  L155: **Binance OI hist BANKUSDT (nguồn: fapi futures/data/openInterestHist, period=1d, boundary: snapshot
+  L160: | 2026-08-01 | 313,572,517 | $18,027,284 |
+  L169: ### D2c. On-chain BANK balance (02–08/08)
+  L192: | 2026-08-04 | 0.02408 | 2,727,422 | 2.0813 | 2.0157 | 1.4606 | +5.00e-05 | +5.00e-05 | +5.00e-05 | 
+  L208: | 2026-08-05 | 0.8714 | 6,393,416 | 1.3980 | 1.6281 | 1.7563 | +1.17e-04 | +5.00e-05 | +2.37e-04 | 6
+  L227: | 2026-08-05 | 0.012087 | 5,718,305 | 1.5035 | 2.7425 | 3.2427 | +4.05e-04 | +2.09e-04 | +7.75e-04 |
+  L231: - gLSR = 2.5448 ↓ (drop từ 3.2427)
+  L234: **BLUAI gLSR chuỗi 5d:** 3.0568 → 3.0519 → 3.1034 → 3.0193 → 3.2427 (dao động, không có slope giảm b
+  L240: | Lớp | TUT | BANK | PARTI | EVAA | BLUAI |
+  L247: | taker_buy_pct | ✓ (export) | ✓ (export) | ✓ | ✓ | ✓ |
+  L258: *Report tạo: 2026-08-06T03:xx UTC. Probe files: _probe_d1_tut_20260808.py, _probe_d2_bank_20260808.p
