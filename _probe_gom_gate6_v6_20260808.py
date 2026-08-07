@@ -57,6 +57,36 @@ def load_txt(tok):
     return []
 
 # ── Loader: freshwatch CSV → DayData list ─────────────────────────────────────
+def _taker_scale(tok: str, combined) -> float:
+    """Tripwire: inspect raw taker values → return scale factor (1.0 or 100.0).
+    Raises ValueError on mixed scale (some > 1.0, some < 1.0).
+    Logs WARNING to stderr when auto-converting fraction → percentage.
+    """
+    raw = []
+    for _, row in combined.iterrows():
+        v = row.get("taker_buy_pct", float("nan"))
+        try:
+            fv = float(v)
+            if not math.isnan(fv):
+                raw.append(fv)
+        except (TypeError, ValueError):
+            pass
+    if not raw:
+        return 100.0  # default: assume fraction (freshwatch convention)
+    mx, mn = max(raw), min(raw)
+    if mx > 1.0 and mn < 1.0:
+        raise ValueError(
+            f"TRIPWIRE [{tok}]: mixed taker_buy_pct scale "
+            f"(min={mn:.4f}, max={mx:.4f}) — cannot auto-convert"
+        )
+    if mx > 1.0:
+        print(f"WARNING TRIPWIRE [{tok}]: taker max={mx:.2f} > 1 → already pct, no ×100",
+              file=sys.stderr)
+        return 1.0
+    print(f"WARNING TRIPWIRE [{tok}]: taker max={mx:.4f} ≤ 1 → fraction, ×100 applied",
+          file=sys.stderr)
+    return 100.0
+
 def load_fw_csv(tok, csv_paths):
     """Load token from one or more freshwatch CSVs, return DayData list sorted by date."""
     frames = []
@@ -72,14 +102,15 @@ def load_fw_csv(tok, csv_paths):
         return []
     combined = pd.concat(frames).sort_values("date").drop_duplicates("date")
 
+    scale = _taker_scale(tok, combined)
+
     days = []
     prev_px = float("nan")
     for _, row in combined.iterrows():
         px = float(row.get("px_avg", float("nan")))
         ret = (px - prev_px) / prev_px if not math.isnan(prev_px) and prev_px > 0 else float("nan")
         taker_raw = float(row.get("taker_buy_pct", float("nan")))
-        # freshwatch stores taker_buy_pct as decimal (0.47); signals.py expects pct (47.0) → ×100
-        taker_pct = taker_raw * 100 if not math.isnan(taker_raw) else float("nan")
+        taker_pct = taker_raw * scale if not math.isnan(taker_raw) else float("nan")
         d = {
             "date":          str(row.get("date", ""))[-5:],   # keep MM-DD
             "listing_date":  LISTING_DATES.get(tok.upper().replace("USDT",""), ""),
