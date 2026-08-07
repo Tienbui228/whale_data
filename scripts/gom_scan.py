@@ -798,6 +798,9 @@ def main() -> None:
         if not store.exists():
             print(f"ERROR: store not found: {store}", file=sys.stderr)
             sys.exit(1)
+        # IMPLEMENT: load freshwatch CSV, apply fw_loader_utils.taker_scale_check()
+        # before passing DayData to eval_gom. freshwatch stores taker as decimal (0.47);
+        # signals.py expects pct (47.0). Mixed scale → raise, not suppress silently.
         print("--daily mode: not yet implemented (awaiting VPS daily CSV path)", file=sys.stderr)
         sys.exit(2)
 

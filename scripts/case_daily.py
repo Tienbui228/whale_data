@@ -41,6 +41,7 @@ import typer
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from whale_collector.alert import telegram_error
+from scripts.fw_loader_utils import taker_scale_check_dict_rows
 
 WHALE      = Path(r"D:\Data back test\whale_data")
 CASE_DIR   = WHALE / "docs" / "case_files"
@@ -173,28 +174,9 @@ def _load_export_csv(date_str: str, log=None) -> dict[str, dict]:
             if row.get("date") == date_str:
                 result[row["symbol"]] = row
 
-    # Tripwire: detect taker_buy_pct scale — freshwatch stores decimal (0.47),
-    # _append_daily_row applies ×100 for Excel col 5. If max > 1.0, exporter
-    # changed format → ×100 in _append_daily_row would double-convert.
-    _tw_vals = []
-    for _row in result.values():
-        try:
-            fv = float(_row.get("taker_buy_pct", "nan"))
-            if not (fv != fv):  # not NaN
-                _tw_vals.append(fv)
-        except (TypeError, ValueError):
-            pass
-    if _tw_vals:
-        _tw_mx, _tw_mn = max(_tw_vals), min(_tw_vals)
-        if _tw_mx > 1.0 and _tw_mn < 1.0:
-            _log.error("taker_scale_mixed",
-                       date=date_str, min=round(_tw_mn, 4), max=round(_tw_mx, 4),
-                       hint="mixed scale in CSV — _append_daily_row ×100 would corrupt some rows")
-        elif _tw_mx > 1.0:
-            _log.warning("taker_scale_pct_unexpected",
-                         date=date_str, max=round(_tw_mx, 2),
-                         hint="taker > 1.0 — already pct? _append_daily_row ×100 would double-scale")
-        # fraction case (max ≤ 1.0): expected — no action needed
+    # Tripwire (shared util): mixed scale → raises ValueError; single-scale-convert → WARNING.
+    # _append_daily_row applies ×100 for col 5 — if CSV format changes to pct, this raises.
+    taker_scale_check_dict_rows(f"case_daily:{date_str}", result.values(), log=_log)
 
     return result
 

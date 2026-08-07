@@ -28,5 +28,6 @@ khi source thay format.
 - `load_fw_csv()` (gate probe): tripwire `_taker_scale()` — detect raw max ≤ 1.0 → ×100 + WARNING stderr; raise nếu mixed.
 - `_load_export_csv()` (case_daily.py): post-load tripwire — log.warning nếu max > 1.0 (×100 sẽ double-scale).
 
-**Lesson ID (gợi ý):** L-45
+**Lesson ID (gợi ý):** L-45 — CHỈ append sau khi xác nhận sheet đã có L-43 và L-44;
+nếu chưa có → báo operator, không chen số (án đánh số lỗ).
 **Tags:** unit-bug, data-reader, tripwire, decay, loader
