@@ -58,6 +58,65 @@ OVERALL: ALL PASS ✓
 
 ---
 
+## SESSION 2026-08-08 — REJECT §6 + rebuild gate table ĐỦ
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### REJECT — Bảng §6 nộp đầu bị từ chối
+
+**Lý do reject:**
+1. **Thiếu 6 dòng spec**: ZBT×2, PARTI, POWER, CLO, TAG-hậu-29/07 wrong-side; BAS thiếu vế open
+2. **Negative case không có bằng chứng** — bảng chỉ có dương case
+3. **MISSING không khai tường minh** — ZBT/PARTI bỏ qua lặng lẽ
+4. **Hàng 10 = AKE (bonus)** thay vì BANK-close-iv (hàng chuẩn §6)
+
+**Ghi án (kỷ luật):** `nộp bảng gate thiếu negative-case = gate failure (bảng kỳ vọng là của spec, không phải của người chấm)`
+
+### Hành động sau reject
+
+1. Thêm `crowd_flush_gap_min_days: 3` vào `screen_thresholds.yaml` (fix rule ii) ✓
+2. Update `scripts/gom_scan.py` rule (ii): dùng gap check từ yaml, track `last_flush_date` ✓
+3. Chạy `_probe_gom_gate6_full_20260808.py` → output `docs/reports/gom_gate6_full_20260808.txt` ✓
+
+### Kết quả probe §6 v2
+
+| # | Token | Type | Result | Evidence |
+|---|-------|------|--------|----------|
+| 1 | BANK | open | PASS | chain_open 06-27 (B2+B3 trước A1) |
+| 2 | BANK | chapter | FAIL* | Q1_cum=0 tại 07-02 crowd_flush → chapter guard chặn |
+| 3 | BANK | close-iv | PASS | pos_r_drop:57% từ peak 3.71 (07-10), closed 07-16 |
+| 4 | TAG | open | PASS | chain_open 06-26 B2+B3 (sớm hơn kỳ vọng) |
+| 5 | BAS | supp | PASS | 15 DQ days (post_climax), no chain_open |
+| 6 | BAS | open-after | FAIL† | BAS không re-open sau suppression trong data range |
+| 7 | BULLA | open | PASS | chain_open 07-02 B1+B3 |
+| 8 | CLO | supp-neg | MIXED§ | DQ days có nhưng chain_open 07-12 — CLO không chặn đủ |
+| 9 | POWER | b-only-neg | FAIL‡ | B1+B3=2 fires GOM (gom_b_min_count=2 quá permissive) |
+| 10 | BANK | close-iv-gate | PASS | Confirm rule (iv): chain_closed 07-16 |
+| Z1 | ZBT | open | PASS | chain_open 07-01 |
+| Z2 | ZBT | close-iv | PASS | chain_closed 07-02 pos_r_drop:34% (peak=3.99) |
+| P | PARTI | — | MISSING | Không có CASE_PARTI.xlsx, không có result.txt |
+| T2 | TAG-hậu | wrong-side? | DATA OK | A2(stealth_grind) fires 07-28→08-01 → cần operator phán |
+| 11 | AKE | supp-then-open | PASS | decay DQ 07-08 → chain_open 07-14 |
+
+**GATE STATUS: KHÔNG ĐỦ PASS** — 3 FAIL + 1 MIXED + 1 MISSING → cần giải quyết trước deploy.
+
+Diagnose FAIL:
+- `*` Row 2: spec §8.2 rule (ii) không nói Q1_cum pre-condition. Cần clarify: chapter on any flush hay chỉ khi Q1_cum>0?
+- `†` Row 6: BAS result.txt có thể không cover post-07-15 đủ để re-open.
+- `§` Row 8: CLO dist_wall/lsr_dist không cover toàn bộ window (chain mở 07-12) → spec clarify permanent SUPP hay sliding window.
+- `‡` Row 9 (blocker cứng): POWER B1+B3=2 fires GOM → FIX cần: gom_b_min_count=3 hoặc A1 required for B-only.
+
+### CẦN OPERATOR
+
+- **[A] gom_b_min_count: 2→3** (blocker — POWER row 9 fix)
+- **[B] Rule (ii) Q1_cum guard**: chapter bất kỳ flush hay chỉ khi Q1_cum>0?
+- **[C] CLO dist_wall semantics**: permanent SUPP hay sliding window?
+- **[D] TAG post-29/07**: A2=stealth_grind 07-28→08-01 là false positive hay correct?
+- **[E] PARTI data**: có file/export không?
+- **[F] BAS post-suppression**: chấp nhận data-range limitation hay cần extend result.txt?
+
+---
+
 ## SESSION 2026-08-06 (K2/chiều+tối) — DEV: G1 state machine thật 12 case (FINAL)
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6  

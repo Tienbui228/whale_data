@@ -152,19 +152,20 @@ def _ret_1d(days: list[DayData], i: int) -> float:
 
 def _empty_chain(date_str: str) -> dict:
     return {
-        "chain_open":    True,
-        "start_date":    date_str,
-        "chapter":       1,
-        "Q1_cum_usd":    0.0,
-        "vwap_num":      0.0,   # Σ ΔOI⁺ × avg_px
-        "vwap_den":      0.0,   # Σ ΔOI⁺
-        "n_days":        0,
-        "peak_pos_r":    float("nan"),
-        "break_streak":  0,
-        "last_gom_date": date_str,
-        "chapter_hist":  [],
-        "suspect_flag":  False,
-        "updated_at":    "",
+        "chain_open":      True,
+        "start_date":      date_str,
+        "chapter":         1,
+        "Q1_cum_usd":      0.0,
+        "vwap_num":        0.0,   # Σ ΔOI⁺ × avg_px
+        "vwap_den":        0.0,   # Σ ΔOI⁺
+        "n_days":          0,
+        "peak_pos_r":      float("nan"),
+        "break_streak":    0,
+        "last_gom_date":   date_str,
+        "last_flush_date": "",    # §8.2 rule (ii): track last crowd_flush for gap check
+        "chapter_hist":    [],
+        "suspect_flag":    False,
+        "updated_at":      "",
     }
 
 
@@ -247,10 +248,23 @@ def update_chain(
     chain["break_streak"] = 0
     chain["last_gom_date"] = date_str
 
-    # ── Rule (ii): crowd_flush → new chapter ────────────────────────────────
-    if cf and chain.get("n_days", 0) > 0:
-        state = _new_chapter(chain, date_str)
-        chain = state
+    # ── Rule (ii): crowd_flush → new chapter (gap ≥ crowd_flush_gap_min_days) ──
+    if cf:
+        cf_gap_min = g.get("crowd_flush_gap_min_days", 3)
+        last_flush = chain.get("last_flush_date", "")
+        if last_flush:
+            try:
+                d0 = datetime.strptime(last_flush[:10], "%Y-%m-%d")
+                d1 = datetime.strptime(date_str[:10], "%Y-%m-%d")
+                gap_days = (d1 - d0).days
+            except ValueError:
+                gap_days = 99
+        else:
+            gap_days = 99  # no prior flush → always eligible
+        if gap_days >= cf_gap_min:
+            state = _new_chapter(chain, date_str)
+            chain = state
+        chain["last_flush_date"] = date_str
 
     # ── Update peak pos_r ────────────────────────────────────────────────────
     pos_r = d.get("lsr_pos", float("nan"))

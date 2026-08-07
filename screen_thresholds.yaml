@@ -31,3 +31,7 @@ gom:
 
   # §1 GOM-A cond A4: hedge_structure lookback window (ngày) để check "backdrop"
   hedge_lookback_days: 7
+
+  # §8.2 rule (ii) — crowd_flush chỉ trigger chapter mới nếu ≥ N ngày sạch kể từ flush trước
+  # Fix: tránh consecutive-flush → multi-chapter trong cùng cluster (BANK 07-02→05)
+  crowd_flush_gap_min_days: 3
