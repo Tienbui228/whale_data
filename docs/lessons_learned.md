@@ -1,7 +1,7 @@
 # Lessons Learned — FreshWatch
 
 > Auto-generated tu CASE_INDEX.xlsx sheet LESSONS. Khong edit file nay truc tiep.
-> Lan sinh: 2026-08-04 · Tong: 42 bai hoc (L-01 → L-42)
+> Lan sinh: 2026-08-07 · Tong: 47 bai hoc (L-01 → L-48)
 
 ## L-01 [2026-07-30] BR (+BAS,TUT,BANK) — `dinh luat` · DA VAO master plan §1 #9
 OI-floor = so vi the MM: ratio doc tai day OI trong so cao (retail da roi); pos_r nhich tai nen chet = tin hieu som dam; ratio tai OI-peak phai chiet khau
@@ -22,17 +22,14 @@ concentration_shift KHONG ban tren BANK = negative case HOP LE: level-type (div 
 ## L-05 [2026-07-30] BR + BTW — `dinh luat` · DA CO trong §1 #1 (rule dao dau M2) — BR cung co them
 Withdrawal gan dinh = MOI on-chain (bang chung #2, vong doi 4 thang truy tron: rut-tai-dinh -> phan phoi -> redeposit). Moi withdrawal cua nhom MM-BAIT phai doc ngo toi da
 *Hanh dong tiep: token dinh bai nay vao SO DEN trong MM_BOOK*
-*Pham vi / Cross-ref: [Pham vi L-42]: Loai B/C — withdrawal gan dinh = bang chung phan phoi THAT. Loai A — withdrawal la dao cu, khong vao bang chung; chuyen sang doc theo L-42.*
 
 ## L-06 [2026-07-28] TAG (Gate probe) — `rule` · GHI NHAN — dua vao khung E4/M4 khi cham diem transfer
 Inventory != gom: toan khoi luong (V_venue vs $withdrawal) phan xu duoc 'vua mua' hay 'hang co san'. Book sieu mong = BAI DO — withdrawal khoi bai do = khoa float, khong doc thanh 'chuyen di ban'
 *Hanh dong tiep: nguong nhap: V_14d >= 2x withdrawal moi coi la 'co the gom tren venue'*
-*Pham vi / Cross-ref: [Pham vi L-42]: Ap dung khi kho xac dinh duoc Loai B hoac C. Loai A — V_venue phan xu 'mua' hay 'hang co san' khong con nghia (hang KHONG thuoc MM); chuyen sang L-42.*
 
 ## L-07 [2026-07-30] BR (operator) — `thesis` · GHI NHAN — khuon moi, BR la test song
 Pump-to-distribute: kho len san = CHUAN BI DAN, khong xa tai gia hien tai — can leg keo tao hype truoc. Khong long theo khi KHONG co ghe big-long de di cung (div ~1) = vi tri con moi. Dieu kien tien quyet cua leg that: crowd long phai bi rua
 *Hanh dong tiep: neu BR keo that: doi chieu chot 1+2 co bao truoc khong*
-*Pham vi / Cross-ref: [Pham vi L-42]: Ap dung khi xac nhan Loai B/C (kho that). Loai A — kho len san = dao cu chuan bi dan, khong phai leg keo; endgame la round-trip tra no. Doc L-42 truoc L-07.*
 
 ## L-08 [2026-07-30] BANK/BTW/ESPORTS/BR — `process` · DA VAO tracker v1.1 (§I + MM_BOOK)
 MM profile la NUA verdict — moi MM danh mot kieu (bid-walk kien nhan / bait-withdrawal / squeeze muc tieu). Gan MM_ID can >=3 van tay trung; gan au te hon khong gan
@@ -173,4 +170,21 @@ Job aggregate ngay phai chay SAU khi ngay dong tron. Export mid-day = so non co 
 ## L-42 [2026-08-04] IDOL/TAG/BANK — kho spot MM: phan loai theo SO HUU truoc khi doc on-chain — `rule` · OPERATOR KY 04/08
 Kho spot cua MM khong tu no la 'hang se xa' — ham muc tieu phu thuoc SO HUU kho. Phan 3 loai TRUOC khi doc bat ky transfer nao: LOAI A (kho MUON tu team — khong gia tri voi MM; P&L 100% o perp; moi deposit/withdrawal la THONG DIEP nhung nguoi doc on-chain, khong phai bang chung; endgame kho round-trip nguyen dai; dong co DAP GIA hau campaign de mua lai tra no kho — canh kho hoi day o day). LOAI B (kho unlock/dau tu — so huu that, cost thap; doanh thu phai hien thuc hoa; neo lich unlock; deposit-len-san <=48h sau ngay unlock = tell hang nhat — BANK 17/07->18/07). LOAI C (tu bo tien mua tai cho — conviction that, cost basis = floor co nghia, khong deadline; loai duy nhat 'di cung thuyen' duoc). Tell phan loai: (1) NGUON kho — deployer/team wallet = nghi A; vesting contract dung lich = B; gom le nhieu nguon dai han = C; (2) nhip voi lich unlock; (3) hanh vi kho HAU DINH — round-trip nguyen = A, ban that = B; (4) do 'dien' cua transfer — chia may deu + Sent=0 trung bay = tin hieu re, nghi A. Bang chung: IDOL 3 man mot dao cu (8% vao 03-05/07 -> rut 273M staging shape 13 vi -> redeposit 102M) trong khi ket that o perp ~$1.2-1.8M; TAG 90B round-trip May->Jul; BANK chan unlock ban that (lai A+B); AKE 'perp vol 70x spot — spot la can gat'.
 *Hanh dong tiep: (a) cot mm_archetype{A/B/C/lai} + kho_nguon cham hoi to 12 case + case song; (b) BR kho 6% trace nguon = viec phan loai dau tien — neu team wallet -> Loai A -> cu flush gLSR 03/08 doc lai duoi anh sang 'dao cu man hai'; (c) moi dong PnL spot chua co sell-side xac nhan ha nhan 'unverified inference' (IDOL 111M, BANK $12-28M); (d) K3 sell-side Pancake IDOL van la test phan xu — PENDING.*
-*Pham vi / Cross-ref: Ap dung cho tat ca case co transfer on-chain. Cap nhat cho L-05/L-06/L-07: scope = Loai B/C; Loai A doc theo L-42 truoc.*
+
+## L-44 [L-44(a) DIEU KIEN KET THUC CAMPAIGN: Loai A (kho-muon) = ghe-roi perp la het. Loai B/C (unlock/tu-mua) = ghe-roi perp la CHUYEN PHA — ket thuc that khi kho/vol ≤10% (Cua A) hoac Cua B kich hoat (short-hedge). TUT: pos_r crash 08-05 (−48%) = GHE-ROI LAN 2 (HARVEST-INTO-STRENGTH), KHONG phai L-26, campaign van tiep tuc.] TUT — `DRAFT` · 
+2026-08-08
+
+## L-45 [L-45(b) DURATION SCALING: Thoi luong campaign ty le thuan voi build_window va kho_size. Tham khao draft n=4: BANK (build ~17d, Loai B) → campaign D+17; IDOL (build ~7d, Loai A partial) → D+11; TUT (build 13d, Loai C) → D+16+ ongoing. CLO TBD. Hypothesis: dai build = dai campaign; chua du n de calib chinh xac.] TUT/BANK/IDOL/CLO — `DRAFT` · 
+2026-08-08
+
+## L-46 [2026-08-09] CASE_BANANAS31 + CASE_HEI — `ARM` · ACTIVE
+Video vs Photo: hai hồ sơ pos_r cao nhưng ý nghĩa khác nhau. "Video" (CASE_HEI) = build thật: pos_r vừa phải, đồng-bộ giá, ít dist_wall. "Photo" (CASE_BANANAS31) = snapshot đẹp nhưng static: pos_r=6.7 RẤT CAO nhưng sign-corr Δpos_r vs ret_1d ~50% (47.7% opposite) — pos_r KHÔNG predict giá. Thêm: dist_wall_day=57/503 (11.3%), knife_crowd=9 ngày — dấu MM đang bán vào pump. Kết luận: pos_r level đơn độc KHÔNG phân biệt được BTW vs phân phối. Cần 3 đạo hàm: level + slope + sync. Xem Phụ lục A.5. Nguồn: CASE_BANANAS31 phân tích 08-09/08/2026 · ký 09/08 · đối chứng: CASE_HEI.xlsx
+*Hanh dong tiep: Khi pos_r >5: check sign-corr Δpos_r vs ret_1d (30d OLS). <55% → Photo → TRACKING-passive. Không vào setup cho đến đồng hồ cụm trigger (xem L-47). Implement: build_case.py đã in OLS slope + sign-corr.*
+
+## L-47 [2026-08-09] CASE_BANANAS31 — `ARM` · ACTIVE
+Đồng hồ cụm: Build-into-weakness không kéo dài vô tận. BANANAS31 pump cluster: Jun/Aug/Oct 2026 [n=3 inference từ vol spikes ≥8×med14]. Build cụm #3 từ 06/2026 → đồng hồ ~60-90 ngày → cụm #4 dự kiến Aug-Oct/26. Nếu không có ignite (gLSR≤0.7 + pos rebuild ≥3d) trong cửa sổ → build failed → MM exit. Hiện tại gLSR=1.20 > ngưỡng ignite 1.1 → block entry (crowd đã long hết). Verdict NO_SETUP — TRACKING-passive. Nguồn: CASE_BANANAS31 · ký 09/08
+*Hanh dong tiep: Mỗi case BTW: ghi ngày dự kiến đồng hồ cụm tiếp theo. Theo dõi: gLSR drop về ≤0.7 (lý tưởng) hoặc ≤0.9 (cảnh báo). Nếu hết cửa sổ không trigger → escalate INVALIDATE check.*
+
+## L-48 [2026-08-09] CASE_BANANAS31 + CASE_IDOL — `DATA` · ACTIVE
+fullyDelisted Alpha → ABSTAIN taker_alpha. Klines[9]==klines[5] trên BAPI khi fullyDelisted=True (taker column = close price, không phải real taker). Đã confirm: IDOL (ALPHA_223, L-43 context) + BANANAS31 (ALPHA_21). Rule chốt: IF offline=True OR offsell=True OR fullyDelisted=True → taker_alpha=NaN, flag=ABSTAIN. Áp dụng ngược cho mọi case đang mở có Alpha token. Nguồn: CASE_BANANAS31 + CASE_IDOL · ký 09/08
+*Hanh dong tiep: Khi collect Alpha mới: check fullyDelisted trước khi parse klines[9]. Script build_case.py đã implement ABSTAIN block. Audit retrospective: CASE_TUT/BR/CLO — check Alpha status.*
