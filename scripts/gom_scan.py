@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""gom_scan.py — GOM accumulation screen (gom_detect_spec.md v1.1)
+"""gom_scan.py — GOM accumulation screen (gom_detect_spec.md v1.3)
 
 Modes:
   --backfill  : run on 12 calibration case files (backtest §6)
@@ -41,6 +41,7 @@ from scanner.screener.signals import (
     crowd_flush,
     dist_wall, lsr_dist, funding_neg_div, funding_extreme, decay, post_climax,
 )
+# stealth_grind = auxiliary/display only (not A2); oi_ignition = auxiliary/display only (not B4)
 
 import importlib.util
 _replay_spec = importlib.util.spec_from_file_location("replay", BOT_ROOT / "replay.py")
@@ -81,7 +82,8 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
 
     # GOM-A signals
     a1 = lsr_accum(days, i, cfg)
-    a2 = stealth_grind(days, i, cfg)
+    # A2: avg5(lsr_global) ≤ 1.1 — inline check (spec v1.3; stealth_grind = SG = auxiliary only)
+    a2 = _avg5_glsr(days, i) <= 1.1
     a3 = s3_eve(days, i, cfg)
     # A4: pos_rerate + hedge_structure alive in hedge_lb days
     hedge_alive = any(
@@ -102,25 +104,31 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     )
     b2 = funding_pinned(days, i, cfg) or funding_pinned_strong(days, i, cfg)
     b3 = absorption(days, i, cfg)
-    b4 = oi_ignition(days, i, cfg)
+    # B4: NOT funding_neg_div — clean environment (spec v1.3; oi_ignition = auxiliary only)
+    b4 = not funding_neg_div(days, i, cfg)
     gom_b = {"B1": b1, "B2": b2, "B3": b3, "B4": b4}
 
     # §1 structural formula: GOM-B = B1 AND (B2 OR B3) AND B4
-    # B1 (hedge_structure bền ≥7d) is MANDATORY — not interchangeable with other B-conditions
-    # (gom_b_min_count removed; count formula was incorrect)
     gom_b_fire = b1 and (b2 or b3) and b4
 
-    # Disqualifiers (canonical from signals.py + wrong_side_dq local)
-    dq = {
+    # Suppressor CỨNG (6 signals — trigger 14d cooldown)
+    supp_dq = {
         "dist_wall":       dist_wall(days, i, cfg),
         "lsr_dist":        lsr_dist(days, i, cfg),
         "funding_neg_div": funding_neg_div(days, i, cfg),
         "funding_extreme": funding_extreme(days, i, cfg),
         "decay":           decay(days, i, cfg),
         "post_climax":     post_climax(days, i, cfg),
-        "wrong_side":      _wrong_side_dq(days, i, sc),   # L-26: price↓ + gLSR↑
     }
-    any_dq = any(dq.values())
+    any_supp_dq = any(supp_dq.values())
+
+    # Per-day DQ (block today only — NO 14d cooldown)
+    perday_dq = {
+        "wrong_side": _wrong_side_dq(days, i, sc),   # L-26: price↓ + gLSR↑ (5d + 1d checks)
+        "slope_dq":   _slope_dq(days, i, sc),        # glsr_slope_5d > 1.15: distribution phase
+        "toi_dq":     i < 13,                         # token has <14 days history
+    }
+    any_perday_dq = any(perday_dq.values())
 
     # Auxiliary flags
     d = days[i]
@@ -131,17 +139,31 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
 
     cf_today = crowd_flush(days, i, cfg)
 
-    gom_day = (any_a or gom_b_fire) and not any_dq
+    gom_day = (any_a or gom_b_fire) and not any_supp_dq and not any_perday_dq
 
     return {
         "gom_day":      gom_day,
         "gom_a":        gom_a,
         "gom_b":        gom_b,
-        "disqualifier": dq,
-        "any_dq":       any_dq,
+        "supp_dq":      supp_dq,
+        "perday_dq":    perday_dq,
+        "any_supp_dq":  any_supp_dq,
+        "any_perday_dq": any_perday_dq,
+        "any_dq":       any_supp_dq or any_perday_dq,   # backward-compat
+        "disqualifier": {**supp_dq, **perday_dq},       # backward-compat flat view
         "low_conf":     lc,
         "crowd_flush":  cf_today,
     }
+
+
+def _avg5_glsr(days: list[DayData], i: int) -> float:
+    """avg5(lsr_global): mean of lsr_global_r over days[i-4:i+1]. NaN if insufficient data."""
+    start = max(0, i - 4)
+    vals = [days[j].get("lsr_global", float("nan")) for j in range(start, i + 1)]
+    vals = [v for v in vals if not math.isnan(v)]
+    if not vals:
+        return float("nan")
+    return sum(vals) / len(vals)
 
 
 def _ret_1d(days: list[DayData], i: int) -> float:
@@ -156,30 +178,59 @@ def _ret_1d(days: list[DayData], i: int) -> float:
 
 
 def _wrong_side_dq(days: list[DayData], i: int, sc: dict) -> bool:
-    """Price drop + gLSR rising = distribution not accumulation (L-26).
-    Implemented in gom_scan (not signals.py) as GOM-screen-specific suppressor.
+    """Per-day DQ: distribution signal — price down + crowd longs rising (L-26).
+    Two checks (either triggers):
+      (A) 5d: px_chg_5d ≤ -px_drop_min AND gLSR_chg_5d ≥ glsr_rise_min
+      (B) 1d: ret_1d ≤ -ret_1d_min AND gLSR_1d_chg ≥ glsr_1d_min
+    NOT a suppressor — blocks today only, no 14d cooldown.
     """
     g = _scfg(sc)
     c = g.get("wrong_side_dq", {})
     if not c:
         return False
+
+    # (A) 5d check
     n        = c.get("lookback_days", 5)
     px_drop  = c.get("px_drop_min", 0.10)
     glsr_min = c.get("glsr_rise_min", 0.15)
+    if i >= n:
+        px0  = days[i-n].get("avg_px",     float("nan"))
+        px1  = days[i].get("avg_px",       float("nan"))
+        g0   = days[i-n].get("lsr_global", float("nan"))
+        g1   = days[i].get("lsr_global",   float("nan"))
+        if not any(math.isnan(v) for v in (px0, px1, g0, g1)) and px0 > 0 and g0 > 0:
+            if (px1 - px0) / px0 <= -px_drop and (g1 - g0) / g0 >= glsr_min:
+                return True
+
+    # (B) 1d check: ret_1d ≤ -5% AND gLSR_1d_chg ≥ +5%
+    ret_1d_min  = c.get("ret_1d_min", 0.05)
+    glsr_1d_min = c.get("glsr_1d_min", 0.05)
+    if i >= 1:
+        px_prev = days[i-1].get("avg_px",     float("nan"))
+        px_now  = days[i].get("avg_px",       float("nan"))
+        g_prev  = days[i-1].get("lsr_global", float("nan"))
+        g_now   = days[i].get("lsr_global",   float("nan"))
+        if not any(math.isnan(v) for v in (px_prev, px_now, g_prev, g_now)):
+            if px_prev > 0 and g_prev > 0:
+                if (px_now - px_prev) / px_prev <= -ret_1d_min and \
+                   (g_now - g_prev) / g_prev >= glsr_1d_min:
+                    return True
+
+    return False
+
+
+def _slope_dq(days: list[DayData], i: int, sc: dict) -> bool:
+    """Per-day DQ: glsr_slope_5d = lsr_global(i) / lsr_global(i-5) > 1.15 = distribution phase."""
+    g = _scfg(sc)
+    slope_max = g.get("slope_5d_max", 1.15)
+    n = 5
     if i < n:
         return False
-    px0  = days[i-n].get("avg_px",     float("nan"))
-    px1  = days[i].get("avg_px",       float("nan"))
-    g0   = days[i-n].get("lsr_global", float("nan"))
-    g1   = days[i].get("lsr_global",   float("nan"))
-    for v in (px0, px1, g0, g1):
-        if math.isnan(v):
-            return False
-    if px0 <= 0 or g0 <= 0:
+    g0 = days[i-n].get("lsr_global", float("nan"))
+    g1 = days[i].get("lsr_global",   float("nan"))
+    if math.isnan(g0) or math.isnan(g1) or g0 <= 0:
         return False
-    px_chg   = (px1 - px0) / px0
-    glsr_chg = (g1 - g0) / g0
-    return px_chg <= -px_drop and glsr_chg >= glsr_min
+    return (g1 / g0) > slope_max
 
 
 # ── Chain state machine ───────────────────────────────────────────────────────
@@ -246,9 +297,9 @@ def update_chain(
     if len(date_str) == 5:
         date_str = "2026-" + date_str
 
-    gom = result["gom_day"]
-    dq  = result["any_dq"]
-    cf  = result["crowd_flush"]
+    gom      = result["gom_day"]
+    supp_dq  = result["any_supp_dq"]   # only suppressors trigger 14d cooldown
+    cf       = result["crowd_flush"]
 
     # Initialise state if empty
     if not state:
@@ -256,9 +307,10 @@ def update_chain(
 
     chain = state  # top-level dict is the chain (we pass token's chain state)
 
-    # ── Rule (i): DQ → close chain + update DQ episode + cooldown ───────────
-    DQ_EP_GAP = 3  # ≥3d clean = new DQ episode (same rule as flush gap)
-    if dq:
+    # ── Rule (i): Suppressor CỨNG → close chain + update DQ episode + cooldown
+    # Per-day DQ (wrong_side/slope/toi) does NOT trigger cooldown — handled via gom_day=False
+    DQ_EP_GAP = 3  # ≥3d clean = new suppressor episode (same rule as flush gap)
+    if supp_dq:
         last_fire = state.get("dq_last_fire", "")
         if last_fire:
             try:
@@ -277,8 +329,8 @@ def update_chain(
         # Matches G1 formula: clear when idx - ep_start_idx >= 14.
         state["dq_last_fire"] = date_str
         if chain.get("chain_open"):
-            fired = [k for k, v in result["disqualifier"].items() if v]
-            state = _close_chain(chain, f"disqualifier:{'+'.join(fired)}", date_str)
+            fired = [k for k, v in result["supp_dq"].items() if v]
+            state = _close_chain(chain, f"suppressor:{'+'.join(fired)}", date_str)
         return state
 
     # ── Cooldown block: within 14d of DQ episode first-fire ─────────────────

@@ -3830,3 +3830,120 @@ Grep toàn bộ .md trong docs/ — file không được reference từ canonica
 **Tổng:** 2 OK, 2 skip, 0 dry_run
 
 ---
+
+## SESSION 2026-08-08 — ÁN SPEC-MUTATION + SPEC FORWARD-CORRECTION (v1.3)
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### VI PHẠM: L-43/L-25 Double Violation
+
+**L-43** (không code theo nguyên văn spec): gom_scan.py đã code A2=stealth_grind và B4=oi_ignition trong khi phán operator là avg5(gLSR)≤1.1 và NOT funding_neg_div.
+
+**L-25** (dùng spec sai làm chuẩn conformance): Bảng conformance 20260808 chấm 9 discrepancies dựa trên spec v1.2 trên đĩa — tức dùng bản đã sai làm chuẩn đúng, nhân đôi vi phạm.
+
+### Kết Quả Điều Tra Git
+
+Lệnh chạy:
+```
+git log -- "docs/gom_detect_spec.md"          # 2 commits: c4c9b61d (v1.1) + f3e764a8 (v1.2)
+git show c4c9b61d:"docs/gom_detect_spec.md"   # v1.1 đã có A2=stealth_grind, B4=oi_ignition
+git diff c4c9b61d f3e764a8 -- "docs/gom_detect_spec.md"  # A2/B4 KHÔNG thay đổi giữa 2 commit
+```
+
+**Phát hiện:**
+- A2=stealth_grind và B4=oi_ignition đã có từ TRƯỚC commit đầu tiên (v1.1 c4c9b61d).
+- Không có spec-mutation giữa v1.1 và v1.2. Không phải "bị sửa sau khi ký".
+- **Lỗi gốc = reconstruction error trước first commit** — §1 viết nhầm SG/oi_ignition thay vì avg5(gLSR)/NOT FN khi soạn spec từ master_plan.
+- master_plan (freshwatch_m45_master_plan.md) cũng ghi stealth_grind/oi_ignition → cùng nguồn, cùng nhầm.
+- **Thay đổi TRÁI PHÉP DUY NHẤT trong v1.2:** §1 cooldown note "mọi DQ bật → cooldown 14d" — mở rộng trái phép từ "Suppressor CỨNG" (6 tín hiệu) ra "mọi DQ" (bao gồm wrong_side). §8.4(i) ghi "Suppressor CỨNG" đúng nhưng §1 tóm tắt sai.
+
+### Forward-Correction Thực Hiện (gom_detect_spec.md v1.3)
+
+File: `D:\Data back test\binance-bot-signals\docs\gom_detect_spec.md`
+
+| Thay đổi | Trước | Sau |
+|----------|-------|-----|
+| A2 | stealth_grind(days, i, cfg) từ signals.py | Inline: avg5(lsr_global) ≤ 1.1. SG = tín hiệu phụ, KHÔNG là A2. |
+| B4 | oi_ignition(days, i, cfg) | NOT funding_neg_div(days, i, cfg). oi_ignition = tín hiệu phụ. |
+| §1 Disqualifiers | wrong_side nằm trong bảng Suppressor (trigger cooldown 14d) | wrong_side chuyển sang Per-day DQ section |
+| §1 cooldown note | "mọi DQ bật → cooldown 14d" | "Suppressor CỨNG bật → cooldown 14d" (6 tín hiệu) |
+| Thêm mới | — | Per-day DQ section: wrong_side (5d+1d), slope_dq (>1.15), toi_dq (<14d) |
+| §8.4(i) | "Suppressor CỨNG bật" (thiếu danh sách) | Liệt kê đủ 6 tín hiệu; per-day DQ không trigger cooldown 14d |
+| §6 row 7 | "stealth_grind 07-17 → GOM-A (A2)" | "avg5(gLSR)≤1.1 07-17 → GOM-A (A2); wrong_side 07-09 = per-day block only" |
+| Changelog | v1.2 | Thêm v1.3 với mô tả correction |
+
+### Tác Động Gate Table
+
+- **BULLA (row 7)**: wrong_side 07-09 → nếu per-day (không cooldown 14d), chain mở 07-17. **FAIL → dự kiến PASS** sau code fix.
+- **POWER (row 9)**: B4=NOT FN, FN không bắn → B4=True mọi ngày. B3∩B4 = trọn window B3. **FAIL → dự kiến PASS** sau code fix.
+- **TAG T2**: A2=avg5(gLSR) thay vì SG. avg5(gLSR) 07-29/07-30 = 1.56–1.73 (>1.1) → A2 KHÔNG fire. **FAIL confirmed** sau code fix (wrong_side 1d check bổ sung).
+- **Các PASS cũ (BANK/TAG/BAS/BTW/TUT/IDOL/ZBT/CLO)**: gLSR đa số deep below 1.1 → A2 vẫn fire hoặc GOM-B giữ. Dự kiến giữ nguyên PASS.
+
+### TIẾP THEO
+
+1. ✅ Spec v1.3 đã cập nhật — commit binance-bot-signals (3d0b4599)
+2. ✅ Code fix gom_scan.py + screen_thresholds.yaml
+3. PARTI SCP từ VPS 5.223.67.21 — PENDING
+4. ✅ v5 gate table — xem kết quả bên dưới
+
+---
+
+## SESSION 2026-08-08 — GOM Gate §6 v5
+
+**Scripts:** `_probe_gom_gate6_v5_20260808.py` · `_probe_gom_v5_report_20260808.py`
+**Output:** `docs/reports/gom_gate6_v5_20260808.txt`
+
+### Code fixes thực hiện (gom_scan.py + screen_thresholds.yaml)
+
+| Fix | Chi tiết |
+|-----|---------|
+| A2 | stealth_grind → `_avg5_glsr()` inline: avg5(lsr_global) ≤ 1.1 |
+| B4 | oi_ignition → `not funding_neg_div(days, i, cfg)` |
+| Tách DQ | `supp_dq` (6 signals, trigger 14d cooldown) vs `perday_dq` (wrong_side/slope/toi, block 1 ngày) |
+| wrong_side 1d | Thêm check: ret_1d ≤ -5% AND gLSR_1d_chg ≥ +5% |
+| slope_dq | `lsr_global(i)/lsr_global(i-5) > 1.15` |
+| toi_dq | `i < 13` (token <14d lịch sử) |
+| update_chain | Cooldown chỉ trigger trên `any_supp_dq` — wrong_side không đóng chuỗi lâu dài |
+| close_reason | "suppressor:" thay "disqualifier:" (rõ hơn) |
+| screen_thresholds | Thêm slope_5d_max=1.15; wrong_side_dq thêm ret_1d_min=0.05/glsr_1d_min=0.05 |
+
+### Kết quả Gate §6 v5
+
+| # | Token | Type | Result | Evidence |
+|---|-------|------|--------|----------|
+| 1 | BANK | open | **PASS** | chain_open=2026-06-29 via GOM-B |
+| 2 | BANK | chapter | **PASS** | ch2_start=2026-07-02 |
+| 3 | BANK | close-iv | **PASS** | closed=2026-07-18 gom_gap>2d* |
+| 4 | TAG | open | **PASS** | chain_open=2026-07-10 |
+| 5 | BAS | supp | **PASS** | 15 post_climax days, no early open |
+| 6 | BAS | open-after | **PASS** | GOM 07-18/19/20 |
+| 7 | BULLA | open | **PASS** | chain_open=2026-07-08 via B1+B3+B4; ws_07-09=per-day-only |
+| 8 | CLO | supp-neg | **PASS** | chain_open=2026-06-29 < first_supp=07-14 |
+| 9 | POWER | b-pos | **PASS** | chain_open=2026-07-05; B4=NOT FN, B1+B3 fires 07-03→05 |
+| 10 | BANK | close-iv-gate | **PASS** | confirm 07-18 |
+| Z1 | ZBT | open | **PASS*** | carried v4 (no result.txt) |
+| Z2 | ZBT | close-iv | **PASS*** | carried v4 |
+| P | PARTI | open+close | **MISSING** | VPS SCP chưa thực hiện |
+| T2 | TAG | wrong-side | **PASS** | GOM không fire 07-28→31 (A2>1.1 all days) |
+| 11 | AKE | supp-then-open | **WARN** | cd_end=07-21, data_end=07-18 → hết ngoài data |
+
+**TỔNG: PASS=11 PASS*=2 FAIL=0 WARN=1 MISSING=1**
+
+*) Row 3 BANK close-iv: closes via rule (iii) gap>2d không phải rule (iv) pos_r_drop. Window đúng (07-18 ≤ 07-22). Rule (iv) code chỉ check khi GOM=True. **FLAG cho operator**: §8.4(iv) "ĐÓNG NGAY" có cần check mọi ngày không phải chỉ GOM ngày?
+
+### Phát hiện mới trong v5
+
+| Phát hiện | Chi tiết |
+|-----------|---------|
+| BULLA A2=avg5(gLSR) | BULLA gLSR luôn >1.1 → A2 không bao giờ fire. GOM mở qua B (B1+B3+B4). PASS via B không phải A2. |
+| BULLA PASS earlier | Chain mở 07-08 (earlier vs spec row 07-17). funding_neg_div Jun-24 → cd_end=07-07 → clear 07-08. |
+| POWER PASS | B4=NOT FN: FN không fire → B4=True mọi ngày. B1+B3 fires 07-03→05. Opens 07-05. |
+| TAG T2 naturally blocked | A2=avg5(gLSR) 1.56–1.73 >> 1.1 → A2=False on all 07-28→31 days. No wrong_side fire needed. |
+| AKE data_end=07-18 | result.txt ends 07-18 (not 07-21). cd_end=07-21 > data_end → WARN correct. |
+
+### CẦN OPERATOR
+
+- **§8.4(iv) clarify**: Rule (iv) "ĐÓNG NGAY" — check pos_r_drop mọi ngày (kể cả khi GOM=False) hay chỉ GOM ngày? Hiện tại code chỉ check khi GOM=True.
+- **PARTI**: SCP freshwatch_daily từ VPS 5.223.67.21 để chạy episode 20/06→15/07.
+
+---

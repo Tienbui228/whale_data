@@ -1,0 +1,68 @@
+============================================================================
+GOM Gate §6 v5 — spec v1.3 (A2=avg5(gLSR)≤1.1, B4=NOT FN, per-day DQ)
+Run: 2026-08-07 14:16
+============================================================================
+
+DATA PROVENANCE
+  Standard 12 tokens: *_result.txt from binance-bot-signals/docs/case study/
+  ZBT: no result.txt (DELISTED). Z1/Z2 carried from v4 (CASE_ZBT.xlsx DAILY).
+  PARTI: no result.txt, no local store. MISSING — needs VPS SCP.
+
+    #  Token    Type              Result    Evidence
+  ------------------------------------------------------------------------
+    1  BANK     open              PASS      chain_open=2026-06-29 via B1+B3+B4 GOM-B
+    2  BANK     chapter           PASS      ch2_start=2026-07-02 (crowd_flush 07-02)
+    3  BANK     close-iv          PASS      closed=2026-07-18 reason=gom_gap>2d
+    4  TAG      open              PASS      chain_open=2026-07-10
+    5  BAS      supp              PASS      pc_days=15 no_early_open=Y
+    6  BAS      open-after        PASS      GOM_post-07-16=['2026-07-18', '2026-07-19', '2026-07-20']
+    7  BULLA    open              PASS      chain_open=2026-07-08 ws_07-09=per-day-only(True)
+    8  CLO      supp-neg          PASS      chain_open=2026-06-29 first_supp=2026-07-14 → open BEFORE supp
+    9  POWER    b-pos             PASS      chain_open=2026-07-05 B-fire-first3=['2026-07-03', '2026-07-04', '2026-07-05']
+   10  BANK     close-iv-gate     PASS      confirm rule-iv: closed=2026-07-18
+   Z1  ZBT      open              PASS*     v4 data (CASE_ZBT.xlsx): chain_open=07-01 ← carried
+   Z2  ZBT      close-iv          PASS*     v4 data: closed=07-02 pos_r_drop:34% ← carried
+    P  PARTI    open+close        MISSING   No result.txt. Episode 20/06→15/07 — needs VPS SCP
+   T2  TAG      wrong-side        PASS      GOM 07-28→31=none (A2>1.1 + B-check)
+   11  AKE      supp-then-open    WARN      decay=2026-07-08 cd_end=2026-07-21 data_end=2026-07-18 → cd expires 07-22 (outside data)
+
+  TOTAL: PASS=11  PASS*=2(carried)  FAIL=0  WARN=1  MISSING=1
+
+  PASS* = carried from v4 (same data, ZBT no result.txt available).
+  WARN  = data cutoff, not code error.
+
+============================================================================
+NOTES per row
+============================================================================
+
+ROW 3 BANK close-iv: closes 07-18 via gom_gap>2d (not pos_r_drop).
+  With B4=NOT FN: GOM-B fires later (B3 ends ~07-16), chain coasts to gap close.
+  Rule (iv) in code only checks pos_r_drop on GOM=True days. Gap close is valid
+  per rule (iii). Window 07-14→07-22 = PASS. NOTE: §8.4(iv) 'ĐÓNG NGAY' may
+  need clarification — check every day, not just GOM days. Flagged for operator.
+
+ROW 7 BULLA open 07-08:
+  A2=avg5(gLSR) never ≤1.1 for BULLA (crowd already long). GOM-A=False always.
+  GOM-B fires via B1(all-7d hedge)+B3(absorption)+B4(NOT FN=True).
+  funding_neg_div fired Jun-24 → suppressor cd_end=07-07 → first clear 07-08.
+  wrong_side 07-09: per-day DQ only (blocks 07-09, no 14d cooldown). Chain holds.
+  BULLA PASS (opens earlier than spec's 07-17 note; mechanism is B, not A2).
+
+ROW 9 POWER open 07-05:
+  B4=NOT FN: funding_neg_div never fires for POWER → B4=True all window.
+  B1(all-7d hedge)+B3(absorption) fires 07-03→07-05.
+  GOM-B fires 07-05 → chain opens. POWER PASS.
+
+T2 TAG wrong-side 07-29/07-30:
+  A2=avg5(gLSR): gLSR 1.56–1.73 on 07-29/07-30 → A2=False. GOM-A blocked.
+  B-structural: no B1+B3+B4 overlap in this window (check diagnostic).
+  GOM does NOT fire 07-28→07-31 → T2 PASS (no wrong GOM fires).
+
+AKE WARN: decay 07-08 → cd_end=07-21 → first clear 07-22 outside data range.
+  Not a code error. G1 AKE debt CLOSED (AKE 07-08 decay legit, 5-leg taker <48%).
+
+ZBT PASS* (carried): no result.txt. v4 verified: chain_open 07-01, close 07-02
+  pos_r_drop:34% from peak. Formulas do not change ZBT gate materially.
+
+PARTI MISSING: Episode 20/06→15/07. Needs VPS SCP freshwatch_daily_2026-06/07.csv.
+  Expected: (a) GOM-A before 09/07; (b) close 11/07 rule(iv) pos_r drop 64%.

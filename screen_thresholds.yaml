@@ -6,6 +6,7 @@
 # 2026-08-08 v1.0: khởi tạo theo spec gom_detect_spec.md v1.1
 # 2026-08-08 v1.1: GOM-B structural formula (B1 AND (B2|B3) AND B4); xóa gom_b_min_count;
 #                  wrong_side_dq (L-26); DQ cooldown 14d from-first-fire
+# 2026-08-08 v1.2: spec v1.3 correction — per-day DQ: thêm slope_5d_max; wrong_side_dq thêm 1d check (ret_1d_min/glsr_1d_min)
 
 gom:
   # §8.3 — ngày đếm Q1: ret_1d (price return 1d) phải ≤ max này
@@ -38,8 +39,14 @@ gom:
   # Chương rỗng (Q1=0) hợp lệ — không dùng Q1_cum guard nữa
   crowd_flush_gap_min_days: 3
 
-  # §8.1 wrong-side DQ (L-26): giá rơi + gLSR tăng = distribution, không phải tích lũy
+  # §1 per-day DQ: slope_5d — lsr_global(i)/lsr_global(i-5) > threshold = distribution phase
+  slope_5d_max: 1.15
+
+  # §1 wrong-side DQ (L-26): per-day block (không cooldown 14d)
+  # Hai check — (A) 5d cumulative; (B) 1d single-day
   wrong_side_dq:
-    lookback_days:  5      # window đo price + gLSR thay đổi
-    px_drop_min:    0.10   # giá rơi ≥ 10% trong lookback
-    glsr_rise_min:  0.15   # gLSR tăng ≥ 15% trong lookback
+    lookback_days:  5      # (A) window đo price + gLSR thay đổi
+    px_drop_min:    0.10   # (A) giá rơi ≥ 10% trong lookback
+    glsr_rise_min:  0.15   # (A) gLSR tăng ≥ 15% trong lookback
+    ret_1d_min:     0.05   # (B) ret_1d ≤ -5% (1d check)
+    glsr_1d_min:    0.05   # (B) gLSR_1d_chg ≥ +5% (1d check)
