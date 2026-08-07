@@ -89,8 +89,8 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     a1 = lsr_accum(days, i, cfg)
     # A2: avg5(lsr_global) ≤ 1.1 — inline check (spec v1.3; stealth_grind = SG = auxiliary only)
     a2 = _avg5_glsr(days, i) <= 1.1
-    # A3: gLSR slope 5d ≤ 1.15 — "fuel not exhausted" (§1; NaN/early → no-DQ → True)
-    a3 = not _slope_dq(days, i, sc)
+    # A3: gLSR slope 5d ≤ 1.15 — "fuel not exhausted" (§1; NaN/early → FAIL-CLOSED → False)
+    a3 = _a3_slope_ok(days, i, sc)
     # A4: pos_rerate + hedge_structure alive in hedge_lb days
     hedge_alive = any(
         hedge_structure(days, j, cfg)
@@ -111,8 +111,9 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     )
     b2 = funding_pinned(days, i, cfg) or funding_pinned_strong(days, i, cfg)
     b3 = absorption(days, i, cfg)
-    # B4: NOT funding_neg_div — clean environment (spec v1.3; oi_ignition = auxiliary only)
-    b4 = not funding_neg_div(days, i, cfg)
+    # B4: NOT funding_neg_div — clean environment. FAIL-CLOSED: funding NaN → B4=False
+    _f_avg = days[i].get("funding_avg", float("nan"))
+    b4 = (not math.isnan(_f_avg)) and not funding_neg_div(days, i, cfg)
     gom_b = {"B1": b1, "B2": b2, "B3": b3, "B4": b4}
 
     # §1 structural formula: GOM-B = B1 AND (B2 OR B3) AND B4 (confirmed correct)
@@ -253,6 +254,22 @@ def _slope_dq(days: list[DayData], i: int, sc: dict) -> bool:
     if math.isnan(g0) or math.isnan(g1) or g0 <= 0:
         return False
     return (g1 / g0) > slope_max
+
+
+def _a3_slope_ok(days: list[DayData], i: int, sc: dict) -> bool:
+    """A3 GOM-A condition: gLSR slope_5d ≤ 1.15 ('fuel not exhausted').
+    FAIL-CLOSED: i<5 or g0/g1 NaN → returns False (condition NOT satisfied).
+    Distinct from _slope_dq (per-day DQ uses fail-open; GOM-A condition uses fail-closed).
+    """
+    g = _scfg(sc)
+    slope_max = g.get("slope_5d_max", 1.15)
+    if i < 5:
+        return False
+    g0 = days[i-5].get("lsr_global", float("nan"))
+    g1 = days[i].get("lsr_global",   float("nan"))
+    if math.isnan(g0) or math.isnan(g1) or g0 <= 0:
+        return False
+    return (g1 / g0) <= slope_max
 
 
 # ── Chain state machine ───────────────────────────────────────────────────────
@@ -551,7 +568,7 @@ def format_footer(all_states: dict, sc: dict) -> str:
         "",
         "── NOTES CHUNG " + "─" * 55,
         "PARTI: [status chưa cập nhật — VPS probe cần refresh]",
-        "ZBT: DELISTED (alpha endpoint 400, không có data)",
+        "ZBT: perp sống (CASE_ZBT active); alpha-spot endpoint 400 = không liên quan",
     ]
     if any_big:
         lines.append('"số lớn ≠ kèo gần — chuỗi dài nhất sổ (ZBT 3 tuần) vẫn cần tell + suppressor sạch"')
@@ -779,7 +796,9 @@ def _false_result() -> dict:
     return {
         "gom_day":       False,
         "gom_a":         {k: False for k in ["A1", "A2", "A3", "A4", "A5"]},
+        "gom_a_fire":    False,
         "gom_b":         {k: False for k in ["B1", "B2", "B3", "B4"]},
+        "gom_b_fire":    False,
         "supp_dq":       {k: False for k in dq_keys},
         "perday_dq":     {k: False for k in pd_keys},
         "any_supp_dq":   False,

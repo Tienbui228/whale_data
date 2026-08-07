@@ -2,6 +2,66 @@
 
 ---
 
+## SESSION 2026-08-08 (8) — GOM v1.4 Fix-Pack: NaN fail-closed + Conformance + 4.2-v3 prep
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Task 1 — Conformance re-verify (spec v1.3/v1.4, ALL rows)
+
+| Row | Signal | Spec định nghĩa | Impl (signals.py / gom_scan.py) | NaN hành vi | Kết quả |
+|-----|--------|-----------------|--------------------------------|-------------|---------|
+| _FORMULA | `gom_a_fire` | A1 AND A2 AND A3 AND (A4\|A5) | `a1 and a2 and a3 and (a4 or a5)` | n/a | PASS ✓ |
+| _FORMULA | `gom_b_fire` | B1 AND (B2\|B3) AND B4 | `b1 and (b2 or b3) and b4` | n/a | PASS ✓ |
+| A1 | `lsr_accum` | div_avg3 ≥ 1.5 AND avg5(gLSR) ≤ 1.1 | signals.py L138-146 — `if isnan(dr): return False` + `if isnan(g5): return False` | FAIL-CLOSED ✓ | PASS ✓ |
+| A2 | avg5(gLSR) ≤ 1.1 (inline) | avg5(lsr_global) ≤ 1.1 | gom_scan `_avg5_glsr` trả NaN khi không có vals → `NaN <= 1.1` = False (Python) | FAIL-CLOSED ✓ | PASS ✓ |
+| A3 | `_a3_slope_ok` (MỚI) | gLSR slope_5d ≤ 1.15 | NEW helper — explicitly `return False` khi i<5 hoặc g0/g1 NaN | **FIX**: từ fail-open → FAIL-CLOSED ✓ | FIXED |
+| A4 | `pos_rerate AND hedge_alive` | pos_rerate + ≥1 hedge_structure trong lookback | `pos_rerate` L177: `if i<min_hold: return False`; L181: `if len<min_hold: return False`; `hedge_structure` L157: `if isnan(dr): return False` | FAIL-CLOSED ✓ | PASS ✓ |
+| A5 | `funding_unpin` | prior pinned ≥5d, then max>threshold ≥2d | L260: `if i<unpin_n: return False`; funding_max NaN breaks streak → unpin_count<min → False | FAIL-CLOSED ✓ | PASS ✓ |
+| B1 | `all(hedge_structure)` | div_avg3 ≤ 0.5 tất cả ngày trong lookback | `hedge_structure` NaN → False; `all(...)` với bất kỳ False → False | FAIL-CLOSED ✓ | PASS ✓ |
+| B2 | `funding_pinned or funding_pinned_strong` | streak ≥5d hoặc ≥10d | `_pinned_streak` L228: NaN breaks streak → 0 → False | FAIL-CLOSED ✓ | PASS ✓ |
+| B3 | `absorption` | taker_buy_pct ∈ [44,50.5] ≥7d AND range ≤±10% | any NaN in 7-day window → return False | FAIL-CLOSED ✓ | PASS ✓ |
+| B4 | `not funding_neg_div` | NOT(funding negative divergence) | **BUG**: funding NaN → `funding_neg_div` trả False → `b4=True` = fail-open | **FIX**: thêm guard `(not isnan(_f_avg)) and not funding_neg_div(...)` | FIXED |
+
+**Signed:** Session 2026-08-08 (8). Hai bug fix: A3 (fail-open → fail-closed) + B4 (fail-open → fail-closed).
+
+### Task 2 — NaN fail-closed patches (commit)
+
+| Patch | Trước | Sau |
+|-------|-------|-----|
+| A3 | `a3 = not _slope_dq(...)` → True khi NaN/i<5 | `a3 = _a3_slope_ok(...)` → False khi NaN/i<5 |
+| B4 | `b4 = not funding_neg_div(...)` → True khi funding NaN | `_f_avg = days[i].get(...)` + `b4 = (not isnan(_f_avg)) and not funding_neg_div(...)` |
+| `_a3_slope_ok` | (không tồn tại) | Helper mới, explicitly fail-closed, distinct từ `_slope_dq` (perday DQ dùng fail-open — đúng) |
+| `_false_result` | thiếu `gom_a_fire`/`gom_b_fire` | thêm 2 keys = False |
+
+**Lý do A3 và B4 fail-closed khác `_slope_dq`:** `_slope_dq` là perday disqualifier — NaN = không có tín hiệu phân phối = không block → fail-open ĐÚNG. `_a3_slope_ok` là GOM-A condition = điều kiện PHẢI thỏa → NaN = không biết → không thỏa → fail-closed.
+
+### Task 3a — Funding audit grid-based (kết quả)
+
+Audit script: `_probe_funding_audit_20260808.py` (VPS, 37 ngày 01/07→06/08, 139 syms, expected=417/ngày)
+
+**Kết quả:** funding_8h TRỐNG TOÀN BỘ cho TẤT CẢ 37 ngày (0/417 mỗi ngày).
+
+**Hệ quả:** Funding trong freshwatch CSVs đến từ fapi call lúc export, không phải store funding_8h. Store này không dùng cho pipeline DAILY hiện tại.
+
+### Task 3c — L-28 addendum (GATE 0 reconcile)
+
+**Ghi sổ:** Kết luận "store full" trong GATE 0 check trước là join-based (mù-vắng-mặt). Khi funding_8h hoàn toàn trống, join với df funding = 0 rows mismatch → không phát hiện absence. Grid audit (expected settlements = 3×139=417/ngày) cho thấy store trống 100%. Quy tắc: audit store → dùng grid expected, không phải join-based diff.
+
+### Task 3b — Regen 24-26/07 (partial)
+
+**Script:** `_probe_regen_24_26jul_20260808.py`  
+**Kết quả regen:** 417 rows (139 syms × 3 dates) từ klines_1h + top_pos_1h + oi_hist_1h  
+**Đã inject:** fw137_test/freshwatch_daily_2026-07.csv 3898 → 4306 rows  
+
+**Issues còn lại:**
+- `oi_usd = NaN` — column mapping sai: VPS oi_hist_1h dùng `sum_open_interest_value`, không phải `oi_usd`
+- `funding = NaN` — store funding_8h trống, cần fapi backfill riêng cho 24-26/07
+- `lsr_acc_r = NaN` — top_acct_1h chỉ có lsr_pos_r (long/short account ratio), không có acc ratio
+
+**Pending 3b (fapi backfill + oi_usd fix → re-regen):** Cần script fetch fapi /fundingRate × 139 syms × 3 dates + fix column mapping + re-regen. → Task tiếp.
+
+---
+
 ## SESSION 2026-08-08 (5) — DEPLOY --daily: fw_loader_utils + gom_scan (Việc 3)
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
