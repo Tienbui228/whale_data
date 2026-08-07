@@ -24,3 +24,7 @@ Format cột Status: `QUEUED` / `DOING` / `DONE <commit>` / `BLOCKED <lý do>`
 | MM-ECON-SIG | - | mm_econ_v0.2 operator ký → dùng vào live signal | BLOCKED — ANALYSIS ONLY, chờ operator ký |
 | XS3B-RETRY | - | XPIN XS3b retry: GeckoTerminal trades endpoint (rate-limited 06/08) | QUEUED |
 | HANDOVER | 08/08 | Lưu handover bản 08/08 + tạo prompt_analysis_topic.md + đóng topic analysis 03→08/08 | DONE ac84dba |
+| GOM-SPEC | 08/08 | gom_detect_spec.md v1.1 (§1-§8): commit binance-bot-signals c4c9b61d | DONE c4c9b61d |
+| GOM-BUILD | 08/08 | gom_scan.py + screen_thresholds.yaml: Bước 2 offline build | DONE 4d0987c |
+| GOM-B3 | 08/08 | Backtest §6: 10/10 PASS — nộp bảng chờ operator duyệt | DONE 4d0987c · **CHỜ DUYỆT** |
+| GOM-B4 | - | Deploy cron VPS + Telegram channel mới (Bước 4) | BLOCKED — chờ operator duyệt §6 + chat_id |

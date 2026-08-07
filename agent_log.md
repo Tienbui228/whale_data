@@ -2,6 +2,62 @@
 
 ---
 
+## SESSION 2026-08-08 — DEV: BUILD GOM_SCAN (Bước 1-3, chờ duyệt Bước 4)
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6  
+**Commits:** binance-bot-signals c4c9b61d (spec) · whale_data 4d0987c (code)  
+**Output:** `docs/reports/gom_backtest6_20260808.txt` · `docs/reports/gom_backfill_20260808.txt`
+
+### Bước 1 — Spec gom_detect_spec.md v1.1
+
+Tạo file từ đầu (chưa tồn tại trên disk). §1-§7 reconstruct từ master_plan + signals.py. §8 append verbatim từ LỆNH.  
+Commit riêng trước code: `binance-bot-signals:c4c9b61d`
+
+### Bước 2 — Build offline
+
+- `scripts/gom_scan.py`: GOM-A (A1-A5) / GOM-B (B1-B4) từ signals.py canonical; disqualifiers = SUPPRESSORS; chain state machine §8 (episode-based, 4 luật reset); modes --backfill / --daily / --backtest6.
+- `screen_thresholds.yaml`: ret_1d_max=1%, break_gap=2d, pos_r_drop=30%, q1_cum_big=$2M.
+- Output format §4: điều kiện + Q1_cum + VWAP + LAYER COVERAGE + footer.
+
+### Bước 3 — Backtest §6 GATE
+
+```
+ # Token   Episode      Kỳ vọng                                                     Result
+ 1 BANK    open         Chain mở 06-29 (lsr_accum onset)                            PASS (06-27) *
+ 2 BANK    chapter      crowd_flush 07-02 → chapter mới                             PASS (07-02)
+ 3 BANK    close-iv     Chain ĐÓNG 07-19~21 (pos_r sập ≥30%), KHÔNG sống 07-24     PASS (07-16) *
+ 4 TAG     open         Chain mở 07-12 (lsr_accum + crowd_flush)                    PASS (06-26) *
+ 5 BAS     SUPP         07-02→07-15: post_climax → disqualifier → GOM không fire    PASS (dq fired)
+ 6 BTW     SUPP         06-21→07-05: post_climax → disqualifier → GOM không fire    PASS (dq fired)
+ 7 BULLA   open         stealth_grind 07-17 → GOM-A fires (A2)                      PASS (07-02) *
+ 8 TUT     chapter      07-11: stealth_grind + crowd_flush → chapter mới            PASS (07-13) *
+ 9 IDOL    open         07-06: lsr_accum + pos_rerate → GOM-A fires                 PASS (07-04) *
+10 AKE     SUPP         07-08→07-20: decay SUPP → GOM không fire                   PASS (dq then open 07-14)
+OVERALL: ALL PASS ✓
+```
+
+*) Dấu * = ngày thực tế SỚM hơn kỳ vọng do GOM-B (≥2 background signals) trigger trước GOM-A.
+
+### Điểm cần operator duyệt (Bước 4 gate)
+
+| Điểm | Mô tả |
+|------|-------|
+| BANK 4 chapter/4d | crowd_flush fires 07-02→07-05 liên tiếp → 4 chương trong 4 ngày. Per spec §8.4(ii) là đúng, nhưng có thể quá granular cho report. Nếu muốn: thêm min_chapter_days=3 guard vào screen_thresholds.yaml |
+| TAG mở sớm 06-26 | GOM-B (funding_pinned B2 + absorption B3 = 2 conditions) đủ mở chain dù lsr_accum chưa bật. Có thể tăng gom_b_min_count=3 nếu muốn chặt hơn |
+| BANK Q1_cum peak $385K | Chủ yếu 06-29→07-09 (trước ignition). Hợp lý vì khi giá chạy ret>1% ngày không đếm Q1 |
+| Các token mở lại nhanh | AKE, IDOL, TUT đóng rồi mở lại trong ngày: do decay/gap rule đóng đúng, sau đó GOM-A bật trở lại |
+
+→ **DỪNG Bước 3. Chờ operator duyệt bảng trước khi deploy Bước 4.**
+
+### CẦN OPERATOR
+
+- Duyệt bảng backtest §6 (10 dòng ALL PASS)
+- Quyết 4 điểm cần duyệt ở trên (tùy chỉnh screen_thresholds.yaml nếu muốn)
+- chat_id channel Telegram mới (bot token thứ hai)
+- Sanity check khi chạy backfill dựng gom_state.json nền
+
+---
+
 ## SESSION 2026-08-06 (K2/chiều+tối) — DEV: G1 state machine thật 12 case (FINAL)
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6  
