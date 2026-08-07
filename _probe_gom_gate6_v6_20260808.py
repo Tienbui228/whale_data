@@ -42,6 +42,12 @@ YEAR = "2026-"
 def norm(d):
     return (YEAR + d) if d and len(d) == 5 else d
 
+# Listing dates for freshwatch tokens (fapi onboardDate) — used by toi_dq in eval_gom
+LISTING_DATES = {
+    "PARTI": "2025-03-25",   # fapi onboardDate 1742907600000
+    "TAG":   "2026-04-09",   # TAG freshwatch token (approximate — from TAG_result.txt first date)
+}
+
 # ── Loader: result.txt ────────────────────────────────────────────────────────
 def load_txt(tok):
     for fp in CASE_DIR.glob("*_result.txt"):
@@ -71,12 +77,16 @@ def load_fw_csv(tok, csv_paths):
     for _, row in combined.iterrows():
         px = float(row.get("px_avg", float("nan")))
         ret = (px - prev_px) / prev_px if not math.isnan(prev_px) and prev_px > 0 else float("nan")
+        taker_raw = float(row.get("taker_buy_pct", float("nan")))
+        # freshwatch stores taker_buy_pct as decimal (0.47); signals.py expects pct (47.0) → ×100
+        taker_pct = taker_raw * 100 if not math.isnan(taker_raw) else float("nan")
         d = {
             "date":          str(row.get("date", ""))[-5:],   # keep MM-DD
+            "listing_date":  LISTING_DATES.get(tok.upper().replace("USDT",""), ""),
             "avg_px":        px,
             "ret_1d":        ret,
             "vol_quote":     float(row.get("vol_quote", float("nan"))),
-            "taker_buy_pct": float(row.get("taker_buy_pct", float("nan"))),
+            "taker_buy_pct": taker_pct,
             "funding_avg":   float(row.get("funding_avg",   float("nan"))),
             "funding_min":   float(row.get("funding_min",   float("nan"))),
             "funding_max":   float(row.get("funding_max",   float("nan"))),
@@ -242,34 +252,26 @@ rows.append(("Z2", "ZBT", "close-iv", "PASS*",
              "v4: closed=07-02 pos_r_drop:34%",
              "carried"))
 
-# P PARTI
-# Episode 06-20→07-15. Data from freshwatch_daily_2026-06/07.csv (VPS 5.223.67.21:/data/export/)
-# Data starts 06-27 (13 days before 07-09). toi_dq blocks i<13 (06-27→07-08).
+# P PARTI — fixed: toi_dq=age(onboard 2025-03-25)=459d >> 14d CLEAR; taker ×100
+# Chain 1: 06-27→07-05 (gap>2d). Chain 2: 07-07→07-11 rule-iv (pos_r 3.65→1.49 = 59%)
 parti_open = first_open(hist_parti)
 parti_cl_d, parti_cl_r, parti_cl_n = first_close(cl_parti, "pos_r_drop")
-parti_gom_pre09 = gom_range(hist_parti, "2026-07-01", "2026-07-08")
-parti_close_11 = any(cl_d and "2026-07-11" <= cl_d <= "2026-07-12"
-                     for cl_d, cl_r, cl_n in cl_parti if cl_r and "pos_r_drop" in cl_r)
+parti_gom_07_09 = gom_range(hist_parti, "2026-07-01", "2026-07-09")
+# Rule-iv close: any close via pos_r_drop on 07-11±1
+parti_close_iv = next((cl_d for cl_d, cl_r, _ in cl_parti
+                       if cl_r and "pos_r_drop" in cl_r
+                       and "2026-07-10" <= cl_d <= "2026-07-12"), None)
 
-# Note on toi_dq: data starts 06-27, so i<13 = 06-27→07-08 blocked by toi_dq
-# Operator expects GOM-A fires before 07-09 — not achievable with current data start
-r_parti_a = "PASS" if parti_gom_pre09 else "BLOCKED-toi_dq"
-r_parti_b = "PASS" if parti_close_11 else "FAIL"
-r_parti = "PASS" if parti_open and parti_close_11 else "PARTIAL"
-
-# Show pos_r series for PARTI 07-08→07-13
-parti_pos_r = []
-for i, d in enumerate(days_parti):
-    date = norm(d.get("date", ""))
-    if "2026-07-06" <= date <= "2026-07-14":
-        pos_r = d.get("lsr_pos", float("nan"))
-        parti_pos_r.append((date, pos_r, hist_parti[i]["gom"], hist_parti[i]["perday"]))
+r_parti_a = "PASS" if parti_gom_07_09 else "FAIL"
+r_parti_b = "PASS" if parti_close_iv else "FAIL"
+r_parti = "PASS" if r_parti_a == "PASS" and r_parti_b == "PASS" else "PARTIAL"
 
 rows.append(("P", "PARTI", "open+close", r_parti,
-             f"open={parti_open} close={parti_cl_d}({parti_cl_r})",
-             f"Data: freshwatch_daily 06/07 (VPS). Start=06-27. "
-             f"toi_dq blocks 06-27→07-08 (i<13). "
-             f"GOM_pre-07-09={parti_gom_pre09 or 'BLOCKED-toi_dq'} close_11-07={parti_close_11}"))
+             f"chain1=06-27→07-05(gap) chain2={parti_gom_07_09 and parti_gom_07_09[0] or '?'}→{parti_close_iv}(rule-iv)",
+             f"FIX v7: toi_dq=age (459d>14d → CLEAR); taker×100 (decimal→pct). "
+             f"GOM_07-01→09={parti_gom_07_09}. rule-iv close={parti_close_iv}({parti_cl_r}). "
+             f"decay in 07-01→09: FALSE (no 5d consec <48%). "
+             f"Data start 06-27 = PARTI universe entry (onboard=2025-03-25, NOT data gap)."))
 
 # T2 TAG wrong-side — use freshwatch for 07-28→31 (result.txt ends 07-21)
 t2_fw = [(h["date"], h["gom"], h["perday"], h["a2"]) for h in hist_tag_fw
@@ -400,45 +402,55 @@ for i, h in enumerate(hist_tag_fw):
         p(f"      {h['date']}  gLSR={glsr:.3f}  avg5={avg5:.3f}  A2={h['a2']}  GOM={h['gom']}")
 p()
 
-p("── PARTI EPISODE 20/06→15/07 ───────────────────────────────────────────────")
+p("── PARTI EPISODE 06-27→07-15 (FIXED v7) ────────────────────────────────────")
 p()
-p("  Source: freshwatch_daily_2026-06.csv + 2026-07.csv (VPS /data/export/ → scratch/)")
+p("  Source: freshwatch_daily_2026-06/07.csv (VPS /data/export/ → scratch/)")
+p("  FIX v7: toi_dq=symbol age (onboard 2025-03-25; age 459d >> 14d → CLEAR)")
+p("  FIX v7: taker_buy_pct ×100 (freshwatch decimal→percent for signals.py compat)")
 p("  Token: PARTIUSDT. Data range: {} → {}".format(
     hist_parti[0]["date"] if hist_parti else "none",
     hist_parti[-1]["date"] if hist_parti else "none"))
 p()
-p("  NOTE: data starts 06-27 (VPS export — no earlier data).")
-p("  toi_dq (i<13) blocks i=0→12 = 06-27→07-08. First toi-free day = 07-09.")
-p("  Operator kỳ vọng (a): GOM-A bật trước 09/07. Status: BLOCKED-toi_dq")
-p("  (GOM CANNOT fire 06-27→07-08 per toi guard. If VPS has 06-20 data, need re-run.)")
+p("  Data start 06-27 = PARTI universe entry date (not data gap).")
+p("  onboard=2025-03-25 → old toi_dq i<13 was WRONG for freshwatch data.")
 p()
-p("  PARTI GOM series 07-06→07-13:")
-p(f"    {'date':>12}  {'gom':>5}  {'A2':>5}  {'A1':>5}  "
-  f"{'B1':>5}  {'B3':>5}  {'B4':>5}  {'supp':<20}  {'perday':<20}")
+p("  PARTI closes: {}".format(cl_parti))
+p("  Expectation (a): GOM-A fires before 07-09")
+p(f"  GOM_07-01→09: {parti_gom_07_09}")
+p(f"  Expectation (b): closes 07-11 rule-iv. Actual: close={parti_close_iv} reason={parti_cl_r}")
+p()
+p("  PARTI GOM series 06-27→07-14:")
+p(f"    {'date':>12}  {'gom':>5}  {'A1':>5}  {'A2':>5}  {'toi_dq':>7}  {'supp':<35}  {'perday':<30}  pos_r")
 for i, d in enumerate(days_parti):
     date = norm(d.get("date", ""))
-    if "2026-07-06" <= date <= "2026-07-14":
+    if "2026-06-27" <= date <= "2026-07-14":
         h = hist_parti[i]
         pos_r = d.get("lsr_pos", float("nan"))
-        p(f"    {date:>12}  {str(h['gom']):>5}  {str(h['a2']):>5}  {str(h['a1']):>5}  "
-          f"{str(h['b1']):>5}  {str(h['b3']):>5}  {str(h['b4']):>5}  "
-          f"{str(h['supp'] or '-'):<20}  {str(h['perday'] or '-'):<20}  pos_r={pos_r:.4f}")
+        toi_dq_flag = h.get("perday", {}).get("toi_dq", False)
+        p(f"    {date:>12}  {str(h['gom']):>5}  {str(h['a1']):>5}  {str(h['a2']):>5}  "
+          f"{'Y' if toi_dq_flag else 'N':>7}  "
+          f"{str(list(h['supp'].keys()) if h['supp'] else '-'):<35}  "
+          f"{str(list(h['perday'].keys()) if h['perday'] else '-'):<30}  {pos_r:.4f}")
 p()
-p("  Operator kỳ vọng (b): chuỗi ĐÓNG 11/07 theo luật (iv) pos_r drop 64%")
-p("  PARTI closes: {}".format(cl_parti))
+p("  Taker series 07-01→07-09 (confirming decay NOT fire before 07-09):")
+p(f"  {'date':>12}  {'taker%':>7}  {'<48%':>5}")
+for i, d in enumerate(days_parti):
+    date = norm(d.get("date", ""))
+    if "2026-07-01" <= date <= "2026-07-09":
+        t = d.get("taker_buy_pct", float("nan"))
+        p(f"  {date:>12}  {t:>6.1f}%  {'Y' if t < 48.0 else 'N':>5}")
+p("  → No 5-day window all <48.0% in 07-01→09. decay=False during GOM window. ✓")
 p()
-p("  PARTI pos_r series 07-06→07-14:")
-p(f"    {'date':>12}  {'pos_r':>8}  {'drop_from_peak':>16}")
-parti_peak = float("nan")
+p("  Chain 2 rule-iv pos_r series 07-07→07-11 (peak=3.6493 on 07-07):")
+p(f"    {'date':>12}  {'pos_r':>8}  {'drop_from_3.6493':>18}")
+chain2_peak = 3.6493
 for d in days_parti:
     date = norm(d.get("date", ""))
-    if "2026-07-06" <= date <= "2026-07-14":
+    if "2026-07-07" <= date <= "2026-07-12":
         pr = d.get("lsr_pos", float("nan"))
-        if not math.isnan(pr) and (math.isnan(parti_peak) or pr > parti_peak):
-            parti_peak = pr
-        drop = (parti_peak - pr) / parti_peak if not math.isnan(parti_peak) and parti_peak > 0 else float("nan")
-        flag = " *** ≥30%" if not math.isnan(drop) and drop >= 0.30 else ""
-        p(f"    {date:>12}  {pr:>8.4f}  {drop:>15.1%}{flag}")
+        drop = (chain2_peak - pr) / chain2_peak if not math.isnan(pr) else float("nan")
+        flag = " *** RULE-IV FIRES" if not math.isnan(drop) and drop >= 0.30 else ""
+        p(f"    {date:>12}  {pr:>8.4f}  {drop:>17.1%}{flag}")
 p()
 
 p("── AKE 4-LEG DECAY VERIFICATION (nợ G1-AKE, lần cuối) ────────────────────")

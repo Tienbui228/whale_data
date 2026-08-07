@@ -1,7 +1,7 @@
 ================================================================================
 GOM Gate §6 v6 — spec v1.4
 Code: gom_scan.py (A2=avg5(gLSR)≤1.1 | B4=NOT FN | per-day DQ | rule-iv mọi ngày)
-Run: 2026-08-07 14:45
+Run: 2026-08-07 15:10
 ================================================================================
 
 ── DATA PROVENANCE ─────────────────────────────────────────────────────────
@@ -34,11 +34,11 @@ Run: 2026-08-07 14:45
    10  BANK     close-iv-gate     PASS      confirm rule-iv: 2026-07-16
    Z1  ZBT      open              PASS*     v4: chain_open=07-01
    Z2  ZBT      close-iv          PASS*     v4: closed=07-02 pos_r_drop:34%
-    P  PARTI    open+close        PARTIAL   open=None close=None(None)
+    P  PARTI    open+close        PASS      chain1=06-27→07-05(gap) chain2=2026-07-01→2026-07-11(rule-iv)
    T2  TAG      wrong-side        PASS      GOM_07-28→31=none
    11  AKE      supp-then-open    WARN      decay=2026-07-08 cd_end=2026-07-21 data_end=2026-07-18
 
-  TOTAL: PASS=11  PASS*=2(carried)  FAIL=0  WARN=1  PARTIAL=1
+  TOTAL: PASS=12  PASS*=2(carried)  FAIL=0  WARN=1  PARTIAL=0
 
 ── CHANGES VS v4 (with numbers) ────────────────────────────────────────────
 
@@ -97,42 +97,63 @@ Run: 2026-08-07 14:45
       2026-07-30  gLSR=1.996  avg5=1.698  A2=False  GOM=False
       2026-07-31  gLSR=1.922  avg5=1.747  A2=False  GOM=False
 
-── PARTI EPISODE 20/06→15/07 ───────────────────────────────────────────────
+── PARTI EPISODE 06-27→07-15 (FIXED v7) ────────────────────────────────────
 
-  Source: freshwatch_daily_2026-06.csv + 2026-07.csv (VPS /data/export/ → scratch/)
+  Source: freshwatch_daily_2026-06/07.csv (VPS /data/export/ → scratch/)
+  FIX v7: toi_dq=symbol age (onboard 2025-03-25; age 459d >> 14d → CLEAR)
+  FIX v7: taker_buy_pct ×100 (freshwatch decimal→percent for signals.py compat)
   Token: PARTIUSDT. Data range: 2026-06-27 → 2026-07-31
 
-  NOTE: data starts 06-27 (VPS export — no earlier data).
-  toi_dq (i<13) blocks i=0→12 = 06-27→07-08. First toi-free day = 07-09.
-  Operator kỳ vọng (a): GOM-A bật trước 09/07. Status: BLOCKED-toi_dq
-  (GOM CANNOT fire 06-27→07-08 per toi guard. If VPS has 06-20 data, need re-run.)
+  Data start 06-27 = PARTI universe entry date (not data gap).
+  onboard=2025-03-25 → old toi_dq i<13 was WRONG for freshwatch data.
 
-  PARTI GOM series 07-06→07-13:
-            date    gom     A2     A1     B1     B3     B4  supp                  perday              
-      2026-07-06  False   True   True  False  False   True  {'decay': True}       {'slope_dq': True, 'toi_dq': True}  pos_r=3.5341
-      2026-07-07  False   True   True  False  False   True  {'decay': True}       {'toi_dq': True}      pos_r=3.6493
-      2026-07-08  False   True   True  False  False   True  {'decay': True}       {'toi_dq': True}      pos_r=3.5028
-      2026-07-09  False   True   True  False  False   True  {'decay': True}       {'toi_dq': True}      pos_r=3.5715
-      2026-07-10  False   True   True  False  False   True  {'decay': True}       {'wrong_side': True, 'slope_dq': True}  pos_r=2.7396
-      2026-07-11  False   True   True  False  False   True  {'funding_extreme': True, 'decay': True, 'post_climax': True}  {'wrong_side': True, 'slope_dq': True}  pos_r=1.4872
-      2026-07-12  False   True   True  False  False   True  {'decay': True, 'post_climax': True}  {'wrong_side': True, 'slope_dq': True}  pos_r=1.2225
-      2026-07-13  False   True   True  False  False   True  {'decay': True, 'post_climax': True}  {'wrong_side': True, 'slope_dq': True}  pos_r=1.5867
-      2026-07-14  False   True   True  False  False   True  {'decay': True, 'post_climax': True}  -                     pos_r=1.8465
+  PARTI closes: [('2026-07-05', 'gom_gap>2d', ''), ('2026-07-11', 'pos_r_drop:59%_from_peak:3.65', 'chuyển pha phân phối')]
+  Expectation (a): GOM-A fires before 07-09
+  GOM_07-01→09: ['2026-07-01', '2026-07-02', '2026-07-07', '2026-07-08', '2026-07-09']
+  Expectation (b): closes 07-11 rule-iv. Actual: close=2026-07-11 reason=pos_r_drop:59%_from_peak:3.65
 
-  Operator kỳ vọng (b): chuỗi ĐÓNG 11/07 theo luật (iv) pos_r drop 64%
-  PARTI closes: []
+  PARTI GOM series 06-27→07-14:
+            date    gom     A1     A2   toi_dq  supp                                 perday                          pos_r
+      2026-06-27   True   True   True        N  -                                    -                               3.4752
+      2026-06-28   True   True   True        N  -                                    -                               3.3857
+      2026-06-29  False   True   True        N  -                                    ['wrong_side']                  3.5242
+      2026-06-30   True   True   True        N  -                                    -                               3.3321
+      2026-07-01   True   True   True        N  -                                    -                               3.3396
+      2026-07-02   True   True   True        N  -                                    -                               3.3358
+      2026-07-03  False   True   True        N  -                                    ['slope_dq']                    3.3717
+      2026-07-04  False   True   True        N  -                                    ['slope_dq']                    3.3606
+      2026-07-05  False   True   True        N  -                                    ['slope_dq']                    3.4297
+      2026-07-06  False   True   True        N  -                                    ['slope_dq']                    3.5341
+      2026-07-07   True   True   True        N  -                                    -                               3.6493
+      2026-07-08   True   True   True        N  -                                    -                               3.5028
+      2026-07-09   True   True   True        N  -                                    -                               3.5715
+      2026-07-10  False   True   True        N  -                                    ['wrong_side', 'slope_dq']      2.7396
+      2026-07-11  False   True   True        N  ['funding_extreme', 'post_climax']   ['wrong_side', 'slope_dq']      1.4872
+      2026-07-12  False   True   True        N  ['post_climax']                      ['wrong_side', 'slope_dq']      1.2225
+      2026-07-13  False   True   True        N  ['post_climax']                      ['wrong_side', 'slope_dq']      1.5867
+      2026-07-14  False   True   True        N  ['post_climax']                      -                               1.8465
 
-  PARTI pos_r series 07-06→07-14:
-            date     pos_r    drop_from_peak
-      2026-07-06    3.5341             0.0%
-      2026-07-07    3.6493             0.0%
-      2026-07-08    3.5028             4.0%
-      2026-07-09    3.5715             2.1%
-      2026-07-10    2.7396            24.9%
-      2026-07-11    1.4872            59.2% *** ≥30%
-      2026-07-12    1.2225            66.5% *** ≥30%
-      2026-07-13    1.5867            56.5% *** ≥30%
-      2026-07-14    1.8465            49.4% *** ≥30%
+  Taker series 07-01→07-09 (confirming decay NOT fire before 07-09):
+          date   taker%   <48%
+    2026-07-01    49.1%      N
+    2026-07-02    51.9%      N
+    2026-07-03    48.6%      N
+    2026-07-04    47.3%      Y
+    2026-07-05    52.4%      N
+    2026-07-06    46.8%      Y
+    2026-07-07    44.2%      Y
+    2026-07-08    51.2%      N
+    2026-07-09    47.3%      Y
+  → No 5-day window all <48.0% in 07-01→09. decay=False during GOM window. ✓
+
+  Chain 2 rule-iv pos_r series 07-07→07-11 (peak=3.6493 on 07-07):
+            date     pos_r    drop_from_3.6493
+      2026-07-07    3.6493               0.0%
+      2026-07-08    3.5028               4.0%
+      2026-07-09    3.5715               2.1%
+      2026-07-10    2.7396              24.9%
+      2026-07-11    1.4872              59.2% *** RULE-IV FIRES
+      2026-07-12    1.2225              66.5% *** RULE-IV FIRES
 
 ── AKE 4-LEG DECAY VERIFICATION (nợ G1-AKE, lần cuối) ────────────────────
 

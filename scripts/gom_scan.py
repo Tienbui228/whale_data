@@ -79,6 +79,7 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     """Evaluate GOM conditions for day i. Returns result dict."""
     g = _scfg(sc)
     hedge_lb = g.get("hedge_lookback_days", 7)
+    d = days[i]  # current day (needed early for listing_date toi_dq)
 
     # GOM-A signals
     a1 = lsr_accum(days, i, cfg)
@@ -123,15 +124,28 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     any_supp_dq = any(supp_dq.values())
 
     # Per-day DQ (block today only — NO 14d cooldown)
+    # toi_dq: if DayData has "listing_date" (YYYY-MM-DD), use symbol age; else fall back to i<13
+    _listing = d.get("listing_date", "")
+    if _listing:
+        try:
+            _d_str = d.get("date", "")
+            if len(_d_str) == 5:
+                _d_str = "2026-" + _d_str
+            _age = (datetime.strptime(_d_str[:10], "%Y-%m-%d") -
+                    datetime.strptime(_listing[:10], "%Y-%m-%d")).days
+            _toi_dq = _age < 14
+        except Exception:
+            _toi_dq = i < 13
+    else:
+        _toi_dq = i < 13  # legacy: data starts at listing date
     perday_dq = {
         "wrong_side": _wrong_side_dq(days, i, sc),   # L-26: price↓ + gLSR↑ (5d + 1d checks)
         "slope_dq":   _slope_dq(days, i, sc),        # glsr_slope_5d > 1.15: distribution phase
-        "toi_dq":     i < 13,                         # token has <14 days history
+        "toi_dq":     _toi_dq,                        # token age <14d; from listing_date if known
     }
     any_perday_dq = any(perday_dq.values())
 
     # Auxiliary flags
-    d = days[i]
     vol_q   = d.get("vol_quote", float("nan"))
     oi      = d.get("oi_usd", float("nan"))
     lc = (not math.isnan(vol_q) and vol_q < g.get("vol_low_conf_usd", 200_000)) or \
@@ -329,6 +343,18 @@ def update_chain(
         # Matches G1 formula: clear when idx - ep_start_idx >= 14.
         state["dq_last_fire"] = date_str
         if chain.get("chain_open"):
+            # Rule (iv) wins label when both suppressor + pos_r_drop fire same day
+            _pos_r = d.get("lsr_pos", float("nan"))
+            if math.isnan(_pos_r):
+                _pos_r = d.get("lsr_pos_r", float("nan"))
+            _peak = chain.get("peak_pos_r", float("nan"))
+            if not math.isnan(_pos_r) and not math.isnan(_peak) and _peak > 0:
+                _drop = (_peak - _pos_r) / _peak
+                if _drop >= g.get("pos_r_drop_close", 0.30):
+                    state = _close_chain(chain,
+                        f"pos_r_drop:{_drop:.0%}_from_peak:{_peak:.2f}", date_str)
+                    state["close_note"] = "chuyển pha phân phối"
+                    return state
             fired = [k for k, v in result["supp_dq"].items() if v]
             state = _close_chain(chain, f"suppressor:{'+'.join(fired)}", date_str)
         return state
