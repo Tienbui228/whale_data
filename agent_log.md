@@ -2,6 +2,84 @@
 
 ---
 
+## SESSION 2026-08-08 — FIX-PACK v2: Án CSV born-wrong (ĐÓNG)
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6  
+**Commit:** (xem bên dưới)
+
+### Án closure
+
+**Tên án:** CSV born-wrong (partial-at-write) — mutation loại trừ có bằng chứng
+
+**Case (b) đã confirm:** Store nghèo tại thời điểm ghi. Export 07-28 00:50 UTC chạy khi store chỉ có 1 settlement BANK 27/07 (BANK vừa thêm vào universe, collector chưa kịp lấy full day). Không phải exporter tính sai, không phải mutation CSV.
+
+**Bằng chứng:**
+- Store hiện tại: BANK 27/07 có 6 unique `as_of_ts_ms` (00:00+10ms, 04:00, 08:00, 12:00, 16:00+1ms, 20:00+4ms). fapi Q3 cũng trả 6. Khớp 100%, không thiếu row nào.
+- 18,734 "gaps" từ audit ban đầu = FALSE POSITIVES — audit dùng exact 4h-boundary (ms chẵn) nhưng Binance fundingTime có offset 1-10ms.
+- fn=1 AND data_ok=True trong CSV post-regen = **0** ✓
+
+### Step 1-3: Store backfill + CSV regen
+
+| Hạng mục | Kết quả |
+|---|---|
+| Audit gaps (exact-ms) | 18,734 — toàn false positive |
+| Real gaps (fapi vs store) | 410 rows, tất cả Aug-05 (VPS interrupt 08:00+12:00) |
+| Backfill Aug-05 | 410 rows → `funding_8h/month=2026-08`, nhãn `source=fapi_backfill` |
+| Jul "gaps" | 0 — store đã đầy đủ |
+| Force-regen 07-27 | BANK fn=6 vol=1,571,406,887 ✓ |
+| Force-regen 08-05 | IDOL fn=6 ✓, XPIN fn=6 ✓, BANK fn=10 (1h interval, 10/24 captured) |
+| fn=1 AND data_ok=True | 0 ✓ |
+
+**Ghi chú BANKUSDT interval:** Config `funding_intervals.json` = 1h (expected_fn=24). Historical rows fn=6 đúng cho era 4h (trước thay đổi interval). Không cần fix — historical đúng với kỳ đó.
+
+### BR 24-26/07 — MISSING PERMANENTLY (L-10 ghi sổ)
+
+BRUSDT 2026-07-24/07-25/07-26 **không thể regen**:
+- W2 collection start lag: 1d stores (oi_hist_1d, taker_ratio_1d, top_acct_1d, top_pos_1d, retail_global_1d) chỉ có 3 rows ở các ngày này, BRUSDT=False
+- klines_1h có data (68/50/24 rows) nhưng `_build_native_1d()` cần đủ 5 stores
+- Thiếu không thể khôi phục từ store hiện tại — cần fapi re-pull từng ngày cho 1d stores (P2)
+
+### Step 4: Collector Polling Gap
+
+**Root cause:**
+- `collect_funding.py` dùng floating lookback 16h (không phải cursor)
+- Khi symbol mới vào universe, poll đầu chỉ cover `[now-16h, now]` → bỏ settlements trước đó
+- BANKUSDT niêm yết Binance Futures từ 2025-04-17 (onboardDate=1745001000000ms) — KHÔNG phải listing mới; gap do whale universe addition timing
+
+**repair_gaps.py:** Tồn tại (`scripts/repair_gaps.py`), proper CLI, idempotent, **KHÔNG trong crontab** — thiếu safety net.
+
+**Đề xuất:** `proposals/collector_gap_fix_20260808.md`
+- Option A (khuyến nghị): thêm `repair_gaps.py` vào weekly cron Chủ nhật 02:00 UTC, window 8 ngày
+- Option B (P2): cursor-based fetch per symbol trong collect_funding.py
+
+**Trạng thái:** Chờ operator ký Option A để thêm crontab.
+
+### Step 5: CSV bundle refresh — CẦN OPERATOR (ops gap)
+
+Không có job backup nào cho freshwatch CSVs trong crontab VPS. Canonical data không có lineage backup.
+
+**Đề xuất:** Thêm weekly cron SCP freshwatch_daily_*.csv về local hoặc git bundle. Operator xác nhận mechanism ưa thích (SCP local / git bundle / rsync) → agent implement.
+
+### Artifacts
+
+| File | Trạng thái |
+|---|---|
+| `_probe_bank27_storecheck_20260808.py` | → scripts/archive/ |
+| `_probe_bank27_fundingcount_20260808.py` | → scripts/archive/ |
+| `_probe_exporter_fn_logic_20260808.py` | → scripts/archive/ |
+| `_task_funding_audit_20260808.py` | → scripts/archive/ |
+| `_task_funding_backfill_20260808.py` | → scripts/archive/ |
+| `_task_force_regen_20260808.py` | → scripts/archive/ |
+| `_probe_br_universe_20260808.py` | → scripts/archive/ |
+| `_probe_br_native1d_20260808.py` | → scripts/archive/ |
+| `_probe_br_gap_20260808.py` | → scripts/archive/ |
+| `_probe_collector_polling_gap_20260808.py` | → scripts/archive/ |
+| `docs/reports/_funding_audit_20260808.txt` | GIỮ (reference) |
+| `docs/reports/_funding_backfill_20260808.txt` | GIỮ (reference) |
+| `proposals/collector_gap_fix_20260808.md` | MỚI |
+
+---
+
 ## SESSION 2026-08-07 (2) — BANANAS31 COLD-START PACK
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
