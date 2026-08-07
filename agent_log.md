@@ -2,6 +2,61 @@
 
 ---
 
+## SESSION 2026-08-08 (4) — GOM Gate §6 v6 + Deploy Pre-Check
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Nhiệm vụ
+
+6 items pre-deploy: (1) bằng chứng spec-mutation, (2) BANK pos_r 12 số, (3) rule-iv mọi ngày,
+(4) v6 TABLE artifact với số, (5) provenance data, (6) AKE 4-leg.
+
+### Kết quả
+
+**Gate v6 PASS=11 PASS*=2 WARN=1 PARTIAL=1 FAIL=0**
+
+| Row | Token | Type | Result | Key numbers |
+|-----|-------|------|--------|-------------|
+| 1 | BANK | open | PASS | chain_open=2026-06-29 |
+| 2 | BANK | chapter | PASS | ch2_start=2026-07-02 |
+| 3 | BANK | close-iv | PASS | closed=2026-07-16 pos_r_drop:57%_from_peak:3.71 |
+| 4 | TAG | open | PASS | chain_open=2026-07-10 |
+| 5 | BAS | supp | PASS | pc_days=15 no_early_open=Y |
+| 6 | BAS | open-after | PASS | GOM_post-07-16=['07-18','07-19','07-20'] |
+| 7 | BULLA | open | PASS | chain_open=2026-07-08 |
+| 8 | CLO | supp-neg | PASS | chain_open=2026-06-29 first_supp=2026-07-14 |
+| 9 | POWER | b-pos | PASS | chain_open=2026-07-05 |
+| 10 | BANK | close-iv-gate | PASS | confirm rule-iv 2026-07-16 |
+| Z1 | ZBT | open | PASS* | v4 carry: chain_open=07-01 |
+| Z2 | ZBT | close-iv | PASS* | v4 carry: pos_r_drop:34% |
+| P | PARTI | open+close | PARTIAL | open=None — toi_dq+decay chặn |
+| T2 | TAG | wrong-side | PASS | avg5(gLSR)=1.56→1.75 on 07-28→31, A2=False |
+| 11 | AKE | supp-then-open | WARN | decay=07-08 cd_end=07-21 data_end=07-18 |
+
+**Code fixes committed (f59a85c):**
+- gom_scan.py: rule-iv check TRƯỚC gap-check — BANK now closes 07-16 (not 07-18 via gap)
+- T2 TAG: dùng freshwatch 2026-07.csv thay TAG_result.txt (chỉ đến 07-21)
+
+**Spec committed (07a22a05 binance-bot-signals):** v1.4 §8.4(iv) clarify
+
+**Bằng chứng spec-mutation (§1):**
+- first-commit c4c9b61d: A2=stealth_grind, B4=oi_ignition
+- bản gốc (operator ký): A2=avg5(gLSR)≤1.1, B4=NOT funding_neg_div
+- Diff: reconstruction error trước first commit — không có post-commit mutation
+
+**AKE 4-leg (G1-AKE DEBT CLOSED):**
+taker 07-04→07-08: 47.3/41.7/45.9/46.4/47.9% — tất cả <48.0% → decay fires 07-08 (5th day).
+signals.py: single-leg check (taker_buy_pct only). LEGITIMATE.
+
+**PARTI PARTIAL (CẦN OPERATOR):**
+VPS export bắt đầu 06-27 (13 ngày trước 07-09). toi_dq i<13 chặn 06-27→07-09.
+Từ 07-10 toi_dq clear nhưng decay suppressor (cứng) fire liên tục → chain chưa bao giờ mở.
+Cần VPS data từ ≤06-20 để test GOM-A trước 07-09. Hoặc operator xác nhận PARTIAL = acceptable.
+
+**Report:** `docs/reports/gom_gate6_v6_20260808.txt`
+
+---
+
 ## SESSION 2026-08-08 (3) — HEI COLD-START PACK
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
