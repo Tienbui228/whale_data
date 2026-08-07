@@ -89,7 +89,8 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     a1 = lsr_accum(days, i, cfg)
     # A2: avg5(lsr_global) ≤ 1.1 — inline check (spec v1.3; stealth_grind = SG = auxiliary only)
     a2 = _avg5_glsr(days, i) <= 1.1
-    a3 = s3_eve(days, i, cfg)
+    # A3: gLSR slope 5d ≤ 1.15 — "fuel not exhausted" (§1; NaN/early → no-DQ → True)
+    a3 = not _slope_dq(days, i, sc)
     # A4: pos_rerate + hedge_structure alive in hedge_lb days
     hedge_alive = any(
         hedge_structure(days, j, cfg)
@@ -99,7 +100,8 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     a5 = funding_unpin(days, i, cfg)
 
     gom_a = {"A1": a1, "A2": a2, "A3": a3, "A4": a4, "A5": a5}
-    any_a  = any(gom_a.values())
+    # §1 structural formula: GOM-A = A1 AND A2 AND A3 AND (A4 OR A5)
+    gom_a_fire = a1 and a2 and a3 and (a4 or a5)
 
     # GOM-B signals
     # B1: hedge_structure bền ≥ hedge_lookback_days (all days in window must satisfy)
@@ -113,7 +115,7 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     b4 = not funding_neg_div(days, i, cfg)
     gom_b = {"B1": b1, "B2": b2, "B3": b3, "B4": b4}
 
-    # §1 structural formula: GOM-B = B1 AND (B2 OR B3) AND B4
+    # §1 structural formula: GOM-B = B1 AND (B2 OR B3) AND B4 (confirmed correct)
     gom_b_fire = b1 and (b2 or b3) and b4
 
     # Suppressor CỨNG (6 signals — trigger 14d cooldown)
@@ -157,20 +159,22 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
 
     cf_today = crowd_flush(days, i, cfg)
 
-    gom_day = (any_a or gom_b_fire) and not any_supp_dq and not any_perday_dq
+    gom_day = (gom_a_fire or gom_b_fire) and not any_supp_dq and not any_perday_dq
 
     return {
-        "gom_day":      gom_day,
-        "gom_a":        gom_a,
-        "gom_b":        gom_b,
-        "supp_dq":      supp_dq,
-        "perday_dq":    perday_dq,
-        "any_supp_dq":  any_supp_dq,
+        "gom_day":       gom_day,
+        "gom_a":         gom_a,
+        "gom_a_fire":    gom_a_fire,
+        "gom_b":         gom_b,
+        "gom_b_fire":    gom_b_fire,
+        "supp_dq":       supp_dq,
+        "perday_dq":     perday_dq,
+        "any_supp_dq":   any_supp_dq,
         "any_perday_dq": any_perday_dq,
-        "any_dq":       any_supp_dq or any_perday_dq,   # backward-compat
-        "disqualifier": {**supp_dq, **perday_dq},       # backward-compat flat view
-        "low_conf":     lc,
-        "crowd_flush":  cf_today,
+        "any_dq":        any_supp_dq or any_perday_dq,   # backward-compat
+        "disqualifier":  {**supp_dq, **perday_dq},       # backward-compat flat view
+        "low_conf":      lc,
+        "crowd_flush":   cf_today,
     }
 
 
@@ -626,15 +630,19 @@ def run_backfill(cfg: dict, sc: dict, token_filter: str | None = None) -> dict:
 # ── Backtest §6 gate table ────────────────────────────────────────────────────
 
 BACKTEST_GATE = [
+    # ── Compose-level conformance (§1 formula) — verified in code, not by case date ──
+    ("_FORMULA", "gom_a_fire", "GOM-A = A1 AND A2 AND A3 AND (A4 OR A5) — tất cả 3 điều kiện đầu bắt buộc đồng thời + ≥1 trong A4/A5"),
+    ("_FORMULA", "gom_b_fire", "GOM-B = B1 AND (B2 OR B3) AND B4 — structural entry only"),
+    # ── Case-level conformance (verified by replay date match) ───────────────────────
     ("BANK",   "open",    "Chain mở 06-29 (lsr_accum onset)"),
     ("BANK",   "chapter", "crowd_flush 07-02 → chapter mới"),
     ("BANK",   "close-iv","Chain ĐÓNG 07-19~21 (pos_r sập ≥30% từ peak), KHÔNG sống 07-24"),
     ("TAG",    "open",    "Chain mở 07-12 (lsr_accum + crowd_flush)"),
     ("BAS",    "SUPP",    "07-02→07-15: post_climax → disqualifier → GOM không fire"),
     ("BTW",    "SUPP",    "06-21→07-05: post_climax → disqualifier → GOM không fire"),
-    ("BULLA",  "open",    "stealth_grind 07-17 → GOM-A fires (A2)"),
+    ("BULLA",  "open",    "stealth_grind + B-path 07-17 → GOM fires (B1+B3+B4 path)"),
     ("TUT",    "chapter", "07-11: stealth_grind + crowd_flush → chapter mới"),
-    ("IDOL",   "open",    "07-06: lsr_accum + pos_rerate → GOM-A fires (A1+A4)"),
+    ("IDOL",   "open",    "07-06: lsr_accum + pos_rerate + A3-ok → GOM-A fires (A1+A2+A3+A4)"),
     ("AKE",    "SUPP",    "07-08→07-20: decay SUPP → GOM không fire"),
 ]
 

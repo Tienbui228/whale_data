@@ -303,6 +303,7 @@ def build_token_days(
         # S1: PARTIAL_DAY — insufficient funding settlements → Q1 skip flag
         fn_val = row.get("funding_n")
         if fn_val is not None and fn_val == fn_val:  # not NaN
+            day["funding_n"] = int(float(fn_val))
             try:
                 if int(float(fn_val)) < exp_fn:
                     day["_partial_day"] = True

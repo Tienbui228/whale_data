@@ -4416,3 +4416,214 @@ File: `D:\Data back test\binance-bot-signals\docs\gom_detect_spec.md`
 - **PARTI**: SCP freshwatch_daily từ VPS 5.223.67.21 để chạy episode 20/06→15/07.
 
 ---
+
+## SESSION 2026-08-08 (6) — VIỆC 4 CORRECTED: --daily 137 filter + A/B breakdown
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Bối cảnh
+
+Operator reject Việc 4 bảng 4.1 (526 symbols, wrong universe). Lệnh:
+1. Phân xử S-MISSING 24-26/07 (a)/(b)
+2. Re-run --daily với universe 137 đúng
+3. Nộp bảng mới + A/B breakdown top-5 Q1 + 3 token mẫu. DỪNG chờ duyệt.
+
+### S-MISSING 24-26/07 — Phân xử
+
+| Check | Kết quả |
+|---|---|
+| `top_pos_1h` VPS 2026-07-24 | 54,818 rows, 525 syms ✓ |
+| `top_pos_1h` VPS 2026-07-25 | 38,277 rows, 525 syms ✓ |
+| `top_pos_1h` VPS 2026-07-26 | 12,584 rows, 525 syms ✓ |
+| Nguồn S-MISSING | `top_pos_1d` (1d store) — chỉ có 3 syms (AKE/BANK/TAG) cho 3 ngày đó |
+| Kết luận | **Case (a)**: CSV export genuine — 1d store chỉ có 3 syms khi W2 mới khởi động |
+| Regen possible? | Có (1h data tồn tại đủ 525 syms) — nhưng sau filter 137: chỉ PARTI+ZBT bị ảnh hưởng |
+| ZBT | DELISTED (alpha endpoint 400) → S-MISSING permanent, không regen |
+| PARTI | Status chưa cập nhật — cần operator decision |
+| Impact lên open chains | PARTI+ZBT không xuất hiện trong OPEN table → regen không thay đổi bảng hiện tại |
+
+**Verdict**: Không cần regen để proceed. S-MISSING legitimate, ghi nhận case (a). Regen 3 ngày từ 1h store là tùy chọn cải thiện data quality cho PARTI nếu operator muốn.
+
+### Việc 4 Corrected — universe=freshwatch_symbols.txt@139
+
+**Probe:** `_probe_fw137_20260808.py`
+**Date:** 2026-08-06  **Window:** 2026-07-01 → 2026-08-06
+
+| Metric | Value |
+|---|---|
+| universe file | freshwatch_symbols.txt (VPS) — 139 lines (137 active + PARTI/ZBT delisted) |
+| Symbols scanned | 139 |
+| Jul CSV filter | 14,700 → 3,898 rows (525 → 139 syms) |
+| Aug CSV filter | 3,156 → 834 rows (526 → 139 syms) |
+| OPEN chains | 24 / 139 (17.3%) |
+| Q1 > $2M | FF ($3.7M ★) — chỉ 1 token |
+| S-MISSING | PARTI: 3 dates, ZBT: 3 dates (24-26/07) — chỉ 2 symbols |
+
+### OPEN SERIES — universe=freshwatch_symbols.txt@139 — 2026-08-06
+
+| TOKEN | ch | n | brk | start | Q1_cum | VWAP | peak_r |
+|---|---|---|---|---|---|---|---|
+| 0G | 2 | 4 | 0 | 2026-07-31 | $204,870 | $0.1421 | 1.62 |
+| ACU | 1 | 2 | 2 | 2026-08-02 | $103,092 | $0.0771 | 1.13 |
+| ALLO | 1 | 4 | 0 | 2026-07-27 | $104,304 | $0.2719 | 1.61 |
+| APR | 1 | 1 | 0 | 2026-08-06 | $527,899 | $0.1976 | 1.79 |
+| BAS | 1 | 3 | 2 | 2026-08-02 | $17,053 | $0.0278 | 1.91 |
+| BTW | 1 | 0 | 0 | 2026-08-06 | $0 | N/A | 1.67 |
+| CAP | 2 | 1 | 0 | 2026-08-04 | $0 | $0.0266 | 1.46 |
+| COAI | 1 | 1 | 1 | 2026-08-02 | $0 | $0.3361 | 1.23 |
+| ENSO | 1 | 5 | 0 | 2026-07-27 | $513,724 | $0.9013 | 3.00 |
+| FF | 2 | 6 | 0 | 2026-07-30 | $3,698,556 | $0.0649 | 3.23 ★ |
+| GIGGLE | 2 | 2 | 0 | 2026-08-05 | $0 | $33.4350 | 2.58 |
+| HOLO | 2 | 4 | 0 | 2026-08-01 | $186,272 | $0.0665 | 1.96 |
+| HUMA | 2 | 0 | 0 | 2026-08-04 | $0 | N/A | 7.81 |
+| IN | 1 | 1 | 0 | 2026-08-06 | $44,793 | $0.0330 | 1.25 |
+| INX | 1 | 1 | 0 | 2026-08-06 | $163,929 | $0.0074 | 1.04 |
+| ON | 1 | 0 | 0 | 2026-08-05 | $0 | N/A | 1.37 |
+| POWER | 1 | 3 | 0 | 2026-08-02 | $39,259 | $0.0851 | 1.07 |
+| ROBO | 1 | 2 | 0 | 2026-08-02 | $628,291 | $0.0118 | 3.77 |
+| SKYAI | 2 | 0 | 0 | 2026-08-05 | $0 | N/A | 1.35 |
+| SOPH | 1 | 1 | 0 | 2026-08-06 | $51,114 | $0.0038 | 1.43 |
+| STAR | 2 | 1 | 2 | 2026-08-04 | $0 | $0.0836 | 1.32 |
+| USELESS | 2 | 4 | 0 | 2026-08-03 | $393,397 | $0.0465 | 1.39 |
+| ZAMA | 2 | 1 | 0 | 2026-08-04 | $286,984 | $0.0491 | 1.55 |
+| ZEST | 2 | 3 | 0 | 2026-08-04 | $154,399 | $0.2291 | 1.11 |
+
+★ = Q1_cum > $2M: FF only
+
+### A/B Breakdown — Top-5 Q1 chains — ngày mở
+
+| Token | start | Q1 | A1 | A2 (avg5gLSR) | A3 | A4 | A5 | B1 | B2 | B3 | B4 | B-fire | SUPP | CF |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| FF | 2026-07-30 | $3.7M | T | T (0.576) | F | F | F | F | F | F | T | F | CLEAN | T |
+| ROBO | 2026-08-02 | $628K | T | F (1.138) | F | F | F | F | F | F | T | F | CLEAN | F |
+| APR | 2026-08-06 | $528K | T | T (0.993) | F | F | F | F | F | F | T | F | CLEAN | F |
+| ENSO | 2026-07-27 | $514K | T | T (1.096) | F | F | F | F | F | F | T | F | CLEAN | F |
+| USELESS | 2026-08-03 | $393K | F | T (1.094) | F | F | F | F | T | T | T | F | CLEAN | T |
+
+**Nhận xét**:
+- B1=False toàn bộ → chains mở qua GOM-A, không phải B
+- FF: A1+A2 fire → GOM-A entry, A2=avg5(gLSR)=0.576 (shorts cực kỳ nghiêng)
+- USELESS ch2: B2+B3+B4 nhưng B1=False → fire=False, mở qua A1+A2? → cần verify logic open
+- funding_n: không pass-through vào day dict (display-only; S1 logic dùng fn_val local — đúng)
+
+### Ghi chú kỹ thuật
+
+- `funding_n=N/A` trong display: key không được ghi vào day dict trong `build_token_days`. Logic S1 đúng (dùng local `fn_val`). Fix display: thêm `"funding_n": fn_val` vào day dict — minor, không block.
+- universe=freshwatch_symbols.txt@139 (139 dòng, 2 delisted: PARTI+ZBT)
+- Filtered CSVs: `scratch/fw137_test/` (tạm, không commit)
+
+### DỪNG — chờ operator duyệt bảng 4.2
+
+Cần duyệt trước Việc 5 (cron deploy).
+
+---
+
+## SESSION 2026-08-08 (7) — BUG FIX: GOM-A compose + A3 mapping + regen 24-26/07
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Phát hiện bugs (từ operator reject bảng 4.1)
+
+| Bug | Root cause | Fix |
+|---|---|---|
+| GOM-A compose | `any_a = any(gom_a.values())` = ANY A fires → bất kỳ 1 điều kiện là đủ | `gom_a_fire = a1 and a2 and a3 and (a4 or a5)` |
+| A3 mapping | `a3 = s3_eve(...)` = OI distribution-wall signal (Signal 10, AKE 14/07) — sai hoàn toàn | `a3 = not _slope_dq(days, i, sc)` (gLSR slope 5d ≤ 1.15) |
+| funding_n display | Key không pass-through vào day dict | Thêm `day["funding_n"] = int(float(fn_val))` |
+
+### Điều tra A3 (operator yêu cầu series FF)
+
+FF lsr_global series 07-20→07-31:
+```
+07-20: 0.4314  07-21: 0.4271  07-22: 0.4015  07-23: 0.4418
+07-24: [NaN - S-MISSING regen'd]  07-25: [NaN]  07-26: [NaN]
+07-27: 0.6093  07-28: 0.6181  07-29: 0.6137  07-30: 0.4611
+```
+FF 07-30: slope_5d = lsr_global[07-30] / lsr_global[07-25] — 07-25 là NaN (S-MISSING) → slope_dq=False → A3=True ✓
+
+### Regen 24-26/07 từ VPS 1h stores
+
+**Scope:** 136/139 freshwatch tokens có S-MISSING cho 24-26/07 (chỉ TAGUSDT/BANKUSDT/AKEUSDT có data)
+
+**Stores available:**
+| Store | Columns | Data 24-26/07 |
+|---|---|---|
+| klines_1h | OHLCV, quote_volume, taker_buy | ✓ 139 syms |
+| top_pos_1h | long_short_ratio (position LSR) | ✓ 139 syms |
+| oi_hist_1h | sum_open_interest_value | ✓ 139 syms |
+| taker_ratio_1h | buy_sell_ratio | ✓ 139 syms |
+| funding_8h | (empty — funding not collected those days) | ✗ 0 rows |
+
+**Regen chất lượng:** px_avg ✓, vol_quote ✓, lsr_global_r ✓(from top_pos_1h — may differ from retail_global), oi_usd ✗(NaN: column name mismatch), funding ✗(NaN: store empty). data_ok=1 (has LSR data).
+
+**Inject:** 417 rows vào fw137_test/freshwatch_daily_2026-07.csv (3898 → 4306 rows)
+
+### Fixes applied trong code
+
+| File | Change |
+|---|---|
+| `scripts/gom_scan.py` | A3: `s3_eve` → `not _slope_dq` |
+| `scripts/gom_scan.py` | compose: `any_a = any(...)` → `gom_a_fire = a1 and a2 and a3 and (a4 or a5)` |
+| `scripts/gom_scan.py` | `gom_day`: `any_a` → `gom_a_fire` |
+| `scripts/gom_scan.py` | return dict: thêm `gom_a_fire`, `gom_b_fire` |
+| `scripts/gom_scan.py` | BACKTEST_GATE: +2 rows `_FORMULA` cho gom_a_fire + gom_b_fire |
+| `scripts/fw_loader_utils.py` | funding_n pass-through vào day dict |
+
+### Kết quả --daily sau fix (2026-08-06, 139 symbols)
+
+**OPEN SERIES TABLE (7 chains) — universe=freshwatch_symbols.txt@139**
+
+| TOKEN | ch | n | brk | start | Q1_cum | VWAP | peak_r |
+|---|---|---|---|---|---|---|---|
+| INX | 1 | 1 | 0 | 2026-08-06 | $163,929 | $0.0074 | 1.04 |
+| SOPH | 1 | 1 | 0 | 2026-08-06 | $51,114 | $0.0038 | 1.43 |
+| IN | 1 | 1 | 0 | 2026-08-06 | $44,793 | $0.0330 | 1.25 |
+| POWER | 1 | 1 | 0 | 2026-08-04 | $0 | $0.0842 | 1.03 |
+| ACU | 1 | 1 | 2 | 2026-08-04 | $0 | $0.0768 | 1.09 |
+| COAI | 1 | 1 | 1 | 2026-08-04 | $0 | $0.3361 | 1.23 |
+| TAIKO | 1 | 0 | 1 | 2026-08-05 | $0 | N/A | 1.09 |
+
+★ Q1>$2M: NONE
+
+**S-MISSING:** DATAIP (early July - 3 dates), KGEN (1 date: 07-18) — S-MISSING 24-26/07 đã xử lý bằng regen ✓
+
+### A/B Breakdown top-5 Q1 chains (ngày mở)
+
+| Token | start | Q1 | A1 | A2(avg5g) | A3(slope) | A4 | A5 | A-fire | B1 | B2 | B3 | B4 | B-fire | SUPP |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| INX | 08-06 | $164K | F | F(3.672) | T(0.971) | F | F | F | T | F | T | T | T | CLEAN |
+| SOPH | 08-06 | $51K | F | F(3.282) | T(1.070) | F | F | F | T | F | T | T | T | CLEAN |
+| IN | 08-06 | $45K | F | F(3.249) | T(1.078) | F | F | F | T | F | T | T | T | CLEAN |
+| POWER | 08-04 | $0 | F | F(4.103) | T(1.081) | F | F | F | T | F | T | T | T | CLEAN |
+| ACU | 08-04 | $0 | F | F(2.980) | T(0.896) | F | F | F | T | F | T | T | T | CLEAN |
+
+**Nhận xét:**
+- Tất cả 5 (và cả 7) chains mở qua GOM-B path: B1 (hedge_structure) + B3 (absorption) + B4 (clean funding)
+- A2=False toàn bộ: avg5gLSR 2.8-4.1 (retail longs dominate >> 1.1) → GOM-A không fire
+- B1=True: top-trader position short-dominant (div_ratio ≤ 0.5) ngược chiều retail
+- B3=True: absorption (taker_buy_pct trong [44,50.5] ≥ 7 ngày) → dòng tiền nhỏ/trung lặng
+- B4=True: clean funding (funding_neg_div=False)
+- SUPP: CLEAN toàn bộ
+
+### Lưu ý chất lượng regen
+
+- `lsr_global_r` regen: từ top_pos_1h (top-trader position ratio) — khả năng khác với retail_global mà exporter thường dùng. Nên verify source sau.
+- `oi_usd` regen: NaN (cần map `sum_open_interest_value` thay vì tên khác)
+- `funding` regen: NaN (funding_8h empty cho 24-26/07 — funding chưa được collect thời W2 startup)
+- Impact: S-MISSING đã giải quyết; dữ liệu partial nhưng better than NaN; corrected 4-condition formula tránh false positive từ partial data
+
+### Artifacts mới
+
+| File | Trạng thái |
+|---|---|
+| `_probe_fix_verify_20260808.py` | Verify A3 + S-MISSING scope + VPS 1h column discovery |
+| `_probe_vps_stores_20260808.py` | Probe VPS store list + 24-26/07 availability |
+| `_probe_regen_24_26jul_20260808.py` | Regen 417 rows từ VPS 1h stores + inject vào fw137_test/ |
+| `_probe_table42v2_20260808.py` | Build corrected table 4.2-v2 + A/B breakdown |
+| `scratch/regen_24_26jul.csv` | Regen data (scratch, không commit) |
+| `scratch/fw137_test/*.csv` | Updated với regen data (scratch, không commit) |
+
+### DỪNG — chờ operator duyệt bảng 4.2-v2
+
+Việc 5 giữ đóng băng.
+
+---
