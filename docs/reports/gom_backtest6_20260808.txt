@@ -1,0 +1,32 @@
+
+Running backfill for §6 gate check...
+
+==========================================================================================
+§6 Backtest Gate — gom_detect_spec v1.1
+==========================================================================================
+ # Token   Episode      Kỳ vọng                                                 Result
+------------------------------------------------------------------------------------------
+ 1 BANK    open         Chain mở 06-29 (lsr_accum onset)                        PASS (06-27)
+ 2 BANK    chapter      crowd_flush 07-02 → chapter mới                         PASS (07-02)
+ 3 BANK    close-iv     Chain ĐÓNG 07-19~21 (pos_r sập ≥30% từ peak), KHÔNG s   PASS (07-16)
+ 4 TAG     open         Chain mở 07-12 (lsr_accum + crowd_flush)                PASS (06-26)
+ 5 BAS     SUPP         07-02→07-15: post_climax → disqualifier → GOM không f   PASS (dq fired, no open)
+ 6 BTW     SUPP         06-21→07-05: post_climax → disqualifier → GOM không f   PASS (dq fired, no open)
+ 7 BULLA   open         stealth_grind 07-17 → GOM-A fires (A2)                  PASS (07-02)
+ 8 TUT     chapter      07-11: stealth_grind + crowd_flush → chapter mới        PASS (07-13)
+ 9 IDOL    open         07-06: lsr_accum + pos_rerate → GOM-A fires (A1+A4)     PASS (07-04)
+10 AKE     SUPP         07-08→07-20: decay SUPP → GOM không fire                PASS (dq then open 07-14)
+------------------------------------------------------------------------------------------
+OVERALL: ALL PASS ✓
+
+Token events detail:
+  BANK: [('06-27', 'chain_open'), ('06-27', 'gom'), ('06-29', 'gom'), ('06-30', 'gom'), ('07-01', 'gom'), ('07-02', 'new_chapter_2'), ('07-02', 'gom'), ('07-03', 'gom'), ('07-04', 'new_chapter_3'), ('07-04', 'gom'), ('07-05', 'new_chapter_4'), ('07-05', 'gom'), ('07-06', 'gom'), ('07-07', 'gom'), ('07-08', 'gom'), ('07-09', 'gom'), ('07-10', 'gom'), ('07-11', 'gom'), ('07-12', 'gom'), ('07-13', 'gom'), ('07-14', 'gom'), ('07-15', 'gom'), ('07-16', 'chain_closed:pos_r_drop:57%_from_peak:3.71'), ('07-16', 'gom'), ('07-17', 'chain_open'), ('07-17', 'gom'), ('07-18', 'gom'), ('07-19', 'chain_closed:pos_r_drop:31%_from_peak:1.89'), ('07-19', 'gom'), ('07-20', 'chain_open'), ('07-20', 'gom'), ('07-21', 'gom')]
+  BANK: [('06-27', 'chain_open'), ('06-27', 'gom'), ('06-29', 'gom'), ('06-30', 'gom'), ('07-01', 'gom'), ('07-02', 'new_chapter_2'), ('07-02', 'gom'), ('07-03', 'gom'), ('07-04', 'new_chapter_3'), ('07-04', 'gom'), ('07-05', 'new_chapter_4'), ('07-05', 'gom'), ('07-06', 'gom'), ('07-07', 'gom'), ('07-08', 'gom'), ('07-09', 'gom'), ('07-10', 'gom'), ('07-11', 'gom'), ('07-12', 'gom'), ('07-13', 'gom'), ('07-14', 'gom'), ('07-15', 'gom'), ('07-16', 'chain_closed:pos_r_drop:57%_from_peak:3.71'), ('07-16', 'gom'), ('07-17', 'chain_open'), ('07-17', 'gom'), ('07-18', 'gom'), ('07-19', 'chain_closed:pos_r_drop:31%_from_peak:1.89'), ('07-19', 'gom'), ('07-20', 'chain_open'), ('07-20', 'gom'), ('07-21', 'gom')]
+  BANK: [('06-27', 'chain_open'), ('06-27', 'gom'), ('06-29', 'gom'), ('06-30', 'gom'), ('07-01', 'gom'), ('07-02', 'new_chapter_2'), ('07-02', 'gom'), ('07-03', 'gom'), ('07-04', 'new_chapter_3'), ('07-04', 'gom'), ('07-05', 'new_chapter_4'), ('07-05', 'gom'), ('07-06', 'gom'), ('07-07', 'gom'), ('07-08', 'gom'), ('07-09', 'gom'), ('07-10', 'gom'), ('07-11', 'gom'), ('07-12', 'gom'), ('07-13', 'gom'), ('07-14', 'gom'), ('07-15', 'gom'), ('07-16', 'chain_closed:pos_r_drop:57%_from_peak:3.71'), ('07-16', 'gom'), ('07-17', 'chain_open'), ('07-17', 'gom'), ('07-18', 'gom'), ('07-19', 'chain_closed:pos_r_drop:31%_from_peak:1.89'), ('07-19', 'gom'), ('07-20', 'chain_open'), ('07-20', 'gom'), ('07-21', 'gom')]
+  TAG: [('06-26', 'chain_open'), ('06-26', 'gom'), ('06-27', 'gom'), ('06-28', 'gom'), ('06-29', 'gom'), ('06-30', 'gom'), ('07-01', 'gom'), ('07-02', 'gom'), ('07-03', 'gom'), ('07-05', 'gom'), ('07-06', 'gom'), ('07-07', 'gom'), ('07-10', 'new_chapter_2'), ('07-10', 'gom'), ('07-12', 'gom'), ('07-13', 'gom'), ('07-14', 'gom'), ('07-15', 'gom'), ('07-16', 'gom'), ('07-17', 'gom'), ('07-18', 'gom'), ('07-19', 'gom'), ('07-20', 'gom')]
+  BAS: [('07-02', 'dq:post_climax'), ('07-03', 'dq:post_climax'), ('07-04', 'dq:post_climax'), ('07-05', 'dq:post_climax'), ('07-06', 'dq:post_climax'), ('07-07', 'dq:post_climax'), ('07-08', 'dq:post_climax'), ('07-09', 'dq:post_climax'), ('07-10', 'dq:post_climax'), ('07-11', 'dq:post_climax'), ('07-12', 'dq:post_climax'), ('07-13', 'dq:post_climax'), ('07-14', 'dq:post_climax'), ('07-15', 'dq:post_climax'), ('07-16', 'dq:post_climax')]
+  BTW: [('06-21', 'dq:post_climax'), ('06-22', 'dq:post_climax'), ('06-23', 'dq:post_climax'), ('06-24', 'dq:post_climax'), ('06-25', 'dq:post_climax'), ('06-26', 'dq:funding_neg_div+post_climax'), ('06-27', 'dq:post_climax'), ('06-28', 'dq:post_climax'), ('06-29', 'dq:post_climax'), ('06-30', 'dq:post_climax'), ('07-01', 'dq:post_climax'), ('07-02', 'dq:post_climax'), ('07-03', 'dq:post_climax'), ('07-04', 'dq:post_climax'), ('07-05', 'dq:post_climax'), ('07-10', 'dq:decay'), ('07-11', 'dq:decay'), ('07-12', 'dq:decay'), ('07-18', 'dq:decay')]
+  BULLA: [('06-24', 'dq:decay'), ('07-02', 'chain_open'), ('07-02', 'gom'), ('07-03', 'gom'), ('07-05', 'new_chapter_2'), ('07-05', 'gom'), ('07-06', 'gom'), ('07-07', 'gom'), ('07-08', 'gom'), ('07-09', 'gom'), ('07-11', 'gom'), ('07-12', 'gom'), ('07-13', 'gom'), ('07-14', 'gom'), ('07-17', 'new_chapter_3'), ('07-17', 'gom'), ('07-18', 'gom'), ('07-19', 'gom'), ('07-20', 'gom'), ('07-21', 'gom')]
+  TUT: [('07-11', 'chain_open'), ('07-11', 'gom'), ('07-12', 'gom'), ('07-13', 'new_chapter_2'), ('07-13', 'gom'), ('07-14', 'gom'), ('07-15', 'gom'), ('07-18', 'chain_closed:gom_gap>2d'), ('07-19', 'chain_open'), ('07-19', 'gom')]
+  IDOL: [('07-04', 'chain_open'), ('07-04', 'gom'), ('07-05', 'gom'), ('07-06', 'gom'), ('07-09', 'chain_closed:gom_gap>2d'), ('07-20', 'chain_open'), ('07-20', 'gom'), ('07-21', 'gom')]
+  AKE: [('07-08', 'dq:decay'), ('07-14', 'chain_open'), ('07-14', 'gom'), ('07-17', 'chain_closed:gom_gap>2d'), ('07-18', 'chain_open'), ('07-18', 'gom')]

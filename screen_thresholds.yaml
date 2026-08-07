@@ -1,0 +1,33 @@
+# screen_thresholds.yaml — SCREEN-tier thresholds cho gom_scan.py
+# Operator chỉnh tự do; log thay đổi bên dưới.
+# Ngưỡng signal canonical (lsr_accum, decay...) = thresholds.yaml LOCKED — không chỉnh ở đây.
+#
+# Changelog:
+# 2026-08-08 v1.0: khởi tạo theo spec gom_detect_spec.md v1.1
+
+gom:
+  # §8.3 — ngày đếm Q1: ret_1d (price return 1d) phải ≤ max này
+  ret_1d_max: 0.01          # +1.0%
+
+  # §8.1 — chuỗi cho phép đứt ≤ break_gap_max ngày liên tiếp
+  break_gap_max: 2
+
+  # §8.4 (iv) — pos_r sập ≥ này từ peak → ĐÓNG chuỗi ngay (ghế rời)
+  pos_r_drop_close: 0.30    # 30%
+
+  # §8.5 — ngưỡng Q1_cum footer warning
+  q1_cum_big_usd: 2_000_000  # $2M
+
+  # §8.3 — VWAP fallback sang vol-weighted khi ΔOI ≈ 0 (seat-rotation)
+  vwap_fallback_seats: true
+
+  # §1 — GOM-B: cần ≥ bao nhiêu B-conditions để trigger (nếu không có GOM-A)
+  gom_b_min_count: 2
+
+  # §2 — guards
+  vol_low_conf_usd: 200_000   # vol_quote < 200K → low_conf flag
+  oi_low_conf_usd: 1_000_000  # oi_usd < 1M → low_conf flag
+  min_history_days: 14        # ký hiệu cần ≥14 ngày lịch sử
+
+  # §1 GOM-A cond A4: hedge_structure lookback window (ngày) để check "backdrop"
+  hedge_lookback_days: 7

@@ -1,0 +1,523 @@
+GOM Backfill — 2026-08-07T01:09:42Z
+Signals: signals.py canonical  |  Thresholds: screen_thresholds.yaml
+
+======================================================================
+Token: AKE  (19 days)
+======================================================================
+  06-30:       [CLOSED:]
+  07-01:       [CLOSED:]
+  07-02:       ret=+2.3% [CLOSED:]
+  07-03:      B4 ret=+14.5% [CLOSED:]
+  07-04:      B4 ret=-24.8% [CLOSED:]
+  07-05:      B4 ret=-11.6% [CLOSED:]
+  07-06:      B4 ret=+0.9% [CLOSED:]
+  07-07:      B4 ret=-22.9% [CLOSED:]
+  07-08:       DQ:decay ret=-18.2% [CLOSED:]
+  07-09:       CF↑chapter ret=+0.6% [CLOSED:]
+  07-10:       ret=-1.2% [CLOSED:]
+  07-11:       ret=+7.8% [CLOSED:]
+  07-12:       ret=-4.9% [CLOSED:]
+  07-13:       ret=-3.0% [CLOSED:]
+  07-14: GOM  A3 ret=+0.6% Q1_cum=$0
+  07-15:      B4 CF↑chapter ret=+184.6% Q1_cum=$0
+  07-16:      B4 CF↑chapter ret=+63.1% Q1_cum=$0
+  07-17:      B4 CF↑chapter ret=+33.6% [CLOSED:gom_gap>2d]
+  07-18: GOM  A1 B4 CF↑chapter ret=+30.1% Q1_cum=$0
+══ AKE =====================================================
+ Chuỗi: [chương 1] start=2026-07-18  n_days=0  break_streak=0
+
+ Q1_cum:  $           0  (ΔOI⁺-weighted)
+ peak_pos_r: 1.08
+
+ LAYER COVERAGE: perp ✓ / spot ? / on-chain ?
+
+======================================================================
+Token: BANK  (36 days)
+======================================================================
+  06-16:       [CLOSED:]
+  06-17:       ret=-2.1% [CLOSED:]
+  06-18:       ret=-5.7% [CLOSED:]
+  06-19:       ret=-0.2% [CLOSED:]
+  06-20:       ret=+3.4% [CLOSED:]
+  06-21:       ret=-3.3% [CLOSED:]
+  06-22:       ret=-1.0% [CLOSED:]
+  06-23:       ret=-1.3% [CLOSED:]
+  06-24:       ret=+3.5% [CLOSED:]
+  06-25:      B3 ret=-4.9% [CLOSED:]
+  06-26:      B3 ret=+3.4% [CLOSED:]
+  06-27: GOM  B2 B3 ret=-1.6% Q1_cum=$0
+  06-28:      B3 ret=-1.8% Q1_cum=$0
+  06-29: GOM  A1 B3 ret=-2.1% Q1_cum=$0
+  06-30: GOM  A1 B3 ret=+1.3% Q1_cum=$0
+  07-01: GOM  A1 B3 ret=-0.7% Q1_cum=$0
+  07-02: GOM  A1 B3 CF↑chapter ret=+7.0% Q1_cum=$0
+  07-03: GOM  A1 B3 CF↑chapter ret=-3.8% Q1_cum=$12,350
+  07-04: GOM  A1 B3 CF↑chapter ret=+0.5% Q1_cum=$46,798
+  07-05: GOM  A1 B3 CF↑chapter ret=+0.2% Q1_cum=$0
+  07-06: GOM  A1 B3 ret=-2.8% Q1_cum=$0
+  07-07: GOM  A1 B3 ret=-2.5% Q1_cum=$245,546
+  07-08: GOM  A1 B2 B3 ret=-0.2% Q1_cum=$245,546
+  07-09: GOM  A1 B2 B3 ret=-0.3% Q1_cum=$385,546
+  07-10: GOM  A1 B2 B3 ret=+5.6% Q1_cum=$385,546
+  07-11: GOM  A1 B3 ret=+4.5% Q1_cum=$385,546
+  07-12: GOM  A1 A5 ret=+5.7% Q1_cum=$385,546
+  07-13: GOM  A1 A5 ret=+1.3% Q1_cum=$385,546
+  07-14: GOM  A1 A2 A5 ret=+3.2% Q1_cum=$385,546
+  07-15: GOM  A1 A2 A5 B4 ret=+9.5% Q1_cum=$385,546
+  07-16: GOM  A1 A2 A5 B4 ret=+23.6% [CLOSED:pos_r_drop:57%_from_peak:3.71]
+  07-17: GOM  A1 A2 B4 ret=+14.2% Q1_cum=$0
+  07-18: GOM  A1 A2 B4 ret=+28.3% Q1_cum=$0
+  07-19: GOM  A1 A2 B4 ret=+92.1% [CLOSED:pos_r_drop:31%_from_peak:1.89]
+  07-20: GOM  A1 A2 B4 CF↑chapter ret=+62.7% Q1_cum=$0
+  07-21: GOM  A1 A2 B4 ret=+7.2% Q1_cum=$0
+══ BANK ====================================================
+ Chuỗi: [chương 1] start=2026-07-20  n_days=0  break_streak=0
+
+ Q1_cum:  $           0  (ΔOI⁺-weighted)
+ peak_pos_r: 1.17
+
+ LAYER COVERAGE: perp ✓ / spot ? / on-chain ?
+ ⚠ SUSPECT: token trong án CSV-mutation — số cộng dồn mang cờ đến khi án đóng
+
+======================================================================
+Token: BAS  (36 days)
+======================================================================
+  06-16:       [CLOSED:]
+  06-17:       ret=+4.9% [CLOSED:]
+  06-18:       ret=+1.0% [CLOSED:]
+  06-19:       ret=+0.0% [CLOSED:]
+  06-20:       ret=-2.7% [CLOSED:]
+  06-21:       ret=+2.1% [CLOSED:]
+  06-22:       ret=-2.2% [CLOSED:]
+  06-23:       ret=+1.1% [CLOSED:]
+  06-24:       ret=+23.4% [CLOSED:]
+  06-25:       ret=+17.1% [CLOSED:]
+  06-26:       ret=+7.7% [CLOSED:]
+  06-27:       ret=-14.0% [CLOSED:]
+  06-28:       ret=+10.2% [CLOSED:]
+  06-29:       ret=+12.6% [CLOSED:]
+  06-30:       ret=-5.7% [CLOSED:]
+  07-01:       ret=-0.9% [CLOSED:]
+  07-02:       DQ:post_climax ret=-27.4% [CLOSED:]
+  07-03:      B4 DQ:post_climax CF↑chapter ret=-5.7% [CLOSED:]
+  07-04:       DQ:post_climax CF↑chapter ret=+25.2% [CLOSED:]
+  07-05:       DQ:post_climax ret=-12.0% [CLOSED:]
+  07-06:       DQ:post_climax ret=-18.9% [CLOSED:]
+  07-07:       DQ:post_climax ret=-8.7% [CLOSED:]
+  07-08:       DQ:post_climax CF↑chapter ret=+3.0% [CLOSED:]
+  07-09:       DQ:post_climax ret=+0.7% [CLOSED:]
+  07-10:      A1 DQ:post_climax ret=-2.2% [CLOSED:]
+  07-11:      A1 DQ:post_climax ret=-2.3% [CLOSED:]
+  07-12:      A1 B2 B3 DQ:post_climax ret=+0.1% [CLOSED:]
+  07-13:      A1 B2 DQ:post_climax ret=-0.6% [CLOSED:]
+  07-14:      A1 B2 DQ:post_climax ret=+2.6% [CLOSED:]
+  07-15:      B2 DQ:post_climax ret=-8.0% [CLOSED:]
+  07-16:      B2 DQ:post_climax ret=+9.1% [CLOSED:]
+  07-17:      B2 ret=+0.6% [CLOSED:]
+  07-18:      B2 ret=+2.3% [CLOSED:]
+  07-19:       ret=+0.2% [CLOSED:]
+  07-20:      B3 ret=-0.1% [CLOSED:]
+  07-21:       ret=+6.2% [CLOSED:]
+
+======================================================================
+Token: BASED  (36 days)
+======================================================================
+  06-16:       [CLOSED:]
+  06-17:       ret=-2.9% [CLOSED:]
+  06-18:       ret=+6.3% [CLOSED:]
+  06-19:       ret=+17.8% [CLOSED:]
+  06-20:       ret=-5.8% [CLOSED:]
+  06-21:       ret=+2.9% [CLOSED:]
+  06-22:       ret=-1.9% [CLOSED:]
+  06-23:       ret=+3.4% [CLOSED:]
+  06-24:       ret=-2.0% [CLOSED:]
+  06-25:       ret=-17.1% [CLOSED:]
+  06-26:       ret=-12.1% [CLOSED:]
+  06-27:       ret=+2.3% [CLOSED:]
+  06-28:       ret=+16.1% [CLOSED:]
+  06-29:       ret=+1.8% [CLOSED:]
+  06-30:       ret=+9.9% [CLOSED:]
+  07-01:      B4 ret=+28.0% [CLOSED:]
+  07-02: GOM  A2 B4 ret=-7.0% Q1_cum=$0
+  07-03: GOM  A2 B4 ret=-13.0% Q1_cum=$0
+  07-04: GOM  A2 B4 ret=+0.6% Q1_cum=$0
+  07-05: GOM  A2 B4 CF↑chapter ret=-2.5% Q1_cum=$0
+  07-06:       ret=+3.0% Q1_cum=$0
+  07-07:       ret=-6.0% Q1_cum=$0
+  07-08:       CF↑chapter ret=-6.7% [CLOSED:gom_gap>2d]
+  07-09:       ret=+20.3% [CLOSED:gom_gap>2d]
+  07-10:       ret=+2.3% [CLOSED:gom_gap>2d]
+  07-11:       ret=-4.2% [CLOSED:gom_gap>2d]
+  07-12:      B2 ret=+3.7% [CLOSED:gom_gap>2d]
+  07-13:      B2 ret=-1.7% [CLOSED:gom_gap>2d]
+  07-14:      B2 CF↑chapter ret=-9.8% [CLOSED:gom_gap>2d]
+  07-15:      B2 CF↑chapter ret=-1.8% [CLOSED:gom_gap>2d]
+  07-16:      B2 CF↑chapter ret=+4.0% [CLOSED:gom_gap>2d]
+  07-17: GOM  B2 B3 ret=-1.0% Q1_cum=$56,349
+  07-18:      B2 ret=+1.2% Q1_cum=$56,349
+  07-19:       ret=+0.7% Q1_cum=$56,349
+  07-20:       ret=-4.6% [CLOSED:gom_gap>2d]
+  07-21:       ret=-3.1% [CLOSED:gom_gap>2d]
+
+======================================================================
+Token: BTW  (36 days)
+======================================================================
+  06-16:       [CLOSED:]
+  06-17:       ret=-8.5% [CLOSED:]
+  06-18:       ret=-21.3% [CLOSED:]
+  06-19:       ret=+46.9% [CLOSED:]
+  06-20:       ret=+91.4% [CLOSED:]
+  06-21:       DQ:post_climax ret=-26.4% [CLOSED:]
+  06-22:       DQ:post_climax ret=-1.3% [CLOSED:]
+  06-23:       DQ:post_climax ret=-3.1% [CLOSED:]
+  06-24:       DQ:post_climax ret=+5.4% [CLOSED:]
+  06-25:       DQ:post_climax ret=-1.8% [CLOSED:]
+  06-26:       DQ:funding_neg_div+post_climax ret=-0.8% [CLOSED:]
+  06-27:       DQ:post_climax ret=-17.2% [CLOSED:]
+  06-28:       DQ:post_climax ret=-22.3% [CLOSED:]
+  06-29:       DQ:post_climax ret=-17.1% [CLOSED:]
+  06-30:       DQ:post_climax ret=+11.2% [CLOSED:]
+  07-01:       DQ:post_climax ret=+11.4% [CLOSED:]
+  07-02:      A1 DQ:post_climax ret=-0.9% [CLOSED:]
+  07-03:      A1 DQ:post_climax ret=-2.3% [CLOSED:]
+  07-04:      A1 DQ:post_climax ret=+0.1% [CLOSED:]
+  07-05:      A1 DQ:post_climax ret=+17.0% [CLOSED:]
+  07-06:       ret=-11.2% [CLOSED:]
+  07-07:       ret=-2.1% [CLOSED:]
+  07-08:       ret=-1.2% [CLOSED:]
+  07-09:       ret=+2.3% [CLOSED:]
+  07-10:       DQ:decay ret=-0.1% [CLOSED:]
+  07-11:       DQ:decay ret=-2.9% [CLOSED:]
+  07-12:      B3 DQ:decay ret=-3.5% [CLOSED:]
+  07-13:      B3 ret=-1.1% [CLOSED:]
+  07-14:      B3 ret=+0.3% [CLOSED:]
+  07-15:      B3 ret=+1.1% [CLOSED:]
+  07-16:      B3 ret=-0.8% [CLOSED:]
+  07-17:      B3 ret=-0.2% [CLOSED:]
+  07-18:      B3 DQ:decay ret=+5.2% [CLOSED:]
+  07-19:       ret=+5.4% [CLOSED:]
+  07-20:       ret=+1.3% [CLOSED:]
+  07-21:       ret=+1.1% [CLOSED:]
+
+======================================================================
+Token: BULLA  (36 days)
+======================================================================
+  06-16:       [CLOSED:]
+  06-17:       ret=-1.7% [CLOSED:]
+  06-18:       ret=-4.8% [CLOSED:]
+  06-19:       ret=-2.9% [CLOSED:]
+  06-20:       ret=+2.4% [CLOSED:]
+  06-21:       ret=+15.1% [CLOSED:]
+  06-22:       ret=+3.3% [CLOSED:]
+  06-23:       ret=+4.3% [CLOSED:]
+  06-24:       DQ:decay ret=-2.9% [CLOSED:]
+  06-25:       ret=-0.8% [CLOSED:]
+  06-26:       ret=+10.0% [CLOSED:]
+  06-27:       ret=-1.6% [CLOSED:]
+  06-28:       ret=+0.7% [CLOSED:]
+  06-29:      B1 ret=+4.9% [CLOSED:]
+  06-30:      B1 ret=-0.6% [CLOSED:]
+  07-01:      B1 ret=-0.9% [CLOSED:]
+  07-02: GOM  B1 B3 ret=+4.3% Q1_cum=$0
+  07-03: GOM  B1 B3 ret=-3.3% Q1_cum=$0
+  07-04:      B1 ret=+8.4% Q1_cum=$0
+  07-05: GOM  B1 B3 CF↑chapter ret=-3.3% Q1_cum=$0
+  07-06: GOM  B1 B3 ret=-1.9% Q1_cum=$0
+  07-07: GOM  B1 B3 ret=+1.0% Q1_cum=$0
+  07-08: GOM  B1 B3 ret=-7.8% Q1_cum=$0
+  07-09: GOM  B1 B3 ret=+1.0% Q1_cum=$0
+  07-10:      B1 ret=+2.5% Q1_cum=$0
+  07-11: GOM  B1 B3 ret=-1.4% Q1_cum=$0
+  07-12: GOM  B1 B3 ret=-1.5% Q1_cum=$0
+  07-13: GOM  B1 B3 ret=+0.1% Q1_cum=$81,329
+  07-14: GOM  B1 B3 ret=+7.7% Q1_cum=$81,329
+  07-15:      B1 CF↑chapter ret=+8.8% Q1_cum=$81,329
+  07-16:       CF↑chapter ret=+4.5% Q1_cum=$81,329
+  07-17: GOM  A2 B4 CF↑chapter ret=+17.1% Q1_cum=$0
+  07-18: GOM  A2 B4 ret=+5.9% Q1_cum=$0
+  07-19: GOM  A2 B4 ret=+12.4% Q1_cum=$0
+  07-20: GOM  A2 A4 B4 ret=-0.6% Q1_cum=$9,213
+  07-21: GOM  A2 ret=+11.0% Q1_cum=$9,213
+══ BULLA ===================================================
+ Chuỗi: [chương 3] start=2026-07-17  n_days=1  break_streak=0
+
+ Q1_cum:  $       9,213  (ΔOI⁺-weighted)
+ VWAP_gom: $0.010183 [vol-weighted fallback]  [chương hiện tại]
+ VWAP cũ:  chương 1: $0.006227 (2026-07-02→2026-07-05)  Q1=$0
+ VWAP cũ:  chương 2: $0.006288 (2026-07-05→2026-07-17)  Q1=$81,329
+ peak_pos_r: 1.99
+
+ LAYER COVERAGE: perp ✓ / spot ? / on-chain ?
+
+======================================================================
+Token: CLO  (36 days)
+======================================================================
+  06-16:       [CLOSED:]
+  06-17:       ret=+5.1% [CLOSED:]
+  06-18:       ret=+28.1% [CLOSED:]
+  06-19:       ret=+3.6% [CLOSED:]
+  06-20:       ret=+21.6% [CLOSED:]
+  06-21:       ret=-23.5% [CLOSED:]
+  06-22:       ret=+18.7% [CLOSED:]
+  06-23:       ret=+4.1% [CLOSED:]
+  06-24:       ret=-7.1% [CLOSED:]
+  06-25:       ret=-6.4% [CLOSED:]
+  06-26:       ret=-1.2% [CLOSED:]
+  06-27:       ret=-22.3% [CLOSED:]
+  06-28:       ret=-13.5% [CLOSED:]
+  06-29:       ret=-3.5% [CLOSED:]
+  06-30:       ret=+8.4% [CLOSED:]
+  07-01:       ret=-1.8% [CLOSED:]
+  07-02:       ret=-3.5% [CLOSED:]
+  07-03:       ret=-1.9% [CLOSED:]
+  07-04:      B3 ret=+6.8% [CLOSED:]
+  07-05:      B3 ret=-2.3% [CLOSED:]
+  07-06:      B3 ret=+1.1% [CLOSED:]
+  07-07:      B4 ret=+22.0% [CLOSED:]
+  07-08:      B4 ret=+16.1% [CLOSED:]
+  07-09:       ret=-1.2% [CLOSED:]
+  07-10:       ret=+5.1% [CLOSED:]
+  07-11:      B4 ret=+17.7% [CLOSED:]
+  07-12: GOM  A2 B4 CF↑chapter ret=+8.9% Q1_cum=$0
+  07-13: GOM  A2 B4 CF↑chapter ret=-15.3% Q1_cum=$0
+  07-14:      A2 B4 DQ:dist_wall ret=-7.7% [CLOSED:disqualifier:dist_wall]
+  07-15:      A2 B4 DQ:dist_wall ret=-1.9% [CLOSED:disqualifier:dist_wall]
+  07-16:      B4 DQ:dist_wall ret=-5.8% [CLOSED:disqualifier:dist_wall]
+  07-17:       DQ:dist_wall+lsr_dist ret=-4.7% [CLOSED:disqualifier:dist_wall]
+  07-18:       DQ:lsr_dist ret=-10.9% [CLOSED:disqualifier:dist_wall]
+  07-19:       DQ:lsr_dist ret=-6.5% [CLOSED:disqualifier:dist_wall]
+  07-20:       DQ:lsr_dist ret=-9.6% [CLOSED:disqualifier:dist_wall]
+  07-21:       DQ:lsr_dist ret=-4.0% [CLOSED:disqualifier:dist_wall]
+
+======================================================================
+Token: ESPORTS  (36 days)
+======================================================================
+  06-16:       [CLOSED:]
+  06-17:       ret=+44.7% [CLOSED:]
+  06-18:       ret=+25.4% [CLOSED:]
+  06-19:       DQ:post_climax ret=-69.7% [CLOSED:]
+  06-20:       DQ:post_climax ret=-13.1% [CLOSED:]
+  06-21:       DQ:post_climax ret=+2.4% [CLOSED:]
+  06-22:       DQ:post_climax ret=-11.6% [CLOSED:]
+  06-23:       DQ:decay+post_climax ret=+10.5% [CLOSED:]
+  06-24:       DQ:decay+post_climax ret=-2.8% [CLOSED:]
+  06-25:       DQ:post_climax ret=-1.4% [CLOSED:]
+  06-26:      B3 DQ:post_climax ret=-3.8% [CLOSED:]
+  06-27:       DQ:post_climax ret=+5.1% [CLOSED:]
+  06-28:       DQ:post_climax ret=-2.6% [CLOSED:]
+  06-29:      B1 DQ:funding_neg_div+post_climax ret=-2.1% [CLOSED:]
+  06-30:      B1 DQ:post_climax ret=-5.0% [CLOSED:]
+  07-01:      B1 DQ:post_climax ret=-1.7% [CLOSED:]
+  07-02:      B1 DQ:decay+post_climax ret=-8.5% [CLOSED:]
+  07-03:      B1 DQ:post_climax ret=+1.3% [CLOSED:]
+  07-04:      B1 ret=-1.5% [CLOSED:]
+  07-05:      B1 ret=-6.5% [CLOSED:]
+  07-06:      B1 ret=-3.6% [CLOSED:]
+  07-07:      B1 ret=-10.0% [CLOSED:]
+  07-08:      B1 DQ:decay ret=-20.7% [CLOSED:]
+  07-09:      B1 ret=+16.9% [CLOSED:]
+  07-10:      B1 ret=-1.5% [CLOSED:]
+  07-11:      B1 ret=-12.4% [CLOSED:]
+  07-12:      B1 ret=-6.0% [CLOSED:]
+  07-13:      B1 ret=-6.4% [CLOSED:]
+  07-14:      B1 ret=-1.0% [CLOSED:]
+  07-15:      B1 ret=+4.2% [CLOSED:]
+  07-16: GOM  B1 B4 ret=+32.3% Q1_cum=$0
+  07-17: GOM  B1 B4 CF↑chapter ret=+21.4% Q1_cum=$0
+  07-18:      B4 CF↑chapter ret=+23.5% Q1_cum=$0
+  07-19:      A2 B4 DQ:funding_extreme+post_climax ret=+16.4% [CLOSED:disqualifier:funding_extreme+post_climax]
+  07-20:      A2 B1 B4 DQ:post_climax ret=-38.9% [CLOSED:disqualifier:funding_extreme+post_climax]
+  07-21:      A2 B1 B4 DQ:post_climax ret=+2.4% [CLOSED:disqualifier:funding_extreme+post_climax]
+
+======================================================================
+Token: IDOL  (36 days)
+======================================================================
+  06-16:       [CLOSED:]
+  06-17:       ret=-1.8% [CLOSED:]
+  06-18:       ret=-1.9% [CLOSED:]
+  06-19:       ret=+3.2% [CLOSED:]
+  06-20:       ret=-9.5% [CLOSED:]
+  06-21:       ret=-18.9% [CLOSED:]
+  06-22:       ret=-15.6% [CLOSED:]
+  06-23:       ret=-1.0% [CLOSED:]
+  06-24:       ret=-0.9% [CLOSED:]
+  06-25:      B2 ret=+22.2% [CLOSED:]
+  06-26:      B2 ret=+15.5% [CLOSED:]
+  06-27:      B2 ret=-0.9% [CLOSED:]
+  06-28:      B2 ret=-4.3% [CLOSED:]
+  06-29:      B2 ret=-7.8% [CLOSED:]
+  06-30:      B2 ret=-1.8% [CLOSED:]
+  07-01:      B2 ret=-6.9% [CLOSED:]
+  07-02:      B2 CF↑chapter ret=-24.9% [CLOSED:]
+  07-03:       CF↑chapter ret=-1.5% [CLOSED:]
+  07-04: GOM  A5 CF↑chapter ret=-1.1% Q1_cum=$397,342
+  07-05: GOM  A5 ret=+1.2% Q1_cum=$397,342
+  07-06: GOM  A1 ret=-1.9% Q1_cum=$397,342
+  07-07:       ret=-0.4% Q1_cum=$397,342
+  07-08:      B3 ret=-1.1% Q1_cum=$397,342
+  07-09:      B3 ret=+1.2% [CLOSED:gom_gap>2d]
+  07-10:      B3 ret=+4.3% [CLOSED:gom_gap>2d]
+  07-11:       ret=-4.1% [CLOSED:gom_gap>2d]
+  07-12:       CF↑chapter ret=+2.2% [CLOSED:gom_gap>2d]
+  07-13:       CF↑chapter ret=-1.9% [CLOSED:gom_gap>2d]
+  07-14:       CF↑chapter ret=+1.7% [CLOSED:gom_gap>2d]
+  07-15:      B4 ret=+0.6% [CLOSED:gom_gap>2d]
+  07-16:      B4 ret=+1.0% [CLOSED:gom_gap>2d]
+  07-17:      B4 ret=+6.7% [CLOSED:gom_gap>2d]
+  07-18:      B4 ret=+4.1% [CLOSED:gom_gap>2d]
+  07-19:      B4 ret=+1.1% [CLOSED:gom_gap>2d]
+  07-20: GOM  A2 B4 ret=-9.2% Q1_cum=$0
+  07-21: GOM  A2 B4 ret=-1.9% Q1_cum=$0
+══ IDOL ====================================================
+ Chuỗi: [chương 1] start=2026-07-20  n_days=2  break_streak=0
+
+ Q1_cum:  $           0  (ΔOI⁺-weighted)
+ VWAP_gom: $0.015751 [vol-weighted fallback]  [chương hiện tại]
+
+ LAYER COVERAGE: perp ✓ / spot ? / on-chain ?
+
+======================================================================
+Token: POWER  (31 days)
+======================================================================
+  06-18:       [CLOSED:]
+  06-19:       ret=-3.2% [CLOSED:]
+  06-20:       ret=-1.5% [CLOSED:]
+  06-21:       ret=+0.9% [CLOSED:]
+  06-22:       ret=+10.4% [CLOSED:]
+  06-23:       ret=+4.1% [CLOSED:]
+  06-24:       ret=-4.5% [CLOSED:]
+  06-25:       ret=-4.3% [CLOSED:]
+  06-26:       ret=-0.7% [CLOSED:]
+  06-27:      B1 ret=-0.8% [CLOSED:]
+  06-28: GOM  B1 B3 ret=-3.4% Q1_cum=$0
+  06-29:      B1 ret=+5.3% Q1_cum=$0
+  06-30: GOM  B1 B3 ret=+0.1% Q1_cum=$103,782
+  07-01: GOM  B1 B3 ret=-1.1% Q1_cum=$168,539
+  07-02: GOM  B1 B3 ret=+1.7% Q1_cum=$168,539
+  07-03: GOM  B1 B3 ret=-0.2% Q1_cum=$234,764
+  07-04: GOM  B1 B3 ret=+2.2% Q1_cum=$234,764
+  07-05: GOM  B1 B3 ret=-11.8% Q1_cum=$234,764
+  07-06:      B1 CF↑chapter ret=-2.5% Q1_cum=$234,764
+  07-07:      B1 CF↑chapter ret=+4.9% Q1_cum=$234,764
+  07-08: GOM  B1 B4 CF↑chapter ret=+19.0% Q1_cum=$0
+  07-09:      B4 CF↑chapter ret=+2.7% Q1_cum=$0
+  07-10:      B4 ret=-7.2% Q1_cum=$0
+  07-11:      B4 ret=-3.2% [CLOSED:gom_gap>2d]
+  07-12: GOM  B1 B4 ret=-4.1% Q1_cum=$0
+  07-13:      B1 ret=-0.0% Q1_cum=$0
+  07-14:      B1 ret=+2.9% Q1_cum=$0
+  07-15:      B1 ret=-0.9% [CLOSED:gom_gap>2d]
+  07-16:      B1 ret=+3.3% [CLOSED:gom_gap>2d]
+  07-17:      B1 ret=-2.7% [CLOSED:gom_gap>2d]
+  07-18: GOM  B1 B3 ret=+2.5% Q1_cum=$0
+══ POWER ===================================================
+ Chuỗi: [chương 1] start=2026-07-18  n_days=0  break_streak=0
+
+ Q1_cum:  $           0  (ΔOI⁺-weighted)
+ peak_pos_r: 1.25
+
+ LAYER COVERAGE: perp ✓ / spot ? / on-chain ?
+
+======================================================================
+Token: TAG  (36 days)
+======================================================================
+  06-16:       [CLOSED:]
+  06-17:       ret=+17.4% [CLOSED:]
+  06-18:       ret=-10.2% [CLOSED:]
+  06-19:       ret=-2.6% [CLOSED:]
+  06-20:       ret=-7.1% [CLOSED:]
+  06-21:       ret=-1.0% [CLOSED:]
+  06-22:       ret=+0.6% [CLOSED:]
+  06-23:       ret=-1.2% [CLOSED:]
+  06-24:       ret=-3.0% [CLOSED:]
+  06-25:      B2 ret=-1.7% [CLOSED:]
+  06-26: GOM  B2 B3 ret=+6.2% Q1_cum=$0
+  06-27: GOM  B2 B3 ret=-3.3% Q1_cum=$0
+  06-28: GOM  B2 B3 ret=-3.4% Q1_cum=$0
+  06-29: GOM  B2 B3 ret=+10.3% Q1_cum=$0
+  06-30: GOM  B2 B3 ret=-0.6% Q1_cum=$0
+  07-01: GOM  B2 B3 ret=-2.3% Q1_cum=$0
+  07-02: GOM  B2 B3 ret=+0.4% Q1_cum=$0
+  07-03: GOM  B2 B3 ret=-2.2% Q1_cum=$94,379
+  07-04:      B2 ret=-3.1% Q1_cum=$94,379
+  07-05: GOM  B2 B3 ret=-1.5% Q1_cum=$186,330
+  07-06: GOM  B2 B3 ret=-1.3% Q1_cum=$186,330
+  07-07: GOM  B2 B3 ret=-0.9% Q1_cum=$186,330
+  07-08:      B2 ret=-19.3% Q1_cum=$186,330
+  07-09:       CF↑chapter ret=+12.3% Q1_cum=$186,330
+  07-10: GOM  A5 B4 CF↑chapter ret=+21.9% Q1_cum=$0
+  07-11:      B4 CF↑chapter ret=-1.4% Q1_cum=$0
+  07-12: GOM  A1 B4 CF↑chapter ret=-3.0% Q1_cum=$0
+  07-13: GOM  A1 B4 ret=-1.6% Q1_cum=$0
+  07-14: GOM  A1 B4 ret=-3.9% Q1_cum=$61,847
+  07-15: GOM  A1 B2 ret=-1.5% Q1_cum=$61,847
+  07-16: GOM  A1 B2 ret=-2.7% Q1_cum=$61,847
+  07-17: GOM  A1 ret=+9.5% Q1_cum=$61,847
+  07-18: GOM  A1 A5 B3 ret=+5.0% Q1_cum=$61,847
+  07-19: GOM  A1 ret=+18.4% Q1_cum=$61,847
+  07-20: GOM  A1 ret=+2.7% Q1_cum=$61,847
+  07-21:       ret=-4.8% Q1_cum=$61,847
+══ TAG =====================================================
+ Chuỗi: [chương 2] start=2026-07-10  n_days=5  break_streak=1
+
+ Q1_cum:  $      61,847  (ΔOI⁺-weighted)
+ VWAP_gom: $0.000921 [vol-weighted fallback]  [chương hiện tại]
+ VWAP cũ:  chương 1: $0.000943 (2026-06-26→2026-07-10)  Q1=$186,330
+ peak_pos_r: 1.74
+
+ LAYER COVERAGE: perp ✓ / spot ? / on-chain ?
+
+======================================================================
+Token: TUT  (36 days)
+======================================================================
+  06-16:       [CLOSED:]
+  06-17:       ret=-1.4% [CLOSED:]
+  06-18:       ret=-2.8% [CLOSED:]
+  06-19:       ret=+4.5% [CLOSED:]
+  06-20:       ret=-1.0% [CLOSED:]
+  06-21:       ret=-0.5% [CLOSED:]
+  06-22:       ret=-2.3% [CLOSED:]
+  06-23:       ret=+0.9% [CLOSED:]
+  06-24:       ret=+1.5% [CLOSED:]
+  06-25:       ret=+0.1% [CLOSED:]
+  06-26:       ret=+3.6% [CLOSED:]
+  06-27:       ret=-2.7% [CLOSED:]
+  06-28:       ret=-0.8% [CLOSED:]
+  06-29:      B3 ret=+0.1% [CLOSED:]
+  06-30:      B3 ret=-1.0% [CLOSED:]
+  07-01:      B3 ret=+1.9% [CLOSED:]
+  07-02:       ret=+0.0% [CLOSED:]
+  07-03:      B2 ret=+2.5% [CLOSED:]
+  07-04:      B2 ret=+3.4% [CLOSED:]
+  07-05:      B2 ret=-1.8% [CLOSED:]
+  07-06:      B2 ret=-6.8% [CLOSED:]
+  07-07:      B2 ret=-1.7% [CLOSED:]
+  07-08:      B2 ret=-3.7% [CLOSED:]
+  07-09:      B2 ret=+5.3% [CLOSED:]
+  07-10:      B2 ret=+6.8% [CLOSED:]
+  07-11: GOM  A2 B2 CF↑chapter ret=+12.7% Q1_cum=$0
+  07-12: GOM  A2 B2 CF↑chapter ret=+0.2% Q1_cum=$0
+  07-13: GOM  A2 B2 CF↑chapter ret=-1.2% Q1_cum=$0
+  07-14: GOM  A2 ret=+2.9% Q1_cum=$0
+  07-15: GOM  A2 ret=+0.7% Q1_cum=$193,664
+  07-16:       ret=+1.4% Q1_cum=$193,664
+  07-17:      B3 ret=+1.4% Q1_cum=$193,664
+  07-18:      B3 ret=-0.1% [CLOSED:gom_gap>2d]
+  07-19: GOM  B2 B3 ret=+0.7% Q1_cum=$19,243
+  07-20:      B3 ret=+4.2% Q1_cum=$19,243
+  07-21:       ret=+8.0% Q1_cum=$19,243
+══ TUT =====================================================
+ Chuỗi: [chương 1] start=2026-07-19  n_days=1  break_streak=2
+
+ Q1_cum:  $      19,243  (ΔOI⁺-weighted)
+ VWAP_gom: $0.013101  [chương hiện tại]
+ peak_pos_r: 4.92
+
+ LAYER COVERAGE: perp ✓ / spot ? / on-chain ?
+
+── NOTES CHUNG ───────────────────────────────────────────────────────
+PARTI: [status chưa cập nhật — VPS probe cần refresh]
+ZBT: DELISTED (alpha endpoint 400, không có data)
+SCREEN-only report. CONFIRM C1-C5 là tầng tay/ANALYSIS.
+
+State → D:\Data back test\whale_data\data\gom_state.json
