@@ -2,6 +2,83 @@
 
 ---
 
+## SESSION 2026-08-08 (10) — G1→G6 GOM-C Data Validation
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### G1→G6 probe results (VPS, `_vps_gomc_validation.py`)
+
+**Field corrections (probe bug):** `avg_px` (không phải `px_avg`), `lsr_pos`/`lsr_global` (không phải `lsr_pos_r`/`lsr_global_r`), `taker_buy_pct` đã là % (không nhân 100). Condition checks (C1-C4) do signal functions tính — không bị ảnh hưởng bởi display bug.
+
+#### G1 — TUT 07-13→07-23 (verify 4 C conditions)
+
+| Date | OI_M | C1_SG | C2_FP | C3_abs | C3_lax | C4_slp | GOMC |
+|------|------|-------|-------|--------|--------|--------|------|
+| 07-13 | 2.8M | T | T | . | T | T | **GOM-C** |
+| 07-14 | 2.7M | T | . | . | T | T | . |
+| 07-15 | 2.7M | T | . | . | T | T | . |
+| 07-16 | 2.9M | . | . | . | T | T | . |
+| 07-17 | 2.8M | . | . | T | T | . | . |
+| 07-18 | 3.0M | . | . | T | T | . | . |
+| 07-19 | 3.2M | . | T | T | T | T | . |
+| 07-20 | 3.1M | . | T | T | T | T | . |
+| 07-21 | 3.4M | T | T | . | T | T | **GOM-C** |
+| 07-22 | 3.8M | T | T | . | T | T | **GOM-C** |
+| 07-23 | 3.4M | T | T | . | T | T | **GOM-C** |
+
+TUT 07-13 field snapshot: avg_px=0.01226, taker_buy_pct=48.5%, funding_avg=5e-05 (0.005%/8h), OI=2.77M, lsr_pos=4.62, lsr_global=1.5615
+
+**Kết luận G1:**
+- GOM-C draft fires 07-13 (entry) và 07-21→23 (peak). Tổng 4/11 ngày.
+- Gián đoạn 7 ngày (07-14→07-20): C2 drop (funding_pinned window bao gồm ngày trước-grind), C4 block 07-17/18 (crowd accumulate long → gLSR slope > 1.15)
+- C3_abs luôn False (absorption quá chặt — range ±10% vi phạm vì giá +37%); C3_lax True mọi ngày
+- Nếu bỏ C4: GOM-C fire gần liên tục 07-13→07-23
+
+#### G2 — BANANAS31 negative test
+
+Phần lớn 07-24→07-26 là SUSPECT (regen gap). **0 GOM-C fires** trên non-suspect rows.  
+**Verdict: INCONCLUSIVE** — cần re-test sau khi có data tháng 8 đầy đủ.
+
+#### G3 — BULLA 07-15→07-21 (cover-driven?)
+
+C2 (funding_pinned) = False mọi ngày → GOM-C correctly blocked ✓. OI mostly tăng (không phải cover-driven). BULLA không phải grind archetype.
+
+#### G4 — BANK 07-10→07-20 (pos_r harvest)
+
+- GOM fires: 07-12→07-15 (4 ngày), chain OPEN
+- Close 07-16: `pos_r_drop:32%_from_peak:2.97` confirmed
+- Post-close OI surge: +0.05M, +5.71M, −0.96M, +12.99M, +23.91M → exit/distribution
+- peak_pos_r=2.974 → longs chiếm ~74.8% tổng position tại peak
+
+#### G5 — Re-accum scan
+
+| Token | CloseDate | Reaccum | Gap |
+|-------|-----------|---------|-----|
+| BANK | 07-16 | 07-20 | **4 ngày** |
+| TOWNS | 07-18 | no reaccum by 08-07 | 20d+ |
+
+BAS/ZBT/ARX vắng: close_reason khác (ZBT=dq_cooldown, không phải pos_r_drop).
+
+#### G6 — Q2 heuristic
+
+Tất cả 4 tokens (IDOL/ZBT/TUT/BANK): Q1_cum_usd=0 → seat-rotation archetype toàn bộ.  
+BANK implied long-side: 2.974/3.974 × 6.0M = **4.49M** (~75% OI tại peak).  
+Q2 metric `share=ΔOI⁺/OI` không áp dụng cho seat-rot. Đề xuất: `seat_rot_index = (peak_pr - base_pr) / base_pr`.
+
+### Output
+
+- `proposals/gom_c_backtest_data.md` — full tables + analysis + open questions
+- `proposals/gom_c_stealth_20260808.md` — draft GOM-C (chưa ký)
+
+### Câu hỏi mở cho operator (từ dữ liệu)
+
+1. C2 window vs single-day: funding_avg=0.005%/8h consistent nhưng FP chỉ fire 07-13 (window bao gồm pre-grind days). Nên dùng single-day check?
+2. Bỏ C4 khỏi GOM-C? Trong grind, crowd tăng long (gLSR tăng) là bình thường, không phải distribution.
+3. C3: dùng C3_lax (40-55%) thay C3_abs (absorption)?
+4. G2 negative test cần re-run với data tháng 8.
+
+---
+
 ## SESSION 2026-08-08 (9) — Probe TUT/ZBT/IDOL + GOM-C đề xuất + Display fix v1.5
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
