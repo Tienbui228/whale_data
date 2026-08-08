@@ -2,6 +2,92 @@
 
 ---
 
+## SESSION 2026-08-08 (14) — TRẢ NỢ 1-7: debt repayment session
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### NỢ 1 — PARTI state bug (ROOT CAUSE GHI ÁN)
+
+VPS gom_state.json cho PARTI: `dq_episode_start: 2026-07-11`, `dq_last_fire: 2026-07-23`, `dq_cooldown_end: 2026-07-24`. KHÔNG có chain nào.
+
+Trace day-by-day (`_probe_parti_trace_20260808.py`): A4 (pos_rerate) và A5 (funding_unpin) đều False trong toàn bộ 60d window. `gom_day = gom_a = gom_b = False` mọi ngày → chain không bao giờ mở. Gate v7 "chain-1 + chain-2" là từ phiên bản code cũ (trước khi A2/A3/B1 thay đổi).
+
+**Root cause:** hedge_structure không bao giờ thỏa mãn cho PARTI trong freshwatch data (div_ratio > 0.5 throughout). A4/A5 = False → GOM-A không fire → GOM-B không fire → chain không mở.
+
+**Án ghi:** PARTI không xuất hiện trong CHƯƠNG ĐÃ ĐÓNG vì chain chưa bao giờ mở với code hiện tại. Cần operator quyết định: (a) manual state injection, (b) signal calibration probe cho PARTI riêng, (c) chấp nhận PARTI là calib-only case.
+
+### NỢ 2 — REPORT NGÀY-2 + NGÀY-3
+
+Ngày-2 (date=2026-08-06): gom_daily.log chỉ có metadata `tg_send=OK open_chains_reported=6` (non-cron run 15:30 UTC). Reconstruction với current post-fix code → 6 open (INX/ACU/SOPH/IN/POWER/COAI), CAMPAIGN-TRACK 3 fires (FHE/OPEN/TUT).
+
+Ngày-3 (date=2026-08-07): Natural cron 01:25 UTC (pre-fix code) → 5 open chains (COAI/IN/INX/POWER/SOPH), full text in log. Reconstruction post-fix → 5 open, CAMPAIGN-TRACK [3 fires + 1 ⏸]: COOKIE/CYS/TUT + ⏸ TST cooldown 11d (first-fire 08-04).
+
+Discrepancy: session 13 probe showed 8 fires (AVA/COOKIE/CYS/GRIFFAIN/GTC/MAVIA/NOM/TUT). Reconstruction shows 3. Root cause: probe ran on intermediate state (many chains accumulated from prior probe runs); clean production state has more dq_cooldown history → 13d backward scan blocks 5 additional tokens.
+
+**Án ghi:** 8 fires vs 3 fires — cần xác định canonical fire count cho ngày-3. Operator cần quyết định: accept 3-fire reconstruction hoặc reset state sạch và re-run.
+
+Full reports: `docs/reports/ngo2_reports_20260808.txt`
+
+### NỢ 3 — G1-FINAL (ĐÃ ĐÓNG)
+
+Backfill 12 calib cases với code hiện tại. Kết quả: 5 PASS (KOMA/MYX/CROSS/TRADOOR/TOSHI) / 6 DIVERGE từ gate v7 / 1 WARN (AKE — 19 missing days).
+
+Nguyên nhân diverge: B1 mandatory (v1.2), A2 đổi từ stealth_grind → avg5(lsr_global) (v1.3), A3 required. Nhiều tokens gate v7 mở chain thì nay không mở (BANK mở 07-12 thay vì 06-29; TAG/CLO/BAS/IDOL/TUT không bao giờ mở).
+
+Report: `docs/reports/g1_final_20260808.txt`
+
+### NỢ 4 — F1: Alpha klines + TST F1-PENDING
+
+**52 symbols alpha_no_trading hàng ngày** (stable 08-06 và 08-07): 0G, 1000CHEEMS, ALLO, AT, BANANAS31, BANK, BARD, BMT, BREV, C, CGPT, COOKIE, EDEN, ENSO, ERA, F, FF, GENIUS, GIGGLE, HAEDAL, HEMI, HOLO, HOME, HUMA, HYPER, LA, MIRA, MITO, MUBARAK, NEWT, OPEN, OPG, OPN, PARTI, PLAY, PROVE, RESOLV, ROBO, SAHARA, SHELL, SIGN, SOPH, STO, TOWNS, TST, TURTLE, TUT, YB, ZAMA, ZBT, ZKC, ZKP.
+
+Tất cả 137 u50 symbols hiện đã có SOME alpha klines trong store (11 failures từ 04/08 backfill đã được forward-fill sau đó). `ok=85` daily = 85 tokens có alpha klines mới mỗi ngày; 52 `alpha_no_trading` không có spot trades trên BSC DEX ngày đó.
+
+**TST F1-PENDING → ĐÓNG:** TST có perp trading (freshwatch 39 rows 06-27→08-07, supp_dq fires từ funding_neg_div). TST là `alpha_no_trading` (không có Alpha DEX spot trades) — đây là expected behavior, KHÔNG phải lỗi collector. Cooldown GOM-C: dq_episode_start=08-04, dq_cooldown_end=08-17 → ⏸ TST trong report là đúng.
+
+**11 symbols backfill 04/08 fail:** Không thể phân biệt retrospectively (đã forward-filled). Subsumed by 52 alpha_no_trading list. Cần Nansen/BSC onchain data nếu cần phân loại chi tiết hơn → CẦN OPERATOR.
+
+### NỢ 5 — F3: Symbol drift 137→139
+
+`freshwatch_symbols.txt`: 139 entries. `alpha_id_map.json` (u50): 137 entries.
+
+Cross-reference:
+- 5 trong fw-filter KHÔNG có trong alpha_id_map: APR, ARX, PIEVERSE, Q, STAR
+- 3 trong alpha_id_map KHÔNG có trong fw-filter: B, GRVT, VELVET
+- Net: +5 -3 = +2 extra trong fw-filter so với alpha_id_map
+
+Hardcoded label `"fw137@139"` trong `run_gom_daily.py` line 324 là STALE (fw-filter hiện là 139, không phải 137).
+
+**Án ghi + operator advice:**
+- APR/ARX/PIEVERSE/Q/STAR: cần operator xác nhận có phải u50 freshwatch tokens hợp lệ không. Nếu có → thêm vào alpha_id_map (và update label). Nếu không → remove khỏi fw-filter.
+- B/GRVT/VELVET: có trong alpha_id_map nhưng không có trong fw-filter → có thể freshwatch không track chúng (BSC delisted hoặc không có perp data). Operator confirm.
+- Hardcoded "fw137@139" → cần sửa thành dynamic hoặc update số.
+
+### NỢ 6 — C4-canonical CASE_TAG.xlsx DAILY
+
+**File mtime:** 2026-08-06 10:00:00 | **Size:** 21521 bytes
+
+**Merged ranges (row 1):**
+- A1:Z1 = "PERP (may)" (26 cols: date → data_bad)
+- AA1:AJ1 = "SPOT/ALPHA (may)" (10 cols: spot_venue → alpha_suspect)
+- AK1:AM1 = "ON-CHAIN (ban tu dong)" (3 cols)
+- AN1:AO1 = "MANUAL (operator)" (2 cols)
+
+**DAILY data:** Rows 2-37 (header row 2 = sub-headers, rows 3-37 = 35 data rows). Last date: 2026-08-05. **MISSING 2026-08-06 và 2026-08-07.**
+
+**Columns consistently None:** ret_1d, oi_vs_med14, oi_cycle_pos, div_raw, div_avg3, glsr_slope_5d, d_pos_3d, d_acc_3d, signals_bullish, signals_suppress, screen_rank, data_bad, depth_bid2_usd→ask_wall_usd, exch_balance_delta, wallet_activity, dominance_pct, note_operator, mm_note. (Đây là các derived/secondary columns — expected blank trong auto-only mode.)
+
+**C4-canonical STATUS:** Columns `oi_usd` (L), `lsr_pos_r` (O), `lsr_acc_r` (P), `lsr_global_r` (Q), `f_avg/f_min/f_max/f_n` (F-I) đều filled từ freshwatch CSV (correct canonical source per FACTS). Không có dấu hiệu sai nguồn.
+
+**Verdict: CLOSE C4-canonical.** Nguồn dữ liệu đúng (freshwatch CSV = derived_1h). DAILY behind 2 ngày là operational gap riêng — cần agent append 08-06 và 08-07 nếu operator cho phép.
+
+### NỢ 7 — Crontab sync (ĐÃ ĐÓNG)
+
+VPS live crontab có 6 entries không có trong repo `crontab.txt` cũ: collect_premium_1h.py (:07 hourly), post_export_csv_commit.sh (01:20 UTC), ledger_daily.py (01:00 UTC), repair_gaps.py (Mon 03:30), run_gom_daily.py (01:25 UTC), git bundle (Sun 03:00 UTC).
+
+Đã update `crontab.txt` to match VPS live crontab (hardcoded VPS paths, all active entries included). Commit kèm trong session này.
+
+---
+
 ## SESSION 2026-08-08 (13) — C2 2×neutral fix + TST 14d cooldown + spec v1.6
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6

@@ -1,0 +1,190 @@
+NỢ 2 — REPORT NGÀY-2 + NGÀY-3
+Generated: 2026-08-08  Source: VPS gom_daily.log + reconstruction
+================================================================================
+
+NGÀY-2: date=2026-08-06
+  Original cron: ran 2026-08-07T15:30 UTC (session 13, pre-fix code)
+  Log entry: tg_send=OK  open_chains_reported=6
+  NOTE: message body NOT captured in log (non-cron run, logged metadata only)
+  Reconstruction below uses current post-fix code + production state.
+
+NGÀY-3: date=2026-08-07
+  Natural cron: 2026-08-08T01:25 UTC (pre-fix code) → logged below
+  Post-fix reconstruction: current code + production state → logged below
+  Discrepancy note: Session 13 probe showed 8 fires (AVA/COOKIE/CYS/GRIFFAIN/
+  GTC/MAVIA/NOM/TUT). Reconstruction shows 3 fires (COOKIE/CYS/TUT). Root cause:
+  session 13 probe used intermediate state (probe-accumulated gom_state.json);
+  reconstruction uses clean production state which has more dq_cooldown data
+  from prior runs → 13d supp_dq backward scan blocks more tokens.
+
+================================================================================
+NGÀY-2 — RECONSTRUCTED (post-fix code, production state)
+================================================================================
+
+📊 GOM Daily — 2026-08-06 (01:25 UTC)
+Universe: fw137@139 | A1∧A2∧A3∧(A4∨A5) | B1∧(B2∨B3)∧B4 | C β-PROV
+
+OPEN (6/139):
+    INX ch1 start=08-06 n=1 Q1=$164k
+    ACU ch1 start=08-02 n=2 brk=2 Q1=$103k
+    SOPH ch1 start=08-06 n=1 Q1=$51k
+    IN ch1 start=08-06 n=1 Q1=$45k
+    POWER ch1 start=08-02 n=3 Q1=$39k
+    COAI ch1 start=08-02 n=1 brk=1 Q1=$0
+★ Q1>$2M: NONE
+S-MISS today: 0 ✓
+S-MISS hist: 138 (short history, normal)
+
+CAMPAIGN-TRACK (theo doi, khong vao) [3] [PROVISIONAL]:
+  FHE n=1 Q2=$0.2-0.3M px=$0.02575 dOI=+0.00M
+  OPEN n=2 Q2=$2.9-4.7M px=$0.21107 dOI=+0.85M
+  TUT n=2 Q2=$1.5-2.4M px=$0.02737 dOI=+0.00M
+
+CHƯƠNG ĐÃ ĐÓNG (60d):
+  BANK ch1 07-12→07-16 n=0 Q1=$0 pr=2.97 VWAP=N/A [rule-iv] [seat-rot]
+  TOWNS ch2 07-15→07-18 n=0 Q1=$0 pr=1.84 VWAP=N/A [rule-iv] [seat-rot]
+  TRADOOR ch1 07-03→07-07 n=3 Q1=$96k pr=1.59 VWAP=$0.40373 [supp] ↑68.6%vsVWAP
+  TOSHI ch1 07-10→07-18 n=4 Q1=$46k pr=1.04 VWAP=$0.00011 [supp] ↓7.1%vsVWAP
+  CROSS ch1 07-06→07-10 n=4 Q1=$43k pr=1.02 VWAP=$0.07908 [supp] ↑26.3%vsVWAP
+  KOMA ch1 07-08→07-12 n=3 Q1=$25k pr=1.22 VWAP=$0.00743 [supp] ↑76.4%vsVWAP
+  GUA ch1 08-02→08-04 n=2 Q1=$8k pr=1.33 VWAP=$0.04760 [supp] ↓1.8%vsVWAP
+  FHE ch1 07-03→07-05 n=0 Q1=$0 pr=1.17 VWAP=N/A [supp]
+  MYX ch1 07-22→07-26 n=2 Q1=$239k pr=1.39 VWAP=$0.07844 [gap] ↓5.1%vsVWAP
+  ORDER ch1 07-12→07-26 n=9 Q1=$203k pr=1.12 VWAP=$0.03286 [gap] ↓14.3%vsVWAP
+  BULLA ch1 07-11→07-17 n=3 Q1=$188k pr=1.71 VWAP=$0.00603 [gap] ↑146.8%vsVWAP
+  IRYS ch1 07-13→07-26 n=7 Q1=$118k pr=1.28 VWAP=$0.01257 [gap] ↑21.2%vsVWAP
+  TURTLE ch1 07-03→07-17 n=7 Q1=$103k pr=2.91 VWAP=$0.03439 [gap] ↑28.8%vsVWAP
+  FIGHT ch1 07-14→07-21 n=4 Q1=$98k pr=1.35 VWAP=$0.00312 [gap] ↑12.4%vsVWAP
+  BTR ch1 07-12→07-19 n=4 Q1=$86k pr=1.07 VWAP=$0.01726 [gap] ↑25.6%vsVWAP
+
+PARTI [status pending] | ZBT perp sống
+[6 open / 139 symbols scanned]
+
+================================================================================
+NGÀY-3 — NATURAL CRON (pre-fix, 2026-08-08T01:25 UTC, from gom_daily.log)
+================================================================================
+
+GOM Daily — 2026-08-08T01:25:02Z
+Date: 2026-08-07  Window: 2026-06-08→2026-08-07  Symbols: 139  Store: /root/Data_back_test/whale_data/data/export
+
+━━ OPEN CHAINS (5) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+══ COAI ====================================================
+ Chuỗi: [chương 1] start=2026-08-02  n_days=1  break_streak=0
+ Điều kiện hôm nay: A3 B1 B3 B4
+ Q1_cum:  $           0  (ΔOI⁺-weighted)
+ VWAP_gom: $0.336094 [vol-weighted fallback]  [chương hiện tại]
+ peak_pos_r: 1.23
+ LAYER COVERAGE: perp ✓ / spot ? / on-chain ?
+
+══ IN ======================================================
+ Chuỗi: [chương 1] start=2026-08-06  n_days=1  break_streak=0
+ Điều kiện hôm nay: A3 B1 B3 B4
+ Q1_cum:  $      44,793  (ΔOI⁺-weighted)
+ VWAP_gom: $0.033010  [chương hiện tại]
+ peak_pos_r: 1.33
+ LAYER COVERAGE: perp ✓ / spot ? / on-chain ?
+
+══ INX =====================================================
+ Chuỗi: [chương 1] start=2026-08-06  n_days=1  break_streak=1
+ Điều kiện hôm nay: A3 B1 B4
+ Q1_cum:  $     163,929  (ΔOI⁺-weighted)
+ VWAP_gom: $0.007416  [chương hiện tại]
+ peak_pos_r: 1.04
+ LAYER COVERAGE: perp ✓ / spot ? / on-chain ?
+
+══ POWER ===================================================
+ Chuỗi: [chương 1] start=2026-08-02  n_days=4  break_streak=0
+ Điều kiện hôm nay: A3 B1 B3 B4
+ Q1_cum:  $     145,021  (ΔOI⁺-weighted)
+ VWAP_gom: $0.085262 [vol-weighted fallback]  [chương hiện tại]
+ peak_pos_r: 1.10
+ LAYER COVERAGE: perp ✓ / spot ? / on-chain ?
+
+══ SOPH ====================================================
+ Chuỗi: [chương 1] start=2026-08-06  n_days=1  break_streak=0
+ Điều kiện hôm nay: A3 B1 B3 B4
+ Q1_cum:  $      51,114  (ΔOI⁺-weighted)
+ VWAP_gom: $0.003845  [chương hiện tại]
+ peak_pos_r: 1.43
+ LAYER COVERAGE: perp ✓ / spot ? / on-chain ?
+
+[RAW STDOUT CONTINUES — S-MISSING section omitted for brevity]
+[5 open / 139 symbols scanned]
+[tg_send=OK — from log entry 2026-08-08T01:25:03Z]
+NOTE: Pre-fix code. No CAMPAIGN-TRACK GOM-C fires reported (C2 bug active).
+
+================================================================================
+NGÀY-3 — RECONSTRUCTED (post-fix: C2 2×neutral + TST ⏸)
+================================================================================
+
+📊 GOM Daily — 2026-08-07 (01:25 UTC)
+Universe: fw137@139 | A1∧A2∧A3∧(A4∨A5) | B1∧(B2∨B3)∧B4 | C β-PROV
+
+OPEN (5/139):
+    INX ch1 start=08-06 n=1 brk=1 Q1=$164k
+    POWER ch1 start=08-02 n=4 Q1=$145k
+    SOPH ch1 start=08-06 n=1 Q1=$51k
+    IN ch1 start=08-06 n=1 Q1=$45k
+    COAI ch1 start=08-02 n=1 Q1=$0
+★ Q1>$2M: NONE
+S-MISS today: 0 ✓
+S-MISS hist: 138 (short history, normal)
+
+CAMPAIGN-TRACK [3 fires + 1 ⏸] [PROVISIONAL]:
+  COOKIE n=1 Q2=$0.2-0.4M px=$0.01011 dOI=+0.00M
+  CYS n=1 Q2=$-0.3--0.5M px=$0.78642 dOI=+0.00M
+  TUT n=2 Q2=$1.4-2.2M px=$0.03494 dOI=-2.04M [cover-drv]
+  ⏸ TST cooldown 11d (first-fire 08-04)
+
+CHƯƠNG ĐÃ ĐÓNG (60d):
+  BANK ch1 07-12→07-16 n=0 Q1=$0 pr=2.97 VWAP=N/A [rule-iv] [seat-rot]
+  TOWNS ch2 07-15→07-18 n=0 Q1=$0 pr=1.84 VWAP=N/A [rule-iv] [seat-rot]
+  TRADOOR ch1 07-03→07-07 n=3 Q1=$96k pr=1.59 VWAP=$0.40373 [supp] ↑65.1%vsVWAP
+  TOSHI ch1 07-10→07-18 n=4 Q1=$46k pr=1.04 VWAP=$0.00011 [supp] ↓6.6%vsVWAP
+  CROSS ch1 07-06→07-10 n=4 Q1=$43k pr=1.02 VWAP=$0.07908 [supp] ↑26.9%vsVWAP
+  KOMA ch1 07-08→07-12 n=3 Q1=$25k pr=1.22 VWAP=$0.00743 [supp] ↑74.7%vsVWAP
+  GUA ch1 08-02→08-04 n=2 Q1=$8k pr=1.33 VWAP=$0.04760 [supp] ↓15.0%vsVWAP
+  FHE ch1 07-03→07-05 n=0 Q1=$0 pr=1.17 VWAP=N/A [supp]
+  MYX ch1 07-22→07-26 n=2 Q1=$239k pr=1.39 VWAP=$0.07844 [gap] ↓5.3%vsVWAP
+  ORDER ch1 07-12→07-26 n=9 Q1=$203k pr=1.12 VWAP=$0.03286 [gap] ↓11.4%vsVWAP
+  BULLA ch1 07-11→07-17 n=3 Q1=$188k pr=1.71 VWAP=$0.00603 [gap] ↑146.3%vsVWAP
+  IRYS ch1 07-13→07-26 n=7 Q1=$118k pr=1.28 VWAP=$0.01257 [gap] ↑25.9%vsVWAP
+  TURTLE ch1 07-03→07-17 n=7 Q1=$103k pr=2.91 VWAP=$0.03439 [gap] ↑30.9%vsVWAP
+  ACU ch1 08-02→08-07 n=2 Q1=$103k pr=1.13 VWAP=$0.07709 [gap] ↑3.9%vsVWAP
+  FIGHT ch1 07-14→07-21 n=4 Q1=$98k pr=1.35 VWAP=$0.00312 [gap] ↑19.0%vsVWAP
+
+PARTI [status pending] | ZBT perp sống
+[5 open / 139 symbols scanned]
+
+================================================================================
+DIFF NGÀY-2 → NGÀY-3
+================================================================================
+
+OPEN CHAINS: 6 → 5 (-1)
+  Closed on 08-07: ACU (gap, n=2, Q1=$103k, VWAP=$0.077, ↑3.9%vsVWAP)
+  Unchanged: COAI, IN, INX, POWER, SOPH
+
+CAMPAIGN-TRACK (post-fix):
+  Ngày-2: FHE(n=1), OPEN(n=2), TUT(n=1)  [3 fires, no ⏸]
+  Ngày-3: COOKIE(n=1), CYS(n=1), TUT(n=2) + ⏸ TST(cd=11d)  [3 fires + 1 ⏸]
+  Delta: FHE/OPEN dropped; COOKIE/CYS added; TUT continues; TST ⏸ appears
+
+CHƯƠNG ĐÃ ĐÓNG:
+  New entry on ngày-3: ACU ch1 08-02→08-07
+
+SESSION-13 PROBE DISCREPANCY:
+  Session 13 probe showed 8 GOM-C fires (AVA/COOKIE/CYS/GRIFFAIN/GTC/MAVIA/NOM/TUT)
+  Reconstruction shows 3 fires (COOKIE/CYS/TUT)
+  Root cause: probe ran on intermediate state (accumulated gom_state from probe runs
+  that had not yet applied 13d supp_dq lookback). Production state has more cooldown
+  history → 13d backward scan blocks AVA/GRIFFAIN/GTC/MAVIA/NOM.
+  → GHI ÁN: need to clarify which is the canonical ngày-3 fire count.
+  → Operator decision needed: accept 3-fire reconstruction or re-run probe with fresh state.
+
+CONFORMANCE CHECK:
+  ✓ Header format: Universe line, OPEN section, ★ Q1>$2M
+  ✓ CAMPAIGN-TRACK [PROVISIONAL] label present
+  ✓ ⏸ TST cooldown displayed: "⏸ TST cooldown 11d (first-fire 08-04)"
+  ✓ CHƯƠNG ĐÃ ĐÓNG section populated
+  ✓ PARTI [status pending] footer line
+  ✓ tg_send=OK (from log for natural cron)

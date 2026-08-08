@@ -1,0 +1,88 @@
+NỢ REPAYMENT SUMMARY — SESSION 14 (2026-08-08)
+=======================================================================
+
+| NỢ | Trạng thái | Commit / Report ref |
+|----|-----------|---------------------|
+| 1  | GHI ÁN (open) | agent_log.md § SESSION 14 NỢ 1 |
+| 2  | GHI ÁN (partial) | docs/reports/ngo2_reports_20260808.txt |
+| 3  | ĐÓNG | docs/reports/g1_final_20260808.txt |
+| 4  | ĐÓNG (TST F1-PENDING → closed) | agent_log.md § NỢ 4 |
+| 5  | GHI ÁN (operator advice) | agent_log.md § NỢ 5 |
+| 6  | ĐÓNG | agent_log.md § NỢ 6 |
+| 7  | ĐÓNG | crontab.txt updated |
+
+=======================================================================
+CHI TIẾT
+=======================================================================
+
+NỢ 1 — PARTI STATE BUG [GHI ÁN — chưa xử]
+  Root cause: A4 (pos_rerate) + A5 (funding_unpin) đều False trong toàn bộ 60d
+  window. hedge_structure không thỏa mãn (div_ratio > 0.5 always). Chain không bao
+  giờ mở với code hiện tại. Gate v7 chain-1/chain-2 từ code version cũ.
+  Cần operator: (a) manual injection, (b) calibration probe, (c) accept calib-only.
+
+NỢ 2 — REPORT NGÀY-2+3 [GHI ÁN — discrepancy chưa resolved]
+  Ngày-2 (08-06): 6 open, CAMPAIGN-TRACK 3 fires (FHE/OPEN/TUT). Log body missing.
+  Ngày-3 (08-07) pre-fix (natural cron 01:25 UTC): 5 open, NO GOM-C fires (log).
+  Ngày-3 post-fix (reconstruction clean state): 5 open, 3 fires (COOKIE/CYS/TUT) + ⏸ TST.
+  Discrepancy: session 13 probe = 8 fires; clean-state reconstruction = 3 fires.
+  Root cause discrepancy: probe ran on intermediate state (accumulated chains);
+  clean production state has more dq_cooldown history blocking 5 tokens.
+  Operator decision needed: accept 3 or reset state + re-run for canonical 8-fire count.
+
+NỢ 3 — G1-FINAL [ĐÓNG]
+  12 calib cases backfilled with current code.
+  PASS (code matches expectations): KOMA, MYX, CROSS, TRADOOR, TOSHI (5)
+  DIVERGE (code evolution): BANK, TAG, CLO, BAS, IDOL, TUT (6)
+    - BANK: opens 07-12 (vs gate v7 06-29) due to B1 mandatory
+    - TAG/CLO/BAS/IDOL/TUT: never open chain (A2/A3/B1 changes since gate v7)
+  WARN: AKE (19 missing days — short history)
+  No code changes needed. Divergences are expected from code evolution.
+
+NỢ 4 — F1 ALPHA [ĐÓNG]
+  52 alpha_no_trading symbols (stable 08-06 và 08-07 — no Alpha DEX spot trades):
+    0G 1000CHEEMS ALLO AT BANANAS31 BANK BARD BMT BREV C CGPT COOKIE EDEN ENSO ERA
+    F FF GENIUS GIGGLE HAEDAL HEMI HOLO HOME HUMA HYPER LA MIRA MITO MUBARAK NEWT
+    OPEN OPG OPN PARTI PLAY PROVE RESOLV ROBO SAHARA SHELL SIGN SOPH STO TOWNS TST
+    TURTLE TUT YB ZAMA ZBT ZKC ZKP
+  All 137 u50 have SOME alpha klines now (11 from 04/08 forward-filled).
+  TST F1-PENDING → CLOSED: TST is alpha_no_trading (expected, not collector error).
+    TST perp active: freshwatch 39 rows, supp_dq fires. GOM-C cooldown 08-04→08-17 correct.
+  GOM scan: all 52 alpha_no_trading can still fire GOM on perp data.
+
+NỢ 5 — F3 SYMBOL DRIFT [GHI ÁN — operator advice needed]
+  fw-filter: 139 entries. alpha_id_map (u50): 137 entries.
+  5 in fw-filter NOT in alpha_id_map: APR, ARX, PIEVERSE, Q, STAR
+  3 in alpha_id_map NOT in fw-filter: B, GRVT, VELVET
+  Net: +2 extra in fw-filter (the 137→139 drift)
+  Hardcoded label "fw137@139" in run_gom_daily.py line 324 is stale.
+  Operator advise: verify APR/ARX/PIEVERSE/Q/STAR are legitimate u50; if yes add to
+  alpha_id_map + update label. Verify B/GRVT/VELVET have no freshwatch perp data.
+
+NỢ 6 — C4-CANONICAL CASE_TAG.xlsx [ĐÓNG]
+  mtime: 2026-08-06 10:00:00 | size: 21521 bytes
+  Merged ranges: PERP(A-Z), SPOT/ALPHA(AA-AJ), ON-CHAIN(AK-AM), MANUAL(AN-AO)
+  Last DAILY row: 2026-08-05 (missing 08-06, 08-07 — operational gap)
+  Primary PERP columns (oi_usd, lsr_*, f_*): filled correctly from freshwatch CSV.
+  Derived columns (oi_vs_med14, div_raw, etc.): None = expected in auto-only mode.
+  C4-canonical = CLOSED. Data source is correct (derived_1h canonical per FACTS).
+
+NỢ 7 — CRONTAB SYNC [ĐÓNG]
+  Updated crontab.txt with all 6 missing VPS entries:
+    collect_premium_1h.py (7 * * * *)
+    ledger_daily.py (0 1 * * *)
+    post_export_csv_commit.sh (20 1 * * *)
+    run_gom_daily.py (25 1 * * *)
+    repair_gaps.py (30 3 * * 1 — weekly Mon)
+    git bundle (0 3 * * 0 — weekly Sun)
+  Fixed log paths to match VPS (flat logs/, not date-subdir logs/).
+  File: crontab.txt in repo root.
+
+=======================================================================
+OPEN ÁN SAU SESSION 14
+=======================================================================
+  - NỢ 1: PARTI chain state — cần operator quyết định approach
+  - NỢ 2: 8-fire vs 3-fire discrepancy — cần operator confirm canonical count
+  - NỢ 5: fw-filter APR/ARX/PIEVERSE/Q/STAR legality + label update
+  - DAILY TAG: append 08-06 và 08-07 (authorization needed)
+  - GOM-C "8 fires" investigation: identify why clean-state gives 3 not 8

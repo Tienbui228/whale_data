@@ -1,25 +1,40 @@
 # Whale Data Collector — crontab (UTC)
-# Install with: crontab crontab.txt
-# Requires WHALE_DATA_DIR env var pointing to project root
+# Canonical source: VPS root@5.223.67.21, synced 2026-08-08
+# Install (VPS): crontab crontab.txt
+# Note: uses .venv/bin/python3 (hardcoded VPS paths)
 
-# Hourly: klines, OI, position ratios, taker (at :05 to avoid exchange rollover spikes)
-5 * * * * cd $WHALE_DATA_DIR && python scripts/collect_hourly.py >> data/logs/$(date -u +\%Y-\%m-\%d)/hourly.log 2>&1
+# Hourly: main 1h data collector (OI, ratios, taker, klines)
+5 * * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/collect_hourly.py >> /root/Data_back_test/whale_data/data/logs/hourly.log 2>&1
 
-# 8h: funding rates (10 min after Binance settlement at 00:00/08:00/16:00 UTC)
-10 0,8,16 * * * cd $WHALE_DATA_DIR && python scripts/collect_funding.py >> data/logs/$(date -u +\%Y-\%m-\%d)/funding.log 2>&1
+# Hourly: premium index (W3, 1 API call)
+7 * * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/collect_premium_1h.py >> /root/Data_back_test/whale_data/data/logs/premium_1h.log 2>&1
 
-# W2: daily-period metrics (00:35 UTC — 35 min after 1d candle closes at 00:00)
-35 0 * * * cd $WHALE_DATA_DIR && python scripts/collect_daily_metrics.py >> data/logs/$(date -u +\%Y-\%m-\%d)/collect_daily_metrics.log 2>&1
+# 8h funding: 10 min after Binance settlement (00:00, 08:00, 16:00 UTC)
+10 0,8,16 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/collect_funding.py >> /root/Data_back_test/whale_data/data/logs/funding.log 2>&1
 
-# Daily spot klines (01:05 UTC — 65 min after 1d candle closes)
-5 1 * * * cd $WHALE_DATA_DIR && python scripts/collect_spot_daily.py >> data/logs/$(date -u +\%Y-\%m-\%d)/spot_daily.log 2>&1
+# W2: daily-period metrics (00:35 UTC)
+35 0 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/collect_daily_metrics.py >> /root/Data_back_test/whale_data/data/logs/collect_daily_metrics.log 2>&1
 
-# Daily Alpha klines (02:00 UTC — after spot_daily, bapi endpoint separate)
-# Failure: ERROR + exit≠0 + Telegram alert (L-44). Missing alpha_id_map.json = fail.
-0 2 * * * cd $WHALE_DATA_DIR && python scripts/collect_alpha_daily.py >> data/logs/$(date -u +\%Y-\%m-\%d)/alpha_daily.log 2>&1
+# Ledger daily (01:00 UTC)
+0 1 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 ledger_daily.py --live --notes >> /root/Data_back_test/whale_data/ledger_daily.log 2>&1
 
-# Daily: universe refresh (CoinGecko + exchangeInfo)
-30 1 * * * cd $WHALE_DATA_DIR && python scripts/collect_daily.py >> data/logs/$(date -u +\%Y-\%m-\%d)/daily.log 2>&1
+# E3: spot klines daily (01:05 UTC -- sau export 00:50)
+05 01 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/collect_spot_daily.py >> /root/Data_back_test/whale_data/data/logs/collect_spot_daily.log 2>&1
 
-# Weekly: integrity audit (Sunday 03:00 UTC)
-0 3 * * 0 cd $WHALE_DATA_DIR && python scripts/audit_integrity.py >> data/logs/$(date -u +\%Y-\%m-\%d)/audit.log 2>&1
+# W4: freshwatch export + git commit (01:20 UTC -- sau spot/alpha; L-41)
+20 1 * * * cd /root/Data_back_test/whale_data && scripts/post_export_csv_commit.sh >> /root/Data_back_test/whale_data/data/logs/freshwatch_export.log 2>&1
+
+# GOM daily scan (01:25 UTC -- L-44)
+25 1 * * * cd /root/Data_back_test/whale_data && python3 scripts/run_gom_daily.py >> /root/Data_back_test/whale_data/data/logs/gom_daily.log 2>&1
+
+# Universe refresh (01:30 UTC)
+30 1 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/collect_daily.py >> /root/Data_back_test/whale_data/data/logs/daily.log 2>&1
+
+# E3-alpha-v2: Alpha klines daily via bapi (02:00 UTC -- sau spot 01:05)
+00 02 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/collect_alpha_daily.py >> /root/Data_back_test/whale_data/data/logs/collect_alpha_daily.log 2>&1
+
+# repair_gaps: weekly funding backfill (Mon 03:30 UTC, L-44)
+30 3 * * 1 cd /root/Data_back_test/whale_data && .venv/bin/python3 scripts/repair_gaps.py funding_8h --start-date $(date -u -d "8 days ago" +%Y-%m-%d) --end-date $(date -u -d "1 day ago" +%Y-%m-%d) >> data/logs/repair_gaps.log 2>&1 || echo "repair_gaps FAILED exit=$?" >> data/logs/repair_gaps.log
+
+# Weekly git bundle (Sun 03:00 UTC)
+0 3 * * 0 cd /root/Data_back_test/whale_data && git bundle create /root/archive/whale_data_$(date -u +%Y%m%d).bundle --all >> data/logs/bundle.log 2>&1
