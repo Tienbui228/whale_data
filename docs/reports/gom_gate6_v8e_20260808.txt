@@ -227,3 +227,34 @@ TASKS STILL OPEN (post v8e)
 - BTW backfill hook verify: BTW re-run after hook implementation
 - C4 BANANAS31: PENDING 15/08
 - SWAP STATE (bước 4): hold until both conditions met → SCP gom_state_v8.json to VPS
+
+========================================================================
+DISPLAY SPEC CHANGELOG §4 — 2026-08-08 (commit a41dcb1)
+========================================================================
+Amendment: VWAP display trong Telegram report
+
+§4.1 OPEN section — thêm 3 cột:
+  Format cũ: {tok} ch{N} start={MM-DD} n={N} Q1=${K}k
+  Format mới: {tok} ch{N} n={N} Q1=${K}k VWAP=${P}[vw-fallback?] px=${P} ↑/↓{PCT}%
+  - VWAP = vwap_num/vwap_den từ chain state (ΔOI⁺-weighted khi chain open)
+  - [vw-fallback] khi vwap_fallback_used=True (vol-weighted §8.3)
+  - VWAP=N/A khi vwap_den=0 (chains chưa tích — seat-rot thuần, ví dụ CAP)
+  - px = avg_px từ freshwatch CSV target_date
+  - Δ% = (px - VWAP) / VWAP × 100 (↑ nếu px > VWAP, ↓ ngược lại)
+  - start= bỏ (rút ngắn dòng); brk= giữ
+
+§4.2 CAMPAIGN-TRACK — thêm VWAP chuỗi C:
+  Format cũ: {tok} n={N} Q2={q2} px={P} dOI={D}
+  Format mới: {tok} n={N} Q2={q2} VWAP={P} px={P} dOI={D}
+  - VWAP lấy từ chain state tại ngày fire GOM-C
+  - CYS/TUT có VWAP=N/A = chains suppressed, update_chain return trước VWAP block
+    (không có GOM-A open chain history → cost basis ABSTAIN per §8.3 note)
+  - COOKIE có VWAP=$0.00774[vw-fallback] = vol-weighted trên ngày suppressed
+
+§4.3 Footer cố định (1 dòng, append sau closed section):
+  "VWAP = giá vốn ước của build TRONG cửa sổ chuỗi — không đo kho hình thành
+  trước (TUT kho 83% cost ABSTAIN). Đọc là floor kinh tế + mốc invalidate,
+  không phải điểm entry."
+
+Verify: probe format 08-07 PASS. Telegram sent 12:xx UTC 08-08.
+Code path: run_gom_daily.py:format_tg_report() + gom_scan.py:gomc_beta_fires dict.
