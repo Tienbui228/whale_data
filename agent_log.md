@@ -6072,3 +6072,109 @@ Gate scratch local KHÔNG swap production.
 
 **→ B2.5 swap conditions MET. Chờ operator ký để deploy production.**
 
+---
+
+## SESSION 2026-08-09 (23) — B2.5 THỰC THI + BASELINE TG + SPEC v1.9
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Bối cảnh
+
+Operator auto-sign từ điều-kiện-tự-động (cả bốn ô PASS). B2.5 thực thi ngay:
+swap gom_state trên VPS, gửi baseline TG report v9, spec bump v1.9, ZBT/BANK A1 lessons.
+
+### Việc đã làm
+
+#### 1. B2.5 Swap (VPS)
+
+```
+cp gom_state.json gom_state_backup_20260809T1445.json
+cp gom_state_v9_vps.json gom_state.json
+md5sum: bc3f8c35f21f528afeaac4ef13680048 (ba file giống nhau — state đã là v9 từ run 14:36)
+```
+
+#### 2. SCP run_gom_daily.py (thiếu rep-threshold)
+
+Phát hiện VPS run_gom_daily.py là bản cũ (không có vwap_rep_frac). SCP bản mới.
+Sau SCP: grep vwap_rep_frac trên VPS → có ✓.
+
+#### 3. Baseline TG report v9 (08-07)
+
+Gửi thành công. Kết quả:
+
+```
+📊 GOM Daily — 2026-08-07
+OPEN (16/139):
+  FF ch1 n=5 Q1=$1988k gross | net=$748k [churn] VWAP=$0.0644 px=$0.0647 ↑0.4%
+     Q2=$5.8–23.2M[INFER] [CONFIRM 0.1: unconfirmed]           ← kỳ vọng ✓
+  BANK ch2 07-04→07-14 VWAP=$0.03972[vw-vol] [rule-iv] [retro 07-16]   ← kỳ vọng ✓
+  PARTI ch1 07-07→07-11 VWAP=$0.04791[vw-vol] [rule-iv]
+  ZBT ch2 07-06→07-14 VWAP=$0.12547 [rule-iv]
+GOM-C: COOKIE ✓ CYS ✓ TUT ✓ TST cooldown
+```
+
+Display fixes trong session này:
+- Closed chains: T2 VWAP[vw-vol] fallback (T1 threshold 5%)
+- Closed chains: [retro MM-DD] label từ retro_tag field
+- Open chains: Q2-dải [INFER] = [0.2×oi_last, 0.8×oi_last]M
+
+#### 4. Spec bump gom_detect_spec.md → v1.9
+
+| Nội dung | Chi tiết |
+|---|---|
+| M2 addendum | vwap_t1_min_rep_frac=0.05 (Tier-1 chỉ khi vwap_den ≥ 5% oi_start) |
+| Display Q2-dải | open chains: [0.2×oi_last, 0.8×oi_last]M [INFER] |
+| Display T2 VWAP | closed chains: T2[vw-vol] + [retro MM-DD] |
+| Provenance L-48 | CLAUDE.md: 4-trường header cho gate/rescan; scratch ≠ production |
+| Gate v9 vs v8e | 0 delta, VPS canonical verified, PARTI/ZBT/BANK anchors signed |
+
+#### 5. ZBT ANALYSIS — framing đúng (L-28 family)
+
+**Lesson (L-28 family): probe fresh-state không carry DQ = chapter ma**
+
+Scratch probe `_probe_zbt_analysis_20260809.py` dùng `chain = {}` fresh → không mang
+DQ state từ July (dq_cooldown_end=2026-08-09). Kết quả: "chapter 08-01→08-07 rule-iv"
+= artifact, không tồn tại trên canonical VPS.
+
+**Quy ước áp dụng mọi probe chain:**
+Mọi probe chain PHẢI khai `state-nguồn`:
+- `chain = {}` = fresh analysis, không có suppressor history (khai rõ trong docstring)
+- `chain = load_state(tok)` = carry production state
+Nếu không khai = probe void (không dùng làm cơ sở ANALYSIS).
+
+**ZBT data thật:**
+- pos_r drop 08-01→08-07: 3.41→1.71 (-50%) REAL trong data
+- OI spike 08-07: $7.89M→$18.89M REAL
+- Nhưng: DQ block → không có chapter canonical → ANALYSIS không có gì để chuyển
+
+**ANALYSIS note:** ZBT đang POST-DQ WATCH từ 08-10. Nếu pos_r recover → watch new chapter.
+Nếu flat/giảm → ghế đã rời, không chapter mới.
+
+#### 6. BANK A1 — bài học provenance (L-28 family)
+
+3d shift (v8 07-12 → v9 07-09) hóa ra là chênh scratch-vs-canonical:
+- Calib probe: v8 sim vs v9 → SAME results (delta ±0.014, không flip A1)
+- Canonical VPS: cả hai đồng thuận start=07-04 → delta=0
+- Root cause: v8_backup dùng pre-B2.1 codebase (không phải pre-M1 only)
+
+**Tổng kết L-28 family:** Một án (provenance), ba triệu chứng:
+1. PARTI "no chain" local → VPS canonical PASS
+2. BANK "3d shift" → zero delta trên canonical
+3. ZBT "chapter 08-01→07" → DQ-blocked artifact
+
+One fix: provenance header L-48. Đây là bài học tốt.
+
+### Trạng thái sau session
+
+| Item | Status |
+|---|---|
+| B2.5 | **DONE — VPS chạy v9 production** |
+| spec | v1.9 (09/08/2026) |
+| run_gom_daily.py | VPS updated (T2 VWAP + retro-tag + Q2-dải) |
+| cron 01:25 | Tiếp quản tự nhiên đêm nay |
+| ZBT | POST-DQ WATCH từ 08-10 (DQ expires 08-09) |
+| BANK | DONE — 3d shift resolved, retro-tag displayed |
+| B2.3 | PENDING — A6 3-case test |
+| C4 | PENDING 15/08 — BANANAS31 negative test |
+| PC proposal | PENDING WRITE |
+

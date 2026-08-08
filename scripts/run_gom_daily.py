@@ -190,7 +190,16 @@ def _closed_section(state: dict, fw_base: set, target_date: str) -> str:
         close = ch.get("close_date", "?")[-5:]
         vnum  = ch.get("vwap_num", 0.0)
         vden  = ch.get("vwap_den", 0.0)
-        vwap  = vnum / vden if vden > 0 else math.nan
+        ois   = ch.get("oi_start_usd", 0.0) or 0.0
+        _t1ok = vden > 0 and (ois <= 0 or vden >= 0.05 * ois)
+        if _t1ok:
+            vwap    = vnum / vden
+            vwap_t2 = False
+        else:
+            _vvn = ch.get("vwap_vol_num", 0.0)
+            _vvd = ch.get("vwap_vol_den", 0.0)
+            vwap    = _vvn / _vvd if _vvd > 0 else math.nan
+            vwap_t2 = _vvd > 0
         chp   = ch.get("chapter", 1)
         cat   = _cat(ch)
 
@@ -205,7 +214,9 @@ def _closed_section(state: dict, fw_base: set, target_date: str) -> str:
             build_s = ""
 
         q1s    = f"${q1/1_000:.0f}k" if q1 >= 1_000 else "$0"
-        vwap_s = f"${vwap:.5f}" if not math.isnan(vwap) else "N/A"
+        vwap_s = (f"${vwap:.5f}[vw-vol]" if (not math.isnan(vwap) and vwap_t2)
+                  else f"${vwap:.5f}" if not math.isnan(vwap)
+                  else "N/A")
 
         px_vs = ""
         if not math.isnan(vwap) and vwap > 0:
@@ -215,8 +226,10 @@ def _closed_section(state: dict, fw_base: set, target_date: str) -> str:
                 arrow = "↑" if pct >= 0 else "↓"
                 px_vs = f" {arrow}{abs(pct):.1f}%vsVWAP"
 
+        retro = ch.get("retro_tag", "")
+        retro_s = f" [retro {retro[-5:]}]" if retro else ""
         rows.append(
-            f"  {tok} ch{chp} {start}→{close} n={nd} Q1={q1s}{pr_s} VWAP={vwap_s} [{cat}]{build_s}{px_vs}"
+            f"  {tok} ch{chp} {start}→{close} n={nd} Q1={q1s}{pr_s} VWAP={vwap_s} [{cat}]{retro_s}{build_s}{px_vs}"
         )
 
     return "\n".join(rows)
@@ -384,6 +397,15 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
                     px_s  = ""
                     pct_s = ""
 
+                # Q2-dải [INFERENCE]: oi_last × [0.2, 0.8] — range estimate for dist phase
+                _oi_last = ch.get("oi_last_usd", math.nan)
+                if not math.isnan(_oi_last) and _oi_last > 0:
+                    _q2lo = _oi_last * 0.2 / 1e6
+                    _q2hi = _oi_last * 0.8 / 1e6
+                    _q2s = f" Q2=${_q2lo:.1f}–{_q2hi:.1f}M[INFER]"
+                else:
+                    _q2s = ""
+
                 # M5: CONFIRM 0.1 — đáy-nền chưa xác nhận = hiển thị nhãn (tầng HUMAN)
                 _c01 = ch.get("confirm_01", False)
                 _c01_tag = " [CONFIRM 0.1: unconfirmed]" if not _c01 else ""
@@ -391,6 +413,8 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
                 _line = f"{flag} {tok} ch{chp} n={nd}{bk_s} Q1={q1s}{net_part} {vwap_s}"
                 if px_s:
                     _line += f" {px_s}{pct_s}"
+                if _q2s:
+                    _line += _q2s
                 if _c01_tag:
                     _line += _c01_tag
                 chain_details.append(_line)
