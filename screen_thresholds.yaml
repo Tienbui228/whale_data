@@ -42,6 +42,10 @@ gom:
   # §1 per-day DQ: slope_5d — lsr_global(i)/lsr_global(i-5) > threshold = distribution phase
   slope_5d_max: 1.15
 
+  # M2: Tier-1 VWAP chỉ dùng khi vwap_den >= frac × oi_start (đại diện đủ trọng số)
+  # Dưới ngưỡng → rơi xuống Tier-2 [vw-vol — seat-rotation chain]
+  vwap_t1_min_rep_frac: 0.05   # 5% default; operator chỉnh tự do
+
   # §1 wrong-side DQ (L-26): per-day block (không cooldown 14d)
   # Hai check — (A) 5d cumulative; (B) 1d single-day
   wrong_side_dq:

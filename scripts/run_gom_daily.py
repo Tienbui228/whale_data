@@ -318,6 +318,17 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
             except Exception:
                 pass
 
+            # M2: load rep-threshold from screen_thresholds.yaml (5% default)
+            _vwap_rep_frac = 0.05
+            try:
+                import yaml as _yaml_tg
+                _sc_raw = _yaml_tg.safe_load(THRESH_PATH.read_text(encoding="utf-8"))
+                if isinstance(_sc_raw, dict):
+                    _g = _sc_raw.get("gom", _sc_raw)
+                    _vwap_rep_frac = float(_g.get("vwap_t1_min_rep_frac", 0.05))
+            except Exception:
+                pass
+
             open_st = {t: c for t, c in _state_full.items()
                        if c.get("chain_open") and t in _fw_base}
             sorted_chains = sorted(open_st.items(),
@@ -341,11 +352,15 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
                 else:
                     net_part = ""
 
-                # M2: VWAP Tier 1 (ΔOI⁺-weighted); Tier 2 (vol-weighted) when vwap_den=0
-                _vn  = ch.get("vwap_num", 0.0)
-                _vd  = ch.get("vwap_den", 0.0)
-                if _vd > 0:
-                    _vv      = _vn / _vd
+                # M2: VWAP Tier 1 (ΔOI⁺-weighted) only when rep threshold met;
+                # else Tier 2 [vw-vol — seat-rotation chain]
+                _vn       = ch.get("vwap_num", 0.0)
+                _vd       = ch.get("vwap_den", 0.0)
+                _oi_st    = ch.get("oi_start_usd", 0.0) or 0.0
+                _t1_ok    = (_vd > 0
+                             and (_oi_st <= 0 or _vd >= _vwap_rep_frac * _oi_st))
+                if _t1_ok:
+                    _vv       = _vn / _vd
                     _vwap_tag = ""
                 else:
                     _vvn = ch.get("vwap_vol_num", 0.0)

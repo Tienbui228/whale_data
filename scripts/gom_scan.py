@@ -699,17 +699,25 @@ def format_chain_report(token: str, chain: dict, result: dict | None, date_str: 
         if dq_list:
             lines.append(f" !! DISQUALIFIER: {', '.join(dq_list)}")
 
-    q1    = chain.get("Q1_cum_usd", 0.0)
-    vnum  = chain.get("vwap_num", 0.0)
-    vden  = chain.get("vwap_den", 0.0)
-    vwap  = vnum / vden if vden > 0 else float("nan")
+    q1   = chain.get("Q1_cum_usd", 0.0)
+    vnum = chain.get("vwap_num", 0.0)
+    vden = chain.get("vwap_den", 0.0)
+    ois  = chain.get("oi_start_usd", 0.0) or 0.0
+    # M2 rep-threshold: 5% of oi_start (hardcoded here — tunable via screen_thresholds in TG report)
+    _t1_ok = vden > 0 and (ois <= 0 or vden >= 0.05 * ois)
+    if _t1_ok:
+        vwap     = vnum / vden
+        vwap_tag = ""
+    else:
+        _vvn = chain.get("vwap_vol_num", 0.0)
+        _vvd = chain.get("vwap_vol_den", 0.0)
+        vwap     = _vvn / _vvd if _vvd > 0 else float("nan")
+        vwap_tag = " [vw-vol — seat-rotation chain]" if _vvd > 0 else ""
 
-    # ΔOI_net
     lines.append(f"")
     lines.append(f" Q1_cum:  ${q1:>12,.0f}  (ΔOI⁺-weighted)")
     if not math.isnan(vwap):
-        fb_tag = " [vol-weighted fallback]" if chain.get("vwap_fallback_used") else ""
-        lines.append(f" VWAP_gom: ${vwap:.6f}{fb_tag}  [chương hiện tại]")
+        lines.append(f" VWAP_gom: ${vwap:.6f}{vwap_tag}  [chương hiện tại]")
 
     for prev in chain.get("chapter_hist", []):
         pv = prev.get("vwap", float("nan"))
@@ -1147,10 +1155,15 @@ def run_daily(
                         doi = (oi_now - oi_first
                                if not (math.isnan(oi_now) or math.isnan(oi_first))
                                else math.nan)
-                        # M2: Tier 1 VWAP; fall to Tier 2 if vwap_den=0
-                        _vwap_num = chain.get("vwap_num", 0.0)
-                        _vwap_den = chain.get("vwap_den", 0.0)
-                        if _vwap_den > 0:
+                        # M2: Tier 1 VWAP; fall to Tier 2 if vwap_den=0 or below rep threshold
+                        _vwap_num   = chain.get("vwap_num", 0.0)
+                        _vwap_den   = chain.get("vwap_den", 0.0)
+                        _oi_start_c = chain.get("oi_start_usd", 0.0) or 0.0
+                        _rep_frac_c = _scfg(sc).get("vwap_t1_min_rep_frac", 0.05)
+                        _t1_ok_c    = (_vwap_den > 0
+                                       and (_oi_start_c <= 0
+                                            or _vwap_den >= _rep_frac_c * _oi_start_c))
+                        if _t1_ok_c:
                             _vwap_c    = _vwap_num / _vwap_den
                             _vwap_type = "oi_weighted"
                         else:
