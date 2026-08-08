@@ -230,6 +230,7 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
     closed_today: list[str] = []
     smissing_today_n: int = 0
     smissing_hist_n:  int = 0
+    gomc_beta_line: str = ""
 
     for line in lines:
         if "OPEN CHAINS" in line:
@@ -258,6 +259,10 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
             continue
         if line.startswith("━━ S-MISSING"):
             in_open = False
+            continue
+        if "━━ GOM-C β" in line:
+            in_open = False
+            gomc_beta_line = line.strip().lstrip("━ ")
             continue
         if line.startswith("── NOTES"):
             in_open = False
@@ -308,7 +313,7 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
 
     msg_lines = [
         f"📊 GOM Daily — {target_date} ({run_utc} UTC)",
-        f"Universe: fw137@139 | Formula: A1∧A2∧A3∧(A4∨A5) | B1∧(B2∨B3)∧B4",
+        f"Universe: fw137@139 | A1∧A2∧A3∧(A4∨A5) | B1∧(B2∨B3)∧B4 | C β-PROV",
         f"",
         f"OPEN ({n_open}/139):",
     ]
@@ -331,6 +336,10 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
         msg_lines.append(f"S-MISS today: 0 ✓")
     if smissing_hist_n > 0:
         msg_lines.append(f"S-MISS hist: {smissing_hist_n} (short history, normal)")
+
+    # GOM-C PROVISIONAL-β
+    if gomc_beta_line and "0 fires" not in gomc_beta_line:
+        msg_lines.append(f"⚡ {gomc_beta_line}")
 
     # Closed chains (60d window)
     closed_sec = _closed_section(_state_full, _fw_base, target_date)

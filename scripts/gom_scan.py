@@ -272,6 +272,53 @@ def _a3_slope_ok(days: list[DayData], i: int, sc: dict) -> bool:
     return (g1 / g0) <= slope_max
 
 
+def _gomc_beta_check(
+    days: list[DayData], i: int, cfg: dict, sc: dict, result: dict
+) -> bool:
+    """GOM-C PROVISIONAL-β per-day check (signed operator 2026-08-08 Q1/Q2/Q3).
+
+    C1(stealth_grind) ∧ C2_quiet(f_avg≤max(2×rate_min,1e-4), single-day) ∧
+    C3_lax(taker∈[40,55]) ∧ d_pos≥0(pos_r non-declining) ∧
+    NOT(gLSR slope>1.15 for ≥3d) ∧ NOT supp_dq.
+
+    result: pre-computed eval_gom dict — reused to avoid double call.
+    Display only — no state changes.
+    """
+    # NOT any supp_dq
+    if any(v for v in result.get("supp_dq", {}).values()):
+        return False
+    # C1: stealth_grind (encodes taker<55% in build window)
+    if not stealth_grind(days, i, cfg):
+        return False
+    # C2_quiet: single-day f_avg ≤ max(2 × funding_floor, 1e-4)
+    f_avg = days[i].get("funding_avg", float("nan"))
+    if math.isnan(f_avg):
+        return False
+    fp = cfg.get("funding_pinned", {})
+    c2_thr = max(2.0 * fp.get("rate_min", 4e-5), 1e-4)
+    if f_avg > c2_thr:
+        return False
+    # C3_lax: taker_buy_pct ∈ [40, 55]
+    tkr = days[i].get("taker_buy_pct", float("nan"))
+    if math.isnan(tkr) or not (40.0 <= tkr <= 55.0):
+        return False
+    # d_pos ≥ 0: pos_r (lsr_pos) must not decline day-over-day
+    if i == 0:
+        return False
+    p_now = days[i].get("lsr_pos", float("nan"))
+    p_prv = days[i-1].get("lsr_pos", float("nan"))
+    if math.isnan(p_now) or math.isnan(p_prv) or (p_now - p_prv) < 0:
+        return False
+    # C4 slope-close: suppress if gLSR slope > 1.15 sustained ≥3 consecutive days
+    slope_bad = sum(
+        1 for j in range(max(0, i - 2), i + 1)
+        if not _a3_slope_ok(days, j, sc)
+    )
+    if slope_bad >= 3:
+        return False
+    return True
+
+
 # ── Chain state machine ───────────────────────────────────────────────────────
 
 def _empty_chain(date_str: str) -> dict:
@@ -901,6 +948,7 @@ def run_daily(
     opened_today:  list[str] = []
     smissing_today_summary: list[str] = []  # target_date itself missing → possible race/fresh issue
     smissing_hist_summary:  list[str] = []  # only historical dates missing → normal short-history
+    gomc_beta_fires: list[str] = []         # GOM-C PROVISIONAL-β display list
 
     for sym in all_symbols:
         token = sym[:-4] if sym.endswith("USDT") else sym
@@ -931,6 +979,9 @@ def run_daily(
                     chain.get("chain_open") != was_open  # open↔close transition
                     or (chain.get("chain_open") and result.get("gom_day"))
                 )
+                # GOM-C β check — display only, no state change
+                if not skip and _gomc_beta_check(days, i, cfg, sc, result):
+                    gomc_beta_fires.append(token)
 
         all_state[token] = chain
 
@@ -977,6 +1028,13 @@ def run_daily(
         print(f"\n━━ S-MISSING HIST ({len(smissing_hist_summary)}) — historical only (short history/regen gap, normal):")
         for s in smissing_hist_summary:
             print(s)
+
+    # GOM-C PROVISIONAL-β
+    if gomc_beta_fires:
+        toks = " ".join(sorted(gomc_beta_fires))
+        print(f"\n━━ GOM-C β ({len(gomc_beta_fires)} fires — PROVISIONAL ⚡ sign-off 15/08): {toks}")
+    else:
+        print(f"\n━━ GOM-C β: 0 fires")
 
     print(format_footer(all_state, sc))
     print(f"\n[{len(open_chains)} open / {len(all_symbols)} symbols scanned]")

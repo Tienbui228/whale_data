@@ -49,45 +49,50 @@ Kết luận: TUT không kích hoạt GOM-A (cần crowd đảo chiều) cũng k
 
 ---
 
-## 3. Điều kiện đề xuất GOM-C (chưa ký)
+## 3. Điều kiện GOM-C (ĐÃ KÝ PROVISIONAL-β, operator 2026-08-08)
 
 ```
-GOM-C = C1 AND C2 AND C3 AND C4 AND NOT any_supp_dq
+GOM-C_β = C1 AND C2_quiet AND C3_lax AND d_pos≥0
+           AND NOT(slope>1.15 sustained ≥3d) AND NOT any_supp_dq
 ```
 
-| Tín hiệu | Ký hiệu | Định nghĩa đề xuất |
-|---|---|---|
-| Stealth grind | C1 | `stealth_grind(days, i, cfg)` = True (đã có sẵn trong signals.py, auxiliary) |
-| Funding bền | C2 | `funding_pinned(days, i, cfg)` OR `funding_pinned_strong(days, i, cfg)` (= B2) |
-| Taker vừa phải | C3 | `absorption(days, i, cfg)` (= B3) — hoặc loose version: taker_buy_pct ∈ [40, 55] |
-| Clean | C4 | B4 (`not funding_neg_div`) = đã có |
-| Guard | NOT supp | Không có dist_wall/lsr_dist/decay/post_climax/funding_extreme |
+| Tín hiệu | Ký hiệu | Định nghĩa đã ký | Ghi chú |
+|---|---|---|---|
+| Stealth grind | C1 | `stealth_grind(days, i, cfg)` | Encodes taker<55% trong build window |
+| Funding quiet | C2_quiet | single-day: `f_avg ≤ max(2×rate_min, 1e-4) = 1e-4` | **Thay** funding_pinned-window (Q1-decision) |
+| Taker lax | C3_lax | `taker_buy_pct ∈ [40, 55]` per-day | **Thay** absorption strict (Q3-decision) |
+| pos_r guard | d_pos≥0 | `lsr_pos[i] ≥ lsr_pos[i-1]` | Guard L-19 chính — bắt harvest (Q2-decision) |
+| Slope-close | C4 demoted | NOT(slope>1.15 cho ≥3 ngày liên tiếp) | Đổi vai: chỉ đóng chuỗi khi dai dẳng (Q2) |
+| Guard | NOT supp | Không có dist_wall/lsr_dist/decay/post_climax/funding_extreme | Giữ nguyên |
 
-**Lưu ý C1:** `stealth_grind` hiện là auxiliary-only trong gom_scan (không phải A2, chỉ display). Cần xác nhận logic `stealth_grind` trong signals.py phù hợp với archetype này.
+**Q1 (C2):** Dùng single-day `f_avg ≤ 1e-4` — funding_pinned window 7d trộn ngữ cảnh pre-grind → gây miss 14-15/07. Continuity lo bởi §8 break-≤2d rule khi implement full chain.
 
-**Vấn đề cần operator phán xử:**
-1. Threshold cho C3: absorption (yêu cầu taker_buy_pct ∈ [44, 50.5] + range ±10%) có thể quá chặt cho drift-up (giá +37% đã vi phạm ±10%?). Cần loose version.
-2. Thời gian minimum C1 active: SG cần mấy ngày liên tiếp mới tính?
-3. Có cần `pos_r tăng dần` (so sánh pos_r hiện tại vs pos_r 5d trước)?
-4. GOM-C có cộng Q1 theo cùng logic (ΔOI⁺)? TUT Q1 sẽ nhỏ vì OI flat — cần metric riêng?
+**Q2 (C4):** d_pos≥0 là guard bắt buộc sắc hơn slope: TUT 17-18/07 slope>1.15 nhưng pos_r leo (build thật) → không block; BANK pos_r drop → d_pos<0 block ngay. C4 slope chỉ đóng chuỗi khi >1.15 sustained ≥3 ngày.
+
+**Q3 (C3):** C3_lax (40-55%): C1 stealth_grind đã encode taker<55% trong window; C3 là continuation check. Band absorption 44-50.5% là chữ ký SIDEWAY không phải grind. Fence trên giữ nghiêm: ngày taker≥55% không đếm vào chuỗi.
 
 ---
 
-## 4. Backtest cần trước khi ký
+## 4. Backtest — trạng thái sau G1→G6
 
-- [ ] TUT: chạy GOM-C trên 07-03→07-13 (pha SG+FP) → xác nhận fire đúng ngày
-- [ ] Kiểm tra false-positive rate: token nào khác sẽ fire GOM-C trong cùng period?
-- [ ] Kiểm tra ESPORTS (nếu có trong fw137): archetype tương tự TUT không?
+- [x] TUT: GOM-C fires 07-13 (entry) và 07-21→23 (peak) — **PASS** (G1)
+- [x] BULLA: GOM-C blocked (C2=False) — **PASS** (G3: thuộc GOM-B territory)
+- [x] BANK: pos_r harvest xác nhận — close rule-iv đúng ngày (G4)
+- [ ] BANANAS31 negative test: **INCONCLUSIVE** (data SUSPECT 07-24→07-26) → re-test 15/08
+- [ ] COOKIE/CYS/TST: 3 token mới fire 08-07 → cần verify archetype
 
 ---
 
-## 5. Trạng thái
+## 5. Trạng thái — PROVISIONAL-β (08/08/2026)
 
-**CHƯA KÝ — chờ operator phê duyệt**
+**ĐÃ KÝ PROVISIONAL-β — deploy display-only**
 
-Operator cần quyết định:
-- Có chấp nhận GOM-C như khuôn thứ ba không?
-- Nếu có: điều chỉnh threshold nào trước khi implement?
-- Nếu không: ghi lý do vào agent_log
+Implement: `_gomc_beta_check()` trong `gom_scan.py`, output `━━ GOM-C β (N fires)`.
+- 08-07: **4 fires** — COOKIE, CYS, TST, TUT
+- State: display only, không tạo chain, không ghi state.json
+- **Sign-off cuối chờ G2 negative test re-run 15/08** (luật gate §6: cần đủ positive+negative)
 
-**Agent không implement GOM-C cho đến khi có chữ ký operator.**
+**Sau sign-off đầy đủ:**
+- Thêm chain tracking cho GOM-C (mở/đóng chương)
+- §8 continuity rule (break ≤2d)
+- Q2 metric: `seat_rot_index` thay Q1_cum (vì Q1=0 toàn bộ seat-rot builds)

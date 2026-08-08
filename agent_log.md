@@ -2,6 +2,53 @@
 
 ---
 
+## SESSION 2026-08-08 (11) — GOM-C β implement: operator ký Q1/Q2/Q3 + 2 chỉnh
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Operator quyết định (ký 08/08/2026)
+
+**Q1 — C2 = funding_QUIET single-day (không phải pinned-window):**
+- Thay `funding_pinned OR funding_pinned_strong` (window 7d) bằng: `f_avg ≤ max(2×rate_min, 1e-4) = 0.0001`
+- Lý do: window 7d trộn ngữ cảnh pre-grind → miss 14-15/07 (TUT funding_avg=0.00005 ≤ 0.0001 ✓ mọi ngày)
+- Continuity lo bởi §8 break-≤2d rule khi implement full chain
+
+**Q2 — d_pos≥0 là guard bắt buộc; C4 slope đổi vai:**
+- Thêm mandatory: `lsr_pos[i] ≥ lsr_pos[i-1]` (pos_r non-declining)
+- C4 slope: từ "block per-day slope>1.15" → "đóng chuỗi khi slope>1.15 sustained ≥3d"
+- Lý do: TUT 17-18/07 slope>1.15 nhưng pos_r vẫn tăng (build thật) → false-negative; BANK pos_r drop → d_pos<0 block ngay (sắc hơn slope)
+
+**Q3 — C3 = C3_lax (40-55%):**
+- Thay absorption strict (44-50.5% + range ±10%) bằng per-day `taker_buy_pct ∈ [40, 55]`
+- Lý do: absorption là chữ ký SIDEWAY, không phải grind; TUT 07-13 taker=52.2% > absorption_max=53% → C3_abs fail
+
+### Hai chỉnh operator (ký 08/08/2026)
+
+**Chỉnh ①: BULLA L-28 — kỳ vọng sai, sổ đóng:**
+- Kỳ vọng cũ: BULLA 07-17→21 là positive case của GOM-C (cover-driven, px+/OI-)
+- Data nói: OI mostly tăng (+0.88, +1.54, +0.28 M), funding không quiet (C2=False)
+- **Verdict:** BULLA thuộc GOM-B territory, không phải GOM-C. C correctly blocked ✓
+- Backtest §6 cập nhật: positive=TUT/BANK, negative=BULLA(đúng bloc), unknown=BANANAS31(SUSPECT)
+
+**Chỉnh ②: G6 math — "75% total OI" là sai, công thức đúng:**
+- Sai: `pos_r/(1+pos_r) = 2.974/3.974 = 74.8%` → diễn giải là "longs chiếm 75% total OI futures"
+- Đúng: `pos_r/(1+pos_r)` = tỷ trọng long TRONG cohort top (lsr_pos = long/short cohort top), không phải tổng OI (futures luôn balance: long=short về nominal)
+- Công thức Q2_net chuẩn (hai lớp giả định):
+  - `Q2_net ≈ OI × s_top × (pos_r−1)/(pos_r+1)`
+  - `(pos_r−1)/(pos_r+1)` = độ nghiêng net-long cohort top [DATA]
+  - `s_top` = share cohort top / tổng OI [ẨN — heuristic 50-80%]
+- BANK peak: 26.5M × [0.5–0.8] × 0.496 ≈ **$6.6–10.5M net-long** — khớp dải B ước cũ $10-14M gross exit
+- Ghi nhận phụ: Q1_cum=0 toàn bộ 4 cases → seat-rotation norm; §3 spec cần flip: Q2-dải là số hiển thị chính, Q1 làm trần ngày-đơn
+
+### GOM-C β implement
+
+- `gom_scan.py`: thêm `_gomc_beta_check()` + collect `gomc_beta_fires` trong `run_daily()` + output `━━ GOM-C β`
+- `run_gom_daily.py`: parse `━━ GOM-C β` line → `⚡ GOM-C β (N fires — PROVISIONAL ⚡ sign-off 15/08): TOKENS`
+- Test VPS date=2026-08-07: **4 fires — COOKIE CYS TST TUT** (display only, no state change)
+- Sign-off cuối: chờ G2 BANANAS31 re-test 15/08
+
+---
+
 ## SESSION 2026-08-08 (10) — G1→G6 GOM-C Data Validation
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
