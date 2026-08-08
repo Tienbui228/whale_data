@@ -1085,8 +1085,15 @@ def run_daily(
                                 n_ct += 1
                             else:
                                 break
-                        # Q2_net range [INFERENCE n=3]: OI × s_top × (pos_r−1)/(pos_r+1)
-                        if not math.isnan(pos_r) and pos_r > 0 and not math.isnan(oi_now):
+                        # Q2_net range [INFERENCE]: OI × s_top × (pos_r−1)/(pos_r+1)
+                        # Gate (signed rule): div_raw=pos_r/lsr_acc ≥ 3 AND lsr_acc ≤ 1
+                        lsr_acc_now = d_now.get("lsr_acc", math.nan)
+                        _div = (pos_r / lsr_acc_now
+                                if not (math.isnan(lsr_acc_now) or lsr_acc_now == 0)
+                                else math.nan)
+                        _q2_gate = (not math.isnan(_div) and _div >= 3
+                                    and not math.isnan(lsr_acc_now) and lsr_acc_now <= 1)
+                        if _q2_gate and not math.isnan(pos_r) and pos_r > 0 and not math.isnan(oi_now):
                             tilt  = (pos_r - 1) / (pos_r + 1)
                             q2_lo = oi_now * 0.5 * tilt
                             q2_hi = oi_now * 0.8 * tilt
@@ -1176,7 +1183,7 @@ def run_daily(
             print(f"\n━━ GOM-C β ({n_f} fires — PROVISIONAL ⚡ sign-off 15/08): {toks}")
         for f in sorted(gomc_beta_fires, key=lambda x: x["token"]):
             q2_s  = (f"${f['q2_lo']/1e6:.1f}-{f['q2_hi']/1e6:.1f}M"
-                     if not math.isnan(f["q2_lo"]) else "NaN")
+                     if not math.isnan(f["q2_lo"]) else "N/A [ngoài heuristic]")
             px_s  = f"${f['px']:.5f}" if not math.isnan(f["px"]) else "NaN"
             doi_s = (f"{'+' if f['doi'] >= 0 else ''}{f['doi']/1e6:.2f}M"
                      if not math.isnan(f["doi"]) else "NaN")

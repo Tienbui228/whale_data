@@ -168,7 +168,9 @@ def _closed_section(state: dict, fw_base: set, target_date: str) -> str:
 
     def _cat(ch: dict) -> str:
         reason_raw = ch.get("close_reason", "")
-        if ch.get("close_note") == "chuyển pha phân phối" or "pos_r_drop" in reason_raw:
+        if (ch.get("close_note") == "chuyển pha phân phối"
+                or "pos_r_drop" in reason_raw
+                or ch.get("retro_tag")):  # retro-tagged gap → promoted to rule-iv tier
             return "rule-iv"
         if "suppressor" in reason_raw or "dq_cooldown" in reason_raw:
             return "supp"
@@ -321,7 +323,7 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
 
     msg_lines = [
         f"📊 GOM Daily — {target_date} ({run_utc} UTC)",
-        f"Universe: fw137@139 | A1∧A2∧A3∧(A4∨A5) | B1∧(B2∨B3)∧B4 | C β-PROV",
+        f"Universe: fw139@139 | A1∧A2∧A3∧(A4∨A5) | B1∧(B2∨B3)∧B4 | C β-PROV",
         f"",
         f"OPEN ({n_open}/139):",
     ]
