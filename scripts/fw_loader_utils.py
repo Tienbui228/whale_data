@@ -319,3 +319,40 @@ def build_token_days(
         days.append(day)
 
     return days, suspect_dates
+
+
+def enrich_token_days(days: list[dict]) -> None:
+    """Add derived fields d_pos_3d and oi_cycle_pos to day dicts in-place.
+
+    d_pos_3d:     lsr_pos[i] - lsr_pos[i-3]; NaN if i<3 or any source NaN
+    oi_cycle_pos: (oi_usd - min30d) / (max30d - min30d) rolling 30d;
+                  NaN if <10 valid points or min==max
+    """
+    n = len(days)
+
+    # d_pos_3d = lsr_pos[i] - lsr_pos[i-3]  (spec A4)
+    for i in range(n):
+        if i < 3:
+            days[i]["d_pos_3d"] = float("nan")
+            continue
+        p_now  = days[i].get("lsr_pos", float("nan"))
+        p_prev = days[i - 3].get("lsr_pos", float("nan"))
+        if math.isnan(p_now) or math.isnan(p_prev):
+            days[i]["d_pos_3d"] = float("nan")
+        else:
+            days[i]["d_pos_3d"] = round(p_now - p_prev, 6)
+
+    # oi_cycle_pos = (oi_usd - min30d) / (max30d - min30d)  (spec A5, rolling 30d)
+    for i in range(n):
+        start  = max(0, i - 29)
+        window = [days[j].get("oi_usd", float("nan")) for j in range(start, i + 1)]
+        valid  = [v for v in window if not math.isnan(v)]
+        cur    = days[i].get("oi_usd", float("nan"))
+        if len(valid) < 10 or math.isnan(cur):
+            days[i]["oi_cycle_pos"] = float("nan")
+            continue
+        mn, mx = min(valid), max(valid)
+        if mx <= mn:
+            days[i]["oi_cycle_pos"] = float("nan")
+        else:
+            days[i]["oi_cycle_pos"] = round((cur - mn) / (mx - mn), 4)

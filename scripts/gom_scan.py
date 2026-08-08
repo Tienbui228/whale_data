@@ -91,13 +91,12 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     a2 = _avg5_glsr(days, i) <= 1.1
     # A3: gLSR slope 5d ≤ 1.15 — "fuel not exhausted" (§1; NaN/early → FAIL-CLOSED → False)
     a3 = _a3_slope_ok(days, i, sc)
-    # A4: pos_rerate + hedge_structure alive in hedge_lb days
-    hedge_alive = any(
-        hedge_structure(days, j, cfg)
-        for j in range(max(0, i - hedge_lb + 1), i + 1)
-    )
-    a4 = pos_rerate(days, i, cfg) and hedge_alive
-    a5 = funding_unpin(days, i, cfg)
+    # A4: d_pos_3d ≥ 0 OR pos_rerate sống (spec v1.4; NaN d_pos_3d → only pos_rerate)
+    _d3 = d.get("d_pos_3d", float("nan"))
+    a4 = (not math.isnan(_d3) and _d3 >= 0) or pos_rerate(days, i, cfg)
+    # A5: oi_cycle_pos ≤ 0.5 — OI trong vùng tích lũy 30d rolling (spec v1.4)
+    _oicp = d.get("oi_cycle_pos", float("nan"))
+    a5 = not math.isnan(_oicp) and _oicp <= 0.5
 
     gom_a = {"A1": a1, "A2": a2, "A3": a3, "A4": a4, "A5": a5}
     # §1 structural formula: GOM-A = A1 AND A2 AND A3 AND (A4 OR A5)
@@ -937,6 +936,7 @@ def run_daily(
     from fw_loader_utils import (
         taker_scale_check_df, load_fw_csvs,
         load_funding_intervals, build_token_days,
+        enrich_token_days,
     )
 
     if target_date is None:
@@ -1013,6 +1013,7 @@ def run_daily(
         days, suspect_dates = build_token_days(df_all, sym, date_from, date_to, intervals)
         if not days:
             continue
+        enrich_token_days(days)
 
         chain: dict     = {}
         last_result     = None
