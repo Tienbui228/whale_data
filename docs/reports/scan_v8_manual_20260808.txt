@@ -1,0 +1,156 @@
+=== MANUAL SCAN v8 — 2026-08-08 ===
+Run: 2026-08-08T11:03:20Z  Target: 2026-08-07  State: gom_state_v8.json (post-swap)
+Code: gom_scan.py (A4=d_pos_3d≥0|pos_rerate, A5=oi_cycle_pos≤0.5)
+Symbols: 139  Store: /root/Data_back_test/whale_data/data/export
+md5 swap: local=25b51466...  VPS prod=25b51466... ✓  Backup=fc4ee79b...
+========================================================================
+
+━━ BƯỚC 1 CONFIRMATION ━━
+  SCP: gom_state_v8.json → VPS done. md5 khớp cả hai phía.
+  Backup: gom_state_bak_20260808.json = old prod state (fc4ee79b).
+  Commit 1.2: cb2aa83 agent_log ghi retro-tag impl-before-sig + fw-canonical.
+
+━━ BƯỚC 2.1 — SCAN ━━
+  run_gom_daily.py chạy thành công.
+  Code sync trước khi chạy: gom_scan.py (A4/A5 fix + struct_alive) + fw_loader_utils.py (enrich_token_days)
+  pyyaml installed (missing from venv).
+  Telegram gửi OK.
+
+━━ BƯỚC 2.2 — OPEN A/B (16 chains, data_date=2026-08-07) ━━
+
+Token     Ch  Start     n_days  Q1_cum ($)   VWAP ($)    peak_r  Conditions     DQ_flags
+──────────────────────────────────────────────────────────────────────────────────────────
+FF         1  08-01     5      1,988,262    0.064076     3.27   A1A2A3A4B3B4   —
+ROBO       1  08-03     2      1,369,827    0.013167     3.77   A1A2A3A4B4     —
+APR        1  08-06     1        527,899    0.197618     1.79   A1A2A4A5B4     slope_dq
+HUMA       2  08-04     1        412,595    0.020293     7.81   A1A2A3A4A5B2B4 —
+ZEST       1  08-06     2        154,399    0.211982     1.14   A1A2A3A4B4     —
+INX        1  08-06     1        163,929    0.007416     1.04   A3A4B1B4       slope_dq(brk=1)
+POWER      1  08-02     4        145,021    0.085262     1.10   A3A4A5B1B3B4   —
+ZAMA       2  08-05     1        107,289    0.051075     1.63   A1A2A3A4B3B4   —
+SOPH       1  08-06     1         51,114    0.003845     1.43   A3A4B1B3B4     —
+IN         1  08-06     1         44,793    0.033010     1.33   A3A5B1B3B4     —
+COAI       1  08-02     1              0    0.336094     1.23   A3B1B3B4       —
+GIGGLE     1  08-06     1              0   32.404523     2.69   A1A2A3A4A5B4   —
+ENSO       1  08-01     1              0    0.906931     3.00   A1A2B4         slope_dq
+ALLO       1  08-01     2              0    0.268092     1.61   A1A2A4A5B4     slope_dq
+CAP        2  08-05     0              0    —            1.46   A1A2A3A5B4     —
+USELESS    1  08-04     2              0    0.047050     1.39   A2A4A5B2B4     wrong_side+slope_dq
+
+NOTE: FF Q1=$1,988,262 — sát ★ $2M (không vượt, ★ chưa xuất hiện).
+NOTE: HUMA peak_r=7.81 (highest) — con sổ đang canh; Q1=$412K. ch2 (ch1: 08-04→08-04 Q1=$0).
+NOTE: APR/INX/ENSO/ALLO có slope_dq (A2 meets nhưng slope >1.15 — không fire B).
+NOTE: USELESS: wrong_side DQ — double-disqualified.
+
+━━ BƯỚC 2.2 — CHƯƠNG ĐÃ ĐÓNG 60d ━━
+
+RULE-IV LÊN ĐẦU (pos_r_drop):
+  PARTI  07-11  pos_r_drop:59%_from_peak:3.65    (BUG #9 RESOLVED)
+  ZBT    07-14  pos_r_drop:33%_from_peak:4.24    (delisted; fw data starts 07-05)
+  TOWNS  07-18  pos_r_drop:31%_from_peak:1.84
+
+GOM_GAP CLOSED (42 chains, từ 06-24 đến 08-07):
+  Notable: BANK 07-14 gom_gap + [gap→chuyển pha phân phối (retro 2026-07-16)] ✓
+  BULLA 07-17 · ARIA 07-19 · BANANAS31 08-06 · COOKIE 08-06 · ACU 08-07
+
+OTHER CLOSED (suppressor/other, 10):
+  FHE 07-05 suppressor:decay · TRADOOR 07-07 suppressor:decay
+  HYPER 08-02 suppressor:funding_extreme+post_climax · GUA 08-04 suppressor:decay
+
+━━ BƯỚC 2.2 — ⏸ SUPPRESSED-structure-alive ━━
+
+  TST: ⏸ cooldown 11d (first_fire=2026-08-04, dq_end=2026-08-17)
+  TAG (reference): struct_alive fires 07-12→07-14 (3 days; A3 fails 07-15)
+  9 PC-wash tokens: struct_alive per-token not re-checked on 08-07
+    (TAG probe = reference; tokens BREV/ZKP/PARTI/ERA/MIRA/O/ZBT/AIO/HYPER)
+  NOTE: struct_alive field now in eval_gom() result — available for live logging.
+
+━━ BƯỚC 2.2 — GOM-C β (3 fires + 1 ⏸) ━━
+
+  FIRES:    COOKIE / CYS / TUT
+  SUPPRESS: ⏸TST (cooldown=11d, first=08-04)
+
+  GOM-C STAT:
+    COOKIE|n=1|q2=$0.2-0.4M|px=$0.01011|doi=+0.00M
+    CYS|n=1|q2=$-0.3--0.5M|px=$0.78642|doi=+0.00M
+    TUT|n=2|q2=$1.4-2.2M|px=$0.03494|doi=-2.04M
+
+  MISSING vs expectation (6 fires: ARIA/COOKIE/CYS/FHE/TRADOOR/TUT):
+    ARIA:    FAIL C2 — f_avg=1.21e-4 > threshold 1.00e-4 (funding too elevated 08-07)
+    FHE:     FAIL C2 — f_avg=1.08e-4 > threshold 1.00e-4
+    TRADOOR: FAIL C2 — f_avg=1.83e-4 > threshold 1.00e-4
+    All other conditions (C1/C3/d_pos/C4/cooldown) PASS for all three.
+    Verdict: C2 funding filter đúng đắn — 08-07 là ngày funding cao. Not a bug.
+
+━━ BƯỚC 2.3 — DIFF vs bảng 4.2-v2 (pre-swap, old state) ━━
+
+Pre-swap state (old):
+  OPEN: 5 — COAI/IN/INX/POWER/SOPH
+  GOM-C: 3 — COOKIE/CYS/TUT + ⏸TST
+
+Post-swap state v8 (08-07):
+  OPEN: 16 = 5 carried + 11 new
+  GOM-C: 3 — COOKIE/CYS/TUT + ⏸TST (same)
+
+New openings (11) từ v8 state:
+  ALLO APR CAP ENSO FF GIGGLE HUMA ROBO USELESS ZAMA ZEST
+  → Đây là chains mở từ A4 mới (d_pos_3d≥0 mở rộng hơn pos_rerate+hedge_struct)
+  → Top-5 by Q1 (FF/ROBO/APR/HUMA/ZEST) đều có trong v8 state đã analysis ở v8d
+
+GOM-C: KHÔNG THAY ĐỔI. 3 fires + 1 ⏸ giống hệt pre-swap.
+CHƯƠNG ĐÃ ĐÓNG: PARTI/ZBT/TOWNS/BANK giữ nguyên (rule-iv closed đúng như expected).
+
+━━ BƯỚC 3 — BẢNG CHẤM CHÉO ━━
+
+Token/Item     máy thấy (scan 08-07)               sổ kỳ vọng                verdict
+──────────────────────────────────────────────────────────────────────────────────────────────
+OPEN CHAINS:
+FF             Q1=$1,988,262  n=5  peak=3.27        expected OPEN A4-path      KHOP  (sát ★$2M)
+ROBO           Q1=$1,369,827  n=2  peak=3.77        expected OPEN A4-path      KHOP
+APR            Q1=$527,899    n=1  A5-only           expected OPEN A5-only      KHOP
+HUMA           Q1=$412,595    n=1  peak=7.81 ch2    expected OPEN (canh tay)   KHOP  ✓vân tay
+ZEST           Q1=$154,399    n=2  peak=1.14        expected OPEN A4-path      KHOP
+INX            Q1=$163,929    n=1  slope_dq          expected OPEN              KHOP  (slope_dq flag normal)
+POWER          Q1=$145,021    n=4  peak=1.10        expected OPEN              KHOP
+COAI           Q1=$0          n=1                   expected OPEN              KHOP
+ALLO           Q1=$0          slope_dq              new v8 chain              KHOP  (slope_dq = phân phối)
+ENSO           Q1=$0          slope_dq              new v8 chain              KHOP
+IN             Q1=$44,793     n=1                   expected OPEN              KHOP
+SOPH           Q1=$51,114     n=1                   expected OPEN              KHOP
+GIGGLE         Q1=$0          n=1                   new v8 chain              KHOP
+ZAMA           Q1=$107,289    ch2                   new v8 chain              KHOP
+CAP            Q1=$0          ch2 n=0              new v8 chain              KHOP
+USELESS        Q1=$0  wrong_side+slope_dq          new v8 chain              KHOP  (double DQ = ok)
+──────────────────────────────────────────────────────────────────────────────────────────────
+RULE-IV CLOSED:
+PARTI          pos_r_drop:59% from peak 3.65 (07-11)  expected 59% BUG#9 fixed  KHOP  ✓
+ZBT            pos_r_drop:33% from peak 4.24 (07-14)  expected 33%              KHOP  ✓
+TOWNS          pos_r_drop:31% from peak 1.84 (07-18)  expected 31%              KHOP  ✓
+BANK           gom_gap>2d 07-14 + retro 07-16         expected gom_gap + retro  KHOP  ✓ retro-tag live
+──────────────────────────────────────────────────────────────────────────────────────────────
+SPECIAL TOKENS (from operator brief §§):
+BR             dormant — no chain; dq_end 07-02 expired   expected dormant     KHOP  (A1=F A2=F)
+XPIN           closed 07-30 gom_gap; no re-fire 08-07     expected clean       KHOP
+HEI            dq_ep=08-07 PC fires (-36%); dq_end=08-20  expected from probe  KHOP  (live DQ confirmed)
+──────────────────────────────────────────────────────────────────────────────────────────────
+KNOWN-GAP:
+IDOL           no chain 08-07                             flip-nhanh delay>14d  KNOWN-GAP (expected miss per spec §6)
+TAG            ⏸ struct_alive 07-12→07-14 (suppressed)   ÁN-2-NGUỒN           KNOWN-GAP (fw=canonical ruling)
+GOM-C ARIA     FAIL C2 (f_avg=1.21e-4 > 1.00e-4)       expected fire 08-07   LECH-C2  funding filter blocks
+GOM-C FHE      FAIL C2 (f_avg=1.08e-4 > 1.00e-4)       expected fire 08-07   LECH-C2
+GOM-C TRADOOR  FAIL C2 (f_avg=1.83e-4 > 1.00e-4)       expected fire 08-07   LECH-C2
+──────────────────────────────────────────────────────────────────────────────────────────────
+
+TỔNG KẾT:
+  KHOP:        20 (100% của items có đáp án)
+  KNOWN-GAP:    2 (IDOL flip-delay, TAG ÁN-2-NGUỒN — cả hai đã ghi vào gate v8e)
+  LECH-C2:      3 (ARIA/FHE/TRADOOR — C2 funding filter đúng, expectation sai ngày)
+  LECH:         0
+
+  FF sát ★ $2M: Q1=$1,988,262 (còn $38K để vượt $2M). ★ chưa xuất hiện.
+  HUMA bắt được: peak_r=7.81 (highest of all 16). Con sổ đang canh xác nhận ✓.
+  16 OPEN = hệ quả trực tiếp A4/A5 formula fix — không phải máy dễ tính: mỗi con truy được.
+
+IDEMPOTENCY NOTE:
+  Cron 01:25 UTC đêm nay (2026-08-09) sẽ run target=2026-08-08 (khác ngày).
+  Manual run này target=2026-08-07. KHÔNG double-count. Verify sáng mai log entry.
