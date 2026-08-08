@@ -60,6 +60,32 @@ Audit script: `_probe_funding_audit_20260808.py` (VPS, 37 ngày 01/07→06/08, 1
 
 **Pending 3b (fapi backfill + oi_usd fix → re-regen):** Cần script fetch fapi /fundingRate × 139 syms × 3 dates + fix column mapping + re-regen. → Task tiếp.
 
+### Task 3a — funding_8h grid audit — EXPLICIT TABLE (bằng chứng phân xử)
+
+**Script:** `_probe_funding8h_table_20260808.py`  
+**Phương pháp:** Grid audit — expected = 3 settlements/day × 139 syms = **417 rows/ngày**  
+**Kết quả:** Partition dirs = **0** (store directory rỗng hoàn toàn).
+
+```
+SUMMARY: 0/37 dates with rows | Total rows: 0
+CONFIRMED: funding_8h TRỐNG TOÀN BỘ — 0 rows for ALL 37 dates
+```
+
+Tất cả 37 ngày (01/07→06/08) đều có `0 / 417` rows. Không có partition nào tồn tại. Store này KHÔNG được collector điền bao giờ trong giai đoạn này. Phán xử câu "TRỐNG toàn bộ": **CONFIRMED với bằng chứng số**.
+
+**Hệ quả đã ghi (L-28 addendum):** Funding trong freshwatch CSV đến từ fapi call lúc export, không phải store funding_8h. Pipeline DAILY không phụ thuộc vào store này.
+
+### Funding_n = NaN: 6 rows — MISSING LOG (Task 3c-addendum)
+
+**Từ regen v2 check (`_probe_regen_v2_check_20260808.py`):**
+
+| Symbol | Dates | Reason |
+|---|---|---|
+| 我踏马来了USDT | 2026-07-24, 07-25, 07-26 | URL encoding — fapi reject Chinese char |
+| 龙虎USDT | 2026-07-24, 07-25, 07-26 | URL encoding — fapi reject Chinese char |
+
+Tổng: 6 rows funding_n=NaN trong regen v2. Không ảnh hưởng pipeline: fapi reject → funding_avg NaN → B4 fail-closed (NaN guard) → không fire GOM. **MISSING: 2 Chinese-char symbols × 3 dates = 6 rows.**
+
 ### Task 3b-v2 — fapi backfill + oi_usd fix (hoàn tất)
 
 **Script:** `_task_regen_funding_oi_20260808.py`
@@ -124,12 +150,99 @@ Chú ý: VPS scan cho 6 chains (TAIKO vắng — brk=1 ngày 08-06, state diff g
 - Footer: PARTI + ZBT notes
 - Đây là chân L-44 thứ ba — hệ được tuyên bố SỐNG tại thời điểm đó, không sớm hơn.
 
+#### Mảnh (b) — Khai chuỗi n=0 (TAIKO) + closed_today fix
+
+**Root cause n=0:** `n_days` chỉ tăng khi `counts_q1=True` (trong GOM fire block). `counts_q1 = not isnan(ret) and ret <= ret_max`. TAIKO mở 2026-08-05 với gom_fire=True nhưng ret > ret_max (daily return vượt ngưỡng) → counts_q1=False → n_days=0. Chain mở nhưng chưa có Q1 day. Đây là hành vi ĐÚNG theo spec (n_days đếm Q1-eligible fire days, không phải total fire days).
+
+**TAIKO trên VPS:** TAIKO không có trong state.json VPS sau run 2026-08-06 — token này chỉ xuất hiện trong local bảng 4.2-v3 (regen data). Trên VPS production data, TAIKO không vào bảng.
+
+**closed_today bug (107 tokens) + fix:**
+
+Bệnh: `closed_today` bao gồm TẤT CẢ tokens có `event_on_target=True` trong 60-day window. Với re-run từ đầu (empty chain), mọi token mở-rồi-đóng trong June-July-August đều trigger `event_on_target` trên target_date → 107 tokens trong dry-run đầu tiên.
+
+Fix (commit kèm Việc 5.3):
+1. Thêm `prev_open_tokens = {t for t, c in all_state.items() if c.get("chain_open")}` sau `load_state()`
+2. Sau loop: `closed_today = [t for t in closed_today if t in prev_open_tokens]`
+
+Nghĩa: CLOSED TODAY chỉ hiện tokens **vừa open trong run trước** và nay đóng — loại sạch noise từ re-run window dài.
+
+#### Dry-run kết quả (2026-08-08T00:00-00:06 UTC, date=2026-08-07)
+
+**Script:** `_task_gom_dryrun_20260808.py` → `_task_deploy_closefix_20260808.py`
+
+- Dry-run 1 (00:00:04 UTC): 5 open chains, CLOSED TODAY 107 tokens (BUG), Telegram sent
+- Fix deployed: `gom_scan.py` prev_open_tokens filter
+- Dry-run 2 (00:06:31 UTC): 5 open chains, CLOSED TODAY [] (CLEAN), Telegram sent
+
+**VPS state (Aug CSV: 2026-08-01→2026-08-06, 6 dates, 08-07 chưa available):**
+
+| Token | ch | n | brk | start | Q1 |
+|---|---|---|---|---|---|
+| INX | 1 | 1 | 1 | 08-06 | $164k |
+| SOPH | 1 | 1 | 1 | 08-06 | $51k |
+| IN | 1 | 1 | 1 | 08-06 | $45k |
+| POWER | 1 | 3 | 1 | 08-02 | $39k |
+| COAI | 1 | 1 | 2 | 08-02 | $0 |
+
+★ Q1>$2M: NONE
+
+ACU: CLOSED (brk=3 > max_brk=2 trong re-run)
+
+**Telegram message (dry-run 2, đã gửi):**
+```
+📊 GOM Daily — 2026-08-07 (00:06 UTC)
+Universe: fw137@139 | Formula: A1∧A2∧A3∧(A4∨A5) | B1∧(B2∨B3)∧B4
+
+OPEN (5/139):
+   INX ch1 start=08-06 n=1 brk=1 Q1=$164k
+   SOPH ch1 start=08-06 n=1 brk=1 Q1=$51k
+   IN ch1 start=08-06 n=1 brk=1 Q1=$45k
+   POWER ch1 start=08-02 n=3 brk=1 Q1=$39k
+   COAI ch1 start=08-02 n=1 brk=2 Q1=$0
+★ Q1>$2M: NONE
+S-MISSING: nhiều tokens (24-26/07 gap + early tokens)
+
+PARTI [status pending] | ZBT perp sống
+[5 open / 139 symbols scanned]
+```
+
+#### Kịch bản đối chiếu — diff v3→natural cron (08:25 VN 2026-08-08)
+
+Natural cron chạy 01:25 UTC 2026-08-08, target_date = **2026-08-07**, với data fresh từ exporter (01:20 UTC).
+
+**Baseline VPS live test (2026-08-06, 6 chains):**
+ACU (n=2,brk=2), COAI (n=1,brk=1), IN (n=1,brk=0), INX (n=1,brk=0), POWER (n=3,brk=0), SOPH (n=1,brk=0)
+
+**Dry-run prediction (2026-08-07):**
+- ACU: brk=3 > max_brk=2 → **CLOSED** ✓
+- COAI: brk=2 (nếu 2026-08-07 không có GOM) — ở ngưỡng, chờ 08-07 data
+- IN/INX/SOPH: brk=1 → còn open
+- POWER: brk=1 → còn open
+
+**Tiêu chí cross-check report tự nhiên:**
+| Tiêu chí | Giá trị kỳ vọng |
+|---|---|
+| Header | `fw137@139` + formula A∧B |
+| Open count | 4-5 (tùy COAI: brk=2 hoặc có GOM fire 08-07) |
+| ACU | CLOSED TODAY |
+| TAIKO | không xuất hiện (không có trong VPS state) |
+| ★ Q1>$2M | NONE |
+| Footer | PARTI + ZBT |
+
+Nếu report khớp tiêu chí trên → chân L-44 thứ ba → hệ SỐNG.
+
+**Ghi chú state.json:** Có 7 stale chains từ Việc 4 backfill (526-symbol run) persist trong state.json (1000000MOG, BRETT, CELR, DRIFT, ETHW, GOAT, RECALL). Harmless: format_tg_report filter bằng fw_base → chỉ show fw-filtered chains. Cleanup → follow-up.
+
 #### Artifacts Việc 5
 
 | File | Trạng thái |
 |---|---|
 | `scripts/run_gom_daily.py` | LIVE — cron entry point, Telegram wrapper |
-| `scripts/gom_scan.py` | `--fw-filter` arg mới + fw_filter_path trong run_daily() |
+| `scripts/gom_scan.py` | `--fw-filter` + `closed_today` fix (prev_open_tokens filter) |
+| `_task_gom_dryrun_20260808.py` | Done → archive |
+| `_task_deploy_closefix_20260808.py` | Done → archive |
+| `_probe_vps_precheck_20260808.py` | Done → archive |
+| `_probe_funding8h_table_20260808.py` | Done → archive |
 | `_task_deploy_gom_vps_20260808.py` | Done → archive |
 | `_task_fix_gom_cron2_20260808.py` | Done → archive |
 | `_task_fix_gom_cron_20260808.py` | Done → archive |

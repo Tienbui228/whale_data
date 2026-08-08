@@ -893,6 +893,8 @@ def run_daily(
 
     # ── Load existing state (carry over DQ episode fields if any) ─────────────
     all_state = load_state()
+    # Capture tokens that were open BEFORE this run — used to filter CLOSED TODAY
+    prev_open_tokens: set[str] = {t for t, c in all_state.items() if c.get("chain_open")}
 
     open_chains:   list[tuple[str, dict, dict | None]] = []  # (token, chain, last_result)
     closed_today:  list[str] = []
@@ -941,6 +943,11 @@ def run_daily(
             open_chains.append((token, chain, last_result))
         elif event_on_target:
             closed_today.append(token)
+
+    # Filter CLOSED TODAY to only tokens that were open in the PREVIOUS state.
+    # Re-run-from-scratch sees ALL chain events in 60d window; without this filter,
+    # tokens that opened+closed in June-July all appear as "closed today" — noise.
+    closed_today = [t for t in closed_today if t in prev_open_tokens]
 
     # ── Output ────────────────────────────────────────────────────────────────
     if open_chains:
