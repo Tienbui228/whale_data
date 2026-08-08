@@ -231,6 +231,88 @@ ACU (n=2,brk=2), COAI (n=1,brk=1), IN (n=1,brk=0), INX (n=1,brk=0), POWER (n=3,b
 
 Nếu report khớp tiêu chí trên → chân L-44 thứ ba → hệ SỐNG.
 
+#### 5.3 — XÁC NHẬN: L-44 chân thứ ba PASSED (01:25:03Z 2026-08-08)
+
+**Natural cron fired:** `[2026-08-08T01:25:03Z] run_complete exit=0` (gom_daily.log)  
+**Tuyên bố:** Hệ SỐNG. Ba chân L-44 hoàn thành: (1) Việc 5 live test, (2) dry-run cleanfix 00:06Z, (3) natural cron 01:25Z.
+
+**Telegram tự nhiên (01:25 UTC, target_date=2026-08-07, Aug CSV 7 dates):**
+```
+📊 GOM Daily — 2026-08-07 (01:25 UTC)
+Universe: fw137@139 | Formula: A1∧A2∧A3∧(A4∨A5) | B1∧(B2∨B3)∧B4
+
+OPEN (5/139):
+  ★ NONE  INX ch1 start=08-06 n=1 brk=1 Q1=$164k
+   POWER ch1 start=08-02 n=4 Q1=$145k
+   SOPH ch1 start=08-06 n=1 Q1=$51k
+   IN ch1 start=08-06 n=1 Q1=$45k
+   COAI ch1 start=08-02 n=1 Q1=$0
+★ Q1>$2M: NONE
+S-MISSING: ~95 token(s)
+
+PARTI [status pending] | ZBT perp sống
+[5 open / 139 symbols scanned]
+```
+
+**Manual run (operator lệnh "CHẠY TAY NGAY", 02:28:43Z 2026-08-08):**
+
+Script: `_task_manual_run_20260808.py` | VPS UTC: 2026-08-08T02:28:43 UTC | Aug CSV: 7 dates (2026-08-01→2026-08-07) | tg_send=OK 02:28:51Z
+
+**5 open chains sau manual run (data 2026-08-07):**
+
+| Token | ch | n | brk | start | Q1 |
+|---|---|---|---|---|---|
+| INX | 1 | 1 | 1 | 08-06 | $164k |
+| POWER | 1 | 4 | 0 | 08-02 | $145k |
+| SOPH | 1 | 1 | 0 | 08-06 | $51k |
+| IN | 1 | 1 | 0 | 08-06 | $45k |
+| COAI | 1 | 1 | 0 | 08-02 | $0 |
+
+**Diff dry-run-2 (08-06, 5 chains) → natural cron (08-07, 5 chains):**
+
+| Token | Dry-run-2 (08-06) | Natural/Manual (08-07) | Delta | Reason |
+|---|---|---|---|---|
+| INX | n=1,brk=1,Q1=$164k | n=1,brk=1,Q1=$164k | unchanged | No GOM fire 08-07 |
+| POWER | n=3,brk=1,Q1=$39k | n=4,brk=0,Q1=$145k | n+1,brk reset,Q1+$106k | GOM fire B1+B3+B4 |
+| SOPH | n=1,brk=1,Q1=$51k | n=1,brk=0,Q1=$51k | brk reset | GOM fire B1+B3+B4 |
+| IN | n=1,brk=1,Q1=$45k | n=1,brk=0,Q1=$45k | brk reset | GOM fire B1+B3+B4 |
+| COAI | n=1,brk=2,Q1=$0 | n=1,brk=0,Q1=$0 | brk reset (2→0) | GOM fire A3+B1+B3+B4 |
+| ACU | n=1,brk=2,Q1=$0 (dry-run) | CLOSED | CLOSED | brk>max_brk on 08-07 data |
+
+Ghi chú: Manual run (02:28Z) KHÔNG thay thế L-44 chân thứ ba. Chân ba = natural cron 01:25:03Z. Manual run là lệnh operator riêng để cross-check report.
+
+**S-MISSING 138 tokens — điều tra + fix (08/08):**
+
+Probe: `_probe_smissing_20260808.py`
+
+**Kết quả điều tra:**
+- Aug CSV 2026-08-07: **526 rows/ngày** (đủ, không race). CSV mtime = 01:20 UTC; cron scan = 01:25 UTC → 5 phút gap = AN TOÀN.
+- S-MISSING = toàn bộ HISTORICAL, không có 2026-08-07 trong danh sách missing của bất kỳ token nào.
+  - Nhóm A (3 ngày: 07-24/25/26): regen gap, ~80 tokens, do freshwatch CSV thiếu 3 ngày này
+  - Nhóm B (22 ngày: từ 06-08): tokens mới join freshwatch, lịch sử ngắn hơn 60d window
+- **Không phải race condition.** Cron 01:25 = đủ thời gian.
+
+**Fix display (gom_scan.py + run_gom_daily.py):**
+- Tách `S-MISSING TODAY (N)` vs `S-MISSING HIST (N)` trong gom_scan stdout
+- Telegram report: `S-MISS today: 0 ✓` và `S-MISS hist: 138 (short history, normal)`
+- Triển khai: SCP + verify OK
+
+**CHƯƠNG ĐÃ ĐÓNG (60d) feature — deploy (08/08):**
+
+Thêm section mới vào Telegram report: top 15 closed chains trong 60d, sort Q1 desc, mỗi dòng: token·window·n·Q1·VWAP·[rule-iv/supp/gap]·px↑↓%vsVWAP. Deploy vào `run_gom_daily.py` (hàm `_closed_section`).
+
+**Telegram format sau cả 2 fix (02:42 UTC test run, 2026-08-07 data):**
+```
+S-MISS today: 0 ✓
+S-MISS hist: 138 (short history, normal)
+
+CHƯƠNG ĐÃ ĐÓNG (60d):
+  MYX ch1 07-22→07-26 n=2 Q1=$239k VWAP=$0.07844 [gap] ↓5.3%vsVWAP
+  ORDER ch1 07-12→07-26 n=9 Q1=$203k VWAP=$0.03286 [gap] ↓11.4%vsVWAP
+  BULLA ch1 07-11→07-17 n=3 Q1=$188k VWAP=$0.00603 [gap] ↑146.3%vsVWAP
+  ... (15 entries total)
+```
+
 **Ghi chú state.json:** Có 7 stale chains từ Việc 4 backfill (526-symbol run) persist trong state.json (1000000MOG, BRETT, CELR, DRIFT, ETHW, GOAT, RECALL). Harmless: format_tg_report filter bằng fw_base → chỉ show fw-filtered chains. Cleanup → follow-up.
 
 #### Artifacts Việc 5

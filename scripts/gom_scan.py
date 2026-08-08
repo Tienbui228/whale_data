@@ -899,7 +899,8 @@ def run_daily(
     open_chains:   list[tuple[str, dict, dict | None]] = []  # (token, chain, last_result)
     closed_today:  list[str] = []
     opened_today:  list[str] = []
-    suspect_summary: list[str] = []
+    smissing_today_summary: list[str] = []  # target_date itself missing → possible race/fresh issue
+    smissing_hist_summary:  list[str] = []  # only historical dates missing → normal short-history
 
     for sym in all_symbols:
         token = sym[:-4] if sym.endswith("USDT") else sym
@@ -934,10 +935,14 @@ def run_daily(
         all_state[token] = chain
 
         if suspect_dates:
-            suspect_summary.append(
+            entry = (
                 f"  {token}: {len(suspect_dates)} suspect/missing date(s) "
                 f"({', '.join(suspect_dates[:3])}{'…' if len(suspect_dates) > 3 else ''})"
             )
+            if target_date in suspect_dates:
+                smissing_today_summary.append(entry)
+            else:
+                smissing_hist_summary.append(entry)
 
         if chain.get("chain_open"):
             open_chains.append((token, chain, last_result))
@@ -961,9 +966,16 @@ def run_daily(
     if closed_today:
         print(f"\n━━ CLOSED TODAY: {', '.join(closed_today)}")
 
-    if suspect_summary:
-        print(f"\n━━ S-MISSING / BAD DATA:")
-        for s in suspect_summary:
+    if smissing_today_summary:
+        print(f"\n━━ S-MISSING TODAY ({len(smissing_today_summary)}) ⚠ target_date absent — check export timing:")
+        for s in smissing_today_summary:
+            print(s)
+    else:
+        print(f"\n━━ S-MISSING TODAY: 0 ✓")
+
+    if smissing_hist_summary:
+        print(f"\n━━ S-MISSING HIST ({len(smissing_hist_summary)}) — historical only (short history/regen gap, normal):")
+        for s in smissing_hist_summary:
             print(s)
 
     print(format_footer(all_state, sc))

@@ -122,6 +122,90 @@ def check_deps(target_date: str) -> None:
 
 # ── Report formatter ──────────────────────────────────────────────────────────
 
+def _closed_section(state: dict, fw_base: set, target_date: str) -> str:
+    """Format top 15 closed chains from last 60 days, sorted by Q1 desc."""
+    try:
+        target_dt = datetime.strptime(target_date, "%Y-%m-%d")
+        cutoff = target_dt - timedelta(days=60)
+    except ValueError:
+        return ""
+
+    # Current prices from freshwatch CSV (avg_px on target_date)
+    px_map: dict[str, float] = {}
+    try:
+        month_str = target_date[:7]
+        csv_path = STORE / f"freshwatch_daily_{month_str}.csv"
+        if csv_path.exists():
+            import csv as _csv
+            with open(csv_path, encoding="utf-8") as f:
+                for row in _csv.DictReader(f):
+                    if row.get("date") == target_date:
+                        sym = row.get("symbol", "")
+                        base = sym[:-4] if sym.endswith("USDT") else sym
+                        try:
+                            px_map[base] = float(row.get("px_avg", "") or "nan")
+                        except (ValueError, TypeError):
+                            pass
+    except Exception:
+        pass
+
+    closed: list[tuple[str, dict]] = []
+    for tok, ch in state.items():
+        if tok not in fw_base or ch.get("chain_open"):
+            continue
+        close_d = ch.get("close_date", "")
+        if not close_d:
+            continue
+        try:
+            if datetime.strptime(close_d[:10], "%Y-%m-%d") < cutoff:
+                continue
+        except ValueError:
+            continue
+        closed.append((tok, ch))
+
+    if not closed:
+        return ""
+
+    closed.sort(key=lambda x: x[1].get("Q1_cum_usd", 0), reverse=True)
+    closed = closed[:15]
+
+    rows = ["", "CHƯƠNG ĐÃ ĐÓNG (60d):"]
+    for tok, ch in closed:
+        q1    = ch.get("Q1_cum_usd", 0.0)
+        nd    = ch.get("n_days", 0)
+        start = ch.get("start_date", "?")[-5:]
+        close = ch.get("close_date", "?")[-5:]
+        vnum  = ch.get("vwap_num", 0.0)
+        vden  = ch.get("vwap_den", 0.0)
+        vwap  = vnum / vden if vden > 0 else math.nan
+        chp   = ch.get("chapter", 1)
+
+        reason_raw = ch.get("close_reason", "")
+        if ch.get("close_note") == "chuyển pha phân phối" or "pos_r_drop" in reason_raw:
+            cat = "rule-iv"
+        elif "suppressor" in reason_raw or "dq_cooldown" in reason_raw:
+            cat = "supp"
+        else:
+            cat = "gap"
+
+        q1s    = f"${q1/1_000:.0f}k" if q1 >= 1_000 else "$0"
+        vwap_s = f"${vwap:.5f}" if not math.isnan(vwap) else "N/A"
+
+        px_vs = ""
+        if not math.isnan(vwap) and vwap > 0:
+            px = px_map.get(tok, math.nan)
+            if not math.isnan(px):
+                pct = (px - vwap) / vwap * 100
+                arrow = "↑" if pct >= 0 else "↓"
+                px_vs = f" {arrow}{abs(pct):.1f}%vsVWAP"
+
+        rows.append(
+            f"  {tok} ch{chp} {start}→{close} n={nd} Q1={q1s} VWAP={vwap_s} [{cat}]{px_vs}"
+        )
+
+    return "\n".join(rows)
+
+
 def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
     """Parse gom_scan stdout → compact Telegram message."""
     lines = stdout.splitlines()
@@ -130,7 +214,8 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
     open_chains: list[str] = []
     in_open = False
     closed_today: list[str] = []
-    smissing: list[str] = []
+    smissing_today_n: int = 0
+    smissing_hist_n:  int = 0
 
     for line in lines:
         if "OPEN CHAINS" in line:
@@ -142,6 +227,21 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
             if closed_part:
                 closed_today = [t.strip() for t in closed_part.split(",") if t.strip()]
             continue
+        if line.startswith("━━ S-MISSING TODAY"):
+            in_open = False
+            # "━━ S-MISSING TODAY (N) ..." or "━━ S-MISSING TODAY: 0 ✓"
+            import re as _re
+            m = _re.search(r"S-MISSING TODAY[:\s]+(\d+)", line)
+            if m:
+                smissing_today_n = int(m.group(1))
+            continue
+        if line.startswith("━━ S-MISSING HIST"):
+            in_open = False
+            import re as _re
+            m = _re.search(r"S-MISSING HIST[:\s]+\((\d+)\)", line)
+            if m:
+                smissing_hist_n = int(m.group(1))
+            continue
         if line.startswith("━━ S-MISSING"):
             in_open = False
             continue
@@ -152,8 +252,6 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
             # Token header line
             token = line.replace("══", "").strip().rstrip("═").strip()
             open_chains.append(token)
-        if "suspect/missing date" in line.lower():
-            smissing.append(line.strip())
 
     # Extract summary line
     summary = ""
@@ -164,14 +262,16 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
 
     # Parse open chains from state to get Q1 / start / n
     chain_details: list[str] = []
+    _state_full: dict = {}
+    _fw_base: set = set()
     if STATE_PATH.exists():
         try:
             with open(STATE_PATH, encoding="utf-8") as f:
-                state = json.load(f)
+                _state_full = json.load(f)
             fw_list = [l.strip() for l in FW_SYM_PATH.read_text(encoding="utf-8").splitlines() if l.strip()]
-            fw_base = {s[:-4] if s.endswith("USDT") else s for s in fw_list}
-            open_st = {t: c for t, c in state.items()
-                       if c.get("chain_open") and t in fw_base}
+            _fw_base = {s[:-4] if s.endswith("USDT") else s for s in fw_list}
+            open_st = {t: c for t, c in _state_full.items()
+                       if c.get("chain_open") and t in _fw_base}
             sorted_chains = sorted(open_st.items(),
                                    key=lambda x: x[1].get("Q1_cum_usd", 0), reverse=True)
             for tok, ch in sorted_chains:
@@ -211,8 +311,17 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
             closed_str += f" (+{len(closed_today)-10})"
         msg_lines.append(f"CLOSED TODAY: {closed_str}")
 
-    if smissing:
-        msg_lines.append(f"S-MISSING: {len(smissing)} token(s)")
+    if smissing_today_n > 0:
+        msg_lines.append(f"⚠ S-MISS TODAY: {smissing_today_n} — check export timing!")
+    else:
+        msg_lines.append(f"S-MISS today: 0 ✓")
+    if smissing_hist_n > 0:
+        msg_lines.append(f"S-MISS hist: {smissing_hist_n} (short history, normal)")
+
+    # Closed chains (60d window)
+    closed_sec = _closed_section(_state_full, _fw_base, target_date)
+    if closed_sec:
+        msg_lines.append(closed_sec)
 
     msg_lines += [
         "",
