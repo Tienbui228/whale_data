@@ -231,6 +231,7 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
     smissing_today_n: int = 0
     smissing_hist_n:  int = 0
     gomc_beta_line: str = ""
+    gomc_beta_stats: list[str] = []
 
     for line in lines:
         if "OPEN CHAINS" in line:
@@ -259,6 +260,9 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
             continue
         if line.startswith("━━ S-MISSING"):
             in_open = False
+            continue
+        if line.startswith("━━ GOM-C β STAT:"):
+            gomc_beta_stats.append(line.replace("━━ GOM-C β STAT:", "").strip())
             continue
         if "━━ GOM-C β" in line:
             in_open = False
@@ -339,15 +343,26 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
 
     # GOM-C CAMPAIGN-TRACK section (D4: tách riêng, header, cột rõ ràng)
     if gomc_beta_line and "0 fires" not in gomc_beta_line:
-        # Parse "GOM-C β (N fires — PROVISIONAL ⚡ sign-off 15/08): TOK1 TOK2 ..."
         import re as _re2
         m_ct = _re2.search(r"\((\d+) fires", gomc_beta_line)
-        m_toks = _re2.search(r"\):\s*(.+)$", gomc_beta_line)
         ct = int(m_ct.group(1)) if m_ct else 0
-        toks_str = m_toks.group(1).strip() if m_toks else ""
         msg_lines.append(f"")
         msg_lines.append(f"CAMPAIGN-TRACK (theo doi, khong vao) [{ct}] [PROVISIONAL]:")
-        if toks_str:
+        if gomc_beta_stats:
+            # Format: "TOKEN|n=N|q2=$lo-hiM|px=$P|doi=±DM [cover-drv]"
+            for stat in gomc_beta_stats:
+                parts = {p.split("=")[0]: p.split("=", 1)[1]
+                         for p in stat.split("|") if "=" in p}
+                tok = stat.split("|")[0]
+                n   = parts.get("n", "?")
+                q2  = parts.get("q2", "NaN")
+                px  = parts.get("px", "NaN")
+                doi = parts.get("doi", "NaN")
+                cvr = " [cover-drv]" if doi.startswith("-") and doi != "NaN" else ""
+                msg_lines.append(f"  {tok} n={n} Q2={q2} px={px} dOI={doi}{cvr}")
+        else:
+            m_toks = _re2.search(r"\):\s*(.+)$", gomc_beta_line)
+            toks_str = m_toks.group(1).strip() if m_toks else ""
             for ct_tok in toks_str.split():
                 msg_lines.append(f"  {ct_tok}")
 

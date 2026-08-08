@@ -951,7 +951,7 @@ def run_daily(
     opened_today:  list[str] = []
     smissing_today_summary: list[str] = []  # target_date itself missing → possible race/fresh issue
     smissing_hist_summary:  list[str] = []  # only historical dates missing → normal short-history
-    gomc_beta_fires: list[str] = []         # GOM-C PROVISIONAL-β display list
+    gomc_beta_fires: list[dict] = []         # GOM-C PROVISIONAL-β stats list
 
     for sym in all_symbols:
         token = sym[:-4] if sym.endswith("USDT") else sym
@@ -984,7 +984,39 @@ def run_daily(
                 )
                 # GOM-C β check — display only, no state change
                 if not skip and _gomc_beta_check(days, i, cfg, sc, result):
-                    gomc_beta_fires.append(token)
+                    d_now  = days[i]
+                    oi_now = d_now.get("oi_usd", math.nan)
+                    pos_r  = d_now.get("lsr_pos", math.nan)
+                    px_now = d_now.get("avg_px", math.nan)
+                    # n_days: consecutive GOM-C β fire days ending today
+                    n_ct = 1
+                    for j in range(i - 1, -1, -1):
+                        dj = days[j]
+                        if dj.get("_suspect") or dj.get("_skip_eval"):
+                            break
+                        rj = eval_gom(days, j, cfg, sc)
+                        if _gomc_beta_check(days, j, cfg, sc, rj):
+                            n_ct += 1
+                        else:
+                            break
+                    # Q2_net range [INFERENCE n=3]: OI × s_top × (pos_r−1)/(pos_r+1)
+                    if not math.isnan(pos_r) and pos_r > 0 and not math.isnan(oi_now):
+                        tilt  = (pos_r - 1) / (pos_r + 1)
+                        q2_lo = oi_now * 0.5 * tilt
+                        q2_hi = oi_now * 0.8 * tilt
+                    else:
+                        q2_lo = q2_hi = math.nan
+                    # ΔOI_net vs start of consecutive streak
+                    first_i  = i - n_ct + 1
+                    oi_first = (days[first_i].get("oi_usd", math.nan)
+                                if 0 <= first_i < len(days) else math.nan)
+                    doi = (oi_now - oi_first
+                           if not (math.isnan(oi_now) or math.isnan(oi_first)) else math.nan)
+                    gomc_beta_fires.append({
+                        "token": token, "n": n_ct,
+                        "q2_lo": q2_lo, "q2_hi": q2_hi,
+                        "px": px_now, "doi": doi,
+                    })
 
         all_state[token] = chain
 
@@ -1034,8 +1066,15 @@ def run_daily(
 
     # GOM-C PROVISIONAL-β
     if gomc_beta_fires:
-        toks = " ".join(sorted(gomc_beta_fires))
+        toks = " ".join(sorted(f["token"] for f in gomc_beta_fires))
         print(f"\n━━ GOM-C β ({len(gomc_beta_fires)} fires — PROVISIONAL ⚡ sign-off 15/08): {toks}")
+        for f in sorted(gomc_beta_fires, key=lambda x: x["token"]):
+            q2_s  = (f"${f['q2_lo']/1e6:.1f}-{f['q2_hi']/1e6:.1f}M"
+                     if not math.isnan(f["q2_lo"]) else "NaN")
+            px_s  = f"${f['px']:.5f}" if not math.isnan(f["px"]) else "NaN"
+            doi_s = (f"{'+' if f['doi'] >= 0 else ''}{f['doi']/1e6:.2f}M"
+                     if not math.isnan(f["doi"]) else "NaN")
+            print(f"━━ GOM-C β STAT: {f['token']}|n={f['n']}|q2={q2_s}|px={px_s}|doi={doi_s}")
     else:
         print(f"\n━━ GOM-C β: 0 fires")
 
