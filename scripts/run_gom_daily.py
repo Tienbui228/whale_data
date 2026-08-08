@@ -235,7 +235,7 @@ def _closed_section(state: dict, fw_base: set, target_date: str) -> str:
     return "\n".join(rows)
 
 
-def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
+def format_tg_report(stdout: str, target_date: str, run_utc: str, run_date: str = "") -> str:
     """Parse gom_scan stdout → compact Telegram message."""
     lines = stdout.splitlines()
 
@@ -359,8 +359,15 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
                 _net_raw = ch.get("net_oi_delta_usd", math.nan)
                 if not math.isnan(_net_raw):
                     _net_s = f"${_net_raw/1_000:.0f}k" if abs(_net_raw) >= 1000 else f"${_net_raw:.0f}"
-                    _churn = " [churn]" if (not math.isnan(q1) and q1 > 0
-                                             and _net_raw > 0 and q1 > 2 * _net_raw) else ""
+                    if not math.isnan(q1) and q1 > 0:
+                        if _net_raw <= 0:
+                            _churn = " [churn-net<=0]"
+                        elif q1 > 2 * _net_raw:
+                            _churn = " [churn]"
+                        else:
+                            _churn = ""
+                    else:
+                        _churn = ""
                     net_part = f" gross | net={_net_s}{_churn}"
                 else:
                     net_part = ""
@@ -425,7 +432,7 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
     stars = [l for l in chain_details if l.startswith("★")]
 
     msg_lines = [
-        f"📊 GOM Daily — {target_date} ({run_utc} UTC)",
+        f"📊 GOM Daily — data_date={target_date} · run={run_date}T{run_utc}Z",
         f"Universe: fw139@139 | A1∧A2∧A3∧(A4∨A5) | B1∧(B2∨B3)∧B4 | C β-PROV",
         f"",
         f"OPEN ({n_open}/139):",
@@ -511,8 +518,10 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main() -> None:
-    run_utc = datetime.now(timezone.utc).strftime("%H:%M")
-    target_date = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+    _now_utc = datetime.now(timezone.utc)
+    run_utc  = _now_utc.strftime("%H:%M")
+    run_date = _now_utc.strftime("%Y-%m-%d")
+    target_date = (_now_utc - timedelta(days=1)).strftime("%Y-%m-%d")
 
     _log(f"run_start date={target_date}")
 
@@ -545,7 +554,7 @@ def main() -> None:
     HB_PATH.write_text(datetime.now(timezone.utc).isoformat(), encoding="utf-8")
 
     # Format and send Telegram report
-    report = format_tg_report(stdout, target_date, run_utc)
+    report = format_tg_report(stdout, target_date, run_utc, run_date)
     ok = tg_send(report)
 
     _log(f"tg_send={'OK' if ok else 'FAIL'}  open_chains_reported={report.count(chr(10)+'  ')}")

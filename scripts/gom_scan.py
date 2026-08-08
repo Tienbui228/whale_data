@@ -1155,7 +1155,8 @@ def run_daily(
                         doi = (oi_now - oi_first
                                if not (math.isnan(oi_now) or math.isnan(oi_first))
                                else math.nan)
-                        # M2: Tier 1 VWAP; fall to Tier 2 if vwap_den=0 or below rep threshold
+                        # M2: Tier 1 VWAP; fall to Tier 2 if vwap_den=0 or below rep threshold;
+                        # Tier 3 fallback: vol-VWAP from GOM-C fire days (covers TUT/CYS no-chain case)
                         _vwap_num   = chain.get("vwap_num", 0.0)
                         _vwap_den   = chain.get("vwap_den", 0.0)
                         _oi_start_c = chain.get("oi_start_usd", 0.0) or 0.0
@@ -1171,6 +1172,19 @@ def run_daily(
                             _vvd = chain.get("vwap_vol_den", 0.0)
                             _vwap_c    = _vvn / _vvd if _vvd > 0 else math.nan
                             _vwap_type = "vol_weighted" if _vvd > 0 else None
+                        if math.isnan(_vwap_c):
+                            # Tier 3: compute vol-VWAP directly from consecutive GOM-C fire days
+                            _c_vn, _c_vd = 0.0, 0.0
+                            for _j in range(first_i, i + 1):
+                                if 0 <= _j < len(days):
+                                    _pj = days[_j].get("avg_px", math.nan)
+                                    _vj = days[_j].get("vol_quote", math.nan)
+                                    if not math.isnan(_pj) and not math.isnan(_vj) and _vj > 0:
+                                        _c_vn += _pj * _vj
+                                        _c_vd += _vj
+                            if _c_vd > 0:
+                                _vwap_c    = _c_vn / _c_vd
+                                _vwap_type = "vol_weighted"
                         # M4: gross/net for CAMPAIGN-TRACK
                         _gross = chain.get("Q1_cum_usd", math.nan)
                         _net   = chain.get("net_oi_delta_usd", math.nan)
@@ -1267,11 +1281,19 @@ def run_daily(
             # M4: gross/net
             _gross = f.get("gross", math.nan)
             _net   = f.get("net",   math.nan)
-            gross_s = f"${_gross/1e3:.0f}k" if not math.isnan(_gross) and _gross >= 1000 else "$0"
+            gross_s = (f"${_gross/1e3:.0f}k" if not math.isnan(_gross) and _gross >= 1000
+                       else f"${_gross:.0f}" if not math.isnan(_gross) else "N/A")
             net_s   = (f"${_net/1e3:.0f}k"  if not math.isnan(_net)   and abs(_net) >= 1000
                        else f"${_net:.0f}" if not math.isnan(_net) else "N/A")
-            _churn_tag = " [churn]" if (not math.isnan(_gross) and not math.isnan(_net)
-                                         and _net > 0 and _gross > 2 * _net) else ""
+            if not math.isnan(_gross) and not math.isnan(_net) and _gross > 0:
+                if _net <= 0:
+                    _churn_tag = " [churn-net<=0]"
+                elif _gross > 2 * _net:
+                    _churn_tag = " [churn]"
+                else:
+                    _churn_tag = ""
+            else:
+                _churn_tag = ""
             print(f"━━ GOM-C β STAT: {f['token']}|n={f['n']}|gross={gross_s}|net={net_s}{_churn_tag}"
                   f"|q2={q2_s}|vwap={vwap_s}|px={px_s}|doi={doi_s}")
         for s in sorted(gomc_beta_suppressed, key=lambda x: x["token"]):

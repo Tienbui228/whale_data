@@ -2,6 +2,88 @@
 
 ---
 
+## SESSION 2026-08-09 (24) — 4-BUG FIX + BASELINE V9 CANONICAL
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Trạng thái:** 4 bugs fixed, gom_scan.py + run_gom_daily.py SCP → VPS, baseline v9 verified.
+
+### Bugs đã fix
+
+| Bug | File | Mô tả | Fix |
+|---|---|---|---|
+| 1 (churn-net≤0) | run_gom_daily.py ~L362 | `net>0` guard bỏ sót worst churn | `if net<=0 → [churn-net<=0]; elif q1>2×net → [churn]` |
+| 1 (GOM-C) | gom_scan.py ~L1273 | GOM-C STAT cùng lỗi | Cùng logic |
+| 2 (closed VWAP) | run_gom_daily.py ~L191 | BANK/PARTI/etc. VWAP=N/A | Đã fix session trước; verify ✓ |
+| 3 (GOM-C VWAP) | gom_scan.py ~L1158 | TUT/CYS VWAP=N/A (no chain) | Tier 3 fallback: vol-VWAP từ fire days `days[first_i:i+1]` |
+| 3 ($0 vs N/A) | gom_scan.py ~L1270 | gross_s=`$0` khi nan | `N/A` khi nan, `$X` khi đo được |
+| 4 (header) | run_gom_daily.py ~L428 | Date ambiguous | `data_date=YYYY-MM-DD · run=YYYY-MM-DDThh:mmZ` |
+
+### Kết quả verify (VPS canonical 2026-08-07)
+
+| Check | Kết quả |
+|---|---|
+| Bug 1: APR/INX/ZEST | `[churn-net<=0]` ✓ |
+| Bug 1: ALLO/GIGGLE/USELESS | `[churn-net<=0]` ✓ (negative net) |
+| Bug 1: FF/HUMA | `[churn]` ✓ (net>0, gross>2×net) |
+| Bug 1: GOM-C GRIFFAIN | `[churn-net<=0]` ✓ |
+| Bug 2: BANK | `VWAP=$0.03972[vw-vol]` ✓ |
+| Bug 2: PARTI | `VWAP=$0.04791[vw-vol]` ✓ |
+| Bug 3: TUT | `VWAP=$0.03284[vw-vol]` ✓ (was N/A) |
+| Bug 3: CYS | `VWAP=$0.78642[vw-vol]` ✓ (was N/A) |
+| Bug 3: gross=N/A | TUT/CYS/AVA/MAVIA/NOM (no chain) ✓ |
+| Bug 4: Header | `data_date=2026-08-07 · run=2026-08-08T15:07Z` ✓ |
+
+### Baseline v9 canonical (TG report)
+
+```
+📊 GOM Daily — data_date=2026-08-07 · run=2026-08-08T15:07Z
+Universe: fw139@139 | A1∧A2∧A3∧(A4∨A5) | B1∧(B2∨B3)∧B4 | C β-PROV
+
+OPEN (16/139):
+    FF ch1 n=5 Q1=$1988k gross | net=$748k [churn] VWAP=$0.0644 px=$0.0647 ↑0.4% Q2=$5.8–23.2M[INFER]
+    ROBO ch1 n=2 Q1=$1370k gross | net=$1063k VWAP=$0.0132 px=$0.0138 ↑4.6% Q2=$0.9–3.6M[INFER]
+    APR ch1 n=1 brk=1 Q1=$528k gross | net=$0 [churn-net<=0] VWAP=$0.1976 px=$0.2059 ↑4.2% Q2=$1.8–7.0M[INFER]
+    HUMA ch2 n=1 Q1=$413k gross | net=$181k [churn] VWAP=$0.0198[vw-vol] px=$0.0203 ↑2.6% Q2=$2.2–8.8M[INFER]
+    INX ch1 n=1 brk=1 Q1=$164k gross | net=$0 [churn-net<=0] VWAP=$0.0074 px=$0.0073 ↓2.0% Q2=$0.4–1.4M[INFER]
+    ZEST ch1 n=2 Q1=$154k gross | net=$-351k [churn-net<=0] VWAP=$0.2145[vw-vol] px=$0.2117 ↓1.3% Q2=$1.1–4.4M[INFER]
+    POWER ch1 n=4 Q1=$145k gross | net=$143k VWAP=$0.0881[vw-vol] px=$0.0884 ↑0.3% Q2=$0.7–2.7M[INFER]
+    ZAMA ch2 n=1 Q1=$107k gross | net=$394k VWAP=$0.0510[vw-vol] px=$0.0511 ↑0.2% Q2=$1.9–7.6M[INFER]
+    SOPH ch1 n=1 Q1=$51k gross | net=$54k VWAP=$0.0039[vw-vol] px=$0.0039 ↑0.5% Q2=$0.3–1.4M[INFER]
+    IN ch1 n=1 Q1=$45k gross | net=$50k VWAP=$0.0337[vw-vol] px=$0.0342 ↑1.5% Q2=$0.4–1.7M[INFER]
+    ALLO ch1 n=2 brk=1 Q1=$0 gross | net=$-1044k VWAP=$0.2745[vw-vol] px=$0.3282 ↑19.6% Q2=$2.6–10.3M[INFER]
+    CAP ch2 n=0 Q1=$0 gross | net=$1195k VWAP=$0.0318[vw-vol] px=$0.0339 ↑6.8% Q2=$1.1–4.3M[INFER]
+    COAI ch1 n=1 Q1=$0 gross | net=$382k VWAP=$0.3436[vw-vol] px=$0.3574 ↑4.0% Q2=$0.8–3.1M[INFER]
+    ENSO ch1 n=1 brk=2 Q1=$0 gross | net=$-214k VWAP=$0.9167[vw-vol] px=$1.0156 ↑10.8% Q2=$0.9–3.7M[INFER]
+    GIGGLE ch1 n=1 Q1=$0 gross | net=$-594k VWAP=$32.7699[vw-vol] px=$33.1635 ↑1.2% Q2=$2.5–10.1M[INFER]
+    USELESS ch1 n=2 brk=2 Q1=$0 gross | net=$-380k VWAP=$0.0470[vw-vol] px=$0.0420 ↓10.7% Q2=$0.9–3.5M[INFER]
+★ Q1>$2M: NONE
+
+CAMPAIGN-TRACK [3 fires + 1 ⏸] [PROVISIONAL]:
+  COOKIE n=1 $0 gross|net=$0 VWAP=$0.00774[vw-vol] px=$0.01011 dOI=+0.00M
+  CYS n=1 N/A gross|net=N/A VWAP=$0.78642[vw-vol] px=$0.78642 dOI=+0.00M
+  TUT n=2 N/A gross|net=N/A VWAP=$0.03284[vw-vol] px=$0.03494 dOI=-2.04M [cover-drv]
+  ⏸ TST cooldown 11d (first-fire 08-04)
+
+CHƯƠNG ĐÃ ĐÓNG (60d):
+  ZBT ch2 07-06→07-14 n=6 Q1=$463k VWAP=$0.12547 [rule-iv]
+  BANK ch2 07-04→07-14 n=0 Q1=$0 VWAP=$0.03972[vw-vol] [rule-iv] [retro 07-16]
+  PARTI ch1 07-07→07-11 n=2 Q1=$0 VWAP=$0.04791[vw-vol] [rule-iv]
+  TOWNS ch2 07-15→07-18 n=0 Q1=$0 VWAP=$0.00212[vw-vol] [rule-iv]
+  ARX ch2 07-03→07-04 n=1 Q1=$632k VWAP=$0.21608 [supp]
+  TRADOOR ch1 07-03→07-07 n=3 Q1=$96k VWAP=$0.40288[vw-vol] [supp]
+  ...
+[16 open / 139 symbols scanned]
+```
+
+### Files changed
+
+| File | Thay đổi |
+|---|---|
+| scripts/gom_scan.py | Bug 3: Tier 3 VWAP fallback + $0→N/A + churn-net<=0 |
+| scripts/run_gom_daily.py | Bug 1: churn-net<=0; Bug 4: header date fields; run_date param |
+
+---
+
 ## SESSION 2026-08-08 (19) — BUG FIX: BANK/Q2-gate/fw139
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
