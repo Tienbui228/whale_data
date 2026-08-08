@@ -270,6 +270,7 @@ def build_token_days(
             # S-missing: absent row → synthetic NaN day (break_streak++ in update_chain)
             day = _nan_day(date_str)
             day["_suspect"] = True
+            day["_interval_h"] = interval_h  # propagate so callers can normalize funding
             suspect_dates.append(date_str)
             days.append(day)
             continue
@@ -312,6 +313,8 @@ def build_token_days(
 
         # Propagate low_conf flag (used in eval_gom display)
         day["low_conf"] = _bool_val(row.get("low_conf"), default=False)
+        # Propagate funding interval so callers can normalize funding_avg to 8h-equivalent
+        day["_interval_h"] = interval_h
 
         days.append(day)
 

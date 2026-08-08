@@ -337,9 +337,19 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
     if smissing_hist_n > 0:
         msg_lines.append(f"S-MISS hist: {smissing_hist_n} (short history, normal)")
 
-    # GOM-C PROVISIONAL-β
+    # GOM-C CAMPAIGN-TRACK section (D4: tách riêng, header, cột rõ ràng)
     if gomc_beta_line and "0 fires" not in gomc_beta_line:
-        msg_lines.append(f"⚡ {gomc_beta_line}")
+        # Parse "GOM-C β (N fires — PROVISIONAL ⚡ sign-off 15/08): TOK1 TOK2 ..."
+        import re as _re2
+        m_ct = _re2.search(r"\((\d+) fires", gomc_beta_line)
+        m_toks = _re2.search(r"\):\s*(.+)$", gomc_beta_line)
+        ct = int(m_ct.group(1)) if m_ct else 0
+        toks_str = m_toks.group(1).strip() if m_toks else ""
+        msg_lines.append(f"")
+        msg_lines.append(f"CAMPAIGN-TRACK (theo doi, khong vao) [{ct}] [PROVISIONAL]:")
+        if toks_str:
+            for ct_tok in toks_str.split():
+                msg_lines.append(f"  {ct_tok}")
 
     # Closed chains (60d window)
     closed_sec = _closed_section(_state_full, _fw_base, target_date)

@@ -2,6 +2,47 @@
 
 ---
 
+## SESSION 2026-08-08 (12) — D1-D5: spec-drift sync + interval normalize + triage
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### D1 — Spec-drift sync (commit đầu tiên)
+
+**DRIFT GHI NHẬN:** Code GOM-C β deployed tại commit e3e734f (gom_scan + run_gom_daily) TRƯỚC khi spec được viết. Đây là vi phạm kỷ luật conformance — ghi nhận là spec-drift, sync tại commit này, KHÔNG bình thường hóa.
+
+**gom_detect_spec.md v1.4 → v1.5 (ký 08/08/2026):**
+- §1.3 GOM-C mới: C1/C2_quiet/C3_lax/d_pos≥0/C4_slope/NOT_supp + known gap normalize
+- §3 Q2_net formula, display flip: Q2_net PRIMARY (range INFERENCE n=3), Q1 = trần ngày-đơn
+- §6 backtest table: TUT PASS, BULLA PASS (GOM-B), BANK PASS (G4), BANANAS31 PENDING 15/08
+- §7 Known Gaps: B2 funding_pinned 1h DEV-debt, BANANAS31 PENDING, TST extreme negative funding
+- §9 Conformance table: GOM-A/B/C đầy đủ, spec expression vs code expression, drift note
+
+### D1.2 — Funding normalize verify
+
+**Probe kết quả (VPS `_probe_interval_inner.py`):**
+- COOKIE/CYS/TST/TUT: đều 4h-interval → f_avg_8h = f_avg × 4/8
+- BANK/ERA: 1h-interval (chỉ 2 token 1h trong fw137)
+- Ngày 08-07: không có misclassification (normalize không thay đổi pass/fail status)
+- TST f_avg = −0.0009237/4h = −5.4%/day (extreme negative) → vẫn pass C2_quiet (< 1e-4)
+
+**Fix implement:**
+- `fw_loader_utils.py`: propagate `_interval_h` vào mỗi day (cả suspect + normal days)
+- `gom_scan.py` `_gomc_beta_check()`: C2_quiet dùng `f_avg × interval_h / 8` thay raw f_avg
+
+**Known gap B2:** `funding_pinned` signal (GOM-B) cũng dùng raw f_avg cho BANK/ERA 1h — DEV-debt, chưa fix (BANK đóng, ERA không active). Ghi §7 spec.
+
+### D4 — TG CAMPAIGN-TRACK format
+
+- `run_gom_daily.py`: tách GOM-C section riêng, header `CAMPAIGN-TRACK (theo doi, khong vao) [N] [PROVISIONAL]:`
+- Mỗi token trên 1 dòng riêng (chưa có cột n_days/Q2_net/VWAP/ΔOI_net — pending D4 bổ sung)
+
+### D2 — Triage pack (scripts written, pending run)
+
+- `_triage_inner.py`: inner script COOKIE/CYS/TST 14d table + suppressor log
+- `_probe_gomc_triage_20260808.py`: runner SCP → VPS → tee output
+
+---
+
 ## SESSION 2026-08-08 (11) — GOM-C β implement: operator ký Q1/Q2/Q3 + 2 chỉnh
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6

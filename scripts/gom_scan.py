@@ -290,13 +290,16 @@ def _gomc_beta_check(
     # C1: stealth_grind (encodes taker<55% in build window)
     if not stealth_grind(days, i, cfg):
         return False
-    # C2_quiet: single-day f_avg ≤ max(2 × funding_floor, 1e-4)
+    # C2_quiet: f_avg normalized to 8h-equivalent ≤ max(2 × funding_floor, 1e-4)
+    # funding_avg = mean(per-period rates); normalize: f_avg_8h = f_avg × interval_h / 8
     f_avg = days[i].get("funding_avg", float("nan"))
     if math.isnan(f_avg):
         return False
+    interval_h = days[i].get("_interval_h", 8)
+    f_avg_8h = f_avg * interval_h / 8
     fp = cfg.get("funding_pinned", {})
     c2_thr = max(2.0 * fp.get("rate_min", 4e-5), 1e-4)
-    if f_avg > c2_thr:
+    if f_avg_8h > c2_thr:
         return False
     # C3_lax: taker_buy_pct ∈ [40, 55]
     tkr = days[i].get("taker_buy_pct", float("nan"))
