@@ -175,6 +175,7 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
         "disqualifier":  {**supp_dq, **perday_dq},       # backward-compat flat view
         "low_conf":      lc,
         "crowd_flush":   cf_today,
+        "struct_alive":  any_supp_dq and a1 and a2 and a3,  # ⏸ A1∧A2∧A3 pass under suppressor
     }
 
 

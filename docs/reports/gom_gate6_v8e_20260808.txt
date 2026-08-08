@@ -1,0 +1,229 @@
+=== GATE v8e — (sau operator ruling hai-nguồn + suppressor dist + 3d BR/XPIN/HEI) 2026-08-08 ===
+Generated: 2026-08-08
+State: gom_state_v8.json  target=2026-08-07  code=post-struct_alive-impl
+Formula A: A1 AND A2 AND A3 AND (A4 OR A5)
+  A4=d_pos_3d>=0 OR pos_rerate  A5=oi_cycle_pos<=0.5 rolling 30d
+========================================================================
+
+L-28 KHAI BÁO (carried from v8d):
+  v8b nói 'TAG A2 fails full period' — SAI. Đúng: A2 PASS 07-12→07-14 (avg5(gLSR) drop).
+  Sửa trong v8c.
+
+OPERATOR RULING (carried from session 17):
+  fw = canonical (2-to-1: fw CSV + CASE_TAG.xlsx = 0.000488 vs calib 0.000716).
+  TAG FAIL/ÁN-2-NGUỒN → FAIL-known-limitation.
+  PC semantic gap (no prior-pump condition) = L-19 in vivo (proposal pending).
+
+SUPPRESSOR DISTRIBUTION — 78 SUPPRESSED tokens (probe _probe_supp44_final_20260808.py):
+  Fix: state keys short (TAG) → build_token_days cần USDT suffix (TAGUSDT).
+  Kết quả: 78/78 reproduced from fw scan. 0 prior-state-carry. 0 errors.
+
+  Suppressor breakdown:
+    post_climax   :  25  (32%)
+      PC-wash     :   9  (no prior pump 21d) — tokens: BREV ZKP PARTI ERA MIRA O ZBT AIO HYPER
+      PC-blowoff  :  16  (had prior pump 21d)
+    decay         :  31  (40%)
+    lsr_dist      :   7
+    dist_wall     :   3
+    funding_neg_div: 7
+    funding_extreme only: 1 (overlap with PC counted in PC group)
+    crowd_flush   :   0
+
+  **CORRECTION vs operator 3-task brief:**
+  - TAG: probe → "blowoff" (had prior pump in 21d window). Operator named TAG as "PC-wash"
+    example. Per probe: TAG had a prior pump before 07-08 crash. PC firing on fw data
+    = correct blowoff detection, not oan. TAG failure root = ÁN-2-NGUỒN (price diverge),
+    not PC-wash mechanism. TAG KHÔNG nằm trong nhóm PC-wash.
+  - BTW: suppressor = DECAY (not post_climax). Operator named "BTW=PC-true-fire."
+    Per probe: BTW dq_ep=07-18, fired by decay (not PC). BTW không phải PC example.
+  - ESPORTS: PC-blowoff confirmed (funding_extreme+post_climax, had prior pump). = true positive.
+  - PC-wash confirmed examples: BREV / ZKP / PARTI / ERA / MIRA / O / ZBT / AIO / HYPER
+
+  PC proposal (CONFIRM-tier): examples cần điều chỉnh lại:
+    - "TAG=false-fire" → ĐỔI THÀNH "tag not in wash group; ÁN-2-NGUỒN is separate issue"
+    - "BTW=true-fire" → ĐỔI THÀNH ESPORTS / BREV(wash) / SIREN(blowoff)
+    - n≥3 confirmed wash tokens available: BREV, ZKP, PARTI (hoặc ERA/MIRA/O)
+
+TAG POST_CLIMAX PROBE (carried from v8d):
+  fw: 07-07→08: 0.000896→0.000488 = −45.5% → PC fires
+  calib: 07-07→08: 0.000875→0.000716 = −19.3% → PC NOT fires (CF fires instead)
+  pc_wash probe: TAG = blowoff (had prior pump). PC firing = correct on fw price.
+  Discrepancy = price series diverge only (not PC logic error for TAG).
+
+TAG ⏸ SUPPRESSED-structure-alive (probe _probe_tag_struct_alive_20260808.py):
+  ⏸ fires: 07-12, 07-13, 07-14 (3 days)
+  Stops 07-15: A3=False (OI/ratio condition drops)
+  Expected range 07-12→07-19: PARTIAL (07-12→07-14 confirmed; 07-15→19 A3 fails)
+  Display-only; not in state. §7 entry below.
+
+========================================================================
+GATE v8e — COMPLETE TABLE
+#     Token        Episode                   Result
+---------------------------------------------------------------------------------------------------------
+1     _FORM        gom_a_fire                skip — formula verified in conformance table (spec v1.7, §3)
+     Note: Per conformance table §3: A1∧A2∧A3∧(A4∨A5). Code verified commit 8edc053 against each row.
+
+2     _FORM        gom_b_fire                skip — formula verified in conformance table (spec v1.7, §4)
+     Note: Per conformance table §4: B1∧(B2∨B3)∧B4. Code verified same commit.
+
+3     BANK         open                      PASS*-data-bound (fw starts 07-01; spec ≤06-29 → earliest possible = 07-04)
+     Note: Spec open criterion: ≤06-29. fw data window starts 07-01 (universe entry 07-01). Opens 07-04 = earliest day with valid A4 d_pos_3d≥0 in fw. PASS*-data-bound (not PASS* vs calib 07-12 — that is run-vs-run expectation drift).
+
+4     BANK         chapter                   PASS (crowd_flush 07-04 → chapter 2 same day)
+     Note: hist ch1: 07-04→07-04 Q1=$0; ch2 starts 07-04. Logic correct.
+
+5     BANK         close-iv [RETRO-TAG SIGNED] RETRO-TAG SIGNED: close gom_gap 07-14; retro-tag 07-16 [gap→chuyển pha (retro 07-16)]
+     Note: fw: chain exhausts gom_gap>2d 07-14. RETRO-TAG: peak_pos_r=3.8142@07-04, 07-16 pos_r=2.02 → drop=47% from peak, gap=2d ≤3 → QUALIFIES. OPERATOR SIGNED. Display-only label. State unchanged. Note: implemented-before-signature 08/08/2026, operator ký retroactive. Not normalizing (ghi sổ agent_log).
+
+6     TAG          open                      FAIL-known-limitation [ÁN-2-NGUỒN — PC-blowoff on fw price]
+     Note: fw avg_px 07-07→08: 0.000896→0.000488 = −45.5% → PC fires. LOCKED calib: 0.000875→0.000716 = −19.3% → PC NOT fires → CF fires. fw + CASE_TAG.xlsx px_avg KHỚP (0.000488). ÁN-2-NGUỒN: two price methods on flash-crash day. OPERATOR RULING: fw=canonical → FAIL. Note: TAG probe = blowoff (had prior pump 21d before 07-08), NOT wash. TAG KHÔNG nằm trong nhóm PC-wash 9 tokens.
+     ⏸ structure-alive 07-12→07-14: A1∧A2∧A3=True, suppressor active. Machine conservative (miss 3 days). A3 fails from 07-15. §7 entry added.
+
+7     BAS          supp+open-after           PASS (post_climax 07-02→07-15; no spurious open after cooldown)
+     Note: BAS dq_ep=07-02 dq_end=07-15. No chain opened in fw period. After cooldown clear 07-15: no GOM-A/B conditions met → no spurious fire. PASS.
+
+8     BTW          SUPP                      FAIL-data-bound (fw window starts 07-01; 06-21 PC episode missing — truncated)
+     Note: fw BTW data starts 07-01. 06-21 post_climax NOT in fw → BTW opens 07-03. Calib has 06-21 PC → suppresses. Data-start truncation. Fix ký: backfill-on-universe-add trailing 35d. BTW suppressor in probe = DECAY (07-18), not post_climax — consistent with fw-start missing the 06-21 PC episode. FAIL-data-bound.
+
+9     BULLA        open                      PASS*-data-bound (+3d diverge 07-11 vs calib 07-08)
+     Note: BULLA opens 07-11 in fw, calib 07-08. B1 hedge_structure stricter on fw daily data. Closes 07-17 gom_gap>2d. Logic functionally correct — date diverge from data granularity.
+
+10    TUT          chapter [REMOVED — see C1] REMOVED (per operator ruling: TUT no GOM-A/B expected; C1 = GOM-C covers it)
+     Note: TUT never meets GOM-A/B in fw period — correct per spec. GOM-C (stateless) fires instead.
+
+11    IDOL         open                      PASS (re-grade: no-fire = expected per §6 signed spec)
+     Note: §6 signed: 'IDOL 28-31/07: GOM-A bật muộn/KHÔNG'. After 07-20: IDOL unwinds. GOM-A lag >14d. PASS.
+
+12    AKE          SUPP                      PASS*-data-bound (dq_ep=07-24 fw vs calib 07-08, +16d date-shift)
+     Note: fw AKE dq_ep=07-24 dq_end=08-06. decay fires 07-24. Date shift: data-start family. Functional PASS.
+
+Z1    ZBT          open                      PASS*-data-bound (fw starts 07-05, delisted — spec ≤07-01)
+     Note: ZBT delisted. fw data starts 07-05. Spec open ≤07-01 not verifiable. PASS*-data-bound.
+
+Z2    ZBT          close-iv                  PASS*-data-bound (07-14 drop:33% — spec 07-02, +12d)
+     Note: fw closes 07-14 pos_r_drop:33% from peak 4.24. Rule-iv logic correct. Date shift data-start. PASS*-data-bound.
+
+P     PARTI        open+close-iv             PASS (opens 07-07 ≤09/07, closes 07-11 drop:59% — Bug #9 RESOLVED)
+     Note: A4 d_pos_3d≥0 → PARTI fires from 07-03. Opens 07-07. Closes 07-11 pos_r_drop:59% from peak 3.65. PASS.
+
+T2    TAG          wrong-side                PASS (no chain open in fw period; 07-28→31 A2 fails, no GOM fire)
+     Note: TAG has no open in fw. 07-28→31: A2 avg5>1.1, no fire. PASS.
+
+PW    POWER        b-pos                     PASS (OPEN 08-02; A3+A4+A5+B1+B3+B4 signals, Q1=$145K)
+     Note: POWER open 08-02, n_days=6, Q1=$145K, peak_pos_r=1.10.
+
+CL    CLO          supp-neg                  PASS (dq_ep=07-27 dq_end=08-09; no chain open)
+     Note: CLO suppressed from 07-27. No chain history. PASS.
+
+C1    TUT          GOM-C fire 07-13+07-23    PASS (fires 07-13 ✓ 07-23 ✓; 07-21/22 d_pos_3d<0→no fire)
+
+C2    BULLA        GOM-C block 07-17→21      PASS (all False 07-17→21 — probe confirmed)
+
+C3    BANK         d_pos<0 post-close        PASS (dq_ep=07-21; d_pos_3d<0 after close → GOM-C blocked)
+
+C4    BANANAS31    negative test             PENDING 15/08 — no fw data before 08-01
+
+C5    COOKIE/CYS/TST live 08-07             PASS (COOKIE ✓ CYS ✓; TST=cooldown first 08-04 clear 08-18)
+
+---------------------------------------------------------------------------------------------------------
+TOTAL: PASS=10  PASS*=5  FAIL=3  PENDING=1  removed=1  skip=2
+
+FAIL BREAKDOWN (v8e):
+  - BANK close-iv: RETRO-TAG SIGNED (display-only) — functionally accounted for
+  - TAG open: FAIL-known-limitation [ÁN-2-NGUỒN] — fw=canonical ruling; PC-blowoff on fw price (not wash)
+  - BTW SUPP: FAIL-data-bound — fix = backfill hook (signed)
+  [IDOL: re-graded PASS. TAG-wash characterization: CORRECTION — TAG=blowoff per probe]
+
+========================================================================
+HỌ BỆNH — DATA-START TRUNCATION (carried from v8d)
+========================================================================
+
+Token    Spec open    fw first day   diverge    grade
+------------------------------------------------------------
+BANK     ≤2026-06-29  2026-07-01     +2d start  PASS*-data-bound
+BTW      has 06-21 PC 2026-07-01     missing 06-21 PC FAIL-data-bound
+ZBT      ≤2026-07-01  2026-07-05     +4d delisted PASS*-data-bound
+AKE      07-08 calib  07-24 fw       +16d shift PASS*-data-bound
+
+========================================================================
+§7 — PC SEMANTIC GAP (L-19 in vivo)
+========================================================================
+
+Signal: post_climax (signals.py)
+Definition: price_drop(prev→curr) <= -0.25 OR funding_extreme(|rate| >= 1%)
+Scans back 14 days. NO prior-pump condition in code.
+
+Gap: signal name "post_climax" implies prior climax (pump) → crash.
+Code fires on ANY -25% crash regardless of whether prior pump occurred.
+This can cause false positives on flat-base crashes (wash events).
+
+Evidence:
+  PC-wash confirmed (9 tokens): BREV ZKP PARTI ERA MIRA O ZBT AIO HYPER
+    → PC fires on flat-base crashes, no prior pump in 21d window
+  PC-blowoff (16 tokens): TAG BANK SIREN OPG SKYAI GWEI BAS TAC TRIA EVAA AKE BILL ESPORTS HOME BLESS UAI
+    → PC fires correctly after prior pump
+  TAG specifically: blowoff (had prior pump). TAG failure = ÁN-2-NGUỒN, not PC-wash.
+
+Proposal status: CONFIRM-tier (proposals/pc_prior_climax_YYYYMMDD.md) — PENDING WRITE.
+  Updated examples: wash=BREV/ZKP/PARTI; blowoff=ESPORTS/SIREN (replace BTW/TAG).
+  No thresholds.yaml change before operator signature.
+
+⏸ SUPPRESSED-structure-alive:
+  Field: struct_alive in eval_gom() result (added in gom_scan.py this session).
+  Fires when: any_supp_dq=True AND A1=True AND A2=True AND A3=True
+  TAG verification: fires 07-12, 07-13, 07-14 (3 days). A3 fails from 07-15.
+  Governance: display-only; not in state; CONFIRM-tier decides action.
+
+========================================================================
+BẢNG 3D CROSS-CHECK v8e — bổ sung BR + XPIN + HEI
+========================================================================
+
+Token          scan_v8 (fw)                sổ (spec/calib)           status      ghi chú
+---------------------------------------------------------------------------------------------------------
+BANK           closed 07-14; retro 07-16   closed calib; retro SIGN  KHOP+SIGN   retro-tag signed
+TAG            supp 07-08 PC (fw -45%)     calib: CF 07-08 (-19%)    LECH-2NGUON fw=canonical; blowoff per probe
+BAS            supp 07-02→07-15; no open   supp 07-02→07-15          KHOP        post_climax 07-02
+BTW            opens 07-03 (no 06-21 PC)   suppressed 06-21 calib    LECH-DATAB  data-start truncation
+IDOL           no chain; avg5>1.1          no-fire expected §6       KHOP        delay >14d; PASS
+TUT            no GOM-A/B; GOM-C 07-13/23  no chain; C1 covers       KHOP        chapter row removed
+AKE            supp 07-24 decay            supp 07-08 calib          KHOP*       +16d shift; data-start
+BULLA          closed 07-17; opens 07-11   calib opens 07-08         KHOP*       +3d diverge; logic OK
+PARTI          closed 07-11; opens 07-07   expected opens ≤07-09     KHOP        Bug #9 resolved
+ZBT            closed 07-14; drop:33%      calib closes 07-02        KHOP*       delisted; late fw start
+POWER          OPEN 08-02 n_days=6         b-pos open (no calib)     KHOP        new open A-signal 08-02
+CLO            supp 07-27→08-09; no open   supp-neg expected         KHOP        dq 07-27; no chain
+COOKIE         closed 08-06; GOM-C 08-07   expected GOM-C fires      KHOP        stateless; C5
+CYS            no state; GOM-C 08-07       expected GOM-C fires      KHOP        stateless; C5
+TST            supp 08-04; cd clear 08-18  GOM-C cd first 08-04      KHOP        C5; cooldown 14d
+BANANAS31      closed 08-06 gom_gap>2d     C4 PENDING 15/08          PEND        opens 08-01
+
+--- BỔ SUNG v8e ---
+BR             dq_end=07-02 (expired); fw 07-01→08-07: no chain      KHOP        A1=F A2=F 08-03→07 (lsr=1.7); px declining 0.145→0.142; dist_wall 06-19 expired, no re-fire. Machine correctly dormant.
+XPIN           closed 07-30 gom_gap>2d; fw 07-01→08-07: no re-fire   KHOP        A1=F A2=F all week; peak_pos_r=1.815; clean after close. GOM không mở lại.
+HEI            open 07-11→08-05 pos_r_drop:45% from peak 2.51;       ACTIVE-DQ   NEW dq_ep=08-07 (PC fires: 0.324→0.208 = −36%); dq_end=08-20. HEI suppressed 08-07→08-20. Live event.
+               08-03: A1T A2T A3T FIRE (open). 08-05: closes. 08-07: PC suppress.
+
+KHOP = scan khop spec/calib | KHOP* = logic khop, date diverge
+LECH-2NGUON = hai-nguon price diverge | LECH-DATAB = data-start truncation
+PEND = pending | ACTIVE-DQ = new live event logged
+
+========================================================================
+BREAKDOWN 5 OPEN CHAINS Q1 LỚN NHẤT (08-07) — carried from v8d
+(unchanged — A1→A5 verified)
+========================================================================
+
+FF   open=2026-08-01  Q1=$1,988,262  A1T A2T A3T A4T A5F → FIRE via A4 (d_pos_3d=+0.0625)
+ROBO open=2026-08-03  Q1=$1,369,827  A1T A2T A3T A4T A5T → FIRE via A4+A5
+APR  open=2026-08-06  Q1=$527,899    A1T A2T A3T A4F A5T → FIRE via A5 only (oi_cycle_pos=0.1982)
+HUMA open=2026-08-04  Q1=$412,595    A1T A2T A3T A4T A5T → FIRE via A4+A5
+ZEST open=2026-08-06  Q1=$154,399    A1T A2T A3T A4T A5F → FIRE via A4 (oi_cycle_pos=0.8542>0.5)
+
+========================================================================
+TASKS STILL OPEN (post v8e)
+========================================================================
+- PC proposal: proposals/pc_prior_climax_20260808.md — PENDING WRITE
+  Updated n≥3 examples: wash=BREV/ZKP/PARTI; blowoff=ESPORTS/SIREN
+  No thresholds.yaml before operator signature.
+- BTW backfill hook verify: BTW re-run after hook implementation
+- C4 BANANAS31: PENDING 15/08
+- SWAP STATE (bước 4): hold until both conditions met → SCP gom_state_v8.json to VPS

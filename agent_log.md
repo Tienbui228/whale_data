@@ -5787,3 +5787,79 @@ FF 07-30: slope_5d = lsr_global[07-30] / lsr_global[07-25] — 07-25 là NaN (S-
 Việc 5 giữ đóng băng.
 
 ---
+
+## SESSION 2026-08-08 (18) — SUPPRESSOR DIST + 3D BR/XPIN/HEI + GATE V8E
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Trạng thái:** Hai điều kiện swap đã có dữ liệu. Gate v8e viết xong. Chờ operator ký swap.
+
+### GHI CHÚ KỶ LUẬT
+
+- **RETRO-TAG IMPLEMENTED-BEFORE-SIGNATURE**: BANK retro-tag code thêm vào gom_scan.py trước khi operator ký (session 17). Operator ký retroactive 08/08/2026. **Not normalizing** — không phải quy trình chuẩn (L-43 violation). Ghi sổ per operator instruction.
+
+### Việc đã làm
+
+| Hạng mục | Kết quả |
+|---|---|
+| Fix suppressor probe | State keys short (TAG) → build_token_days cần USDT suffix (TAGUSDT). Root cause xác định. |
+| _probe_supp44_final_20260808.py | 78/78 tokens reproduced from fw. 0 prior-state-carry. 0 errors. |
+| Suppressor dist table | PC=25(32%) decay=31(40%) lsr_dist=7 dist_wall=3 funding_neg_div=7; PC-wash=9 PC-blowoff=16 |
+| _probe_3d_br_xpin_hei_20260808.py | BR: dormant (A1=F,A2=F); XPIN: closed 07-30 no re-fire; HEI: new dq_ep=08-07 (PC -36%) |
+| struct_alive flag | Added to eval_gom() result in gom_scan.py: any_supp_dq∧A1∧A2∧A3 |
+| _probe_tag_struct_alive_20260808.py | TAG ⏸ fires 07-12,07-13,07-14 (3 days). A3 fails from 07-15 (not 07-19 as expected). |
+| Gate v8e | docs/reports/gom_gate6_v8e_20260808.txt — bổ sung BR/XPIN/HEI + §7 + suppressor dist |
+
+### Số key — suppressor distribution (78 tokens)
+
+| Suppressor | Count | % |
+|---|---|---|
+| decay (primary) | 31 | 40% |
+| post_climax (primary) | 25 | 32% |
+| &nbsp;&nbsp;PC-wash (no prior pump 21d) | 9 | |
+| &nbsp;&nbsp;PC-blowoff (had prior pump) | 16 | |
+| lsr_dist | 7 | 9% |
+| funding_neg_div | 7 | 9% |
+| dist_wall | 3 | 4% |
+| crowd_flush | 0 | 0% |
+
+PC-wash tokens (9): BREV ZKP PARTI ERA MIRA O ZBT AIO HYPER
+
+### CORRECTION vs operator brief (quan trọng)
+
+- **TAG = blowoff** per probe (had prior pump 21d before 07-08). Operator characterized TAG as "PC-wash" example. **TAG KHÔNG nằm trong nhóm PC-wash.** TAG failure = ÁN-2-NGUỒN (price diverge), không phải PC-wash mechanism.
+- **BTW suppressor = decay** (probe), không phải post_climax. Operator named "BTW=PC-true-fire" — sai. BTW không phải PC example.
+- **ESPORTS = PC-blowoff** (funding_extreme+post_climax, had prior pump) → true positive PC.
+- PC proposal examples cần điều chỉnh: wash=BREV/ZKP/PARTI; blowoff=ESPORTS/SIREN (replace TAG/BTW).
+
+### 3d cross-check bổ sung (điều kiện swap #2)
+
+| Token | Trạng thái 08-07 | Ghi chú |
+|---|---|---|
+| BR | A1=F,A2=F; dq_end 07-02 expired; no chain | Dormant. Machine correct — not opening. |
+| XPIN | A1=F,A2=F; closed 07-30 gom_gap; no re-fire | Clean after close. |
+| HEI | NEW dq_ep=08-07; PC fires 0.324→0.208 (−36%) | Suppressed 08-07→08-20. Live event. |
+
+### TAG ⏸
+
+- Fires: 07-12, 07-13, 07-14 (3 days) — A1∧A2∧A3 pass under suppressor
+- A3 fails from 07-15 → ⏸ range = 07-12→07-14 (không phải 07-12→07-19 như spec kỳ vọng)
+- struct_alive field added to eval_gom() return dict
+
+### Artifacts
+
+| File | Trạng thái |
+|---|---|
+| `_probe_supp44_final_20260808.py` | DONE — 78/78 reproduced |
+| `_probe_3d_br_xpin_hei_20260808.py` | DONE — BR/XPIN/HEI readings |
+| `_probe_tag_struct_alive_20260808.py` | DONE — ⏸ 07-12→07-14 confirmed |
+| `scripts/gom_scan.py` | struct_alive field added to eval_gom() |
+| `docs/reports/gom_gate6_v8e_20260808.txt` | Gate v8e complete |
+
+### OPEN TASKS (post session 18)
+
+- PC proposal: proposals/pc_prior_climax_20260808.md — CẦN VIẾT (examples: BREV/ZKP/PARTI)
+- BTW backfill hook verify
+- C4 BANANAS31: PENDING 15/08
+- **SWAP STATE (BƯỚC 4)**: HOLD — chờ operator ký sau khi đọc hai điều kiện
+
+---
