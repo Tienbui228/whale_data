@@ -289,7 +289,7 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
             summary = line.strip()
             break
 
-    # Parse open chains from state to get Q1 / start / n
+    # Parse open chains from state to get Q1 / VWAP / px
     chain_details: list[str] = []
     _state_full: dict = {}
     _fw_base: set = set()
@@ -299,6 +299,25 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
                 _state_full = json.load(f)
             fw_list = [l.strip() for l in FW_SYM_PATH.read_text(encoding="utf-8").splitlines() if l.strip()]
             _fw_base = {s[:-4] if s.endswith("USDT") else s for s in fw_list}
+
+            # px_map for target_date (for VWAP Δ% display)
+            _px_map: dict[str, float] = {}
+            try:
+                import csv as _csv_tg
+                _cp = STORE / f"freshwatch_daily_{target_date[:7]}.csv"
+                if _cp.exists():
+                    with open(_cp, encoding="utf-8") as _fc:
+                        for _row in _csv_tg.DictReader(_fc):
+                            if _row.get("date") == target_date:
+                                _s = _row.get("symbol", "")
+                                _b = _s[:-4] if _s.endswith("USDT") else _s
+                                try:
+                                    _px_map[_b] = float(_row.get("px_avg", "") or "nan")
+                                except (ValueError, TypeError):
+                                    pass
+            except Exception:
+                pass
+
             open_st = {t: c for t, c in _state_full.items()
                        if c.get("chain_open") and t in _fw_base}
             sorted_chains = sorted(open_st.items(),
@@ -307,14 +326,38 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
                 q1  = ch.get("Q1_cum_usd", 0.0)
                 nd  = ch.get("n_days", 0)
                 bk  = ch.get("break_streak", 0)
-                st  = ch.get("start_date", "?")[-5:]  # MM-DD
                 chp = ch.get("chapter", 1)
                 q1s = f"${q1/1_000:.0f}k" if q1 >= 1000 else "$0"
                 flag = "★" if q1 > 2_000_000 else " "
                 bk_s = f" brk={bk}" if bk > 0 else ""
-                chain_details.append(
-                    f"{flag} {tok} ch{chp} start={st} n={nd}{bk_s} Q1={q1s}"
-                )
+
+                # VWAP from chain state (ΔOI⁺-weighted or vol-fallback §8.3)
+                _vn  = ch.get("vwap_num", 0.0)
+                _vd  = ch.get("vwap_den", 0.0)
+                _vv  = _vn / _vd if _vd > 0 else math.nan
+                _vfb = ch.get("vwap_fallback_used", False)
+                _vfb_tag = "[vw-fallback]" if _vfb else ""
+                vwap_s = (f"VWAP=${_vv:.4f}{_vfb_tag}"
+                          if not math.isnan(_vv) else "VWAP=N/A")
+
+                # px_now and Δ% vs VWAP
+                _px = _px_map.get(tok, math.nan)
+                if not math.isnan(_px):
+                    px_s = f"px=${_px:.4f}"
+                    if not math.isnan(_vv) and _vv > 0:
+                        _pct  = (_px - _vv) / _vv * 100
+                        _arr  = "↑" if _pct >= 0 else "↓"
+                        pct_s = f" {_arr}{abs(_pct):.1f}%"
+                    else:
+                        pct_s = ""
+                else:
+                    px_s  = ""
+                    pct_s = ""
+
+                _line = f"{flag} {tok} ch{chp} n={nd}{bk_s} Q1={q1s} {vwap_s}"
+                if px_s:
+                    _line += f" {px_s}{pct_s}"
+                chain_details.append(_line)
         except Exception as exc:
             chain_details.append(f"(state parse error: {exc})")
 
@@ -360,17 +403,18 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
             f"CAMPAIGN-TRACK (theo doi, khong vao) [{ct}] [PROVISIONAL]:"
         )
         if gomc_beta_stats:
-            # Format: "TOKEN|n=N|q2=$lo-hiM|px=$P|doi=±DM [cover-drv]"
+            # Format: "TOKEN|n=N|q2=...|vwap=...|px=$P|doi=±DM"
             for stat in gomc_beta_stats:
                 parts = {p.split("=")[0]: p.split("=", 1)[1]
                          for p in stat.split("|") if "=" in p}
-                tok = stat.split("|")[0]
-                n   = parts.get("n", "?")
-                q2  = parts.get("q2", "NaN")
-                px  = parts.get("px", "NaN")
-                doi = parts.get("doi", "NaN")
-                cvr = " [cover-drv]" if doi.startswith("-") and doi != "NaN" else ""
-                msg_lines.append(f"  {tok} n={n} Q2={q2} px={px} dOI={doi}{cvr}")
+                tok    = stat.split("|")[0]
+                n      = parts.get("n", "?")
+                q2     = parts.get("q2", "NaN")
+                vwap_c = parts.get("vwap", "N/A")
+                px     = parts.get("px", "NaN")
+                doi    = parts.get("doi", "NaN")
+                cvr    = " [cover-drv]" if doi.startswith("-") and doi != "NaN" else ""
+                msg_lines.append(f"  {tok} n={n} Q2={q2} VWAP={vwap_c} px={px} dOI={doi}{cvr}")
         elif ct > 0:
             m_toks = _re2.search(r"\):\s*(.+)$", gomc_beta_line) if gomc_beta_line else None
             toks_str = m_toks.group(1).strip() if m_toks else ""
@@ -392,6 +436,7 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
 
     msg_lines += [
         "",
+        "VWAP = giá vốn ước của build TRONG cửa sổ chuỗi — không đo kho hình thành trước (TUT kho 83% cost ABSTAIN). Đọc là floor kinh tế + mốc invalidate, không phải điểm entry.",
         "PARTI [status pending] | ZBT perp sống",
         summary if summary else f"[{n_open} open / 139 scanned]",
     ]

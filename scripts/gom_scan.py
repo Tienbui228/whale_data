@@ -1106,10 +1106,15 @@ def run_daily(
                         doi = (oi_now - oi_first
                                if not (math.isnan(oi_now) or math.isnan(oi_first))
                                else math.nan)
+                        _vwap_num = chain.get("vwap_num", 0.0)
+                        _vwap_den = chain.get("vwap_den", 0.0)
+                        _vwap_c   = _vwap_num / _vwap_den if _vwap_den > 0 else math.nan
                         gomc_beta_fires.append({
                             "token": token, "n": n_ct,
                             "q2_lo": q2_lo, "q2_hi": q2_hi,
                             "px": px_now, "doi": doi,
+                            "vwap": _vwap_c,
+                            "vwap_fb": chain.get("vwap_fallback_used", False),
                         })
                     else:
                         # base conditions (no cooldown check) pass → token is in cooldown
@@ -1184,10 +1189,14 @@ def run_daily(
         for f in sorted(gomc_beta_fires, key=lambda x: x["token"]):
             q2_s  = (f"${f['q2_lo']/1e6:.1f}-{f['q2_hi']/1e6:.1f}M"
                      if not math.isnan(f["q2_lo"]) else "N/A [ngoài heuristic]")
+            _vwap_f = f.get("vwap", math.nan)
+            _vwap_fb_tag = "[vw-fallback]" if f.get("vwap_fb") else ""
+            vwap_s = (f"${_vwap_f:.5f}{_vwap_fb_tag}"
+                      if not math.isnan(_vwap_f) else "N/A")
             px_s  = f"${f['px']:.5f}" if not math.isnan(f["px"]) else "NaN"
             doi_s = (f"{'+' if f['doi'] >= 0 else ''}{f['doi']/1e6:.2f}M"
                      if not math.isnan(f["doi"]) else "NaN")
-            print(f"━━ GOM-C β STAT: {f['token']}|n={f['n']}|q2={q2_s}|px={px_s}|doi={doi_s}")
+            print(f"━━ GOM-C β STAT: {f['token']}|n={f['n']}|q2={q2_s}|vwap={vwap_s}|px={px_s}|doi={doi_s}")
         for s in sorted(gomc_beta_suppressed, key=lambda x: x["token"]):
             print(f"━━ GOM-C β SUPP: {s['token']}|cooldown={s['days_remaining']}d"
                   f"|first={s['first_fire']}")
