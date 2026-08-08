@@ -341,6 +341,69 @@ Format output 2-3 token mẫu + OPEN SERIES list ← operator duyệt trước V
 
 ---
 
+## SESSION 2026-08-09 (2) — COLD-START CASE_TST (ĐANG CHỜ ĐỌC)
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Trạng thái:** Đã build file, đã viết report, DỪNG chờ operator đọc.
+
+### Việc đã làm
+
+| Hạng mục | Kết quả |
+|---|---|
+| T-1 LSR persist | 4 endpoints × 30d (pos/acc/gLSR/taker), persisted 00:08 UTC |
+| T-2 Klines | Perp 545 rows 2025-02-09→2026-08-07, Spot same window |
+| T-3 build_case.py | CASE_TST.xlsx: 7 sheets, 545 DAILY rows, 50 cols, L-32 PASS |
+| T-4 Alpha | ABSTAIN (fullyDelisted=True, L-48) |
+| T-5 Funding | 501 records 2026-05-16→2026-08-08; OI 30 days; BscScan NOTOK |
+| T-6 Freshwatch | Jun+Jul 2026 TSTUSDT extracted, extended LSR to 2026-06-27 |
+| T-7 Đăng ký | CASE_INDEX row 3 + INDEX.md TST row (02:16 UTC) |
+| Depth snap #1 | 00:08 UTC, mid=0.013485, bid2pct=$94k, ask2pct=$66k |
+| A.5 ba-đạo-hàm | Computed from scratch CSVs |
+| _collect_tst_20260809.md | Report đầy đủ + MISSING list |
+
+### Số key
+
+| Metric | Value |
+|---|---|
+| ATH | 0.2252 (2025-02-09 listing day close) |
+| Giá 07/08 | 0.01350 (+20.5% trong ngày) |
+| Drawdown ATH | -94.0% |
+| Vol 07/08 | $52.5M ≈ 27x med14 |
+| pos_r 07/08 | 5.3391 (spike từ 1.3 cuối tháng 7) |
+| gLSR 07/08 | 2.3591 (never below 1.1 toàn LSR window) |
+| OI 07/08 | $2.77M; 08/08 partial $3.99M |
+| f_avg 05/08 | -0.001773 (f_min=-0.004963) |
+| f_avg 07/08 | -0.000924 |
+| GOM-A fires | 0 (gLSR > 1.1 toàn bộ → A2 fail) |
+| GOM-B fires | 0 |
+
+### A.5 ba-đạo-hàm
+
+| Biến | 28d(11/07) | 21d(18/07) | 14d(25/07) | 7d(01/08) | 07/08 |
+|---|---|---|---|---|---|
+| gLSR | 1.5400 | 1.8233 | 2.0760 | 1.8114 | 2.3591 |
+| div_avg3 | N/A | 0.789 | 0.818 | 0.897 | 1.758 |
+| vol_vs_m avg7 | ~1.12 | ~1.19 | ~1.34 | ~2.43 | ~6.02 |
+
+### MISSING
+
+- M-1: Depth snap #2 (CẦN ≥04:08 UTC — chưa lấy khi session kết thúc 00:19 UTC)
+- M-2: BscScan top holders (NOTOK free API)
+- M-3: Nansen (LOCKED)
+- M-4: VPS freshwatch Aug 2026 TSTUSDT
+- M-5: Venue ngoài Binance (L-30)
+- M-6: Contract cross-verify L-28
+- M-8: Alpha listing date chính thức
+
+### Kỷ luật session
+
+- L-38: LSR persist đầu tiên (00:08 UTC)
+- L-21: Trim 2026-08-08 partial candle
+- L-48: taker_alpha=ABSTAIN
+- build_case.py: chạy nguyên bản, không sửa
+
+---
+
 ## SESSION 2026-08-09 — LESSONS L-46/47/48 + Phụ lục A.5 (ĐÓNG)
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6

@@ -53,6 +53,7 @@
 | `docs/case_files/CASE_CLO.xlsx` | CLO | ABSTAIN (T0 unconf.) |
 | `docs/case_files/CASE_HEI.xlsx` | HEI | TRACKING (doi chung DUONG cap L-46) |
 | `docs/case_files/CASE_BANANAS31.xlsx` | BANANAS31 | COLD_START — PENDING (doi chung AM cap L-46, TRACKING-passive) |
+| `docs/case_files/CASE_TST.xlsx` | TST | COLD_START — PENDING (Alpha fullyDelisted, vol spike 07/08, -94% ATH) |
 | `docs/case_files/CASE_IDOL.xlsx` | IDOL | PARTIAL (post-climax) |
 | `docs/case_files/CASE_TAG.xlsx` | TAG | TRACKING |
 | `docs/case_files/CASE_TUT.xlsx` | TUT | LIVE (T+30=08/08) |
