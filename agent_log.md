@@ -31,10 +31,15 @@
 
 **Known gap B2:** `funding_pinned` signal (GOM-B) cũng dùng raw f_avg cho BANK/ERA 1h — DEV-debt, chưa fix (BANK đóng, ERA không active). Ghi §7 spec.
 
-### D4 — TG CAMPAIGN-TRACK format
+### D4 — TG CAMPAIGN-TRACK format + columns
 
-- `run_gom_daily.py`: tách GOM-C section riêng, header `CAMPAIGN-TRACK (theo doi, khong vao) [N] [PROVISIONAL]:`
-- Mỗi token trên 1 dòng riêng (chưa có cột n_days/Q2_net/VWAP/ΔOI_net — pending D4 bổ sung)
+- `gom_scan.py`: emit `GOM-C β STAT:` lines per-token với: n_days (consecutive), Q2_net range [INFERENCE s_top=50-80%], px (avg_px today), ΔOI_net vs first fire day
+- `run_gom_daily.py`: parse STAT lines → `TOKEN n=N Q2=$lo-hiM px=$P dOI=±DM [cover-drv]` per line
+
+**Side effect D1.2 normalization:** C2_quiet normalize (f_avg×interval_h/8) expand fires 4→9 cho date 08-07.
+- Fires cũ: COOKIE CYS TST TUT
+- Fires mới: AVA GRIFFAIN GTC MAVIA NOM (đều 4h-interval; raw f_avg × 0.5 < 1e-4 = pass sau normalize)
+- Report operator qua ANALYSIS.
 
 ### D2 — Triage pack (scripts written, pending run)
 
