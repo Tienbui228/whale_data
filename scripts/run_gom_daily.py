@@ -331,13 +331,28 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
                 flag = "★" if q1 > 2_000_000 else " "
                 bk_s = f" brk={bk}" if bk > 0 else ""
 
-                # VWAP from chain state (ΔOI⁺-weighted or vol-fallback §8.3)
+                # M4: gross (= Q1_cum) / net (oi_last - oi_start)
+                _net_raw = ch.get("net_oi_delta_usd", math.nan)
+                if not math.isnan(_net_raw):
+                    _net_s = f"${_net_raw/1_000:.0f}k" if abs(_net_raw) >= 1000 else f"${_net_raw:.0f}"
+                    _churn = " [churn]" if (not math.isnan(q1) and q1 > 0
+                                             and _net_raw > 0 and q1 > 2 * _net_raw) else ""
+                    net_part = f" gross | net={_net_s}{_churn}"
+                else:
+                    net_part = ""
+
+                # M2: VWAP Tier 1 (ΔOI⁺-weighted); Tier 2 (vol-weighted) when vwap_den=0
                 _vn  = ch.get("vwap_num", 0.0)
                 _vd  = ch.get("vwap_den", 0.0)
-                _vv  = _vn / _vd if _vd > 0 else math.nan
-                _vfb = ch.get("vwap_fallback_used", False)
-                _vfb_tag = "[vw-fallback]" if _vfb else ""
-                vwap_s = (f"VWAP=${_vv:.4f}{_vfb_tag}"
+                if _vd > 0:
+                    _vv      = _vn / _vd
+                    _vwap_tag = ""
+                else:
+                    _vvn = ch.get("vwap_vol_num", 0.0)
+                    _vvd = ch.get("vwap_vol_den", 0.0)
+                    _vv  = _vvn / _vvd if _vvd > 0 else math.nan
+                    _vwap_tag = "[vw-vol — seat-rotation chain]" if _vvd > 0 else ""
+                vwap_s = (f"VWAP=${_vv:.4f}{_vwap_tag}"
                           if not math.isnan(_vv) else "VWAP=N/A")
 
                 # px_now and Δ% vs VWAP
@@ -354,9 +369,15 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
                     px_s  = ""
                     pct_s = ""
 
-                _line = f"{flag} {tok} ch{chp} n={nd}{bk_s} Q1={q1s} {vwap_s}"
+                # M5: CONFIRM 0.1 — đáy-nền chưa xác nhận = hiển thị nhãn (tầng HUMAN)
+                _c01 = ch.get("confirm_01", False)
+                _c01_tag = " [CONFIRM 0.1: unconfirmed]" if not _c01 else ""
+
+                _line = f"{flag} {tok} ch{chp} n={nd}{bk_s} Q1={q1s}{net_part} {vwap_s}"
                 if px_s:
                     _line += f" {px_s}{pct_s}"
+                if _c01_tag:
+                    _line += _c01_tag
                 chain_details.append(_line)
         except Exception as exc:
             chain_details.append(f"(state parse error: {exc})")
@@ -403,18 +424,22 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
             f"CAMPAIGN-TRACK (theo doi, khong vao) [{ct}] [PROVISIONAL]:"
         )
         if gomc_beta_stats:
-            # Format: "TOKEN|n=N|q2=...|vwap=...|px=$P|doi=±DM"
+            # Format: "TOKEN|n=N|gross=$Xk|net=$Yk[churn]|q2=...|vwap=...|px=$P|doi=±DM"
             for stat in gomc_beta_stats:
                 parts = {p.split("=")[0]: p.split("=", 1)[1]
                          for p in stat.split("|") if "=" in p}
                 tok    = stat.split("|")[0]
                 n      = parts.get("n", "?")
+                gross  = parts.get("gross", "")
+                net    = parts.get("net", "")
                 q2     = parts.get("q2", "NaN")
                 vwap_c = parts.get("vwap", "N/A")
                 px     = parts.get("px", "NaN")
                 doi    = parts.get("doi", "NaN")
                 cvr    = " [cover-drv]" if doi.startswith("-") and doi != "NaN" else ""
-                msg_lines.append(f"  {tok} n={n} Q2={q2} VWAP={vwap_c} px={px} dOI={doi}{cvr}")
+                # M4: show gross|net if available; churn tag already embedded in net string
+                gn_s = f" {gross} gross|net={net}" if gross and net else ""
+                msg_lines.append(f"  {tok} n={n}{gn_s} Q2={q2} VWAP={vwap_c} px={px} dOI={doi}{cvr}")
         elif ct > 0:
             m_toks = _re2.search(r"\):\s*(.+)$", gomc_beta_line) if gomc_beta_line else None
             toks_str = m_toks.group(1).strip() if m_toks else ""

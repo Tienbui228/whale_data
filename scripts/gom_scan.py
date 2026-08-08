@@ -77,6 +77,10 @@ def _scfg(sc: dict) -> dict:
 # ── Suspect tokens (án CSV-mutation đang mở) ─────────────────────────────────
 SUSPECT_TOKENS: frozenset[str] = frozenset({"BANK"})
 
+# ── M3: A6 price-slope-guard — DISABLED until M3b test PASS (B2.3) ───────────
+# After test passes, set True and re-run B2.2 gate to confirm no FAIL regression.
+A6_PRICE_SLOPE_GUARD_ENABLED: bool = False
+
 # ── GOM-A/B evaluation ───────────────────────────────────────────────────────
 
 def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
@@ -97,9 +101,13 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     # A5: oi_cycle_pos ≤ 0.5 — OI trong vùng tích lũy 30d rolling (spec v1.4)
     _oicp = d.get("oi_cycle_pos", float("nan"))
     a5 = not math.isnan(_oicp) and _oicp <= 0.5
+    # A6: price-slope-guard (M3 — DISABLED flag; same as _a3_slope_ok but formally named A6)
+    # Enabled only after M3b 3-case test PASS (B2.3). Does NOT affect GOM firing until enabled.
+    a6 = A6_PRICE_SLOPE_GUARD_ENABLED and _a3_slope_ok(days, i, sc)
 
-    gom_a = {"A1": a1, "A2": a2, "A3": a3, "A4": a4, "A5": a5}
+    gom_a = {"A1": a1, "A2": a2, "A3": a3, "A4": a4, "A5": a5, "A6": a6}
     # §1 structural formula: GOM-A = A1 AND A2 AND A3 AND (A4 OR A5)
+    # A6 not yet in formula (PENDING M3b) — computed for audit/trace only
     gom_a_fire = a1 and a2 and a3 and (a4 or a5)
 
     # GOM-B signals
@@ -382,9 +390,19 @@ def _empty_chain(date_str: str) -> dict:
         "chain_open":      True,
         "start_date":      date_str,
         "chapter":         1,
+        # Q1 / accumulation (M4: gross_adds_usd mirrors Q1_cum_usd)
         "Q1_cum_usd":      0.0,
+        "gross_adds_usd":  0.0,   # M4 alias — kept in sync with Q1_cum_usd
+        "oi_start_usd":    float("nan"),  # M4: OI snapshot at chain open (first GOM fire)
+        "oi_last_usd":     float("nan"),  # M4: OI snapshot at last GOM fire
+        "net_oi_delta_usd": float("nan"), # M4: oi_last_usd - oi_start_usd (per-chapter)
+        # VWAP Tier 1: ΔOI⁺-weighted (primary)
         "vwap_num":        0.0,   # Σ ΔOI⁺ × avg_px
         "vwap_den":        0.0,   # Σ ΔOI⁺
+        # VWAP Tier 2: chain-level vol-weighted (fallback when vwap_den=0 — seat-rotation)
+        "vwap_vol_num":    0.0,   # Σ vol_quote × avg_px (all GOM fire days)
+        "vwap_vol_den":    0.0,   # Σ vol_quote (all GOM fire days)
+        "vwap_type":       None,  # "oi_weighted" | "vol_weighted" | null
         "n_days":          0,
         "peak_pos_r":      float("nan"),
         "break_streak":    0,
@@ -404,7 +422,7 @@ def _close_chain(st: dict, reason: str, date_str: str) -> dict:
 
 
 def _new_chapter(st: dict, date_str: str) -> dict:
-    """Archive current chapter, start fresh Q1 accumulation (VWAP preserved per §8.2)."""
+    """Archive current chapter, start fresh Q1/VWAP accumulation (§8.2)."""
     vwap_current = (st["vwap_num"] / st["vwap_den"]) if st["vwap_den"] > 0 else float("nan")
     st["chapter_hist"].append({
         "chapter":  st["chapter"],
@@ -413,12 +431,19 @@ def _new_chapter(st: dict, date_str: str) -> dict:
         "vwap":     vwap_current,
         "Q1_cum":   st["Q1_cum_usd"],
     })
-    st["chapter"]      += 1
-    st["start_date"]   = date_str
-    st["Q1_cum_usd"]   = 0.0
-    st["vwap_num"]     = 0.0
-    st["vwap_den"]     = 0.0
-    st["n_days"]       = 0
+    st["chapter"]          += 1
+    st["start_date"]       = date_str
+    st["Q1_cum_usd"]       = 0.0
+    st["gross_adds_usd"]   = 0.0
+    st["oi_start_usd"]     = float("nan")  # reset per new chapter
+    st["oi_last_usd"]      = float("nan")
+    st["net_oi_delta_usd"] = float("nan")
+    st["vwap_num"]         = 0.0
+    st["vwap_den"]         = 0.0
+    st["vwap_vol_num"]     = 0.0
+    st["vwap_vol_den"]     = 0.0
+    st["vwap_type"]        = None
+    st["n_days"]           = 0
     return st
 
 
@@ -552,6 +577,7 @@ def update_chain(
                    ("dq_episode_start", "dq_last_fire", "dq_cooldown_end")}
         state = _empty_chain(date_str)
         state.update(dq_save)
+        # M4: oi_start_usd set on first open (will be set again in OI tracking block below)
         chain = state
 
     chain["break_streak"] = 0
@@ -585,6 +611,15 @@ def update_chain(
             chain["peak_pos_r"] = pos_r
     # (rule iv already handled above for all open days, before this GOM section)
 
+    # ── M4: OI tracking (oi_start on first fire; oi_last every GOM fire) ────
+    _oi_now = d.get("oi_usd", float("nan"))
+    if not math.isnan(_oi_now):
+        if math.isnan(chain.get("oi_start_usd", float("nan"))):
+            chain["oi_start_usd"] = _oi_now   # first GOM fire in this chapter
+        chain["oi_last_usd"] = _oi_now
+        _oi_start = chain.get("oi_start_usd", float("nan"))
+        chain["net_oi_delta_usd"] = _oi_now - _oi_start if not math.isnan(_oi_start) else float("nan")
+
     # ── Q1 counting ──────────────────────────────────────────────────────────
     ret = _ret_1d(days, i)
     ret_max = g.get("ret_1d_max", 0.01)
@@ -595,28 +630,35 @@ def update_chain(
 
     if counts_q1:
         # ΔOI⁺ = max(OI_today - OI_prev, 0)
-        oi_now  = d.get("oi_usd", float("nan"))
         oi_prev = days[i-1].get("oi_usd", float("nan")) if i > 0 else float("nan")
-        if not math.isnan(oi_now) and not math.isnan(oi_prev):
-            delta_oi = max(oi_now - oi_prev, 0.0)
+        if not math.isnan(_oi_now) and not math.isnan(oi_prev):
+            delta_oi = max(_oi_now - oi_prev, 0.0)
         else:
             delta_oi = 0.0
 
-        chain["Q1_cum_usd"] = chain.get("Q1_cum_usd", 0.0) + delta_oi
-        chain["n_days"]     = chain.get("n_days", 0) + 1
+        chain["Q1_cum_usd"]     = chain.get("Q1_cum_usd", 0.0) + delta_oi
+        chain["gross_adds_usd"] = chain["Q1_cum_usd"]   # M4: alias in sync
+        chain["n_days"]         = chain.get("n_days", 0) + 1
 
-        # VWAP: ΔOI⁺-weighted
+        # VWAP Tier 1: ΔOI⁺-weighted (M2 primary)
         px = d.get("avg_px", float("nan"))
         if not math.isnan(px) and delta_oi > 0:
             chain["vwap_num"] = chain.get("vwap_num", 0.0) + delta_oi * px
             chain["vwap_den"] = chain.get("vwap_den", 0.0) + delta_oi
-        elif not math.isnan(px) and delta_oi == 0 and g.get("vwap_fallback_seats", True):
-            # fallback vol-weighted for seat-rotation days
-            vol = d.get("vol_quote", float("nan"))
-            if not math.isnan(vol) and vol > 0:
-                chain["vwap_num"] = chain.get("vwap_num", 0.0) + vol * px
-                chain["vwap_den"] = chain.get("vwap_den", 0.0) + vol
-                chain.setdefault("vwap_fallback_used", True)
+            chain["vwap_type"] = "oi_weighted"
+        # M2: NO per-day vol-fallback here — Tier 2 accumulated separately below
+
+    # ── M2 VWAP Tier 2: vol-weighted accumulation on ALL GOM fire days ───────
+    # Used as chain-level fallback when vwap_den=0 (seat-rotation build).
+    # Accumulated regardless of Q1 counting or ΔOI.
+    _px_t2 = d.get("avg_px", float("nan"))
+    _vol_t2 = d.get("vol_quote", float("nan"))
+    if not math.isnan(_px_t2) and not math.isnan(_vol_t2) and _vol_t2 > 0:
+        chain["vwap_vol_num"] = chain.get("vwap_vol_num", 0.0) + _vol_t2 * _px_t2
+        chain["vwap_vol_den"] = chain.get("vwap_vol_den", 0.0) + _vol_t2
+        # vwap_type stays "oi_weighted" if Tier 1 already set; only fallback if still None
+        if chain.get("vwap_type") is None:
+            chain["vwap_type"] = "vol_weighted"   # tentative until vwap_den possibly fills
 
     # suspect flag
     if token in SUSPECT_TOKENS:
@@ -964,7 +1006,7 @@ def run_daily(
     from fw_loader_utils import (
         taker_scale_check_df, load_fw_csvs,
         load_funding_intervals, build_token_days,
-        enrich_token_days,
+        enrich_token_days, div_avg3,   # M1: canonical ratio-of-means
     )
 
     if target_date is None:
@@ -1086,13 +1128,12 @@ def run_daily(
                             else:
                                 break
                         # Q2_net range [INFERENCE]: OI × s_top × (pos_r−1)/(pos_r+1)
-                        # Gate (signed rule): div_raw=pos_r/lsr_acc ≥ 3 AND lsr_acc ≤ 1
-                        lsr_acc_now = d_now.get("lsr_acc", math.nan)
-                        _div = (pos_r / lsr_acc_now
-                                if not (math.isnan(lsr_acc_now) or lsr_acc_now == 0)
-                                else math.nan)
+                        # Gate (signed rule): div_avg3 ≥ 3 AND lsr_acc(today) ≤ 1
+                        # M1: use canonical div_avg3 (ratio-of-means avg3) instead of single-day
+                        _div = div_avg3(days, i)   # M1 canonical
+                        _lsr_acc_now = d_now.get("lsr_acc", math.nan)
                         _q2_gate = (not math.isnan(_div) and _div >= 3
-                                    and not math.isnan(lsr_acc_now) and lsr_acc_now <= 1)
+                                    and not math.isnan(_lsr_acc_now) and _lsr_acc_now <= 1)
                         if _q2_gate and not math.isnan(pos_r) and pos_r > 0 and not math.isnan(oi_now):
                             tilt  = (pos_r - 1) / (pos_r + 1)
                             q2_lo = oi_now * 0.5 * tilt
@@ -1106,15 +1147,27 @@ def run_daily(
                         doi = (oi_now - oi_first
                                if not (math.isnan(oi_now) or math.isnan(oi_first))
                                else math.nan)
+                        # M2: Tier 1 VWAP; fall to Tier 2 if vwap_den=0
                         _vwap_num = chain.get("vwap_num", 0.0)
                         _vwap_den = chain.get("vwap_den", 0.0)
-                        _vwap_c   = _vwap_num / _vwap_den if _vwap_den > 0 else math.nan
+                        if _vwap_den > 0:
+                            _vwap_c    = _vwap_num / _vwap_den
+                            _vwap_type = "oi_weighted"
+                        else:
+                            _vvn = chain.get("vwap_vol_num", 0.0)
+                            _vvd = chain.get("vwap_vol_den", 0.0)
+                            _vwap_c    = _vvn / _vvd if _vvd > 0 else math.nan
+                            _vwap_type = "vol_weighted" if _vvd > 0 else None
+                        # M4: gross/net for CAMPAIGN-TRACK
+                        _gross = chain.get("Q1_cum_usd", math.nan)
+                        _net   = chain.get("net_oi_delta_usd", math.nan)
                         gomc_beta_fires.append({
                             "token": token, "n": n_ct,
                             "q2_lo": q2_lo, "q2_hi": q2_hi,
                             "px": px_now, "doi": doi,
                             "vwap": _vwap_c,
-                            "vwap_fb": chain.get("vwap_fallback_used", False),
+                            "vwap_type": _vwap_type,
+                            "gross": _gross, "net": _net,
                         })
                     else:
                         # base conditions (no cooldown check) pass → token is in cooldown
@@ -1190,13 +1243,24 @@ def run_daily(
             q2_s  = (f"${f['q2_lo']/1e6:.1f}-{f['q2_hi']/1e6:.1f}M"
                      if not math.isnan(f["q2_lo"]) else "N/A [ngoài heuristic]")
             _vwap_f = f.get("vwap", math.nan)
-            _vwap_fb_tag = "[vw-fallback]" if f.get("vwap_fb") else ""
-            vwap_s = (f"${_vwap_f:.5f}{_vwap_fb_tag}"
+            # M2: Tier 2 label when vol-weighted fallback
+            _vt = f.get("vwap_type")
+            _vwap_tag = "[vw-vol — seat-rotation chain]" if _vt == "vol_weighted" else ""
+            vwap_s = (f"${_vwap_f:.5f}{_vwap_tag}"
                       if not math.isnan(_vwap_f) else "N/A")
             px_s  = f"${f['px']:.5f}" if not math.isnan(f["px"]) else "NaN"
             doi_s = (f"{'+' if f['doi'] >= 0 else ''}{f['doi']/1e6:.2f}M"
                      if not math.isnan(f["doi"]) else "NaN")
-            print(f"━━ GOM-C β STAT: {f['token']}|n={f['n']}|q2={q2_s}|vwap={vwap_s}|px={px_s}|doi={doi_s}")
+            # M4: gross/net
+            _gross = f.get("gross", math.nan)
+            _net   = f.get("net",   math.nan)
+            gross_s = f"${_gross/1e3:.0f}k" if not math.isnan(_gross) and _gross >= 1000 else "$0"
+            net_s   = (f"${_net/1e3:.0f}k"  if not math.isnan(_net)   and abs(_net) >= 1000
+                       else f"${_net:.0f}" if not math.isnan(_net) else "N/A")
+            _churn_tag = " [churn]" if (not math.isnan(_gross) and not math.isnan(_net)
+                                         and _net > 0 and _gross > 2 * _net) else ""
+            print(f"━━ GOM-C β STAT: {f['token']}|n={f['n']}|gross={gross_s}|net={net_s}{_churn_tag}"
+                  f"|q2={q2_s}|vwap={vwap_s}|px={px_s}|doi={doi_s}")
         for s in sorted(gomc_beta_suppressed, key=lambda x: x["token"]):
             print(f"━━ GOM-C β SUPP: {s['token']}|cooldown={s['days_remaining']}d"
                   f"|first={s['first_fire']}")

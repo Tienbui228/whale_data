@@ -356,3 +356,31 @@ def enrich_token_days(days: list[dict]) -> None:
             days[i]["oi_cycle_pos"] = float("nan")
         else:
             days[i]["oi_cycle_pos"] = round((cur - mn) / (mx - mn), 4)
+
+
+# ---------------------------------------------------------------------------
+# M1 canonical div_avg3 — Amendment v1.5, Phụ lục A
+# ---------------------------------------------------------------------------
+
+def div_avg3(days: list[dict], i: int) -> float:
+    """Canonical div_avg3 = avg3(lsr_pos) / avg3(lsr_acc) — ratio-of-means.
+
+    M1 (Amendment v1.5, Phụ lục A): KHÔNG dùng avg3(pos/acc) = mean-of-ratios.
+    Paired-NaN: nếu lsr_pos[j] hoặc lsr_acc[j] là NaN → bỏ cả cặp j đó.
+    Equivalent formula: signals._div_ratio (same computation, kept in-repo for signals.py).
+    NaN nếu không có pair hợp lệ nào hoặc avg(acc) ≈ 0.
+    """
+    start = max(0, i - 2)
+    valid_pairs: list[tuple[float, float]] = []
+    for j in range(start, i + 1):
+        p = days[j].get("lsr_pos", float("nan"))
+        a = days[j].get("lsr_acc", float("nan"))
+        if not math.isnan(p) and not math.isnan(a):
+            valid_pairs.append((p, a))
+    if not valid_pairs:
+        return float("nan")
+    avg_pos = sum(p for p, _ in valid_pairs) / len(valid_pairs)
+    avg_acc = sum(a for _, a in valid_pairs) / len(valid_pairs)
+    if avg_acc < 1e-9:
+        return float("nan")
+    return avg_pos / avg_acc
