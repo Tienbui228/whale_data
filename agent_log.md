@@ -5899,3 +5899,75 @@ PC-wash tokens (9): BREV ZKP PARTI ERA MIRA O ZBT AIO HYPER
 - **SWAP STATE (BƯỚC 4)**: HOLD — chờ operator ký sau khi đọc hai điều kiện
 
 ---
+
+---
+
+## SESSION 2026-08-09 (21) — B2.1 addendum + B2.2/B2.4
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Bối cảnh
+
+Tiếp nối B2.1 (commit fa5247b / 2eb02df4). Operator phán A (code đúng, kỳ vọng
+test viết ẩu) + phát hiện lỗ đại diện Tier-1 VWAP + sửa fixture 4b (arithmetic,
+không qua eval_gom). B2.2/B2.4 tự chạy sau khi 6 mảnh xác minh sạch.
+
+### Việc đã làm
+
+#### 1. Xác minh Piece 3b/4b (PASS)
+
+**Piece 3b — VWAP rep-threshold:**
+- Thiết kế: Tier-1 chỉ dùng khi `vwap_den >= 5% × oi_start_usd`; dưới ngưỡng → T2 [vw-vol]
+- BANK: oi_start=$4.46M, threshold=$223k, vwap_den=$140k → T2-vw-vol = 0.036984 PASS
+- BULLA/POWER cũng T2 (3/12 calib tokens seat-rotation đúng luật)
+- screen_thresholds.yaml: `vwap_t1_min_rep_frac: 0.05` (operator-tunable)
+
+**Piece 4b — M4 churn arithmetic (không qua eval_gom):**
+- IDOL fixture 07-27→07-31: gross=4.108M, net=2.203M, churn=NO PASS
+- Synthetic (+3,-2.5,+3,-2.5): gross=6.0M, net=1.0M, churn=YES PASS
+
+#### 2. Code changes (commit c545c28)
+
+| File | Change |
+|---|---|
+| `screen_thresholds.yaml` | `vwap_t1_min_rep_frac: 0.05` |
+| `scripts/gom_scan.py` | rep-threshold trong GOM-C STAT + format_chain_report; xóa vwap_fallback_used dead ref |
+| `scripts/run_gom_daily.py` | load yaml rep-threshold; apply trong TG VWAP block |
+| `_probe_3b_vwap_tier_20260809.py` | Smoke test Tier-2 — PASS |
+| `_probe_4b_m4_churn_20260809.py` | IDOL fixture + synthetic churn — PASS |
+
+#### 3. B2.2 — gate table + v9 fresh state (commit f358e5b)
+
+- `gom_scan.py --backtest6`: 5 PASSes unchanged, 5 pre-existing FAILs unchanged — NO REGRESSION
+- `gom_scan.py --backfill`: v9 fresh state → gom_state_v9.json
+- v8 backup: gom_state_v8_backup.json
+
+#### 4. B2.4 — V8 vs V9 comparison report
+
+| Check | Result |
+|---|---|
+| Token set | 12/12 unchanged |
+| Category changes | NONE — PASS |
+| BANK rule-iv anchor | PASS |
+| PARTI/ZBT | Not in calib — VPS needed (B3) |
+| M4 fields present | PASS (gross/net/net_delta all populated) |
+| VWAP tier changes | BANK/BULLA/POWER → T2 (EXPECTED by design) |
+
+Report: `docs/reports/b24_v8v9_report_20260809.md`
+
+### Trạng thái sau session
+
+| Item | Status |
+|---|---|
+| B2.1 | DONE (commits fa5247b + 2eb02df4 + c545c28) |
+| B2.2 | DONE (gate table PASS + v9 state) |
+| B2.3 | PENDING — A6 3-case test (FF BLOCK/HEI PASS/TUT PASS) |
+| B2.4 | DONE — report gửi operator |
+| B2.5 | **CHỜ OPERATOR KÝ** — swap v9 → production |
+| B3 | PENDING — VPS rescan FF chain (div_avg3 8-01) + PARTI/ZBT anchor |
+
+### CẦN OPERATOR
+
+- **B2.5**: Duyệt V8→V9 report → ký swap. Pre-condition: A6 disabled (flag=False)
+  nên không phụ thuộc B2.3. Swap = chạy --daily với code mới lần đầu.
+
