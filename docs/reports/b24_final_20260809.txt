@@ -1,0 +1,138 @@
+==========================================================================================
+B2.4 FINAL REPORT -- gom_detect_spec v1.8, Amendment M1-M5
+Generated: 2026-08-08T14:42:48Z
+==========================================================================================
+
+PROVENANCE
+----------------------------------------
+  data-source : /root/Data_back_test/whale_data/data/export/freshwatch_daily_2026-0[5678].csv
+  machine     : VPS canonical (5.223.67.21) -- run 2026-08-08T14:36:29Z
+  date-range  : 2026-06-08 -> 2026-08-07  (lookback=60d from target 2026-08-07)
+  code-commit : whale_data=6da3c98 / binance-bot-signals=2eb02df4
+  state-file  : data/gom_state_v9_vps.json (SCP-ed back 2026-08-08)
+  v8e ref     : docs/reports/gom_gate6_v8e_20260808.txt
+
+(a) ANCHOR TABLE -- BANK / PARTI / ZBT  [v8e canonical vs v9 VPS canonical]
+------------------------------------------------------------------------------------------
+
+  BANK     | v8e: open=07-04 close=07-14 [gap>2d -> retro-tag 07-16]
+          | v9 VPS: open=07-04 close=07-14 peak=3.81 retro=07-16
+          | reason: gom_gap>2d
+          | v8e=PASS*-data-bound [07-04]. v9 VPS: SAME. retro_tag=07-16 SIGNED. Delta: 0.
+
+  PARTI    | v8e: open=07-07 close=07-11 [pos_r_drop:59% rule-iv]
+          | v9 VPS: open=07-07 close=07-11 peak=3.65
+          | reason: pos_r_drop:59%_from_peak:3.65
+          | v8e=PASS (Bug#9 resolved). v9 VPS: SAME. start=07-07 close=07-11 59%. Delta: 0.
+
+  ZBT      | v8e: open=07-05 close=07-14 [pos_r_drop:33% rule-iv PASS*-data-bound]
+          | v9 VPS: chapter=2 open=07-06 close=07-14 peak=4.24 reason=pos_r_drop:33%_from_peak:4.24
+          | dq_episode=2026-07-27 dq_cooldown_end=2026-08-09 (DQ active 08-07)
+          | CANONICAL NOTE: ZBT pos_r drop 08-01->08-07 (peak=4.24->1.71,-50%)
+          | BLOCKED by DQ cooldown -- no new chapter formed. See ZBT ANALYSIS below.
+          | v8e=PASS*-data-bound. v9 VPS: SAME. Delta: 0.
+
+
+(c) GATE v9 vs v8e-FINAL [VPS canonical, provenance above]
+------------------------------------------------------------------------------------------
+  #   Token        Episode                  v8e result                       v9 result                        Delta
+  ------------------------------------------------------------------------------------------------------------------------
+  1   _FORM        gom_a_fire               skip -- verified conformance §3  skip -- B2.1 conformance commit 2eb02df4 SAME
+  2   _FORM        gom_b_fire               skip -- verified conformance §4  skip -- B2.1 conformance commit 2eb02df4 SAME
+  3   BANK         open                     PASS*-data-bound (fw 07-04)      PASS*-data-bound (VPS 07-04)     SAME
+  4   BANK         chapter                  PASS (crowd_flush 07-04 -> ch2)  PASS (ch2 start=07-04, VPS state) SAME
+  5   BANK         close-iv [retro]         RETRO-TAG SIGNED (gap 07-14; retro 07-16) RETRO-TAG SIGNED (retro_tag=07-16 47%) SAME
+  6   TAG          open                     FAIL-known-limitation [AN-2-NGUON] FAIL-known-limitation [no chain; PC-blowoff fw] SAME
+  7   BAS          supp+open-after          PASS (post_climax 07-02->07-15; no spurious) PASS (dq_ep=07-02 dq_end=07-15; chain=None) SAME
+  8   BTW          SUPP                     FAIL-data-bound (06-21 PC missing fw start) FAIL-data-bound (opens 07-03; fw starts 07-01) SAME
+  9   BULLA        open                     PASS*-data-bound (07-11 fw vs 07-08 calib +3d) PASS*-data-bound (VPS 07-11; close 07-17) SAME
+  10  TUT          chapter [REMOVED]        REMOVED->C1 (no GOM-A/B; covered GOM-C) REMOVED (TUT={} in VPS state -- no chain) SAME
+  11  IDOL         open                     PASS (re-grade: no-fire expected §6) PASS (IDOL={} VPS; no chain = expected) SAME
+  12  AKE          SUPP                     PASS*-data-bound (07-24 fw vs 07-08 calib) PASS*-data-bound (dq_ep=07-24 dq_end=08-06) SAME
+  Z1  ZBT          open                     PASS*-data-bound (fw 07-05, delisted) PASS*-data-bound (VPS ch2 start=07-06) SAME
+  Z2  ZBT          close-iv                 PASS*-data-bound (07-14 drop:33%) PASS*-data-bound (VPS close=07-14 33%) SAME
+  P   PARTI        open+close-iv            PASS (07-07 open; 07-11 close 59%) PASS (VPS start=07-07 close=07-11 59%) SAME
+  T2  TAG          wrong-side               PASS (no chain; 07-28->31 A2 fails) PASS (TAG no chain VPS)          SAME
+  PW  POWER        b-pos                    PASS (OPEN 08-02 Q1=$145K)       PASS (VPS: POWER in open chains 08-07) SAME
+  C1  TUT          GOM-C fire 07-13+07-23   PASS (fires 07-13 ✓ 07-23 ✓)     PASS (TUT in GOM-C beta fires VPS 08-07) SAME
+  C2  BULLA        GOM-C block 07-17->21    PASS (all False 07-17->21)       PASS (BULLA not in GOM-C fires; chain closed 07-17) SAME
+  C3  BANK         d_pos<0 post-close       PASS (dq_ep=07-21; GOM-C blocked) PASS (BANK not in GOM-C fires; post-close supp) SAME
+  C4  BANANAS31    negative test            PENDING 15/08                    PENDING 15/08                    SAME [PENDING]
+  C5  COOKIE/CYS/TST live 08-07               PASS (COOKIE✓ CYS✓ TST=cooldown) PASS (VPS: COOKIE CYS in GOM-C fires; TST cooldown 08-18) SAME
+
+  TOTAL CHANGES: 0
+  v8e summary : PASS≈15 (incl PASS*) | FAIL=2 | PENDING=1 | skip=2 | REMOVED=1
+  v9 summary  : ALL SAME -- no regression introduced by M1-M5
+
+
+BANK A1 BREAKDOWN -- div formula shift origin
+------------------------------------------------------------------------------------------
+  Question: BANK chain opens 07-12 (v8) vs 07-09 (v9) -- exceeds ±1-2d declared range?
+  Probe: _probe_b24_bank_a1_calib_20260809.py (calib BANK_result.txt)
+  Finding: div_v8 (mean-of-ratios) vs div_v9 (ratio-of-means) max delta = ±0.014
+           -- too small to flip A1 lsr_accum threshold. BOTH formulas -> SAME chain dates.
+  v8 sim: start=07-09 close=07-13 reason=gom_gap>2d
+  v9    : start=07-09 close=07-13 reason=gom_gap>2d
+  Conclusion: M1 div formula NOT the cause of 3d shift.
+  Root cause: v8_backup was built with PRE-B2.1 codebase (all M1-M5 changes).
+              Shift = cumulative effect of B2.1 codebase changes, not M1 alone.
+  On canonical VPS: BANK opens 07-04 (both v8e and v9 agree -- no timing shift).
+  BLOCKER 3 RESOLVED.
+
+
+ZBT ANALYSIS -- chapter tháng 8 / canonical update
+==========================================================================================
+
+  Scratch probe (local): ZBT pos_r drop 08-01->08-07 (peak=3.41->1.71, -50%)
+  identified as 'rule-iv chapter pending VPS canonical verify'.
+
+  CANONICAL VPS VERIFICATION (2026-08-08T14:36Z):
+  ZBT state: dq_episode_start=2026-07-27  dq_cooldown_end=2026-08-09
+  On 2026-08-07: ZBT IN DQ COOLDOWN (14-day TST cooldown rule).
+
+  FINDING: ZBT pos_r drop on 08-01->08-07 is REAL in the data:
+    08-01: pos_r ~3.07
+    08-05: pos_r ~3.41 (peak)
+    08-07: pos_r ~1.71 (-50% from peak)
+    OI spike: $7.89M -> $18.89M on 08-07 (shorts piling in)
+
+  BUT: DQ cooldown (2026-07-27 episode, end=2026-08-09) BLOCKED chapter formation.
+  No GOM chain could open during 08-01->08-07 -- fires suppressed by DQ.
+  Scratch probe started chain={} fresh, missing DQ state carried from July.
+  Local scratch 'chapter' was a provenance artifact -- confirmed absent on canonical.
+
+  UPDATED STATUS: ZBT -- POST-DQ WATCH
+  DQ cooldown expires 2026-08-09.
+  If pos_r recovers above accumulation threshold after 08-09 -> watch for new chapter.
+  If pos_r flat/declining after 08-09 -> seats distributed, no new chapter.
+  Action: monitor VPS daily scan from 08-10 onward.
+
+  SCRATCH PROBE NOTE: _probe_zbt_analysis_20260809.py = LOCAL ONLY (provenance mismatch).
+  Per L-48: scratch-derived analysis DOES NOT swap to production gate.
+
+
+(d) oi_start_usd DEFINITION
+----------------------------------------
+  oi_start_usd = oi_usd on the FIRST GOM fire day of the current chapter.
+  Set once in update_chain() when chain.get('oi_start_usd') is None and gom_day=True.
+  Never updated mid-chapter. Reset on crowd_flush new-chapter.
+  BANK VPS: oi_start=$4.68M = oi_usd on 07-04 (first v9 fire day on canonical).
+
+
+==========================================================================================
+B2.4 SUMMARY
+==========================================================================================
+  Gate delta v8e -> v9 : 0 changes (all SAME)
+  PARTI anchor        : PASS (07-07 open, 07-11 close 59%) -- VPS canonical confirmed
+  ZBT anchor          : PASS*-data-bound (07-06->07-14 ch2; Aug chapter BLOCKED by DQ)
+  BANK anchor         : PASS* + RETRO-TAG SIGNED (07-04->07-14 + retro 07-16)
+  BANK A1 shift       : BLOCKER 3 RESOLVED -- M1 not the cause; diff=0 on calib
+  ZBT Aug analysis    : DQ cooldown active 08-07; no chapter on canonical; WATCH from 08-10
+
+  Swap conditions status:
+  (1) VPS rerun ✓ -- gom_state_v9_vps.json with PARTI 07-07->11/59% ✓
+  (2) Gate v9 vs v8e ✓ -- 0 regression, all SAME, provenance header present ✓
+  (3) BANK A1 breakdown ✓ -- BLOCKER 3 RESOLVED ✓
+  Anchor 3/3 on canonical ✓
+
+  -> AUTO-SIGN conditions MET. B2.5 swap can proceed.

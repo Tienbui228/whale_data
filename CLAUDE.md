@@ -86,6 +86,12 @@ Quy ước vòng đời artifact:
 
 ## KỶ LUẬT
 
+\- **DATA PROVENANCE (L-48, ký 09/08/2026):** Mọi gate/rescan/backfill PHẢI khai
+  header provenance tối thiểu 4 trường: `data-source` (file path hoặc endpoint),
+  `machine` (local scratch / VPS canonical), `date-range` (YYYY-MM-DD → YYYY-MM-DD),
+  `code-commit` (git hash). Gate dựng trên scratch local KHÔNG được swap lên VPS.
+  Chỉ gate chạy trên VPS export canonical (path khai rõ) mới đủ tư cách production.
+
 \- Mỗi session ghi agent\_log.md: việc + lệnh + kết quả số.
 
 \- Commit message tiếng Việt ngắn, một change-set một chủ đề.

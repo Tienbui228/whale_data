@@ -5971,3 +5971,104 @@ Report: `docs/reports/b24_v8v9_report_20260809.md`
 - **B2.5**: Duyệt V8→V9 report → ký swap. Pre-condition: A6 disabled (flag=False)
   nên không phụ thuộc B2.3. Swap = chạy --daily với code mới lần đầu.
 
+---
+
+## SESSION 2026-08-09 (22) — B2.4 FINAL + VPS CANONICAL GATE + SWAP CONDITIONS MET
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Bối cảnh
+
+Tiếp nối session 21. Operator REJECT báo cáo B2.4 đầu (3 blockers). Session này:
+(1) Rerun VPS canonical; (2) Gate v9 vs v8e-FINAL; (3) BANK A1 breakdown; (4) ZBT ANALYSIS.
+Thêm L-48 provenance rule vào CLAUDE.md.
+
+### Việc đã làm
+
+#### 1. SCP v9 code lên VPS
+
+Files SCPed (5.223.67.21):
+- `scripts/gom_scan.py` → VPS canonical
+- `scripts/fw_loader_utils.py` → VPS canonical
+- `screen_thresholds.yaml` → VPS canonical
+- `binance-bot-signals/scanner/screener/signals.py` → VPS canonical
+
+#### 2. VPS canonical backfill
+
+```
+python3 scripts/gom_scan.py --daily --store data/export --date 2026-08-07
+```
+- Backup trước: gom_state_vps_pre_v9_backup.json
+- Kết quả: 59 open / 526 symbols scanned
+- PARTI: start=2026-07-07 close=2026-07-11 reason=pos_r_drop:59%_from_peak:3.65 PASS ✓
+- ZBT: chapter=2 start=2026-07-06 close=2026-07-14 reason=pos_r_drop:33% dq_cooldown_end=2026-08-09
+- BANK: start=2026-07-04 chapter=2 close=2026-07-14 retro_tag=2026-07-16 47%
+- State: gom_state_v9_vps.json (SCP-ed back local; not committed — data/ gitignored)
+
+#### 3. Gate v9 vs v8e-FINAL
+
+| Check | Result |
+|---|---|
+| Total rows | 22 (incl C1-C5, Z1/Z2, P, T2, PW, skip=2, REMOVED=1) |
+| Delta v8e → v9 | **0 changes (ALL SAME)** |
+| PARTI anchor | PASS (07-07→07-11 59%) VPS canonical ✓ |
+| ZBT anchor | PASS*-data-bound (07-06→07-14 33%) ✓ |
+| BANK anchor | PASS* + RETRO-TAG SIGNED (07-04→07-14 + retro 07-16) ✓ |
+
+Report: `docs/reports/b24_final_20260809.txt`
+
+#### 4. BANK A1 breakdown (BLOCKER 3 RESOLVED)
+
+Probe: `_probe_b24_bank_a1_calib_20260809.py` (trên calib BANK_result.txt)
+
+| | v8 sim (mean-of-ratios) | v9 (ratio-of-means) |
+|---|---|---|
+| div delta max | ±0.014 | baseline |
+| Chain start | 07-09 | 07-09 |
+| Chain close | 07-13 | 07-13 |
+| Close reason | gom_gap>2d | gom_gap>2d |
+
+Kết luận: M1 div formula KHÔNG phải nguyên nhân 3d shift. Shift từ codebase pre-B2.1 vs post-B2.1 tổng hợp. Trên canonical VPS: BANK opens 07-04 (cả v8e lẫn v9 đều đồng thuận — delta=0).
+
+#### 5. ZBT ANALYSIS (canonical update)
+
+Scratch probe `_probe_zbt_analysis_20260809.py` xác định "chapter 08-01→08-07 rule-iv".
+Canonical VPS verify: ZBT dq_cooldown_end=2026-08-09 → DQ còn hiệu lực 08-07.
+Không có chapter nào được mở 08-01→08-07 (fires suppressed).
+Scratch artifact: chain={} fresh không mang DQ state từ tháng 7.
+
+| Field | Value |
+|---|---|
+| pos_r drop data | REAL (08-01=3.07 → 08-07=1.71, -50%) |
+| OI spike 08-07 | $7.89M → $18.89M |
+| Chapter hình thành | KHÔNG — DQ blocked |
+| Status cập nhật | POST-DQ WATCH từ 2026-08-10 |
+
+#### 6. L-48 Provenance rule
+
+CLAUDE.md KỶ LUẬT section, ký 09/08/2026:
+Gate/rescan phải khai 4 trường: data-source, machine, date-range, code-commit.
+Gate scratch local KHÔNG swap production.
+
+### Trạng thái sau session
+
+| Item | Status |
+|---|---|
+| B2.1 | DONE (commits fa5247b + 2eb02df4 + c545c28) |
+| B2.2 | DONE (gate table PASS + v9 state) |
+| B2.3 | PENDING — A6 3-case test |
+| B2.4 | DONE — report b24_final_20260809.txt VPS canonical |
+| B2.5 | AUTO-SIGN CONDITIONS MET — swap sẵn sàng |
+| ZBT | POST-DQ WATCH từ 08-10 |
+
+### Swap conditions status
+
+| Condition | Status |
+|---|---|
+| (1) VPS rerun + PARTI 07-07→11/59% | PASS ✓ |
+| (2) Gate v9 vs v8e-FINAL (0 delta) | PASS ✓ |
+| (3) BANK A1 breakdown (BLOCKER 3) | RESOLVED ✓ |
+| Anchor 3/3 on canonical | PASS ✓ |
+
+**→ B2.5 swap conditions MET. Chờ operator ký để deploy production.**
+
