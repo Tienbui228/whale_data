@@ -448,6 +448,31 @@ def update_chain(
 
     chain = state  # top-level dict is the chain (we pass token's chain state)
 
+    # ── Retro-tag: display-only label post-gom_gap close (operator signed 08/08/2026) ──
+    # If chain closed via gom_gap AND pos_r drops >=30% from peak within <=3d of close_date
+    # → label state with retro_tag (no state change, display only).
+    if (not chain.get("chain_open")
+            and chain.get("close_reason", "").startswith("gom_gap")
+            and not chain.get("retro_tag")
+            and chain.get("close_date", "")):
+        _close_d = chain.get("close_date", "")
+        try:
+            _gap_d = (datetime.strptime(date_str[:10], "%Y-%m-%d") -
+                      datetime.strptime(_close_d[:10], "%Y-%m-%d")).days
+            if 0 < _gap_d <= 3:
+                _rt_pos = d.get("lsr_pos", float("nan"))
+                if math.isnan(_rt_pos):
+                    _rt_pos = d.get("lsr_pos_r", float("nan"))
+                _rt_peak = chain.get("peak_pos_r", float("nan"))
+                if not math.isnan(_rt_pos) and not math.isnan(_rt_peak) and _rt_peak > 0:
+                    _rt_drop = (_rt_peak - _rt_pos) / _rt_peak
+                    if _rt_drop >= g.get("pos_r_drop_close", 0.30):
+                        chain["retro_tag"] = date_str
+                        chain["retro_tag_drop"] = f"{_rt_drop:.0%}"
+                        chain["retro_tag_note"] = f"gap→chuyển pha phân phối (retro {date_str})"
+        except (ValueError, TypeError):
+            pass
+
     # ── Rule (i): Suppressor CỨNG → close chain + update DQ episode + cooldown
     # Per-day DQ (wrong_side/slope/toi) does NOT trigger cooldown — handled via gom_day=False
     DQ_EP_GAP = 3  # ≥3d clean = new suppressor episode (same rule as flush gap)
@@ -607,7 +632,9 @@ def format_chain_report(token: str, chain: dict, result: dict | None, date_str: 
     if not chain.get("chain_open"):
         reason = chain.get("close_reason", "?")
         closed = chain.get("close_date", "?")
-        lines.append(f"══ {token} ══ CHAIN CLOSED ({closed}) reason={reason}")
+        retro  = chain.get("retro_tag_note", "")
+        retro_str = f"  [{retro}]" if retro else ""
+        lines.append(f"══ {token} ══ CHAIN CLOSED ({closed}) reason={reason}{retro_str}")
         return "\n".join(lines)
 
     ch = chain.get("chapter", 1)
