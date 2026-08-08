@@ -1,0 +1,181 @@
+=== GOM STAT 60d v8 — BUOC 3 ===
+Generated: 2026-08-08T09:11:36Z
+State: gom_state_v8.json  target=2026-08-07  60d window
+Universe: fw@139  Code: 8edc053
+========================================================================
+
+3a. CHUONG DA DONG 60d — sort: rule-iv truoc, then close date
+------------------------------------------------------------------------
+TOK             ch         open        close reason                                                          Q1
+----------------------------------------------------------------------------------------------------
+PARTI            1   2026-07-07   2026-07-11 pos_r_drop:59%_from_peak:3.65                                    —
+ZBT              2   2026-07-06   2026-07-14 pos_r_drop:33%_from_peak:4.24                             $463,115
+                 hist ch1: 2026-07-05->2026-07-06  Q1=$0
+TOWNS            2   2026-07-15   2026-07-18 pos_r_drop:31%_from_peak:1.84                              $17,698
+                 hist ch1: 2026-07-08->2026-07-15  Q1=$17,698
+BILL             1   2026-06-21   2026-06-24 gom_gap>2d                                                       —
+TAC              1   2026-06-21   2026-06-25 gom_gap>2d                                                       —
+GWEI             1   2026-06-21   2026-06-26 gom_gap>2d                                                       —
+XAN              2   2026-06-23   2026-06-26 gom_gap>2d                                                       —
+                 hist ch1: 2026-06-22->2026-06-23  Q1=$0
+SKYAI            1   2026-06-22   2026-06-28 suppressor:post_climax                                           —
+ARX              2   2026-07-03   2026-07-04 suppressor:funding_neg_div                                $632,487
+                 hist ch1: 2026-07-03->2026-07-03  Q1=$0
+FHE              1   2026-07-03   2026-07-05 suppressor:decay                                                 —
+KGEN             1   2026-07-04   2026-07-07 gom_gap>2d                                                       —
+RESOLV           1   2026-07-02   2026-07-07 gom_gap>2d                                                $108,153
+TRADOOR          1   2026-07-03   2026-07-07 suppressor:decay                                           $95,842
+BTW              1   2026-07-03   2026-07-08 gom_gap>2d                                                       —
+EDEN             1   2026-07-04   2026-07-08 gom_gap>2d                                                $129,483
+UAI              1   2026-07-04   2026-07-09 gom_gap>2d                                                       —
+CROSS            1   2026-07-06   2026-07-10 suppressor:decay                                           $43,034
+C                1   2026-07-08   2026-07-11 gom_gap>2d                                                       —
+BMT              1   2026-07-06   2026-07-12 gom_gap>2d                                                 $24,841
+KOMA             1   2026-07-08   2026-07-12 suppressor:funding_neg_div                                 $24,655
+BANK             2   2026-07-04   2026-07-14 gom_gap>2d                                                 $67,676
+                 hist ch1: 2026-07-04->2026-07-04  Q1=$0
+RIVER            1   2026-07-11   2026-07-14 gom_gap>2d                                                       —
+我踏马来了            1   2026-07-08   2026-07-15 gom_gap>2d                                                       —
+BULLA            1   2026-07-11   2026-07-17 gom_gap>2d                                                $188,193
+HOME             1   2026-07-15   2026-07-17 suppressor:funding_extreme+post_climax                           —
+TURTLE           1   2026-07-03   2026-07-17 gom_gap>2d                                                $103,301
+TOSHI            1   2026-07-10   2026-07-18 suppressor:lsr_dist                                        $46,452
+ARIA             2   2026-07-10   2026-07-19 gom_gap>2d                                                  $2,771
+                 hist ch1: 2026-07-05->2026-07-10  Q1=$2,771
+BTR              1   2026-07-12   2026-07-19 gom_gap>2d                                                 $85,861
+O                2   2026-07-11   2026-07-20 gom_gap>2d                                                $231,124
+                 hist ch1: 2026-07-11->2026-07-11  Q1=$0
+SIREN            1   2026-07-16   2026-07-20 gom_gap>2d                                                 $13,367
+FIGHT            1   2026-07-14   2026-07-21 gom_gap>2d                                                 $98,087
+HAEDAL           1   2026-07-18   2026-07-22 gom_gap>2d                                                 $67,301
+MERL             1   2026-07-19   2026-07-22 gom_gap>2d                                                       —
+AT               1   2026-07-11   2026-07-24 gom_gap>2d                                                $502,891
+LIGHT            1   2026-07-22   2026-07-25 gom_gap>2d                                                       —
+OPEN             1   2026-07-16   2026-07-25 gom_gap>2d                                                $232,247
+PIEVERSE         2   2026-07-15   2026-07-25 gom_gap>2d                                                $533,972
+                 hist ch1: 2026-07-15->2026-07-15  Q1=$0
+PLAY             2   2026-07-22   2026-07-25 gom_gap>2d                                                       —
+                 hist ch1: 2026-07-21->2026-07-22  Q1=$0
+1000000BOB       1   2026-07-23   2026-07-26 gom_gap>2d                                                 $37,122
+IRYS             1   2026-07-13   2026-07-26 gom_gap>2d                                                $117,863
+MYX              1   2026-07-22   2026-07-26 gom_gap>2d                                                $238,744
+OPG              1   2026-07-23   2026-07-26 gom_gap>2d                                                       —
+ORDER            1   2026-07-12   2026-07-26 gom_gap>2d                                                $203,034
+PUMPBTC          1   2026-07-16   2026-07-26 gom_gap>2d                                                 $49,566
+GENIUS           1   2026-07-27   2026-07-30 gom_gap>2d                                                       —
+OPN              1   2026-07-27   2026-07-30 gom_gap>2d                                                       —
+SAHARA           1   2026-07-28   2026-07-31 gom_gap>2d                                                       —
+HYPER            1   2026-08-01   2026-08-02 suppressor:funding_extreme+post_climax                     $61,225
+GUA              1   2026-08-02   2026-08-04 suppressor:decay                                            $8,120
+BANANAS31        1   2026-08-01   2026-08-06 gom_gap>2d                                                $459,559
+COOKIE           1   2026-08-03   2026-08-06 gom_gap>2d                                                       —
+DOOD             1   2026-08-03   2026-08-06 gom_gap>2d                                                 $34,345
+HOLO             2   2026-08-03   2026-08-06 gom_gap>2d                                                       —
+                 hist ch1: 2026-08-03->2026-08-03  Q1=$0
+ACU              1   2026-08-02   2026-08-07 gom_gap>2d                                                $103,092
+
+Subtotal closed chains: 55
+  rule-iv (pos_r_drop): 3
+  gap/supp close:       52
+
+3b. CHUOI DANG MO — as of 2026-08-07
+------------------------------------------------------------------------
+TOK             ch        start           Q1   peak_pos_r
+------------------------------------------------------------
+ALLO             1   2026-08-01            —         1.61
+ENSO             1   2026-08-01            —         3.00
+FF               1   2026-08-01   $1,988,262         3.27
+COAI             1   2026-08-02            —         1.23
+POWER            1   2026-08-02     $145,021         1.10
+ROBO             1   2026-08-03   $1,369,827         3.77
+HUMA             2   2026-08-04     $412,595         7.81
+USELESS          1   2026-08-04            —         1.39
+CAP              2   2026-08-05            —         1.46
+ZAMA             2   2026-08-05     $107,289         1.63
+APR              1   2026-08-06     $527,899         1.79
+GIGGLE           1   2026-08-06            —         2.69
+IN               1   2026-08-06      $44,793         1.33
+INX              1   2026-08-06     $163,929         1.04
+SOPH             1   2026-08-06      $51,114         1.43
+ZEST             1   2026-08-06     $154,399         1.14
+
+Subtotal open: 16
+
+3c. SUPPRESSED — dq episode active, no GOM chain opened
+------------------------------------------------------------------------
+TOK                   dq_ep       dq_end
+------------------------------------------
+SPACE            2026-06-13   2026-06-26
+CGPT             2026-06-17   2026-06-30
+BR               2026-06-19   2026-07-02
+JCT              2026-06-25   2026-07-08
+BAS              2026-07-02   2026-07-15
+BREV             2026-07-02   2026-07-15
+ZKP              2026-07-03   2026-07-16
+B2               2026-07-04   2026-07-17
+ON               2026-07-04   2026-07-17
+BSB              2026-07-05   2026-07-18
+RAVE             2026-07-07   2026-07-20
+0G               2026-07-08   2026-07-21
+TAG              2026-07-08   2026-07-21
+TRIA             2026-07-08   2026-07-21
+EVAA             2026-07-09   2026-07-22
+STAR             2026-07-09   2026-07-22
+BLUAI            2026-07-10   2026-07-23
+AIA              2026-07-15   2026-07-28
+SOON             2026-07-17   2026-07-30
+PTB              2026-07-19   2026-08-01
+FOLKS            2026-07-21   2026-08-03
+TAKE             2026-07-22   2026-08-04
+AKE              2026-07-24   2026-08-06
+BARD             2026-07-27   2026-08-09
+CARV             2026-07-27   2026-08-09
+CLO              2026-07-27   2026-08-09
+ERA              2026-07-27   2026-08-09
+ESPORTS          2026-07-27   2026-08-09
+LA               2026-07-27   2026-08-09
+MIRA             2026-07-27   2026-08-09
+SHELL            2026-07-27   2026-08-09
+SQD              2026-07-27   2026-08-09
+STBL             2026-07-27   2026-08-09
+TAIKO            2026-07-28   2026-08-10
+SLX              2026-07-30   2026-08-12
+AIO              2026-07-31   2026-08-13
+NEWT             2026-08-01   2026-08-14
+LAB              2026-08-02   2026-08-15
+DATAIP           2026-08-03   2026-08-16
+BASED            2026-08-04   2026-08-17
+BLESS            2026-08-04   2026-08-17
+TST              2026-08-04   2026-08-17
+LYN              2026-08-05   2026-08-18
+SIGN             2026-08-05   2026-08-18
+
+Subtotal suppressed-only: 44
+
+3d. DOI CHIEU — so sanh vs ho so CASE
+------------------------------------------------------------------------
+TOK            scan_status    note
+----------------------------------------------------------------------------------------------------
+BANK           closed 2026-07-14 [OK] chain 06-29 (v7 calib); fw 07-04; close 07-14 gom_gap vs calib close-iv 07-21
+TAG            supp 2026-07-08 [OK] no GOM in fw period — A2 gLSR blocks; dq 07-08->07-21
+BAS            supp 2026-07-02 [OK] post_climax 07-02, no open
+BTW            closed 2026-07-08 [OK] fw opens 07-03, closes 07-08 gom_gap (not in gate spec v8b)
+AKE            supp 2026-07-24 [OK] decay fires 07-24 (calib 07-08), no open
+BULLA          closed 2026-07-17 [OK] opens 07-11 (calib 07-08), closes 07-17 gom_gap
+PARTI          closed 2026-07-11 [OK] PASS — opens 07-07, closes 07-11 pos_r_drop:59% (Bug #9 RESOLVED)
+ZBT            closed 2026-07-14 [OK] ch2 closes 07-14 pos_r_drop:33%
+POWER          OPEN 2026-08-02 [OK] OPEN 08-02, b-positive structure
+CLO            supp 2026-07-27 [OK] dq 07-27->08-09, no open
+TUT            no state       [OK] GOM-C fires 08-07; no GOM-A/B chain
+BANANAS31      closed 2026-08-06 [OK] opens 08-01, closes 08-06 gom_gap>2d
+COOKIE         closed 2026-08-06 [OK] GOM-C fires 08-07
+CYS            no state       [OK] GOM-C fires 08-07
+TST            supp 2026-08-04 [OK] GOM-C suppressed cooldown (first 08-04, clear 08-18)
+
+========================================================================
+TOTALS:
+  Open chains:      16
+  Closed chains:    55  (rule-iv: 3  gom_gap/supp: 52)
+  Suppressed-only:  44
+  Total w/ state:   115
+  Total scanned:    139

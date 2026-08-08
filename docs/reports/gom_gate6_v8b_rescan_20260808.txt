@@ -1,0 +1,107 @@
+=== GATE v8b — Freshwatch Rescan (BUOC 2) ===
+Generated: 2026-08-08T09:10:38Z
+Based on: gom_state_v8.json  target=2026-08-07  window=60d
+Universe: fw@139  Code: 8edc053  Spec: v1.7
+Formula A: A1 AND A2 AND A3 AND (A4 OR A5)
+  A4=d_pos_3d>=0 OR pos_rerate
+  A5=oi_cycle_pos<=0.5 rolling 30d
+========================================================================
+
+PHAN A/B: GOM-A / GOM-B gate rows
+------------------------------------------------------------------------
+
+BANK (freshwatch rescan):
+  State: ch=2 open=False start=2026-07-04 close=2026-07-14 reason=gom_gap>2d
+  hist ch1: 2026-07-04->2026-07-04
+  dq_ep=2026-07-21 dq_end=2026-08-03
+  BANK open:     PASS* (07-04 vs calib 07-12, A2 now passes via d_pos_3d)
+  BANK chapter:  PASS (crowd_flush 07-04 -> ch2)
+  BANK close-iv: FAIL (closes: gom_gap>2d)
+
+TAG (freshwatch rescan):
+  State: ch=1 open=False start= close=
+  dq_ep=2026-07-08 dq_end=2026-07-21
+  TAG open:       FAIL (no open — A2 avg5(gLSR)>1.1 blocks)
+  TAG-hau KHONG:  PASS (TAG DQ still active through 07-21, then no open -> no wrong-side fire)
+
+BAS SUPP (freshwatch rescan):
+  State: open=False start= dq_ep=2026-07-02 dq_end=2026-07-15
+  BAS SUPP:       PASS (dq fires 2026-07-02, no chain open)
+
+BULLA open (freshwatch rescan):
+  State: ch=1 open=False start=2026-07-11 close=2026-07-17 reason=gom_gap>2d
+  BULLA open:     PASS* (opens 2026-07-11 (expected 07-08, +3d diverge))
+
+POWER b-pos (freshwatch rescan):
+  State: ch=1 open=True start=2026-08-02
+  POWER b-pos:    PASS (chain open 2026-08-02, A3+A4+A5+B1+B3+B4 fire)
+
+CLO supp-neg (freshwatch rescan):
+  State: open=False start= dq_ep=2026-07-27 dq_end=2026-08-09
+  CLO supp-neg:   PASS (suppressed dq 2026-07-27->2026-08-09, no GOM-A fire)
+
+ZBT Z1/Z2 (freshwatch rescan):
+  State: ch=2 open=False start=2026-07-06 close=2026-07-14 reason=pos_r_drop:33%_from_peak:4.24
+  hist ch1: 2026-07-05->2026-07-06
+  ZBT Z1:         PASS* (opens 2026-07-05 (expected 07-01 carried; fw data starts late))
+  ZBT Z2:         PASS* (pos_r_drop:33% on 2026-07-14 (expected 07-02 close 34%; fw data later))
+
+PARTI P open+close-iv (freshwatch rescan):
+  State: ch=1 open=False start=2026-07-07 close=2026-07-11 reason=pos_r_drop:59%_from_peak:3.65
+  PARTI P:        PASS (opens 2026-07-07 (before 09/07), closes 2026-07-11 pos_r_drop:59%_from_peak:3.65 -- Bug #9 RESOLVED)
+
+AKE bonus (freshwatch rescan):
+  State: open=False start= dq_ep=2026-07-24 dq_end=2026-08-06
+  AKE SUPP:       PASS (decay/supp fires 2026-07-24, no GOM open (date-shift: expected 07-08, got 2026-07-24))
+
+========================================================================
+PHAN C: GOM-C beta rows
+------------------------------------------------------------------------
+
+GOM-C is stateless (display-only) — results from scan output on 08-07:
+
+  C1 TUT   GOM-C fire 07-13+07-21->23  -> PENDING (need per-date GOM-C probe)
+  C2 BULLA GOM-C block 07-17->21       -> PASS (BULLA chain closes 07-17 gom_gap)
+  C3 BANK  d_pos<0 blocks post-close   -> PASS (chain closed 07-14, dq 07-21)
+  C4 BANANAS31  negative test          -> PENDING 15/08
+  C5 COOKIE/CYS/TST live 08-07         -> PASS (COOKIE+CYS fire 08-07; TST cooldown)
+
+========================================================================
+SUMMARY TABLE
+------------------------------------------------------------------------
+Row                       Result                                                 
+--------------------------------------------------------------------------------
+  BANK open               PASS* (07-04 vs calib 07-12, A2 now passes via d_pos_3d)
+  BANK chapter            PASS (crowd_flush 07-04 -> ch2)
+  BANK close-iv           FAIL (closes: gom_gap>2d)
+  TAG open                FAIL (no open — A2 avg5(gLSR)>1.1 blocks)
+  TAG-hau KHONG           PASS (TAG DQ still active through 07-21, then no open -> no wrong-side fire)
+  BAS SUPP                PASS (dq fires 2026-07-02, no chain open)
+  BULLA open              PASS* (opens 2026-07-11 (expected 07-08, +3d diverge))
+  POWER b-pos             PASS (chain open 2026-08-02, A3+A4+A5+B1+B3+B4 fire)
+  CLO supp-neg            PASS (suppressed dq 2026-07-27->2026-08-09, no GOM-A fire)
+  ZBT Z1                  PASS* (opens 2026-07-05 (expected 07-01 carried; fw data starts late))
+  ZBT Z2                  PASS* (pos_r_drop:33% on 2026-07-14 (expected 07-02 close 34%; fw data later))
+  PARTI P                 PASS (opens 2026-07-07 (before 09/07), closes 2026-07-11 pos_r_drop:59%_from_peak:3.65 -- Bug #9 RESOLVED)
+  AKE SUPP                PASS (decay/supp fires 2026-07-24, no GOM open (date-shift: expected 07-08, got 2026-07-24))
+  C1 TUT GOM-C            PENDING (per-date probe needed)
+  C2 BULLA block          PASS (chain closes 07-17)
+  C3 BANK post-cls        PASS (dq 07-21, no GOM-C after close)
+  C4 BANANAS31            PENDING 15/08
+  C5 COOKIE/CYS/TST       PASS (COOKIE+CYS fire 08-07; TST cooldown)
+
+TOTAL: PASS=10  PASS*=4  FAIL=2  PENDING=2
+
+KEY CHANGES vs v8 (calib-based):
+  PARTI P: FAIL->PASS  (A4 d_pos_3d>=0 resolves Bug #9 — hedge_structure no longer required)
+  BULLA: PASS (07-11, +3d date diverge from calib 07-08)
+  BANK open: PASS (07-04, earlier than calib 07-12 — A4 d_pos_3d allows earlier fire)
+  BANK close-iv: FAIL->FAIL (gom_gap>2d, not pos_r_drop — same outcome different path)
+  TAG: still FAIL (A2 avg5(gLSR)>1.1 blocks throughout fw period)
+
+DIVERGE ANALYSIS:
+  BANK 07-04 (fw) vs 07-12 (calib): A4 d_pos_3d fires earlier on fw data
+  BULLA 07-11 (fw) vs 07-08 (calib): B1 hedge_structure stricter on fw data?
+  ZBT: fw data starts later than calib, so date diverges for Z1/Z2
+
+State source: data\gom_state_v8.json

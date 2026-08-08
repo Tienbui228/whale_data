@@ -199,6 +199,85 @@ Recreate Task Scheduler entry:
 
 **Watchdog priority (operator directive):** case_daily watchdog là món ĐẦU TIÊN sau khi sổ nợ sạch. Hiện tại: CASE_TAG missing 08-06 + 08-07. Khi task được fix, sẽ auto-append từ ngày mai.
 
+#### BUOC 0 — A4/A5 spec fix (session 14 continued)
+
+**Phan xu A4/A5 vs spec v1.7 operator directive:**
+
+Code cu A4: `pos_rerate AND hedge_alive(7d)` — yeu cau hedge_structure → div_raw/div_avg3 → Bug #9 block PARTI.
+Code cu A5: `funding_unpin` — KHONG phai oi_cycle_pos.
+
+Spec moi:
+- A4 = d_pos_3d>=0 OR pos_rerate (bo hedge_alive)
+- A5 = oi_cycle_pos<=0.5 rolling 30d (thay funding_unpin)
+
+**Dinh nghia oi_cycle_pos:** `(oi_usd - min30d) / (max30d - min30d)` rolling 30d, can >=10 valid points. Tim thay tai build_case.py:264.
+
+**d_pos_3d PARTI 07-01→09:**
+07-01=-0.046(N) 07-02=-0.188(N) 07-03=+0.040(Y) 07-04=+0.021(Y) 07-05=+0.094(Y) 07-06=+0.162(Y) 07-07=+0.289(Y) 07-08=+0.073(Y) 07-09=+0.037(Y)
+
+**Fix dung cho:**
+- `scripts/fw_loader_utils.py`: them `enrich_token_days(days)` — tinh d_pos_3d + oi_cycle_pos vao day dicts
+- `scripts/gom_scan.py`: update A4/A5 trong eval_gom(), goi enrich_token_days(days) sau build_token_days()
+- `binance-bot-signals/docs/gom_detect_spec.md`: v1.7, cap nhat A4/A5 rows + conformance table
+
+**PARTI Bug #9 RESOLVED:** hedge_structure khong con bat buoc trong A4 voi spec moi. PARTI d_pos_3d>=0 tu 07-03 → GOM co the mo voi A1∧A2∧A3∧A4.
+
+Commit whale_data: `8edc053` | Commit signals: `a7eaed9d`
+
+#### BUOC 1 — Full 60d rescan (gom_state_v8.json)
+
+Rescan 139 symbols fw@139, window 60d (2026-06-08→2026-08-07), fresh state (no carry-over), spec v1.7.
+
+**Ket qua:**
+- 16 OPEN chains: ALLO/APR/CAP/COAI/ENSO/FF/GIGGLE/HUMA/IN/INX/POWER/ROBO/SOPH/USELESS/ZAMA/ZEST
+- 55 CLOSED chains (3 rule-iv: PARTI+ZBT+TOWNS; 52 gom_gap/supp)
+- 44 SUPPRESSED-only (dq episode, no chain)
+- Total w/ state: 115/139
+- GOM-C β: 6 fires (ARIA/COOKIE/CYS/FHE/TRADOOR/TUT) + 1 supp (TST)
+
+Output: `data/gom_state_v8.json` (gitignored, scratch copy local)
+Report: `docs/reports/gom_stat60d_v8_20260808.txt`
+
+#### BUOC 2 — Gate v8b complete table
+
+Gate tren freshwatch rescan (gom_state_v8.json). Ket qua:
+
+| Row | Result |
+|-----|--------|
+| BANK open | PASS* (07-04 vs calib 07-12) |
+| BANK chapter | PASS (crowd_flush 07-04 → ch2) |
+| BANK close-iv | FAIL (gom_gap>2d, khong phai pos_r_drop) |
+| TAG open | FAIL (A2 avg5 gLSR>1.1 blocks) |
+| TAG-hau KHONG | PASS (dq 07-08->07-21, no open) |
+| BAS SUPP | PASS |
+| BULLA open | PASS* (07-11 vs calib 07-08, +3d) |
+| POWER b-pos | PASS (OPEN 08-02) |
+| CLO supp-neg | PASS |
+| ZBT Z1 | PASS* (07-05 vs carried 07-01) |
+| ZBT Z2 | PASS* (pos_r_drop:33% 07-14 vs 07-02) |
+| **PARTI P** | **PASS (07-07 → 07-11 pos_r_drop:59% — Bug #9 RESOLVED)** |
+| AKE SUPP | PASS |
+| C1 TUT GOM-C | PENDING |
+| C2 BULLA block | PASS |
+| C3 BANK post-cls | PASS |
+| C4 BANANAS31 | PENDING 15/08 |
+| C5 COOKIE/CYS/TST | PASS |
+
+**TOTAL: PASS=10 PASS*=4 FAIL=2 PENDING=2**
+(vs v8 calib: PASS=9 PASS*=3 FAIL=5 PENDING=2)
+
+Report: `docs/reports/gom_gate6_v8b_rescan_20260808.txt`
+
+#### BUOC 3 — Stat 60d + cross-check
+
+Tat ca 15 verdicts doi chieu = OK. Chi tiet trong report.
+
+Report: `docs/reports/gom_stat60d_v8_20260808.txt`
+
+#### BUOC 4 — PENDING OPERATOR APPROVAL
+
+Swap production state: `data/gom_state.json` ← `data/gom_state_v8.json`. Can operator duyet truoc khi ap dung.
+
 ---
 
 ## SESSION 2026-08-08 (13) — C2 2×neutral fix + TST 14d cooldown + spec v1.6
@@ -906,6 +985,88 @@ ZRO (ch2,n=3), 币安人生 (ch1,n=9,Q1=$2.5M★)
 ### Chờ duyệt
 
 Format output 2-3 token mẫu + OPEN SERIES list ← operator duyệt trước Việc 5 (deploy cron).
+
+---
+
+## SESSION 2026-08-08 (15) — AGT COLD-START PACK (ĐANG CHỜ ĐỌC)
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Trạng thái:** Đã build file, đã viết report, DỪNG chờ snap #2 + operator đọc.
+
+### Việc đã làm
+
+| Hạng mục | Kết quả |
+|---|---|
+| A-0 Vá build_case.py | 9 edits: parametrize metadata từ alpha_id_map + BAPI; fix lsr_by_d key mismatch (pos_r/pos_r_raw); fix spot_by_d key mismatch (vol_quote_usd→vol_spot_usd); A-0b guard RAISE nếu LSR null >50% last 30d |
+| A-1 LSR persist | 4 endpoints × 30d (pos/acc/gLSR/taker) = 31 merged dates, 30/31 non-null; freshwatch 32 rows → tổng 43 dates |
+| A-2 Klines perp | 446 raw → 445 rows (L-21 trim 08-08 partial); 2025-05-20→2026-08-07 |
+| A-2 Spot | HTTP 400 — NO PAIR (permanent, documented) |
+| A-2 Funding | 500 records 2026-05-17→2026-08-08, ALL POSITIVE |
+| A-2 OI | 30 records 2026-07-10→2026-08-08 |
+| A-3 build_case.py | CASE_AGT.xlsx: 7 sheets, 445 DAILY rows, 50 cols, L-32 PASS, A-0b guard PASS |
+| A-4 Depth snap #1 | 08:44:20 UTC, mid=0.0155015, bid2pct=$8,669, ask2pct=$16,547, ratio=0.524 (ask-heavy) |
+| A-4 Depth snap #2 | MISSING — CẦN ≥12:44 UTC |
+| A-5 BAPI | ALPHA_191, contract=0x5dbde81...e274 (PARTIAL — L-28 cần cross-verify) |
+| A-5 BscScan | NOTOK (deprecated V1) → CẦN OPERATOR |
+| A-6 Freshwatch | 32 rows AGTUSDT; không có gom_state open chain |
+| A-7 Sanity | OVERALL PASS (WARNING: no spot pair — documented) |
+| A-8 Register | CASE_INDEX row 15 + INDEX.md AGT row added after TST |
+| _collect_agt_20260808.md | Report đầy đủ: A-0 diff, raw tables, A.5, nhịp cụm pump, B-2 flags, A-7, LAYER COVERAGE, MISSING |
+
+### Số key
+
+| Metric | Value |
+|---|---|
+| Alpha ID | ALPHA_191 |
+| Perp onboard | 2025-05-20 |
+| ATH | 0.034016 (2025-05-27) |
+| Giá 07/08 | 0.01489 (+6.11% trong ngày) |
+| Drawdown ATH | −56% |
+| Vol 07/08 | thấp (không có spike ngày đó) |
+| pos_r range 30d | 1.39→1.57 (tăng dần, stable) |
+| gLSR range 30d | 1.53→2.73 (never below 1.53) |
+| pos_r INVERSO | 53.8% ngày pos_r tăng khi giá giảm |
+| Funding range | ALL POSITIVE toàn bộ 500 records |
+| OI 07/08 | trong 30d OI window |
+| GOM-A fires | 0 (gLSR luôn >1.1 → A2 fail) |
+| Vol spikes ≥8× | 19 cụm (9 nhịp pump) |
+
+### A.5 ba-đạo-hàm
+
+| Biến | 28d | 21d | 14d | 7d | 07/08 |
+|---|---|---|---|---|---|
+| pos_r | 1.39 | 1.49 | 1.49 | 1.49 | 1.57 |
+| acc_r | 1.72 | 2.14 | 2.22 | 2.22 | 2.61 |
+| gLSR | 1.53 | 2.23 | 2.56 | 2.56 | 2.73 |
+| div_avg3 | N/A | N/A | N/A | N/A | 0.664 |
+
+*Depth snap #1 (08:44 UTC):* mid=0.0155015, bid/ask ratio=0.524 (ask-heavy)
+
+### A-0 Bug fix (retroactive — ảnh hưởng TST cũng như AGT)
+
+| Bug | Mô tả | Fix |
+|---|---|---|
+| lsr_by_d key mismatch | Fresh LSR CSVs dùng "pos_r" nhưng build_case.py đọc "pos_r_raw" → toàn bộ fresh 30d LSR bị None | `r.get("pos_r_raw") or r.get("pos_r")` |
+| spot_by_d key mismatch | Spot CSVs dùng "vol_quote_usd" nhưng build_case.py đọc "vol_spot_usd" → vol_spot None | `r.get("vol_spot_usd") or r.get("vol_quote_usd")` |
+| CASE sheet hardcoded | Tất cả metadata (Alpha ID, contract, supply, holders, dates) hardcoded BANANAS31 | `load_alpha_meta()` + CASE_QUESTION arg |
+| taker_alpha hardcoded | `if SYM_BASE == "BANANAS31"` guard | Removed — L-48 applies universally |
+
+### MISSING
+
+- M-1: Depth snap #2 (CẦN ≥12:44 UTC 08/08)
+- M-2: BscScan top holders (NOTOK free API) → CẦN OPERATOR
+- M-3: Nansen (LOCKED) → CẦN OPERATOR
+- M-4: VPS freshwatch Aug 2026 AGTUSDT
+- M-5: Venue ngoài Binance (L-30)
+- M-6: Contract cross-verify L-28 (BSC 0x5dbde81...e274 = PARTIAL, 1 source)
+
+### Kỷ luật session
+
+- L-38: LSR persist đầu phiên (08:00 UTC)
+- L-21: Trim 2026-08-08 partial candle
+- L-48: taker_alpha=ABSTAIN (bapi klines[9]==klines[5])
+- L-28: Contract PARTIAL (BAPI = 1 source only)
+- A-0b guard: RAISE nếu LSR null >50% (PASS cho AGT)
 
 ---
 
