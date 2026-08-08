@@ -86,6 +86,119 @@ VPS live crontab có 6 entries không có trong repo `crontab.txt` cũ: collect_
 
 Đã update `crontab.txt` to match VPS live crontab (hardcoded VPS paths, all active entries included). Commit kèm trong session này.
 
+### PHASE 2 — 6 items (tiếp session 14)
+
+#### Item 1 — GATE §6 v8 (ĐÃ CHẠY)
+
+Chạy `run_backtest6()` local + freshwatch-based rows VPS. Kết quả:
+
+| # | Token | Episode | v8 Result |
+|---|-------|---------|-----------|
+| 3 | BANK | open | PASS* (07-12) — date diverge (+13d) |
+| 4 | BANK | chapter | **FAIL** (no chapter — chain opens too late) |
+| 5 | BANK | close-iv | PASS (07-16 pos_r_drop:43%) |
+| 6 | TAG | open | **FAIL** (A2 fails full calib period) |
+| 7 | BAS | SUPP | PASS |
+| 8 | BTW | SUPP | PASS |
+| 9 | BULLA | open | PASS (07-08) |
+|10 | TUT | chapter | **FAIL** (no chain open → no chapter) |
+|11 | IDOL | open | **FAIL** (A2 fails full calib period) |
+|12 | AKE | SUPP | PASS (WARN data-cutoff retained) |
+| Z1/Z2 | ZBT | open/close | PASS* carried (no fw data) |
+| P | PARTI | open+close | **FAIL** (Bug #9 — div_* missing) |
+| T2 | TAG | wrong-side | PASS |
+| C1 | TUT | GOM-C fire | PASS (07-13 ✓, 07-23 ✓) |
+| C2 | BULLA | GOM-C block | PASS |
+| C3 | BANK | d_pos harvest | PASS |
+| C4 | BANANAS31 | negative | PENDING 15/08 |
+| C5 | COOKIE/CYS/TST | live 08-07 | PENDING D2 triage |
+
+**TOTAL: PASS=9 PASS*=3 FAIL=5 PENDING=2** (v7: PASS=12 PASS*=2 WARN=1 FAIL=0)
+
+**Root cause tất cả FAIL calib:** A2 = avg5(lsr_global)≤1.1 (v1.3+ fix) chặt hơn v7 code (stealth_grind). TAG/TUT/IDOL không mở chain trong calib period; BANK mở 07-12 thay vì 06-29.
+
+Đây là EXPECTED drift từ v1.3 spec correction — KHÔNG phải regression mới. PARTI FAIL do Bug #9 (data gap).
+
+Report: `docs/reports/gom_gate6_v8_20260808.txt`
+
+#### Item 2 — A4/A5 bug #9 (PHÂN XỬ — DÍNH)
+
+A4 code: `pos_rerate(days, i, cfg) AND hedge_structure(days, i, cfg, lookback_days=7)`
+- `hedge_structure()` yêu cầu `div_ratio = div_raw / div_avg3 ≤ 0.5`
+- PARTI day dicts MISSING: `div_raw`, `div_avg3`, `div_ratio` → hedge_structure always False → A4 always False
+
+A5 code: `funding_unpin(days, i, cfg)` — requires pin_streak ≥10d then ≥2 kỳ >0.0001
+- PARTI A5 cũng False (funding pattern không match)
+
+`d_pos_3d` field: KHÔNG có trong PARTI day dicts (not in build_token_days output)
+
+Xác nhận: PARTI calib fields = `['_interval_h', 'avg_px', 'date', 'funding_avg', 'funding_max', 'funding_min', 'funding_n', 'low_conf', 'lsr_acc', 'lsr_global', 'lsr_pos', 'oi_usd', 'taker_buy_pct', 'taker_ratio', 'vol_quote']` — NO div_* fields.
+
+**Bug #9 DÍNH (ảnh hưởng v8):** PARTI row P = FAIL trực tiếp do bug này. Ghi DEV ticket: add div_raw/div_avg3/div_ratio to PARTI freshwatch collector (or compute from lsr_pos data if available).
+
+#### Item 3 — gom_state C-chains + breakdown 5 tokens mất ngày-3
+
+**GOM-C β là stateless (display-only)** — không có C-chain persistent state trong gom_state.json. Chỉ A/B chains có `chain_open`.
+
+gom_state A/B chain status của 5 tokens "missing":
+- GRIFFAIN: chain_open=False (chain opened + closed trong prior probe runs)
+- GTC: chain_open=False
+- MAVIA: `{}` (empty — không có chain history)
+- AVA: không có entry hoặc empty
+- NOM: không có entry hoặc empty
+
+**Root cause discrepancy 8-fire vs 3-fire (corrected):**
+Session-13 probe đánh giá trên 08-07 freshwatch data (đã cập nhật đủ). Cron 08-07 01:25 UTC đánh giá 08-06 data (export snapshot tại thời điểm đó). Data thay đổi giữa 01:25 UTC và thời điểm probe chạy.
+
+Với `_gomc_beta_check()` đúng (C3=taker∈[40,55], C2÷4): TẤT CẢ 8 tokens FIRE trên 08-07 data hiện tại. Cron canonical 08-07 = 3 fires (COOKIE/CYS/TUT) là dữ liệu gốc tại 01:25 UTC.
+
+**Verdict:** 3-fire cron result là canonical. 8-fire probe = later data evaluation. GHI ÁN: C-fire count phụ thuộc vào thời điểm export snapshot.
+
+#### Item 4 — G1 DIVERGE BANK (REPORT)
+
+BANK chain_open: v7=06-29, v8=07-12 (+13 ngày).
+
+Trace 06-25→07-12 với code hiện tại:
+- 06-25→07-02: A1=T, A2=T, **A3=F** → gom_day=False (A3 chặn)
+- 07-03→07-11: A3=True, nhưng A4=F và A5=F → gom_day=False
+- 07-12: **A5=True** → A1∧A2∧A3∧A5 = True → gom_day fires → chain opens
+
+06-29 values: lsr_global_r/avg5/div_ratio = N/A (data not available at that date in calib)
+
+**B1 status:** BANK calib không có div_* fields → hedge_structure always False → B1 always False trong toàn bộ calib. gom_day fires = A alone (không cần B).
+
+**v7 vs v8 root cause:** v7 A3 looser condition OR A2=stealth_grind (passes 06-29). Current A3 strict → 06-29 blocked. A5 fires 07-12 → first opportunity.
+
+#### Item 5 — fw139 vs universe_master + label update
+
+**fw-filter vs universe_master active (526 tokens):**
+- Tất cả 139 fw-filter symbols TỒN TẠI trong universe_master active ✓ (hợp pháp)
+- APR/ARX/PIEVERSE/Q/STAR: in UM=True, in alpha_id_map=False → 5 unresolvable Alpha DEX IDs
+- GRVT/VELVET: in UM=True, in fw=False (missing từ fw-filter)
+- B: in UM=False, in alpha_id_map=True (edge case)
+
+**Hardcoded label "fw137@139" tại run_gom_daily.py:324 = STALE.**
+- fw-filter = 139 (không phải 137)
+- "137" là số alpha_id_map, không phải fw-filter
+
+**Advice:** Update label sang `fw@139` (dynamic fw_filter size). APR/ARX/PIEVERSE/Q/STAR: operator confirm nếu muốn resolve alpha IDs hoặc loại khỏi fw-filter.
+
+#### Item 6 — case_daily 2-ngày im (ROOT CAUSE TÌM THẤY)
+
+**Root cause:** Task Scheduler `FreshWatch_case_daily` bị misconfigure path.
+- Execute: `D:\Data` (WRONG — chỉ là first token trước space)
+- Arguments: `back test\whale_data\scripts\run_case_daily.bat` (phần còn lại của path)
+- LastTaskResult: 0x800710E0 (process failed to run)
+- LastRunTime: 08-08 09:11 AM — task runs daily 09:00 AM nhưng FAIL mỗi lần
+- case_daily.log: KHÔNG TỒN TẠI (bat không bao giờ chạy thực sự)
+
+**Fix cần làm (TẦNG HUMAN — operator action):**
+Recreate Task Scheduler entry:
+- Execute: `D:\Data back test\whale_data\scripts\run_case_daily.bat` (quoted full path)
+- Hoặc: Execute `cmd.exe`, Arguments `/c "D:\Data back test\whale_data\scripts\run_case_daily.bat"`
+
+**Watchdog priority (operator directive):** case_daily watchdog là món ĐẦU TIÊN sau khi sổ nợ sạch. Hiện tại: CASE_TAG missing 08-06 + 08-07. Khi task được fix, sẽ auto-append từ ngày mai.
+
 ---
 
 ## SESSION 2026-08-08 (13) — C2 2×neutral fix + TST 14d cooldown + spec v1.6

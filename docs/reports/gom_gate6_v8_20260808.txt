@@ -1,0 +1,108 @@
+§6 Backtest Gate v8 — 2026-08-08
+Code: gom_scan.py (VPS commit HEAD 08-08)
+Post-change state: compose/A2-fix + C2-2×neutral + 14d cooldown + toi_dq real listing_date
+Run: python scripts/gom_scan.py --backfill (local) + freshwatch CSV (VPS)
+Prev: v7 PASS=12 PASS*=2 WARN=1 FAIL=0 (commit b7523d8)
+========================================================================
+
+§6 Backtest Gate — calib-based rows (run_backtest6)
+========================================================================
+ # Token   Episode      v7-kỳ-vọng                         v8-Result
+------------------------------------------------------------------------
+ 1 _FORM  gom_a_fire   code-level formula check             [skip — xem §1 spec]
+ 2 _FORM  gom_b_fire   code-level formula check             [skip — xem §1 spec]
+ 3 BANK   open         chain_open=06-29                     PASS* (07-12) ← date diverge
+ 4 BANK   chapter      crowd_flush 07-02 → chapter          FAIL (no chapter)
+ 5 BANK   close-iv     chain close ≤07-21 pos_r_drop        PASS (07-16 pos_r_drop:43%)
+ 6 TAG    open         chain_open=07-10                      FAIL (no open)
+ 7 BAS    SUPP         07-02→07-15 no GOM                   PASS (post_climax fires, no open)
+ 8 BTW    SUPP         06-21→07-05 no GOM                   PASS (post_climax fires, no open)
+ 9 BULLA  open         B1+B3+B4 → chain_open=07-08          PASS (07-08)
+10 TUT    chapter      chapter 07-11 crowd_flush             FAIL (no chapter — no chain open)
+11 IDOL   open         chain_open=07-06                      FAIL (no open)
+12 AKE    SUPP         decay 07-08 → no GOM open             PASS (decay fires, no open) [WARN data-cutoff retained]
+
+CALIB SUBTOTAL: PASS=5 PASS*=1(date-ok) FAIL=4
+
+§6 freshwatch-based rows
+========================================================================
+ Z1 ZBT   open         chain_open=07-01 (v4 calib)          PASS* (carried — no fw data, delisted)
+ Z2 ZBT   close-iv     close 07-02 rule-iv 34%              PASS* (carried — no fw data)
+ P  PARTI open+close   chain2=07-01→07-11 rule-iv 59%       FAIL (no chain open — Bug #9)
+ T2 TAG   wrong-side   no GOM 07-28→31 (avg5 gLSR>1.1)      PASS (gom_day=False all 4 days)
+
+§6 GOM-C β rows (freshwatch CSV, 2026-08-07 data)
+========================================================================
+ C1 TUT    GOM-C fire 07-13+07-21→23          PASS (fire 07-13 ✓, fire 07-23 ✓)
+ C2 BULLA  GOM-C block 07-17→21               PASS (no fire 07-17→21)
+ C3 BANK   d_pos<0 blocks post-close           PASS (no GOM-C fires after 07-16 close)
+ C4 BANANAS31  negative test                  PENDING 15/08 (no fw data available)
+ C5 COOKIE/CYS/TST  live 08-07               PENDING D2 triage
+                                              [COOKIE fire 08-07 ✓, CYS fire 08-07 ✓, TST=⏸ cooldown]
+
+========================================================================
+§6 v8 TOTAL: PASS=9 PASS*=3(date+carried) FAIL=5 PENDING=2
+(v7: PASS=12 PASS*=2 WARN=1 FAIL=0)
+========================================================================
+
+FAIL ANALYSIS
+========================================================================
+
+FAIL-1: BANK #4 (chapter)
+  Expected: chain opens 06-29 → crowd_flush 07-02 → chapter
+  v8 chain opens 07-12 (A5 fires) → closes 07-16 (pos_r_drop:43%) = 4 days, no chapter event
+  Root cause: same as BANK open date diverge below
+
+FAIL-2: TAG #6 (open)
+  Expected: chain_open=07-10 (v7 had A2=stealth_grind which passes on 07-10)
+  v8: A2=avg5(lsr_global)≤1.1 fails throughout calib period (gLSR too high for TAG)
+  TAG 07-10 signals: A3 A5 B4 — no A1, A2 → gom_day=False → no chain open
+  TAG events (calib): only dq:slope_dq and dq:wrong_side — no chain_open
+
+FAIL-3: TUT #10 (chapter)
+  Expected: chapter 07-11 (chain opens → crowd_flush 07-11 → chapter)
+  v8: A2 fails throughout — TUT never opens chain in calib period
+  TUT events (calib): no chain_open, only dq:slope_dq events
+
+FAIL-4: IDOL #11 (open)
+  Expected: chain_open=07-06 (A1∧A3∧A4 → GOM-A)
+  v8: IDOL 07-06 has A1 A3 B4 but no A2 → gom_day=False → no open
+  IDOL never fires in calib period — A2 blocks
+
+FAIL-5: PARTI P (open+close)
+  Expected: chain2=07-01→07-11 (rule-iv 59%)
+  v8: no chain open at all
+  Root cause: Bug #9 — PARTI freshwatch CSVs missing div_raw/div_avg3/div_ratio
+  → hedge_structure() always False → A4 always False
+  → A5 also False (funding unpin pattern not present)
+  → gom_day = A1∧A2∧A3∧(F∨F) = False → chain never opens
+
+PASS* NOTE: BANK open shows "PASS (07-12)" per gate check logic (chain_open exists)
+  but date diverge is real: v7=06-29, v8=07-12 (+13 days)
+  Root cause: A2 (avg5 gLSR) fails on 06-29; A5 fires 07-12 → A1∧A2∧A3∧A5 = True → opens
+  v7 code had looser A2 (stealth_grind) which passed 06-29
+
+ROOT CAUSE SUMMARY
+========================================================================
+All calib FAILs (BANK-chapter, TAG-open, TUT-chapter, IDOL-open) trace to:
+  A2 = avg5(lsr_global) ≤ 1.1  (current spec v1.3+)
+  vs
+  A2 = stealth_grind (v7 code, pre-correction)
+
+The v1.3 correction ("A2 = avg5(gLSR)≤1.1, KHÔNG phải stealth_grind") tightened A2.
+On calib data, this A2 fails for TAG/TUT/IDOL throughout their fire windows,
+and fails for BANK on 06-29 (moving open date to 07-12).
+
+These are EXPECTED drifts from the spec correction, not new regressions.
+Action: operator decision — accept drifts or update calib expectations.
+
+PARTI FAIL traces to Bug #9 (data gap, not logic bug).
+Action: ghi án PARTI div-fields missing → separate DEV ticket.
+
+RECOMMENDATIONS (operator decision)
+========================================================================
+1. Accept BANK open date-diverge (07-12 vs 06-29) as confirmed G1 DIVERGE án
+2. Accept TAG/TUT/IDOL FAIL — calib expectations predate A2 correction (v1.3)
+   → Update calib expected dates or mark as DIVERGE (same root cause as BANK)
+3. PARTI: Bug #9 DEV ticket — add div_* fields to PARTI freshwatch collector
+4. C4/C5: hold PENDING until 15/08 BANANAS31 + D2 triage
