@@ -273,33 +273,37 @@ def _a3_slope_ok(days: list[DayData], i: int, sc: dict) -> bool:
 
 
 def _gomc_beta_check(
-    days: list[DayData], i: int, cfg: dict, sc: dict, result: dict
+    days: list[DayData], i: int, cfg: dict, sc: dict, result: dict,
+    check_cooldown: bool = True,
 ) -> bool:
     """GOM-C PROVISIONAL-β per-day check (signed operator 2026-08-08 Q1/Q2/Q3).
 
-    C1(stealth_grind) ∧ C2_quiet(f_avg≤max(2×rate_min,1e-4), single-day) ∧
+    C1(stealth_grind) ∧ C2_quiet(f_avg ≤ 2×neutral per interval) ∧
     C3_lax(taker∈[40,55]) ∧ d_pos≥0(pos_r non-declining) ∧
-    NOT(gLSR slope>1.15 for ≥3d) ∧ NOT supp_dq.
+    NOT(gLSR slope>1.15 for ≥3d) ∧ NOT supp_dq(today) ∧ NOT(supp_dq in prior 13d).
 
+    C2 2×neutral table: 4h→1e-4, 8h→2e-4, 1h→2.5e-5.
+    check_cooldown=False: skip 14d backward scan (for suppressed-display detection only).
     result: pre-computed eval_gom dict — reused to avoid double call.
     Display only — no state changes.
     """
-    # NOT any supp_dq
+    # NOT any supp_dq (today)
     if any(v for v in result.get("supp_dq", {}).values()):
         return False
     # C1: stealth_grind (encodes taker<55% in build window)
     if not stealth_grind(days, i, cfg):
         return False
-    # C2_quiet: f_avg normalized to 8h-equivalent ≤ max(2 × funding_floor, 1e-4)
-    # funding_avg = mean(per-period rates); normalize: f_avg_8h = f_avg × interval_h / 8
+    # C2_quiet: f_avg ≤ 2×neutral threshold per interval
+    # thr_8h = max(2×rate_min, 1e-4) = 1e-4; 2×neutral: thr = thr_8h × (interval_h/4)
+    # Table: 4h→1e-4, 8h→2e-4, 1h→2.5e-5
     f_avg = days[i].get("funding_avg", float("nan"))
     if math.isnan(f_avg):
         return False
     interval_h = days[i].get("_interval_h", 8)
-    f_avg_8h = f_avg * interval_h / 8
     fp = cfg.get("funding_pinned", {})
-    c2_thr = max(2.0 * fp.get("rate_min", 4e-5), 1e-4)
-    if f_avg_8h > c2_thr:
+    c2_thr_8h = max(2.0 * fp.get("rate_min", 4e-5), 1e-4)
+    c2_thr = c2_thr_8h * interval_h / 4   # 2×neutral: 4h→1e-4, 8h→2e-4, 1h→2.5e-5
+    if f_avg > c2_thr:
         return False
     # C3_lax: taker_buy_pct ∈ [40, 55]
     tkr = days[i].get("taker_buy_pct", float("nan"))
@@ -319,7 +323,56 @@ def _gomc_beta_check(
     )
     if slope_bad >= 3:
         return False
+    # 14d supp cooldown: GOM-C inherits same cooldown as GOM-B (§8.4 rule-i)
+    # any supp_dq fire in prior 13 days → today still in cooldown window
+    if check_cooldown:
+        for j in range(max(0, i - 13), i):
+            dj = days[j]
+            if dj.get("_skip_eval") or dj.get("_suspect"):
+                continue
+            rj = eval_gom(days, j, cfg, sc)
+            if any(v for v in rj.get("supp_dq", {}).values()):
+                return False
     return True
+
+
+def _gomc_c_cooldown_info(
+    days: list[DayData], i: int, cfg: dict, sc: dict
+) -> tuple[str, str, int]:
+    """Find earliest supp_dq fire in prior 13d for GOM-C suppressed display.
+
+    Returns (first_fire_date, cooldown_end_date, days_remaining_inclusive).
+    Returns ("", "", 0) if no cooldown active.
+    """
+    today_str = days[i].get("date", "")
+    if len(today_str) == 5:
+        today_str = "2026-" + today_str
+
+    first_fire = ""
+    for j in range(max(0, i - 13), i):
+        dj = days[j]
+        if dj.get("_skip_eval") or dj.get("_suspect"):
+            continue
+        rj = eval_gom(days, j, cfg, sc)
+        if any(v for v in rj.get("supp_dq", {}).values()):
+            dj_str = dj.get("date", "")
+            if len(dj_str) == 5:
+                dj_str = "2026-" + dj_str
+            if not first_fire:
+                first_fire = dj_str[:10]  # earliest fire in window
+
+    if not first_fire:
+        return "", "", 0
+
+    try:
+        first_dt        = datetime.strptime(first_fire, "%Y-%m-%d")
+        cooldown_end_dt = first_dt + timedelta(days=13)  # last blocked day
+        today_dt        = datetime.strptime(today_str[:10], "%Y-%m-%d")
+        remaining       = (cooldown_end_dt - today_dt).days + 1  # inclusive today
+        cooldown_end    = cooldown_end_dt.strftime("%Y-%m-%d")
+        return first_fire, cooldown_end, max(0, remaining)
+    except Exception:
+        return "", "", 0
 
 
 # ── Chain state machine ───────────────────────────────────────────────────────
@@ -951,7 +1004,8 @@ def run_daily(
     opened_today:  list[str] = []
     smissing_today_summary: list[str] = []  # target_date itself missing → possible race/fresh issue
     smissing_hist_summary:  list[str] = []  # only historical dates missing → normal short-history
-    gomc_beta_fires: list[dict] = []         # GOM-C PROVISIONAL-β stats list
+    gomc_beta_fires:      list[dict] = []    # GOM-C PROVISIONAL-β fires
+    gomc_beta_suppressed: list[dict] = []    # GOM-C tokens in 14d cooldown but otherwise passing
 
     for sym in all_symbols:
         token = sym[:-4] if sym.endswith("USDT") else sym
@@ -983,40 +1037,56 @@ def run_daily(
                     or (chain.get("chain_open") and result.get("gom_day"))
                 )
                 # GOM-C β check — display only, no state change
-                if not skip and _gomc_beta_check(days, i, cfg, sc, result):
-                    d_now  = days[i]
-                    oi_now = d_now.get("oi_usd", math.nan)
-                    pos_r  = d_now.get("lsr_pos", math.nan)
-                    px_now = d_now.get("avg_px", math.nan)
-                    # n_days: consecutive GOM-C β fire days ending today
-                    n_ct = 1
-                    for j in range(i - 1, -1, -1):
-                        dj = days[j]
-                        if dj.get("_suspect") or dj.get("_skip_eval"):
-                            break
-                        rj = eval_gom(days, j, cfg, sc)
-                        if _gomc_beta_check(days, j, cfg, sc, rj):
-                            n_ct += 1
+                if not skip:
+                    fires_today = _gomc_beta_check(days, i, cfg, sc, result,
+                                                   check_cooldown=True)
+                    if fires_today:
+                        d_now  = days[i]
+                        oi_now = d_now.get("oi_usd", math.nan)
+                        pos_r  = d_now.get("lsr_pos", math.nan)
+                        px_now = d_now.get("avg_px", math.nan)
+                        # n_days: consecutive GOM-C β fire days ending today
+                        n_ct = 1
+                        for j in range(i - 1, -1, -1):
+                            dj = days[j]
+                            if dj.get("_suspect") or dj.get("_skip_eval"):
+                                break
+                            rj = eval_gom(days, j, cfg, sc)
+                            if _gomc_beta_check(days, j, cfg, sc, rj):
+                                n_ct += 1
+                            else:
+                                break
+                        # Q2_net range [INFERENCE n=3]: OI × s_top × (pos_r−1)/(pos_r+1)
+                        if not math.isnan(pos_r) and pos_r > 0 and not math.isnan(oi_now):
+                            tilt  = (pos_r - 1) / (pos_r + 1)
+                            q2_lo = oi_now * 0.5 * tilt
+                            q2_hi = oi_now * 0.8 * tilt
                         else:
-                            break
-                    # Q2_net range [INFERENCE n=3]: OI × s_top × (pos_r−1)/(pos_r+1)
-                    if not math.isnan(pos_r) and pos_r > 0 and not math.isnan(oi_now):
-                        tilt  = (pos_r - 1) / (pos_r + 1)
-                        q2_lo = oi_now * 0.5 * tilt
-                        q2_hi = oi_now * 0.8 * tilt
+                            q2_lo = q2_hi = math.nan
+                        # ΔOI_net vs start of consecutive streak
+                        first_i  = i - n_ct + 1
+                        oi_first = (days[first_i].get("oi_usd", math.nan)
+                                    if 0 <= first_i < len(days) else math.nan)
+                        doi = (oi_now - oi_first
+                               if not (math.isnan(oi_now) or math.isnan(oi_first))
+                               else math.nan)
+                        gomc_beta_fires.append({
+                            "token": token, "n": n_ct,
+                            "q2_lo": q2_lo, "q2_hi": q2_hi,
+                            "px": px_now, "doi": doi,
+                        })
                     else:
-                        q2_lo = q2_hi = math.nan
-                    # ΔOI_net vs start of consecutive streak
-                    first_i  = i - n_ct + 1
-                    oi_first = (days[first_i].get("oi_usd", math.nan)
-                                if 0 <= first_i < len(days) else math.nan)
-                    doi = (oi_now - oi_first
-                           if not (math.isnan(oi_now) or math.isnan(oi_first)) else math.nan)
-                    gomc_beta_fires.append({
-                        "token": token, "n": n_ct,
-                        "q2_lo": q2_lo, "q2_hi": q2_hi,
-                        "px": px_now, "doi": doi,
-                    })
+                        # base conditions (no cooldown check) pass → token is in cooldown
+                        base_ok = _gomc_beta_check(days, i, cfg, sc, result,
+                                                   check_cooldown=False)
+                        if base_ok:
+                            first_ff, cd_end, cd_rem = _gomc_c_cooldown_info(
+                                days, i, cfg, sc)
+                            if first_ff:
+                                gomc_beta_suppressed.append({
+                                    "token": token, "first_fire": first_ff,
+                                    "cooldown_end": cd_end, "days_remaining": cd_rem,
+                                })
 
         all_state[token] = chain
 
@@ -1065,9 +1135,16 @@ def run_daily(
             print(s)
 
     # GOM-C PROVISIONAL-β
-    if gomc_beta_fires:
-        toks = " ".join(sorted(f["token"] for f in gomc_beta_fires))
-        print(f"\n━━ GOM-C β ({len(gomc_beta_fires)} fires — PROVISIONAL ⚡ sign-off 15/08): {toks}")
+    if gomc_beta_fires or gomc_beta_suppressed:
+        n_f = len(gomc_beta_fires)
+        n_s = len(gomc_beta_suppressed)
+        toks      = " ".join(sorted(f["token"] for f in gomc_beta_fires))
+        supp_toks = " ".join(sorted(f["token"] for f in gomc_beta_suppressed))
+        if n_s:
+            print(f"\n━━ GOM-C β ({n_f} fires + {n_s} ⏸ — PROVISIONAL ⚡ sign-off 15/08): "
+                  f"{toks}  ⏸{supp_toks}")
+        else:
+            print(f"\n━━ GOM-C β ({n_f} fires — PROVISIONAL ⚡ sign-off 15/08): {toks}")
         for f in sorted(gomc_beta_fires, key=lambda x: x["token"]):
             q2_s  = (f"${f['q2_lo']/1e6:.1f}-{f['q2_hi']/1e6:.1f}M"
                      if not math.isnan(f["q2_lo"]) else "NaN")
@@ -1075,6 +1152,9 @@ def run_daily(
             doi_s = (f"{'+' if f['doi'] >= 0 else ''}{f['doi']/1e6:.2f}M"
                      if not math.isnan(f["doi"]) else "NaN")
             print(f"━━ GOM-C β STAT: {f['token']}|n={f['n']}|q2={q2_s}|px={px_s}|doi={doi_s}")
+        for s in sorted(gomc_beta_suppressed, key=lambda x: x["token"]):
+            print(f"━━ GOM-C β SUPP: {s['token']}|cooldown={s['days_remaining']}d"
+                  f"|first={s['first_fire']}")
     else:
         print(f"\n━━ GOM-C β: 0 fires")
 

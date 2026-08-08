@@ -43,13 +43,15 @@ def nan_s(v, fmt=".4f"):
 def bool_s(v): return "T" if v else "."
 
 def c2_quiet_check(days, i):
+    # 2×neutral per-interval: thr = max(2×rate_min,1e-4) × (interval_h/4)
+    # 4h→1e-4, 8h→2e-4, 1h→2.5e-5
     f_avg = days[i].get("funding_avg", float("nan"))
     if math.isnan(f_avg): return False
     interval_h = days[i].get("_interval_h", 8)
-    f_avg_8h = f_avg * interval_h / 8
     fp = cfg.get("funding_pinned", {})
-    c2_thr = max(2.0 * fp.get("rate_min", 4e-5), 1e-4)
-    return f_avg_8h <= c2_thr
+    c2_thr_8h = max(2.0 * fp.get("rate_min", 4e-5), 1e-4)
+    c2_thr = c2_thr_8h * interval_h / 4   # 2×neutral: 4h→1e-4, 8h→2e-4, 1h→2.5e-5
+    return f_avg <= c2_thr
 
 def c3_lax(days, i):
     tkr = days[i].get("taker_buy_pct", float("nan"))

@@ -232,6 +232,7 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
     smissing_hist_n:  int = 0
     gomc_beta_line: str = ""
     gomc_beta_stats: list[str] = []
+    gomc_beta_supp:  list[str] = []
 
     for line in lines:
         if "OPEN CHAINS" in line:
@@ -263,6 +264,9 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
             continue
         if line.startswith("━━ GOM-C β STAT:"):
             gomc_beta_stats.append(line.replace("━━ GOM-C β STAT:", "").strip())
+            continue
+        if line.startswith("━━ GOM-C β SUPP:"):
+            gomc_beta_supp.append(line.replace("━━ GOM-C β SUPP:", "").strip())
             continue
         if "━━ GOM-C β" in line:
             in_open = False
@@ -342,12 +346,17 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
         msg_lines.append(f"S-MISS hist: {smissing_hist_n} (short history, normal)")
 
     # GOM-C CAMPAIGN-TRACK section (D4: tách riêng, header, cột rõ ràng)
-    if gomc_beta_line and "0 fires" not in gomc_beta_line:
+    if (gomc_beta_line and "0 fires" not in gomc_beta_line) or gomc_beta_supp:
         import re as _re2
-        m_ct = _re2.search(r"\((\d+) fires", gomc_beta_line)
+        m_ct = _re2.search(r"\((\d+) fires", gomc_beta_line) if gomc_beta_line else None
         ct = int(m_ct.group(1)) if m_ct else 0
+        ct_supp = len(gomc_beta_supp)
         msg_lines.append(f"")
-        msg_lines.append(f"CAMPAIGN-TRACK (theo doi, khong vao) [{ct}] [PROVISIONAL]:")
+        msg_lines.append(
+            f"CAMPAIGN-TRACK [{ct} fires + {ct_supp} ⏸] [PROVISIONAL]:"
+            if ct_supp else
+            f"CAMPAIGN-TRACK (theo doi, khong vao) [{ct}] [PROVISIONAL]:"
+        )
         if gomc_beta_stats:
             # Format: "TOKEN|n=N|q2=$lo-hiM|px=$P|doi=±DM [cover-drv]"
             for stat in gomc_beta_stats:
@@ -360,11 +369,19 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str) -> str:
                 doi = parts.get("doi", "NaN")
                 cvr = " [cover-drv]" if doi.startswith("-") and doi != "NaN" else ""
                 msg_lines.append(f"  {tok} n={n} Q2={q2} px={px} dOI={doi}{cvr}")
-        else:
-            m_toks = _re2.search(r"\):\s*(.+)$", gomc_beta_line)
+        elif ct > 0:
+            m_toks = _re2.search(r"\):\s*(.+)$", gomc_beta_line) if gomc_beta_line else None
             toks_str = m_toks.group(1).strip() if m_toks else ""
             for ct_tok in toks_str.split():
-                msg_lines.append(f"  {ct_tok}")
+                if not ct_tok.startswith("⏸"):
+                    msg_lines.append(f"  {ct_tok}")
+        for supp_raw in gomc_beta_supp:
+            parts_s = {p.split("=")[0]: p.split("=", 1)[1]
+                       for p in supp_raw.split("|") if "=" in p}
+            tok_s  = supp_raw.split("|")[0]
+            cd_s   = parts_s.get("cooldown", "?")
+            first_s = parts_s.get("first", "?")[-5:]  # MM-DD
+            msg_lines.append(f"  ⏸ {tok_s} cooldown {cd_s} (first-fire {first_s})")
 
     # Closed chains (60d window)
     closed_sec = _closed_section(_state_full, _fw_base, target_date)

@@ -2,6 +2,46 @@
 
 ---
 
+## SESSION 2026-08-08 (13) — C2 2×neutral fix + TST 14d cooldown + spec v1.6
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### C2 double-normalization fix
+
+**Root cause (xác nhận session 12):** Deployed 1×neutral code so raw `f_avg` với threshold đã scale xuống: `c2_thr = 1e-4 × (interval_h/8) = 5e-5` cho 4h tokens. CYS: f_avg_raw=7.52e-5 > 5e-5 → false block. Nhưng display hiển thị `f8h = f_avg × 4/8 = 3.76e-5`. Discrepancy 2× = double-normalization conceptual bug.
+
+**Operator quyết định:** 2×neutral = `c2_thr = max(2×rate_min,1e-4) × interval_h / 4`. Bảng: 4h→1e-4, 8h→2e-4, 1h→2.5e-5. Phục hồi threshold đúng cho 4h tokens.
+
+**Files sửa:**
+- `scripts/gom_scan.py` `_gomc_beta_check()`: `/8` → `/4`, update comment + add cooldown check
+- `_triage_inner.py` `c2_quiet_check()`: `/8` → `/4`
+
+### TST 14d supp cooldown
+
+**Operator quyết định:** GOM-C inherits 14d cooldown from-first-fire giống GOM-B §8.4(i). TST first supp_dq fire = 08-04 (funding_neg_div — price flat + funding âm). Blocked đến 08-17 (clear 08-18).
+
+**Implement:**
+- `_gomc_beta_check(check_cooldown=True)`: backward scan j ∈ range(max(0,i-13), i) — any supp_dq → return False
+- `_gomc_c_cooldown_info()`: helper tìm first-fire + tính cooldown remaining
+- `run_daily()`: `gomc_beta_suppressed: list[dict]` — collect tokens trong cooldown nhưng pass base conditions
+- Output: `━━ GOM-C β SUPP: TOKEN|cooldown=Nd|first=YYYY-MM-DD`
+- `run_gom_daily.py`: parse SUPP lines → `⏸ TOKEN cooldown Nd (first-fire MM-DD)` trong CAMPAIGN-TRACK
+
+### Probe kết quả (VPS --daily 2026-08-07)
+
+```
+GOM-C β (8 fires + 1 ⏸): AVA COOKIE CYS GRIFFAIN GTC MAVIA NOM TUT  ⏸TST
+SUPP: TST|cooldown=11d|first=2026-08-04
+```
+
+Kỳ vọng = thực tế ✓ (operator expected 8 fires, TST ⏸)
+
+### Spec v1.5 → v1.6
+
+C2 2×neutral formula, GOM-C 14d cooldown, §9 conformance update. Deployed.
+
+---
+
 ## SESSION 2026-08-08 (12) — D1-D5: spec-drift sync + interval normalize + triage
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
