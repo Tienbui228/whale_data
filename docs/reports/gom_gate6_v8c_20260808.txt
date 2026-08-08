@@ -1,0 +1,154 @@
+=== GATE v8c — COMPLETE (tat ca row) 2026-08-08 ===
+Generated: 2026-08-08T09:30:55Z
+State: gom_state_v8.json  target=2026-08-07  code=8edc053
+Formula A: A1 AND A2 AND A3 AND (A4 OR A5)
+  A4=d_pos_3d>=0 OR pos_rerate  A5=oi_cycle_pos<=0.5 rolling 30d
+========================================================================
+
+GATE v8c — COMPLETE TABLE
+#    Token        Episode                   Result                                                      
+---------------------------------------------------------------------------------------------------------
+1    _FORM        gom_a_fire                skip
+     Note: code-level formula check per spec v1.7
+
+2    _FORM        gom_b_fire                skip
+     Note: code-level formula check
+
+3    BANK         open                      PASS* (07-04 fw; A4 d_pos_3d fires earlier than calib 07-12)
+     Note: A4 new: d_pos_3d>=0 OR pos_rerate; fw data opens 07-04 vs calib 07-12 (+8d diverge)
+
+4    BANK         chapter                   PASS (crowd_flush 07-04 -> chapter 2 same day)
+     Note: hist ch1: 07-04->07-04 Q1=$0; ch2 starts 07-04
+
+5    BANK         close-iv                  FAIL (gom_gap>2d 07-14 — retro-tag QUALIFIES: 07-16 drop 47% (<=2d gap))
+     Note: fw: chain exhausts (d_pos_3d<0 after peak 07-04) -> gap close. RETRO-TAG PROPOSAL: 47% drop on 07-16 within 2d -> [gap->chuyen pha (retro 07-16)]. Awaiting operator sign-off one line.
+
+6    TAG          open                      FAIL (post_climax 07-08 cooldown covers A2-pass window; after 07-21 A2>1.1 again)
+     Note: fw: A2 PASSES 07-12->07-19 (avg5=1.06->1.08) — SAME DATA as xlsx. But post_climax fires 07-08 -> 14d cooldown 07-08->07-21 covers exactly the pass window. After 07-21: A2 avg5>1.1 -> chain never opens. Data sources fw CSV = xlsx CONFIRMED (no bug-col, no an-L25).
+
+7    BAS          supp+open-after           PASS (dq_ep=07-02 dq_end=07-15; no chain open in fw period)
+     Note: BAS: post_climax fires 07-02 (dq_end=07-15). No chain opened at all in 60d window. open-after = no spurious fire after cooldown (N/A — no signal conditions met post-07-15 either).
+
+8    BTW          SUPP                      FAIL (DIVERGE: fw BTW opens 07-03 — post_climax 06-21 NOT in fw data)
+     Note: fw: BTW dq_ep=07-18 (first suppressor in fw). No 06-21 post_climax recorded -> chain opens 07-03 (within expected suppression window). Calib data (CASE_BTW.xlsx) has different 06-21 snapshot vs fw CSV. Data-source diverge — not logic bug.
+
+9    BULLA        open                      PASS* (opens 07-11 (+3d diverge from calib 07-08))
+     Note: B1 hedge_structure possibly stricter on fw data. Chain opens 07-11, closes 07-17 gom_gap>2d.
+
+10   TUT          chapter                   FAIL (no GOM-A/B chain in fw — same as calib FAIL; GOM-C fires instead (see C1))
+     Note: TUT never meets GOM-A/B conditions in fw period. GOM-C stateless fires 07-13/14/15/23. A2 context for TUT: not yet probed.
+
+11   IDOL         open                      FAIL (A2 avg5(gLSR)>1.1 throughout fw period 07-06->07-20 (data confirmed = xlsx))
+     Note: IDOL fw lsr_global_r 07-06->20: 1.12,1.38,1.75,2.01,2.10,2.14,1.76,1.24,1.22,1.48,1.47,1.50,1.28,1.18,1.08. avg5 NEVER <=1.1 in this window. fw CSV = xlsx CONFIRMED. No bug-col. IDOL FAIL reason holds.
+
+12   AKE          SUPP                      PASS* (dq fires 07-24 fw (expected 07-08 calib, +16d date-shift); no chain open)
+     Note: fw: AKE dq_ep=07-24 dq_end=08-06. Suppressor fires (date differs). Functional PASS: decay/supp blocks chain. [WARN data-cutoff retained from v8].
+
+Z1   ZBT          open                      PASS* (opens 07-05 (fw data starts late — ZBT delisted))
+     Note: ZBT fw data starts 07-05 (not 07-01). Z1 carried status superseded by fw data.
+
+Z2   ZBT          close-iv                  PASS* (pos_r_drop:33% on 07-14 fw (expected 07-02; date-shift from late fw start))
+     Note: fw: closes 07-14 pos_r_drop:33% from peak 4.24. Rule-iv functional PASS.
+
+P    PARTI        open+close-iv             PASS (opens 07-07 (<09/07), closes 07-11 pos_r_drop:59% — Bug #9 RESOLVED)
+     Note: A4 d_pos_3d>=0 (no hedge_structure required) -> PARTI fires from 07-03. Opens 07-07 (<09/07 threshold). Closes 07-11 pos_r_drop:59% from peak 3.65. PASS.
+
+T2   TAG          wrong-side                PASS (no chain open in fw period; dq 07-08->07-21 then A2>1.1 post-cooldown)
+     Note: TAG has no open in fw. 07-28->31 period: A2 fails, no GOM fire. PASS.
+
+PW   POWER        b-pos                     PASS (OPEN 08-02; A3+A4+A5+B1+B3+B4 signals)
+     Note: POWER open 08-02, n_days=4 (08-02->08-07), Q1=$145K, peak=1.10.
+
+CL   CLO          supp-neg                  PASS (dq_ep=07-27 dq_end=08-09; no chain open)
+     Note: CLO suppressed from 07-27. No chain history.
+
+C1   TUT          GOM-C fire 07-13+07-21->23 PASS (fires 07-13 ✓ 07-14 07-15, 07-23 ✓ (07-21/22: d_pos_3d<0 -> no fire))
+     Note: Per-date probe: FIRE on 07-13,07-14,07-15,07-23. Gate expects 07-13 and within 07-21->23: 07-23 ✓.
+
+C2   BULLA        GOM-C block 07-17->21     PASS (all False 07-17->21 (probe confirmed))
+     Note: BULLA chain closes gom_gap 07-17. GOM-C check (no cooldown) = False all 5 days.
+
+C3   BANK         d_pos<0 post-close        PASS (dq_ep=07-21; d_pos_3d<0 after close -> GOM-C blocked)
+     Note: BANK closes 07-14 (fw). dq fires 07-21. No GOM-C after chain close.
+
+C4   BANANAS31    negative test             PENDING 15/08 — no fw data before 08-01
+     Note: BANANAS31 opens 08-01, closes 08-06 gom_gap>2d. GOM-C negative test for earlier period.
+
+C5   COOKIE/CYS/TST live 08-07                PASS (COOKIE ✓ CYS ✓; TST=cooldown(first 08-04, clear 08-18))
+     Note: From scan output 08-07.
+
+---------------------------------------------------------------------------------------------------------
+TOTAL: PASS=10  PASS*=5  FAIL=5  PENDING=1  (skip=2)
+
+KEY CORRECTIONS vs v8b:
+  + Added missing rows: IDOL #11 (FAIL), BTW #8 (FAIL/DIVERGE), TUT #10 (FAIL)
+  + TAG open: corrected failure reason — not 'A2 fails throughout' but
+    'post_climax 07-08 cooldown covers the A2-pass window (07-12->07-19)'
+  + fw CSV lsr_global_r TAG = xlsx lsr_global_r CONFIRMED (no bug-col, no an-L25)
+  + IDOL: same confirmation — A2 fails throughout 07-06->07-20, fw=xlsx
+  + C1 TUT: PENDING->PASS (probe: fires 07-13/07-23)
+  + C2 BULLA: confirmed PASS (probe: no GOM-C 07-17->21)
+  + BANK close-iv: retro-tag QUALIFIES (07-16, drop 47%, gap 2d <=3)
+    STATUS: awaiting operator sign-off one line before implementing display-only tag
+
+========================================================================
+BANG 3d CROSS-CHECK — doi chieu so vs so operator
+------------------------------------------------------------------------
+TOKEN          scan_status       khop? ghi chu
+--------------------------------------------------------------------------------
+BANK           closed 07-14         OK  chain 07-04->07-14 gom_gap; dq 07-21; retro-tag proposal 07-16
+TAG            supp 07-08           OK  post_climax 07-08 cooldown; A2 passes 07-12->07-19 inside cooldown
+BAS            supp 07-02           OK  post_climax 07-02->07-15; no open
+BTW            open 07-03         LECH  fw BTW opens 07-03 (no 06-21 post_climax in fw data vs calib)
+IDOL           no state             OK  A2 avg5 gLSR>1.1 throughout; no chain; same as calib
+TUT            no state             OK  GOM-C fires 07-13/23 (stateless); no GOM-A/B chain
+AKE            supp 07-24          OK*  date-shift 07-24 vs calib 07-08; functional PASS
+BULLA          closed 07-17        OK*  opens 07-11 vs calib 07-08 (+3d diverge)
+PARTI          closed 07-11         OK  PASS — opens 07-07, closes 07-11 rule-iv 59% (Bug #9 RESOLVED)
+ZBT            closed 07-14        OK*  Z2 pos_r_drop:33% 07-14 vs calib 07-02 (late fw start)
+POWER          OPEN 08-02           OK  b-positive open 08-02, n_days=4
+CLO            supp 07-27           OK  dq 07-27->08-09, no open
+COOKIE         closed 08-06         OK  GOM-C fires 08-07 (stateless)
+CYS            no state             OK  GOM-C fires 08-07 (stateless); no GOM-A/B
+TST            supp 08-04           OK  GOM-C cooldown first-fire 08-04, clear 08-18
+BANANAS31      closed 08-06         OK  opens 08-01, closes 08-06 gom_gap>2d; C4 PENDING 15/08
+
+Khop=OK: scan khop calib expectation | OK*=diverge date nhung logic dung | LECH=data source diverge
+
+========================================================================
+BREAKDOWN 5 OPEN CHAINS Q1 LON NHAT (08-07) — A/B signals on open date
+------------------------------------------------------------------------
+
+==================================================
+FF  open=2026-08-01  Q1=$1,988,262  peak_pos_r=3.27
+  GOM-A: A1=True A2=True A3=True A4=True A5=False -> FIRE=True
+  GOM-B: B1=False B2=False B3=False B4=True -> FIRE=False
+  d_pos_3d=+0.0625  oi_cycle_pos=0.7284  lsr_pos=3.1089
+
+==================================================
+ROBO  open=2026-08-03  Q1=$1,369,827  peak_pos_r=3.77
+  GOM-A: A1=True A2=True A3=True A4=True A5=True -> FIRE=True
+  GOM-B: B1=False B2=False B3=False B4=True -> FIRE=False
+  d_pos_3d=+1.2345  oi_cycle_pos=0.2384  lsr_pos=3.4094
+
+==================================================
+APR  open=2026-08-06  Q1=$527,899  peak_pos_r=1.79
+  GOM-A: A1=True A2=True A3=True A4=False A5=True -> FIRE=True
+  GOM-B: B1=False B2=False B3=False B4=True -> FIRE=False
+  d_pos_3d=-0.0355  oi_cycle_pos=0.1982  lsr_pos=1.7866
+
+==================================================
+HUMA  open=2026-08-04  Q1=$412,595  peak_pos_r=7.81
+  GOM-A: A1=True A2=True A3=True A4=True A5=True -> FIRE=True
+  GOM-B: B1=False B2=True B3=True B4=True -> FIRE=False
+  d_pos_3d=+0.2429  oi_cycle_pos=0.2008  lsr_pos=7.0763
+
+==================================================
+ZEST  open=2026-08-06  Q1=$154,399  peak_pos_r=1.14
+  GOM-A: A1=True A2=True A3=True A4=True A5=False -> FIRE=True
+  GOM-B: B1=False B2=False B3=False B4=True -> FIRE=False
+  d_pos_3d=+0.1133  oi_cycle_pos=0.8542  lsr_pos=1.1054
+
+========================================================================
+Note FF: was previously 'dead under structural-compose'. With new A4 (d_pos_3d>=0),
+FF opens if A1+A2+A3+A4 pass without needing hedge_structure. Check B-signals above.

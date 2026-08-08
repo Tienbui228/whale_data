@@ -2,6 +2,123 @@
 
 ---
 
+## SESSION 2026-08-08 (16) — XPIN CASE REFRESH (ĐANG CHỜ ĐỌC)
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Trạng thái:** Refresh DAILY + schema + BAPI done, DỪNG chờ snap #2 + operator đọc.
+
+### Việc đã làm
+
+| Hạng mục | Kết quả |
+|---|---|
+| X-0 Đọc sổ cũ | DAILY 41 cols, last 08-05 (data_bad=1), schema thiếu 11 cols |
+| X-1 LSR persist | FAPI 404 (permanent) → freshwatch Jun+Jul+Aug: 62 dates, 30/30 pos/acc/gLSR |
+| X-2 Schema update | 11 cột mới thêm (gom_A/B, vol_alpha, taker_alpha, spot_perp_ratio, depth_ratio, ret_7d/30d, vol_vs_med14, lsr_taker_r, ret_atl) |
+| X-2 UPDATE row 330 | 08-05: vol $599K→$2.55M, f_n 2→6, data_bad 1→0 |
+| X-2 APPEND 08-06 | px=0.001624, vol=$2.27M, ret=+2.4%, gLSR=2.447, div=0.876 |
+| X-2 APPEND 08-07 | px=0.001739, vol=$6.05M (2.49×med14), ret=+7.1%, gLSR=2.521, div=0.854 |
+| X-2 CASE sheet | Updated: gLSR=2.521, OI=$13.0M, px=0.001739, px_vs_ath=-83.1% |
+| X-2 TRIGGERS | 6 triggers cập nhật 08/08/2026 |
+| X-2 EVENTS | Row 24 appended |
+| X-3 A.5 | div_avg3 -18.7%/28d, gLSR +37.7%/28d, vol_vs_m14 +2.6%/28d |
+| X-3 Trigger-check | T1: 0/4 met; T3 gLSR cần -52.4%; T2 div cần +75.6% |
+| X-4 Depth snap #1 | 09:18 UTC, mid=0.001699, bid±2%=$44,772, ask±2%=$16,348, ratio=2.74 (bid-heavy) |
+| X-4 Depth snap #2 | MISSING — CẦN ≥13:18 UTC |
+| X-5 Contract | PASS (BAPI+alpha_id_map+CASE 3 sources); holders=69,247 (live) |
+| X-5 BscScan | NOTOK (deprecated V1) |
+| X-5 Operator checklist | 5 mục: unlock, top holders, exchange balance, BitMart wash, Nansen |
+| X-6 Cross-ref | FW 62 rows; gom_state not found locally; 0 XPIN cross-mentions |
+| X-7 Sanity | OVERALL PASS (4/4) |
+| _refresh_xpin_20260808.md | Report đầy đủ viết xong |
+
+### Số key (08-07)
+
+| Metric | Giá trị |
+|---|---|
+| px_avg | 0.001739 (+7.1% ngày) |
+| vol_perp | $6,048,619 (2.49× med14) |
+| taker | 46.6% (sell-leaning) |
+| gLSR | 2.521 (NEW PEAK 30d) |
+| pos_r | 1.867 |
+| acc_r | 2.186 (+24% vs 28d) |
+| div_raw | 0.854 (inverted) |
+| OI | $13,001,000 |
+| depth ratio | 2.74 bid/ask (bid-heavy, snap #1) |
+
+### Schema thay đổi
+
+- 41 cols → 52 cols (11 thêm)
+- Cột cũ giữ nguyên tên (px_avg, vol_perp_usd, taker_buy_pct... — XPIN tiêu chuẩn riêng trước build_case.py)
+- New cols: gom_A/B=False toàn window (gLSR>>1.1, div_ratio>>0.5)
+
+### MISSING
+
+- M-1: Depth snap #2 (CẦN ≥13:18 UTC 08/08)
+- M-2: Spot vol 08-06/08-07 (GeckoTerminal 403)
+- M-3: BscScan holders/exchange balance (NOTOK)
+- M-4: Nansen (LOCKED) → CẦN OPERATOR
+- M-5: taker_lsr 30d (FAPI 404 permanent)
+- M-6: Unlock schedule (PENDING OPERATOR)
+- M-7: BitMart wash confirm (PENDING OPERATOR)
+- M-8: kho wallet ID (PENDING OPERATOR)
+
+### Kỷ luật session
+
+- L-21: Trim 08-08 partial candle → stop at 08-07 ✓
+- L-25: Nguồn fw_aug canonical, tách rõ từng dòng ✓
+- L-34: Backup CASE_XPIN_bak_20260808_091552.xlsx trước khi ghi ✓
+- L-38: LSR persist đầu phiên (X-1 chạy trước) ✓
+- L-28: Contract PASS 3 sources ✓
+- L-48: taker_alpha=ABSTAIN ✓
+
+---
+
+## SESSION 2026-08-08 (17) — GATE V8C: complete table + probes
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Trạng thái:** v8c gate report hoàn chỉnh. Chờ operator ký BANK retro-tag + approve trước BƯỚC 4.
+
+### Việc đã làm
+
+| Hạng mục | Kết quả |
+|---|---|
+| BƯỚC 0 A4/A5 fix | A4=d_pos_3d≥0 OR pos_rerate; A5=oi_cycle_pos≤0.5. Commit 8edc053 |
+| BƯỚC 1 rescan | 139 symbols, 16 open/55 closed/44 suppressed → gom_state_v8.json |
+| Probe TAG gLSR | fw CSV = xlsx IDENTICAL. A2 PASSES 07-12→07-19 (avg5=1.06→1.08) |
+| Probe TAG supp | post_climax fires 07-08 → cooldown 07-08→07-21 covers pass window |
+| Probe IDOL gLSR | avg5 gLSR >1.1 throughout 07-06→07-20; fw=xlsx confirmed |
+| Probe C1 TUT | FIRE 07-13, 07-14, 07-15, 07-23 → C1=PASS |
+| Probe BANK retro | peak=3.8142, 07-16 drop=47%, gap=2d ≤3 → QUALIFIES |
+| Probe BULLA C2 | GOM-C False all 07-17→21 → C2=PASS |
+| Gate v8c report | docs/reports/gom_gate6_v8c_20260808.txt — ĐỦ ROW |
+
+### Số key v8c
+
+| | |
+|---|---|
+| PASS | 10 |
+| PASS* | 5 |
+| FAIL | 5 (BANK close-iv, TAG open, BTW SUPP, TUT chapter, IDOL open) |
+| PENDING | 1 (C4 BANANAS31 15/08) |
+
+### TAG failure reason (đã sửa từ v8b)
+
+- v8b sai: "A2 fails throughout" 
+- v8c đúng: A2 PASSES 07-12→07-19 (avg5=1.06) nhưng post_climax 07-08 → cooldown 07-08→07-21 covers exactly the pass window. Sau 07-21: avg5>1.1 → chain không mở được. fw=xlsx confirmed, no bug-col.
+
+### BANK retro-tag proposal
+
+- peak_pos_r=3.8142 (07-04), 07-16 pos_r=2.02 → drop=47%, gap=2d ≤3d → QUALIFIES
+- Đề xuất display-only: `[gap → chuyển pha phân phối (retro 07-16)]`
+- **CHỜ OPERATOR KÝ MỘT DÒNG** trước khi implement vào gom_scan.py + §6 changelog
+
+### SWAP STATE (BƯỚC 4)
+
+- HOLD — chờ v8c operator approve + TAG analysis confirm
+- Sau đó: SCP gom_state_v8.json lên VPS (explicit step)
+
+---
+
 ## SESSION 2026-08-08 (14) — TRẢ NỢ 1-7: debt repayment session
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
