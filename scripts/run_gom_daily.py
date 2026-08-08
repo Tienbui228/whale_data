@@ -166,7 +166,18 @@ def _closed_section(state: dict, fw_base: set, target_date: str) -> str:
     if not closed:
         return ""
 
-    closed.sort(key=lambda x: x[1].get("Q1_cum_usd", 0), reverse=True)
+    def _cat(ch: dict) -> str:
+        reason_raw = ch.get("close_reason", "")
+        if ch.get("close_note") == "chuyển pha phân phối" or "pos_r_drop" in reason_raw:
+            return "rule-iv"
+        if "suppressor" in reason_raw or "dq_cooldown" in reason_raw:
+            return "supp"
+        return "gap"
+
+    # Sort: rule-iv first (bất kể Q1) — "gom xong rồi CHUYỂN PHA" là dòng anh cần thấy nhất
+    # Within each category: sort by Q1 desc (seat-rotation tokens have low Q1 but still rule-iv)
+    _cat_order = {"rule-iv": 0, "supp": 1, "gap": 2}
+    closed.sort(key=lambda x: (_cat_order[_cat(x[1])], -x[1].get("Q1_cum_usd", 0)))
     closed = closed[:15]
 
     rows = ["", "CHƯƠNG ĐÃ ĐÓNG (60d):"]
@@ -179,14 +190,17 @@ def _closed_section(state: dict, fw_base: set, target_date: str) -> str:
         vden  = ch.get("vwap_den", 0.0)
         vwap  = vnum / vden if vden > 0 else math.nan
         chp   = ch.get("chapter", 1)
+        cat   = _cat(ch)
 
-        reason_raw = ch.get("close_reason", "")
-        if ch.get("close_note") == "chuyển pha phân phối" or "pos_r_drop" in reason_raw:
-            cat = "rule-iv"
-        elif "suppressor" in reason_raw or "dq_cooldown" in reason_raw:
-            cat = "supp"
+        # peak_pos_r — proxy for "bao nhiêu long đã build vào"
+        peak_pr = ch.get("peak_pos_r", math.nan)
+        pr_s = f" pr={peak_pr:.2f}" if not math.isnan(peak_pr) else ""
+
+        # Build-type: seat-rotation (Q1 nhỏ vì OI flat, nhưng pos_r leo) vs Q1-driven
+        if not math.isnan(peak_pr) and peak_pr > 1.4 and q1 < 80_000:
+            build_s = " [seat-rot]"
         else:
-            cat = "gap"
+            build_s = ""
 
         q1s    = f"${q1/1_000:.0f}k" if q1 >= 1_000 else "$0"
         vwap_s = f"${vwap:.5f}" if not math.isnan(vwap) else "N/A"
@@ -200,7 +214,7 @@ def _closed_section(state: dict, fw_base: set, target_date: str) -> str:
                 px_vs = f" {arrow}{abs(pct):.1f}%vsVWAP"
 
         rows.append(
-            f"  {tok} ch{chp} {start}→{close} n={nd} Q1={q1s} VWAP={vwap_s} [{cat}]{px_vs}"
+            f"  {tok} ch{chp} {start}→{close} n={nd} Q1={q1s}{pr_s} VWAP={vwap_s} [{cat}]{build_s}{px_vs}"
         )
 
     return "\n".join(rows)

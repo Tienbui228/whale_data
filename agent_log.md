@@ -2,6 +2,83 @@
 
 ---
 
+## SESSION 2026-08-08 (9) — Probe TUT/ZBT/IDOL + GOM-C đề xuất + Display fix v1.5
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### BANK/PARTI vắng "CHƯƠNG ĐÃ ĐÓNG" — phán xử
+
+**BANK:** Có trong state.json. `close_date: 2026-07-16`, `pos_r_drop:32%_from_peak:2.97`, `Q1=$0`. Lý do vắng: sort Q1 desc → Q1=$0 bị đẩy xuống cuối top-15. **Fix (a): sort rule-iv lên đầu → BANK lên #1.**
+
+**PARTI:** Có trong state.json nhưng KHÔNG có chain. State chỉ chứa `dq_episode_start: 2026-07-11`, `dq_cooldown_end: 2026-07-24`. Suppressor bắt trước khi chain mở. `close_date: ""` → `_closed_section` bỏ qua (đúng — chain chưa mở). Nếu operator kỳ vọng PARTI có chain, cần re-probe verbose 07-01→07-15.
+
+**Fix (a) + (b) — deploy 08/08:**
+- Sort: rule-iv first (bất kể Q1), rồi supp, rồi gap; trong mỗi nhóm sort Q1 desc
+- Thêm cột: `pr=X.XX` (peak_pos_r) + `[seat-rot]` tag khi Q1<$80k AND pr>1.4
+- BANK `[rule-iv] [seat-rot] pr=2.97` hiện ngay dòng 1
+
+### Probe TUT/ZBT/IDOL (verbose per-day)
+
+#### TUT (07-01→07-20) — ÁN GOM-C
+
+**Per-day scan (production data):**
+
+| Date | A1 | A2 | A3 | B1 | B2 | B3 | B4 | Note |
+|---|---|---|---|---|---|---|---|---|
+| 07-01 | . | . | . | . | . | . | T | no-chain |
+| 07-03 | . | . | T | . | T | . | T | B2+B4 sống, B1 chặn |
+| 07-11 | . | . | T | . | T | . | T | SG+FP sống, không bật |
+| 07-19 | . | . | T | . | T | T | T | B2+B3+B4, vẫn B1=F |
+| 07-20 | . | . | T | . | T | T | T | same |
+
+**Kết luận TUT: FALSE-NEGATIVE CÓ HỆ THỐNG.**
+- A1/A2=False toàn bộ: TUT đang trong stealth grind — crowd IS long (gLSR cao) → `avg5(gLSR) > 1.1` → A1/A2 chặn. GOM-A thiết kế để bắt crowd đảo chiều, không bắt được crowd-already-long tích lũy thêm.
+- B1=False toàn bộ: stealth grind không có acute 7-day all-hedge. Tích lũy từ từ ≠ hedge cứng.
+- **Không ngày nào bật GOM** trong pha SG+FP sống 10+ ngày.
+- Proposal: `proposals/gom_c_stealth_20260808.md` (chờ operator ký)
+
+#### ZBT (07-15→07-31) — SUPPRESSOR CHẶN, KHÔNG PHẢI NaN GAP
+
+| Date | A1 | A2 | A3 | B1 | Note |
+|---|---|---|---|---|---|
+| 07-15→07-23 | T | T | T | . | DQ:post_climax mỗi ngày |
+| 07-24/25/26 | - | - | - | - | SUSPECT (NaN gap) |
+| 07-27→07-31 | T | T | . | . | DQ:post_climax+slope_dq |
+
+**Kết luận ZBT:**
+- NaN gap 07-24/25/26 KHÔNG phải lý do. Suppressor `post_climax` chặn liên tục từ 07-15→07-31.
+- A1=T, A2=T, A3=T (điều kiện đủ cấu trúc) nhưng DQ override hết.
+- Hồi-2 không mở vì ZBT tiếp tục phát tín hiệu phân phối sau chain-1 đóng rule-iv (07-02). Đây là ĐÚNG spec — ZBT trong pha phân phối, suppressor chặn chính xác.
+- Gate kỳ vọng "bật hồi-2 từ ~20/07" là sai kỳ vọng, không phải lỗ code.
+
+#### IDOL (07-25→08-01) — CONFIRMED, không lỗ mới
+
+| Date | A1 | A2 | A3 | B1 | Note |
+|---|---|---|---|---|---|
+| 07-25/26 | - | - | - | - | SUSPECT |
+| 07-27/28 | . | . | T | . | Không đủ điều kiện |
+| 07-29 | . | . | . | . | DQ:wrong_side |
+| 07-30/31 | . | . | . | . | nothing |
+| 08-01 | . | . | T | . | nothing |
+
+**Kết luận IDOL:** Xác nhận "bật muộn/không" — đúng gate note. Không lỗ mới. IDOL build 4 ngày quá nhanh, post-build window không trigger.
+
+### TG Report v1.6 sau display fix (02-08/08, 03:00 UTC, data 2026-08-07)
+
+```
+CHƯƠNG ĐÃ ĐÓNG (60d):
+  BANK ch1 07-12→07-16 n=0 Q1=$0 pr=2.97 VWAP=N/A [rule-iv] [seat-rot]
+  TOWNS ch2 07-15→07-18 n=0 Q1=$0 pr=1.84 VWAP=N/A [rule-iv] [seat-rot]
+  TRADOOR ch1 07-03→07-07 n=3 Q1=$96k pr=1.59 VWAP=$0.40373 [supp] ↑65.1%vsVWAP
+  TOSHI ch1 07-10→07-18 n=4 Q1=$46k pr=1.04 VWAP=$0.00011 [supp] ↓6.6%vsVWAP
+  CROSS ch1 07-06→07-10 n=4 Q1=$43k pr=1.02 VWAP=$0.07908 [supp] ↑26.9%vsVWAP
+  ... (15 total, rule-iv → supp → gap)
+```
+
+BANK xuất hiện dòng 1. PARTI vắng vì không có close_date (chain chưa từng mở trên data production).
+
+---
+
 ## SESSION 2026-08-08 (8) — GOM v1.4 Fix-Pack: NaN fail-closed + Conformance + 4.2-v3 prep
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
