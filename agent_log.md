@@ -2,6 +2,42 @@
 
 ---
 
+## SESSION 2026-08-08 (19) — BUG FIX: BANK/Q2-gate/fw139
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Trạng thái:** 3 bugs đã fix + commit 4f4bb31. Bug 4 = explanation only (no code change).
+
+### Việc đã làm
+
+| Bug | Mô tả | Fix | Kết quả |
+|---|---|---|---|
+| Bug 1 | BANK biến mất khỏi CHƯƠNG ĐÃ ĐÓNG | `_cat()` thêm `ch.get("retro_tag")` → return "rule-iv" | BANK nay sort tier 0, luôn hiện |
+| Bug 2 | Q2 in sai luật ký (CYS âm, TUT ngoài acc≤1) | Gate `div_raw≥3 AND lsr_acc≤1` trước khi tính Q2; fail → "N/A [ngoài heuristic]" | COOKIE/CYS/TUT cả ba gate=False → N/A |
+| Bug 3 | Label `fw137@139` (lần nhắc thứ ba) | `fw137@139` → `fw139@139` tại run_gom_daily.py L324 | Done |
+
+### Bug 4 explanation (no code change)
+
+ARIA/FHE/TRADOOR GOM-C miss trên 08-07 = **C2 funding filter** chính xác, không phải bug:
+- ARIA: f_avg=1.21e-4 > thr=1.00e-4
+- FHE: f_avg=1.08e-4 > thr=1.00e-4
+- TRADOOR: f_avg=1.83e-4 > thr=1.00e-4
+- C1/C3/d_pos/C4/cooldown đều PASS cho cả ba.
+- TRADOOR hiện ở closed-[supp] = chain cũ close 07-07 (suppressor:decay). dq_episode 07-23→08-05 là episode riêng, cooldown hết trước 08-07. Không có suppressor mới nào 08-07.
+- Verdict: C2 đúng đắn — 08-07 là ngày funding cao market-wide. Expectation "6 fires" sai ngày.
+
+### Số key
+
+| | |
+|---|---|
+| Files changed | scripts/gom_scan.py, scripts/run_gom_daily.py |
+| Commit | 4f4bb31 |
+| Verify probe | _probe_bug1_bug2_verify_20260808.py — VPS PASS |
+| BANK _cat OLD→NEW | gap → rule-iv ✓ |
+| Q2 gate 08-07 | div_raw: COOKIE=0.65, CYS=1.94, TUT=2.04 — tất cả <3 → N/A |
+| SCP VPS | run_gom_daily.py + gom_scan.py synced ✓ |
+
+---
+
 ## SESSION 2026-08-08 (16) — XPIN CASE REFRESH (ĐANG CHỜ ĐỌC)
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
