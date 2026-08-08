@@ -82,6 +82,11 @@ CHƯƠNG ĐÃ ĐÓNG (60d):
 | scripts/gom_scan.py | Bug 3: Tier 3 VWAP fallback + $0→N/A + churn-net<=0 |
 | scripts/run_gom_daily.py | Bug 1: churn-net<=0; Bug 4: header date fields; run_date param |
 
+### VERIFY — BANK VWAP delta (số tự bảo vệ)
+
+Baseline v9 in BANK VWAP=$0.03972[vw-vol]; probe 3b tuần này in $0.036984 → delta ~7%.
+**Nguyên nhân: cùng họ ZBT** (ZBT probe→v9: $0.12371→$0.12547, ~1.4%). Probe 3b chạy trước M2 addendum (vwap_t1_min_rep_frac=0.05) — lúc đó T1 rep-threshold chưa có, weight khác. Sau M2: BANK T1 không đủ rep → fallback vw-vol với weight tập con ngày ΔOI⁺ ≥ threshold → VWAP dịch nhẹ. Không phải data error, không phải join bug. Delta <10% sau thay đổi công thức = expected, chấp.
+
 ---
 
 ## SESSION 2026-08-08 (19) — BUG FIX: BANK/Q2-gate/fw139
