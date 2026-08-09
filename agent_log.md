@@ -6362,3 +6362,20 @@ gom_scan đã fire COOKIE — fire hợp lệ theo spec v1.5 không? Có ai gom 
 | Depth snap #2 | PENDING (≥05:50 UTC) |
 | FF snap #2 | PENDING (≥16:07 UTC 08-08 — check if done in prior session) |
 | Verdict | PENDING OPERATOR |
+
+---
+
+## SESSION FF addendum — depth snap #2 (2026-08-09 02:00 UTC)
+
+FF snap #2 collected 2026-08-09 02:00:19 UTC (+13h53m vs snap #1, gate ≥16:07 UTC 08-08 ✓).
+
+| Metric | Snap #1 (12:07 UTC 08-08) | Snap #2 (02:00 UTC 08-09) | Delta |
+|--------|--------------------------|--------------------------|-------|
+| mid | $0.064325 | $0.064555 | +0.36% |
+| bid ±2% | $81,907 | $77,539 | -5.3% |
+| ask ±2% | $59,410 | $51,150 | -13.9% |
+| ratio ±2% | 1.3787 | 1.5161 | +0.14 (bid↑) |
+| full book ratio | — | 1.0949 | — |
+
+Đọc: Bid-heavy maintained và ratio tăng nhẹ. Price stable +0.36%. Spread tight 0.015%.
+_collect_ff_20260808.md updated, F-5 snap #2 DONE, M-1 DONE.
