@@ -555,7 +555,14 @@ def main() -> None:
 
     # Format and send Telegram report
     report = format_tg_report(stdout, target_date, run_utc, run_date)
-    ok = tg_send(report)
+    _TG_LIMIT = 4096
+    if len(report) > _TG_LIMIT:
+        _cut = report[:_TG_LIMIT - 50].rfind("\n")
+        report_send = report[:_cut] + "\n[+overflow truncated]"
+        _log(f"tg_truncate len={len(report)}→{len(report_send)}")
+    else:
+        report_send = report
+    ok = tg_send(report_send)
 
     _log(f"tg_send={'OK' if ok else 'FAIL'}  open_chains_reported={report.count(chr(10)+'  ')}")
 

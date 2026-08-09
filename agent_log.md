@@ -82,6 +82,28 @@ CHƯƠNG ĐÃ ĐÓNG (60d):
 | scripts/gom_scan.py | Bug 3: Tier 3 VWAP fallback + $0→N/A + churn-net<=0 |
 | scripts/run_gom_daily.py | Bug 1: churn-net<=0; Bug 4: header date fields; run_date param |
 
+### MISS #1 — BASELINE V9 CRON 01:25 UTC 09/08 (root cause + fix)
+
+**Tóm tắt:** Cron fired ✓, script exit=0 ✓, nhưng TG không nhận — `tg_send=FAIL`.
+
+| Bước chẩn | Kết quả |
+|---|---|
+| Cron còn dòng? | ✓ `25 1 * * * python3 scripts/run_gom_daily.py` |
+| Cron fired? | ✓ journalctl: 01:25:01 CMD launched |
+| Script exit? | ✓ `[2026-08-09T01:25:03Z] run_complete exit=0` |
+| Code version VPS=local? | ✓ MD5 khớp cả hai file |
+| Export CSV tồn tại? | ✓ freshwatch_daily_2026-08.csv 711KB tại 01:20 |
+| TG creds .env? | ✓ TOKEN + CHAT_ID present |
+| **Root cause** | **Message 4860 chars > TG limit 4096 → sendMessage 400 → False** |
+
+36 open chains 08-08 (BTW mới vào ★7.5M) → report dài hơn bình thường.
+
+**Fix permanent:** `run_gom_daily.py` truncate tại 4096−50 chars + `[+overflow truncated]` suffix. Log thêm `tg_truncate len=X→Y`. SCP → VPS done.
+
+**Bù ngay:** `_probe_tg_resend_20260809.py` trên VPS → truncated 4860→4054, `tg_send=OK`. BTW ★$7.5M new entry.
+
+---
+
 ### VERIFY — BANK VWAP delta (số tự bảo vệ)
 
 Baseline v9 in BANK VWAP=$0.03972[vw-vol]; probe 3b tuần này in $0.036984 → delta ~7%.
