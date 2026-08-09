@@ -611,10 +611,6 @@ def main() -> None:
         err_snippet = (stderr or stdout)[:500]
         tg_error(f"gom_scan exit={result.returncode}\n{err_snippet}")
 
-    # Heartbeat
-    HB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    HB_PATH.write_text(datetime.now(timezone.utc).isoformat(), encoding="utf-8")
-
     # Format and send Telegram report (split into ≤4096-char parts; footer always last)
     report   = format_tg_report(stdout, target_date, run_utc, run_date)
     messages = _tg_split(report)
@@ -643,6 +639,10 @@ def main() -> None:
         _log("ERROR: tg deliver fail")
         print(f"ERROR: tg_send part {fail_part} failed", file=sys.stderr)
         sys.exit(1)
+
+    # Heartbeat: only written after confirmed TG delivery (C1 watchdog leg)
+    HB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    HB_PATH.write_text(datetime.now(timezone.utc).isoformat(), encoding="utf-8")
 
     print(stdout)
     if stderr:

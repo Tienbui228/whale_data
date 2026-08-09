@@ -104,6 +104,61 @@ CHƯƠNG ĐÃ ĐÓNG (60d):
 
 ---
 
+### MISS #1 ADDENDUM — 3 FIX THÊM (split-message + fail-exit + watchdog)
+
+**Vấn đề phát hiện sau fix ban đầu:**
+
+1. **Truncate là fix sai** — cắt phần cuối = cắt footer (phanh bắt buộc). Fix đúng: split 2 phần.
+2. **tg_send FAIL → exit 0 = fail-êm vi phạm L-44** ở tầng giao hàng.
+3. **Heartbeat ghi trước khi TG send** → heartbeat luôn fresh dù K3 xảy ra → watcher mù.
+
+**Fix đã deploy (c7e67cd):**
+
+| Fix | Mô tả |
+|---|---|
+| split-message | `_tg_split()`: chia tại boundary CAMPAIGN-TRACK/CHƯƠNG, footer luôn ở phần cuối |
+| fail-exit | `tg_send FAIL → ops ping ngắn + log ERROR + exit 1` |
+| heartbeat timing | Chuyển `HB_PATH.write_text()` xuống SAU `all_ok=True` (C1 watchdog leg) |
+
+**Verify 08-08:** 4860 → [2724, 2134] parts; footer (VWAP...) trong part 2 ✓
+
+**Watchdog spec:** `proposals/watchdog_3leg_20260809.md` — 3 chân (C1 deployed, C2+C3 chờ ký).
+
+### 36-VS-17 CLARIFY + BTW ★ PROFILE
+
+**36 là mis-count.** `open_chains_reported=36` đếm tất cả dòng indent trong report (bao gồm C-section, CLOSED). Actual fw139 open: 17 (08-08) vs 16 (08-07) = +1 (chỉ BTW).
+
+**3 chain mới trên fw139 08-08:** BTW ($7.5M), ORDER ($79k), AKE ($0). Market 08-08: GREEN (+1.3% median, 73 up / 32 down trong fw139). Không phải explosion đồng loạt.
+
+**BTW ★ full profile:**
+
+| Câu hỏi | Số |
+|---|---|
+| DQ episode | 07-18 (single day) |
+| DQ cooldown hết | 07-31 |
+| Chapter mở | 08-08 (8 ngày clear sau cooldown) |
+| A1,A2,A3,A4 | TRUE (4/5) |
+| A5 | FALSE |
+| gom_a_fire | TRUE |
+| B1,B2,B3 | FALSE |
+| B4 | TRUE |
+| gom_b_fire | FALSE |
+| gom_day | TRUE (A-path fire, B không đủ) |
+| struct_alive | FALSE (chapter mới, không continuation) |
+| confirm_01 | FALSE → [CONFIRM 0.1: unconfirmed] đang hiển thị ✓ |
+
+**Nguồn $7.5M Q1:** OI(08-08) − OI(08-07) = $48.815M − $41.278M = **+$7.537M một ngày**. Trong khi giá GIẢM 12% cùng ngày ($0.193 → $0.170). OI build 5 ngày liền (08-04→08-08): $14.3M → $48.8M = +$34.5M (+241%).
+
+**Đọc tín hiệu:**
+- gom_b_fire=False (B1 missing) + struct_alive=False = chương mới, chưa có structural basis. Normal cho n=1.
+- Giá xuống 12% trong ngày OI tăng $7.5M = consistent với "bẫy phân phối có phòng hộ" (calib note): shorts enter cùng longs, gross OI tăng, giá bị kéo xuống.
+- pos_r=1.639 (giảm từ 1.658 ngày trước) = longs vẫn dominate nhưng shorts đang tăng biên.
+- CONFIRM 0.1 đang hiển thị → đúng với precedent. BTW là ★ đầu tiên: hệ xử lý đúng — cờ tồn tại và không bị truncate.
+
+**Verdict tạm:** BTW chưa được phép hành động cho đến khi CONFIRM 0.1 cleared (tầng HUMAN). Theo dõi: (1) gom_b_fire có bật ngày 2 không; (2) price recover hay tiếp tục đi xuống; (3) pos_r trend.
+
+---
+
 ### VERIFY — BANK VWAP delta (số tự bảo vệ)
 
 Baseline v9 in BANK VWAP=$0.03972[vw-vol]; probe 3b tuần này in $0.036984 → delta ~7%.
