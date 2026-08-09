@@ -245,6 +245,48 @@ TST là token crowd-heavy (retail luôn heavily long). Spec A2 = "crowd chưa ex
 
 ---
 
+### R4 — TST T-1 Silent Fail Diagnosis
+
+**T-1 = 2026-07-24** (ngay truoc khi TST duoc them vao universe_master 2026-07-25).
+
+Ket luan: KHONG phai klines-None guard bug. TST don gian chua co trong universe truoc 07-25. Gom_scan khong xu ly TST tren bat ky ngay nao truoc 07-25. Khong co "silent fail" — la behavior dung.
+
+Chung minh: freshwatch CSV bat dau co TST tu 2026-05-26. universe_master timestamp = 07-25. Gap 05-26→07-24 = data ton tai nhung TST chua duoc them vao fw_filter.txt. Khong lien quan den klines-None guard bug family.
+
+### R5 — Open CASE Tokens Coverage Check
+
+| Token | Q1 | OI | Coverage (10 recent dates) | Status |
+|---|---|---|---|---|
+| ZEC | $28.4M | $236.5M | 10/10 last=08-09 | OK |
+| BTW | $7.5M | $48.8M | 10/10 last=08-09 | OK |
+| US | $2.3M | $28.7M | 10/10 last=08-09 | OK |
+| FF | $2.0M | $28.1M | 10/10 last=08-09 | OK |
+| ETC | $1.5M | $17.5M | 10/10 last=08-09 | OK |
+| ... (55 others) | various | various | 10/10 last=08-09 | OK |
+| ACX | $0 | $1.1M | **8/10 last=08-07** | MISS 08-08/09 |
+
+Total: 60 open chains, 59/60 = 10/10 coverage. ACX is minor (Q1=$0). All high-value chains fully covered.
+
+CASE file tokens in open chains: **FF** (coverage OK), **TST** (just rescued via R1-R3).
+
+### FF-1 — Klines Analysis (klines 74 days)
+
+**Phat hien:** CASE_FF DAILY (313 rows, 2025-09-29→2026-08-07) co px_avg=None cho TOAN BO lich su. vol_perp_usd cung None. GOM-A screen (col37) DA duoc dien dung (34 fire days tu 06-01).
+
+**Root cause:** Khong co script nao populate PERP klines (o, h, l, c, vol, taker) vao CASE_*.xlsx. GOM screen duoc dien thu cong tu TG report. PERP klines (tu fapi) chua bao gio duoc harvest vao CASE.
+
+**gom_scan status:** KHONG bi anh huong. gom_scan doc tu freshwatch CSV (data/export/freshwatch_daily_*.csv) co day du px_avg + vol_quote + taker_buy_pct cho FF (72 rows tu 05-26→08-08, zero NaN).
+
+**COOKIE tuong tu:** CASE_COOKIE DAILY (579 rows, 2025-01-07→2026-08-08), px_avg=None. gLSR 08-08 = 1.56 (dang giam nhanh tu 3.5). A2 van FAIL (avg5 gLSR >> 1.1). gom_scan: CAMPAIGN-TRACK n=1.
+
+**DQ conditions (signals.py):** dist_wall va decay FAIL-OPEN khi taker_buy_pct=NaN (return False). Tuy nhien trong freshwatch CSV, FF/COOKIE co taker_buy_pct day du (non-NaN). Nen tren pipeline thuc, DQ hoat dong dung.
+
+**"74 days treo" nghia la:** 74 ngay GOM-A fire trong CASE_FF DAILY (tu 06-01→08-09) ma khong co PERP klines context. La tracking document gap, khong phai code bug.
+
+**Fix can lam:** Backfill fapi klines cho FFUSDT/COOKIEUSDT vao CASE_FF/COOKIE DAILY. Scope: khong urgent (gom_scan OK), can lam de CONFIRM 0.1 analysis day du.
+
+---
+
 ## SESSION 2026-08-08 (19) — BUG FIX: BANK/Q2-gate/fw139
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
