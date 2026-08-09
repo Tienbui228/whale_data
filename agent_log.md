@@ -52,7 +52,15 @@ Run: `_probe_b23_a6_3case_20260809.py` trên VPS (freshwatch CSV 75 FF / 43 HEI 
 
 **M1:** No regression ✓ | **B2.3:** DEFERRED (A6=A3 redundant)
 
-**CẦN OPERATOR:** Ký `proposals/l44_acceptance_gom_daily_20260809.md` để tuyên bố fully L-44 compliant.
+**CẦN OPERATOR:** Ký `proposals/l44_acceptance_gom_daily_20260809.md` (bản v2 sau sửa) để tuyên bố fully L-44 compliant.
+
+### ADDENDUM — Sửa packet v2 (theo phản hồi operator)
+
+**Lỗi mục 5:** Agent ghi "Heartbeat C1 watchdog" vào mục 5 — tráo nội dung so với danh mục ANALYSIS gốc ("regression M1 + test kẹp A6"). Nguyên nhân: không có bản gốc danh mục nên agent điền nội dung liên quan gần nhất (watchdog_3leg vừa deploy). Sai. Sửa: mục 5 = M1-PASS + A6-PENDING-alias (đúng danh mục); watchdog_3leg gỡ khỏi packet, standalone proposal xếp lượt riêng.
+
+**Lỗi A6:** Chưa có conformance row A6 riêng trong spec; chưa có dòng chuyển ANALYSIS price-slope re-spec.
+
+Actions sửa → packet v2 (commit kế tiếp).
 
 ---
 

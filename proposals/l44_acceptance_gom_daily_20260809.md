@@ -1,15 +1,15 @@
 ---
-title: L-44 Acceptance — GOM Daily Cron
+title: L-44 Acceptance — GOM Daily Cron (v2)
 date: 2026-08-09
 status: PENDING OPERATOR SIGNATURE
-author: agent session 25
+author: agent session 25 (v2 sau sửa)
 ---
 
 # L-44 Acceptance — GOM Daily Delivery Chain
 
 **Đối tượng:** `scripts/run_gom_daily.py` cron 01:25 UTC trên VPS  
 **Quy tắc L-44:** Missing dependency → ERROR + exit≠0 + alert (cấm no-op êm). (CLAUDE.md)  
-**Yêu cầu ký:** Operator xác nhận 7 mục dưới đây + M1 regression PASS trước khi hệ được tuyên bố fully L-44 compliant.
+**Yêu cầu ký:** Operator xác nhận 7 mục + M1/A6 test kết quả.
 
 ---
 
@@ -27,16 +27,20 @@ author: agent session 25
 
 ---
 
-### Mục 2 — Spec phiên bản
+### Mục 2 — Spec phiên bản + Conformance A6
 
-| Field | Giá trị |
-|-------|---------|
-| Spec | `gom_detect_spec.md` v1.9 (09/08/2026) |
-| Formula GOM-A | A1 ∧ A2 ∧ A3 ∧ (A4 ∨ A5) |
-| Formula GOM-B | B1 ∧ (B2 ∨ B3) ∧ B4 |
-| GOM-C | β PROVISIONAL (chưa promote, gate 15/08) |
+| Signal | Formula / Impl | Trạng thái |
+|--------|----------------|-----------|
+| GOM-A formula | A1 ∧ A2 ∧ A3 ∧ (A4 ∨ A5) | ACTIVE ✓ |
+| GOM-B formula | B1 ∧ (B2 ∨ B3) ∧ B4 | ACTIVE ✓ |
+| GOM-C | β PROVISIONAL (chưa promote, gate 15/08) | β ✓ |
+| **A6 price-slope-guard** | **`_a3_slope_ok()` — phát hiện là alias A3** | **PENDING — re-spec** |
 
-**Status:** DONE ✓
+**A6 conformance note:**  
+A6 hiện implement = `_a3_slope_ok()` = cùng function với A3 (gLSR slope_5d ≤ 1.15). Đây là alias, không phải independent guard. A6 KHÔNG được đứng trong bảng như condition riêng cho đến khi được re-spec thành hàm khác. Flag = False là trạng thái đúng.
+
+**Spec:** `gom_detect_spec.md` v1.9 (09/08/2026)  
+**Status:** DONE ✓ (formula); A6 conformance: PENDING re-spec
 
 ---
 
@@ -69,83 +73,16 @@ Ngày 2026-08-08T01:25:03Z: natural cron tự nhiên fired.
 
 ---
 
-### Mục 5 — Heartbeat timing (C1 watchdog leg)
+### Mục 5 — M1 Regression + A6 Test kẹp
 
-| Field | Giá trị |
-|-------|---------|
-| Commit | `c7e67cd` + `fe07a7e` |
-| Trước fix | `HB_PATH.write_text()` trước TG send → heartbeat fresh dù K3 xảy ra |
-| Sau fix | Heartbeat chỉ ghi SAU `all_ok=True` (line 643-645 của run_gom_daily.py) |
-| Code line | `# Heartbeat: only written after confirmed TG delivery (C1 watchdog leg)` |
-| Watchdog spec | `proposals/watchdog_3leg_20260809.md` (C1 deployed; C2+C3 chờ operator ký) |
+*(Đúng danh mục ANALYSIS: regression bộ test họ-tỷ-số M1 + test kẹp A6)*
 
-**Status:** C1 DEPLOYED ✓ / C2+C3 PENDING OPERATOR
-
----
-
-### Mục 6 — GOM-A/B vs GOM-C boundary (COOKIE negative-log)
-
-Ranh giới GOM-A/B ≠ GOM-C được xác nhận từ production report (baseline v9, 08-07 data):
-
-```
-OPEN (16/139):          ← GOM-A hoặc GOM-B fire
-  FF ch1 n=5 Q1=$1988k ...
-  [không có COOKIE]     ← COOKIE ABSENT từ GOM-A/B section = negative log
-
-CAMPAIGN-TRACK [PROVISIONAL]:
-  COOKIE n=1 $0 ...     ← COOKIE chỉ hiện ở GOM-C track
-```
-
-**Xác nhận boundary:**  
-- COOKIE gLSR(08-08) = 1.17, avg5(gLSR) ~2.0 >> 1.1 → A2 FAIL → GOM-A không fire ✓  
-- COOKIE fires GOM-C (stealth_grind + C2_quiet + C3_lax) → đúng track  
-- Gate 15/08: nếu BANANAS31 PASS + operator review triage → GOM-C promote β→v1.0  
-
-**Rule:** "GOM-A/B ≠ GOM-C" là ranh giới vĩnh cửu — GOM-C là campaign track RIÊNG,  
-không thể lẫn lộn với open-chain accumulation signal GOM-A/B.
-
-**Status:** CONFIRMED ✓ (xem baseline v9 report 08-08 TG)
-
----
-
-### Mục 7 — Blocking line verbatim (L-44 delivery fail-exit)
-
-**Hai điểm exit 1 trong run_gom_daily.py:**
-
-**Exit 1 (A) — Missing dependency** (line 76):
-```python
-def tg_error(msg: str) -> None:
-    """Send error alert and exit 1."""
-    tg_send(f"❌ GOM DAILY ERROR\n{msg}")
-    print(f"ERROR: {msg}", file=sys.stderr)
-    _log(f"ERROR: {msg}")
-    sys.exit(1)    # ← L-44 blocking line (K1/K2)
-```
-Triggers khi: missing freshwatch CSV, missing .env, missing screen_thresholds.yaml, import fail.
-
-**Exit 1 (B) — TG delivery fail** (lines 636–641):
-```python
-if not all_ok:
-    # Short ops ping (<200 chars) — won't hit length limit
-    tg_send(f"[GOM DELIVER FAIL] {target_date} part {fail_part}/{len(messages)} — check gom_daily.log")
-    _log("ERROR: tg deliver fail")
-    print(f"ERROR: tg_send part {fail_part} failed", file=sys.stderr)
-    sys.exit(1)    # ← L-44 blocking line (K3 delivery fail)
-```
-Triggers khi: TG sendMessage returns False (K3 kiểu chết — giao hàng fail sau khi script chạy xong).
-
-**Status:** DONE ✓ (commit c7e67cd)
-
----
-
-## M1 Regression — Backtest §6 Gate
-
-Run: `python scripts/gom_scan.py --backtest6` (local, code a4acb95)
+**M1 Regression — Backtest §6 Gate** (code a4acb95, post session-24 4-bug fixes):
 
 | # | Token | Episode | Result |
 |---|-------|---------|--------|
-| 1 | _FORMULA | gom_a_fire | ? (formula check) |
-| 2 | _FORMULA | gom_b_fire | ? (formula check) |
+| 1 | _FORMULA | gom_a_fire | formula check ✓ |
+| 2 | _FORMULA | gom_b_fire | formula check ✓ |
 | 3 | BANK | open | PASS (07-09) |
 | 4 | BANK | chapter | FAIL (pre-existing) |
 | 5 | BANK | close-iv | FAIL (pre-existing) |
@@ -157,48 +94,104 @@ Run: `python scripts/gom_scan.py --backtest6` (local, code a4acb95)
 | 11 | IDOL | open | FAIL (pre-existing) |
 | 12 | AKE | SUPP | PASS |
 
-**Kết quả:** 5 PASSes / 5 pre-existing FAILs — KHÔNG REGRESSION so với baseline B2.2.  
-Session 24 4-bug fixes không làm FAIL thêm bất kỳ case nào.
+**Kết quả M1:** 5 PASSes / 5 pre-existing FAILs — KHÔNG REGRESSION. Session 24's 4 bug fixes không tạo thêm FAIL nào.
+
+**A6 3-Case Test kẹp** (VPS, freshwatch CSV 2026-05-26→2026-08-09):
+
+| Case | Token | Expected | Raw result | Nhận xét |
+|------|-------|----------|------------|----------|
+| FF BLOCK | FFUSDT | A6=False một số ngày | 24/75 ngày A6=False | Tất cả non-fire days (A3 cũng False) |
+| HEI PASS | HEIUSDT | A6=True ngày fire | PASS — 08-03 A6=True (slope5d=1.091) | ✓ |
+| TUT PASS | TUTUSDT | A6=True ngày fire | PASS — 08-04→08-08 all A6=True | ✓ |
+
+**Kết quả A6:** PENDING — A6 alias A3 (redundant). Chi tiết xem Mục 2 conformance note.
+
+**Status (Mục 5):** M1 PASS ✓ / A6 PENDING (re-spec cần trước khi enable)
 
 ---
 
-## B2.3 — A6 3-Case Test
+### Mục 6 — GOM-A/B vs GOM-C boundary (COOKIE negative-log)
 
-Run: `_probe_b23_a6_3case_20260809.py` (VPS, freshwatch CSV 2026-05-26 to 2026-08-09)
+Ranh giới GOM-A/B ≠ GOM-C xác nhận từ production baseline v9 (08-07 data):
 
-| Case | Token | Expected | Result | Notes |
-|------|-------|----------|--------|-------|
-| FF BLOCK | FFUSDT | A6=False on some dates | CONFIRMED (24/75 dates) | A6=False dates = also A3=False = non-fire days |
-| HEI PASS | HEIUSDT | A6=True on fire day | PASS (08-03 A6=True) | gLSR slope5d=1.091 |
-| TUT PASS | TUTUSDT | A6=True on fire days | PASS (08-04→08-08 all A6=True) | gLSR declining phase |
+```
+OPEN (16/139):           ← GOM-A hoặc GOM-B fire
+  FF ch1 n=5 Q1=$1988k ...
+  [COOKIE vắng mặt]      ← negative log: COOKIE không fire GOM-A/B
 
-**Phân tích:**  
-A6 hiện tại = `_a3_slope_ok()` = same function as A3 (gLSR slope_5d ≤ 1.15).  
-Vì A3 đã có trong formula GOM-A, việc enable A6 flag không thay đổi gì trên fire days.  
-"FF BLOCK" confirmed: 24 ngày có A6=False — nhưng tất cả đều là non-fire days (A3 cũng False).  
-HEI + TUT PASS hoàn toàn trên fire days.
+CAMPAIGN-TRACK [PROVISIONAL]:
+  COOKIE n=1 $0 ...      ← COOKIE chỉ hiện ở GOM-C track
+```
 
-**Kết luận:** A6 dưới dạng hiện tại là redundant với A3. Nếu muốn A6 có giá trị thực (ví dụ price-slope guard), cần re-spec A6 thành hàm khác. Cho đến khi re-spec, `A6_PRICE_SLOPE_GUARD_ENABLED = False` là đúng.
+**Xác nhận:**
+- COOKIE avg5(gLSR) ~2.0 >> 1.1 → A2 FAIL → GOM-A không fire ✓
+- COOKIE fires GOM-C (stealth_grind + C2_quiet + C3_lax) → đúng track
 
-**B2.3 STATUS: DEFERRED** — re-spec A6 trước khi test có ý nghĩa. Không ảnh hưởng production.
+**Rule ký:** GOM-A/B ≠ GOM-C là ranh giới vĩnh cửu. GOM-C là campaign track RIÊNG, không lẫn lộn với accumulation signal GOM-A/B.  
+**Status:** CONFIRMED ✓
 
 ---
 
-## Tóm tắt kết quả
+### Mục 7 — Blocking line verbatim (L-44 delivery fail-exit)
+
+**Exit 1 (A) — Missing dependency** (run_gom_daily.py, line 76):
+```python
+def tg_error(msg: str) -> None:
+    """Send error alert and exit 1."""
+    tg_send(f"❌ GOM DAILY ERROR\n{msg}")
+    print(f"ERROR: {msg}", file=sys.stderr)
+    _log(f"ERROR: {msg}")
+    sys.exit(1)    # ← L-44 blocking line (K1/K2)
+```
+
+**Exit 1 (B) — TG delivery fail** (run_gom_daily.py, lines 636–641):
+```python
+if not all_ok:
+    tg_send(f"[GOM DELIVER FAIL] {target_date} part {fail_part}/{len(messages)} — check gom_daily.log")
+    _log("ERROR: tg deliver fail")
+    print(f"ERROR: tg_send part {fail_part} failed", file=sys.stderr)
+    sys.exit(1)    # ← L-44 blocking line (K3 delivery fail)
+```
+
+**Status:** DONE ✓ (commit c7e67cd)
+
+---
+
+## ANALYSIS — A6 Price-Slope Guard: Cần Re-spec
+
+**Phát hiện từ test kẹp B2.3:** A6 trong code = `_a3_slope_ok()` — cùng hàm với A3.  
+Chữ "price" trong tên "price-slope-guard" bị mất khi đặt tên hàm — ý gốc của A6 là kiểm tra **giá token** (px_chg_Nd), không phải gLSR slope (đã có A3 làm).
+
+**Thiết kế đề xuất A6 re-spec (chờ operator):**  
+A6 = price-slope guard: chặn fires khi token đã "chạy quá xa" trước khi tín hiệu gom bắt đầu.  
+Ví dụ khung:
+```
+A6_price: px_chg_Nd(i) <= X%   (price tăng nhiều trong N ngày gần nhất = grind-đã-chạy)
+```
+Test case vẫn giữ nguyên (FF-BLOCK / HEI-PASS / TUT-PASS) nhưng chạy lại sau khi A6 được
+re-implement với price-slope thật. Khi đó:
+- FF cuối-July (giá tăng mạnh trước khi gLSR spike) → A6=False = BLOCK hợp lý
+- HEI/TUT (giá chưa grind quá xa) → A6=True = PASS
+
+**Hành động:** Cần operator spec giá trị N và X trước khi viết code.  
+**Flag giữ nguyên:** `A6_PRICE_SLOPE_GUARD_ENABLED = False`
+
+---
+
+## Tóm tắt kết quả (v2)
 
 | Item | Status |
 |------|--------|
 | 1 — Script | DONE ✓ |
-| 2 — Spec v1.9 | DONE ✓ |
+| 2 — Spec v1.9 + A6 conformance | DONE (formula) ✓; A6 PENDING re-spec |
 | 3 — Cron | DONE ✓ |
 | 4 — L-44 Chân 3 SỐNG | DONE ✓ |
-| 5 — Heartbeat C1 | C1 DEPLOYED ✓; C2+C3 PENDING |
-| 6 — GOM-A/B ≠ GOM-C | CONFIRMED ✓ |
-| 7 — Blocking lines | DONE ✓ |
-| M1 regression | NO REGRESSION ✓ |
-| B2.3 A6 test | DEFERRED (A6=A3 redundant) |
+| 5 — M1 PASS + A6 PENDING | M1 PASS ✓; A6 DEFERRED (alias) |
+| 6 — GOM-A/B ≠ GOM-C boundary | CONFIRMED ✓ |
+| 7 — Blocking lines verbatim | DONE ✓ |
 
-**Đề xuất operator ký:**  
-Items 1-4, 6, 7 đầy đủ → ký L-44 acceptance cho delivery chain.  
-Item 5 (C2+C3 watchdog): operator xem xét `proposals/watchdog_3leg_20260809.md`.  
-B2.3: tạm hoãn, không block production (flag=False).
+**Items 1, 3, 4, 6, 7: sạch — ký được.**  
+**Items 2, 5: M1 phần sạch; A6 cần re-spec trước khi ký phần A6 — không block ký L-44 delivery (flag OFF).**
+
+**Đề xuất operator ký chữ ký L-44 delivery chain** (items 1/3/4/6/7 + M1):  
+"Hệ run_gom_daily.py cron L-44 compliant tại commit c7e67cd. A6 deferred pending re-spec."
