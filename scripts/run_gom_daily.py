@@ -515,6 +515,68 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str, run_date: str 
     return "\n".join(msg_lines)
 
 
+# ── TG message splitter ───────────────────────────────────────────────────────
+
+_TG_LIMIT = 4096
+
+
+def _tg_split(report: str) -> list:
+    """Split report into ≤4096-char TG messages. Footer (VWAP line) always last."""
+    if len(report) <= _TG_LIMIT:
+        return [report]
+
+    lines = report.split("\n")
+
+    # Footer: from the blank line before "VWAP = " to end
+    footer_start = next(
+        (i for i in range(len(lines)) if lines[i].startswith("VWAP = ")),
+        None
+    )
+    if footer_start is None:
+        cut = report[:_TG_LIMIT - 25].rsplit("\n", 1)[0]
+        return [cut + "\n[+overflow]"]
+
+    fi = (footer_start - 1
+          if footer_start > 0 and lines[footer_start - 1] == ""
+          else footer_start)
+    footer_str = "\n".join(lines[fi:])
+    body_lines = lines[:fi]
+
+    # Natural split: blank line immediately before "CAMPAIGN-TRACK" or "CHƯƠNG ĐÃ ĐÓNG"
+    split_i = None
+    for i in range(len(body_lines) - 1):
+        if body_lines[i] == "" and (
+            body_lines[i + 1].startswith("CAMPAIGN-TRACK") or
+            body_lines[i + 1].startswith("CHƯƠNG ĐÃ ĐÓNG")
+        ):
+            split_i = i
+            break
+
+    body_str = "\n".join(body_lines)
+
+    if split_i is None:
+        avail = _TG_LIMIT - len(footer_str) - 1
+        if len(body_str) <= avail:
+            return [body_str + "\n" + footer_str]
+        cut = body_str[:avail].rsplit("\n", 1)[0]
+        return [cut + "\n[+cont]\n" + footer_str]
+
+    msg1 = "\n".join(body_lines[:split_i])
+    msg2_lines = body_lines[split_i + 1:]
+
+    if len(msg1) > _TG_LIMIT:
+        msg1 = msg1[:_TG_LIMIT - 10].rsplit("\n", 1)[0] + "\n[+cont]"
+
+    msg2_with_footer = "\n".join(msg2_lines) + "\n" + footer_str
+    if len(msg2_with_footer) <= _TG_LIMIT:
+        return [msg1, msg2_with_footer]
+
+    msg2 = "\n".join(msg2_lines)
+    if len(msg2) > _TG_LIMIT:
+        msg2 = msg2[:_TG_LIMIT - 10].rsplit("\n", 1)[0] + "\n[+cont]"
+    return [msg1, msg2, footer_str]
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -553,18 +615,34 @@ def main() -> None:
     HB_PATH.parent.mkdir(parents=True, exist_ok=True)
     HB_PATH.write_text(datetime.now(timezone.utc).isoformat(), encoding="utf-8")
 
-    # Format and send Telegram report
-    report = format_tg_report(stdout, target_date, run_utc, run_date)
-    _TG_LIMIT = 4096
-    if len(report) > _TG_LIMIT:
-        _cut = report[:_TG_LIMIT - 50].rfind("\n")
-        report_send = report[:_cut] + "\n[+overflow truncated]"
-        _log(f"tg_truncate len={len(report)}→{len(report_send)}")
-    else:
-        report_send = report
-    ok = tg_send(report_send)
+    # Format and send Telegram report (split into ≤4096-char parts; footer always last)
+    report   = format_tg_report(stdout, target_date, run_utc, run_date)
+    messages = _tg_split(report)
+    if len(messages) > 1:
+        _log(f"tg_split parts={len(messages)} lens={[len(m) for m in messages]}")
 
-    _log(f"tg_send={'OK' if ok else 'FAIL'}  open_chains_reported={report.count(chr(10)+'  ')}")
+    import re as _re_log
+    _m = _re_log.search(r"OPEN \((\d+)/", report)
+    n_open_fw = int(_m.group(1)) if _m else "?"
+
+    all_ok = True
+    fail_part = -1
+    for i, msg in enumerate(messages):
+        ok = tg_send(msg)
+        if not ok:
+            all_ok = False
+            fail_part = i + 1
+            _log(f"tg_send_FAIL part={fail_part}/{len(messages)} len={len(msg)}")
+            break
+
+    _log(f"tg_send={'OK' if all_ok else 'FAIL'} parts={len(messages)} open_fw={n_open_fw}")
+
+    if not all_ok:
+        # Short ops ping (<200 chars) — won't hit length limit
+        tg_send(f"[GOM DELIVER FAIL] {target_date} part {fail_part}/{len(messages)} — check gom_daily.log")
+        _log("ERROR: tg deliver fail")
+        print(f"ERROR: tg_send part {fail_part} failed", file=sys.stderr)
+        sys.exit(1)
 
     print(stdout)
     if stderr:
