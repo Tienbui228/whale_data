@@ -26,16 +26,62 @@ DATE_TAG    = sys.argv[2] if len(sys.argv) > 2 else datetime.now(timezone.utc).s
 SYM_BASE    = SYMBOL_PERP.replace("USDT","")   # e.g. BANANAS31
 SYM_LOWER   = SYM_BASE.lower()                 # e.g. bananas31
 
-SCRATCH  = Path(r"D:\Data back test\whale_data\scratch")
-CASE_DIR = Path(r"D:\Data back test\whale_data\docs\case_files")
-XLSX     = CASE_DIR / f"CASE_{SYM_BASE}.xlsx"
+SCRATCH   = Path(r"D:\Data back test\whale_data\scratch")
+CASE_DIR  = Path(r"D:\Data back test\whale_data\docs\case_files")
+ALPHA_MAP = Path(r"D:\Data back test\whale_data\data\config\alpha_id_map.json")
+XLSX      = CASE_DIR / f"CASE_{SYM_BASE}.xlsx"
 PIN_LO, PIN_HI = 4e-5, 6e-5
+CASE_QUESTION = sys.argv[3] if len(sys.argv) > 3 else "Cau hoi case: TBD — operator dien"
 
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 
 def log(s=""): print(s)
+
+def load_alpha_meta(sym_base, date_tag, scratch):
+    """A-0a: Dynamic lookup — NO hardcoded values. Reads pre-fetched BAPI/perp JSONs."""
+    meta = {
+        "alpha_id": "NOT_IN_MAP",
+        "fullyDelisted": None,
+        "contract": "UNKNOWN — CAN OPERATOR",
+        "total_supply": "UNKNOWN",
+        "circ_supply": "UNKNOWN",
+        "holders": "UNKNOWN",
+        "alpha_listing_date": "UNKNOWN",
+        "perp_onboard": "UNKNOWN",
+        "alpha_status": "UNKNOWN",
+    }
+    # 1. alpha_id from map
+    if ALPHA_MAP.exists():
+        alpha_map = json.loads(ALPHA_MAP.read_text(encoding="utf-8"))
+        meta["alpha_id"] = alpha_map.get(sym_base, "NOT_IN_MAP")
+    # 2. BAPI token details from pre-fetched JSON
+    bapi_path = scratch / f"{sym_base.lower()}_bapi_{date_tag}.json"
+    if bapi_path.exists():
+        bapi = json.loads(bapi_path.read_text(encoding="utf-8"))
+        meta["fullyDelisted"] = bapi.get("fullyDelisted", None)
+        meta["contract"] = bapi.get("contractAddress", "UNKNOWN — CAN OPERATOR")
+        meta["total_supply"] = bapi.get("totalSupply", "UNKNOWN")
+        meta["circ_supply"] = bapi.get("circulatingSupply", "UNKNOWN")
+        meta["holders"] = bapi.get("holders", "UNKNOWN")
+        ts = int(bapi.get("listingTime", 0) or 0)
+        if ts:
+            meta["alpha_listing_date"] = datetime.fromtimestamp(ts/1000, tz=timezone.utc).strftime("%Y-%m-%d")
+        fd = bapi.get("fullyDelisted", False)
+        meta["alpha_status"] = (f"fullyDelisted={fd}, offsell={bapi.get('offsell',False)}, "
+                                 f"offline={bapi.get('offline',False)}")
+    else:
+        log(f"  WARN: {bapi_path.name} not found — CASE meta will be UNKNOWN")
+    # 3. Perp onboard from pre-fetched exchangeInfo
+    pinfo_path = scratch / f"{sym_base.lower()}_perp_info_{date_tag}.json"
+    if pinfo_path.exists():
+        pinfo = json.loads(pinfo_path.read_text(encoding="utf-8"))
+        onboard_ms = pinfo.get("onboardDate", 0) or 0
+        if onboard_ms:
+            meta["perp_onboard"] = datetime.fromtimestamp(onboard_ms/1000, tz=timezone.utc).strftime("%Y-%m-%d")
+    return meta
+
 def safe_float(v, d=None):
     try:
         return float(v) if v not in (None, "", "None") else d
@@ -54,9 +100,12 @@ def load_csv(path):
     with open(p, encoding="utf-8") as f:
         return list(csv.DictReader(f))
 
-NOW = datetime.now(timezone.utc)
+NOW  = datetime.now(timezone.utc)
+meta = load_alpha_meta(SYM_BASE, DATE_TAG, SCRATCH)  # A-0a: dynamic lookup
 log("=" * 70)
 log(f"BUILD CASE  {SYM_BASE}  |  {NOW.strftime('%Y-%m-%d %H:%M UTC')}")
+log(f"  alpha_id={meta['alpha_id']}  contract={meta['contract'][:20]}...  "
+    f"fullyDelisted={meta['fullyDelisted']}")
 log("=" * 70)
 
 # ── 0. Backup existing xlsx ────────────────────────────────────────────────────
@@ -75,8 +124,30 @@ log(f"  CSVs: perp={len(perp_rows)}, spot={len(spot_rows)}, "
     f"lsr={len(lsr_rows)}, fund={len(fund_rows)}, oi={len(oi_rows)}")
 
 perp_by_d = {r["date"]: r for r in perp_rows}
-spot_by_d = {r["date"]: r for r in spot_rows}
-lsr_by_d  = {r["date"]: r for r in lsr_rows}
+
+# A-0a fix: normalize spot CSV columns (vol_quote_usd → vol_spot_usd, taker_pct → taker_spot_pct)
+spot_by_d = {}
+for r in spot_rows:
+    dt = r.get("date","")
+    if not dt: continue
+    spot_by_d[dt] = {
+        "vol_spot_usd":   safe_float(r.get("vol_spot_usd") or r.get("vol_quote_usd")),
+        "taker_spot_pct": safe_float(r.get("taker_spot_pct") or r.get("taker_pct")),
+        "spot_perp_ratio": safe_float(r.get("spot_perp_ratio")),
+    }
+
+# A-0a fix: normalize LSR CSV columns (handles both "pos_r" and "pos_r_raw" naming)
+lsr_by_d = {}
+for r in lsr_rows:
+    dt = r.get("date","")
+    if not dt: continue
+    lsr_by_d[dt] = {
+        "pos_r_raw":     safe_float(r.get("pos_r_raw") or r.get("pos_r")),
+        "acc_r_raw":     safe_float(r.get("acc_r_raw") or r.get("acc_r")),
+        "glsr_raw":      safe_float(r.get("glsr_raw") or r.get("gLSR") or r.get("glsr")),
+        "taker_lsr_raw": safe_float(r.get("taker_lsr_raw") or r.get("taker_lsr")),
+        "_src":          r.get("_src", "fapi_LSR_30d"),
+    }
 
 # ── 2. Extend LSR with freshwatch (earlier history) ───────────────────────────
 # freshwatch has lsr_pos_r / lsr_acc_r / lsr_global_r — usable before LSR retention window
@@ -426,8 +497,9 @@ for i, dt in enumerate(all_dates):
         "pos_r": pos_r, "acc_r": acc_r, "gLSR": glsr, "taker_lsr": tkls,
         "vol_spot_usd": vol_s, "taker_spot_pct": tk_s,
         "spot_perp_ratio": spr, "l29_flag": l29,
-        "vol_alpha": f"ABSTAIN(fullyDelisted={SYM_BASE})" if SYM_BASE == "BANANAS31" else "ABSTAIN",
-        "taker_alpha": "BANNED(k9==k5)",
+        "vol_alpha": (f"alpha_klines_store(forward_2026-08-04,venue=binance_alpha)"
+                      if not meta.get("fullyDelisted") else f"ABSTAIN(fullyDelisted={SYM_BASE})"),
+        "taker_alpha": "ABSTAIN(bapi_klines9==klines5_L48)",
         "on_chain_source": "ABSTAIN(Nansen_LOCKED)",
         "gom_A_screen": "TRUE" if gom_a else "false",
         "gom_B_screen": "TRUE" if gom_b else "false",
@@ -656,25 +728,29 @@ for ci in range(2, 51):
 ws_case = wb["CASE"]
 ws_case.cell(1, 1).value = f"CASE_{SYM_BASE}"
 ws_case.cell(1, 1).font = Font(bold=True, size=14)
+# A-0a: ALL values from dynamic meta lookup — NO hardcoded token-specific values
+has_spot = len(spot_rows) > 0
+venue_str = "Binance perp + spot" if has_spot else "Binance perp (no spot pair)"
 case_meta = [
     ("Symbol (perp)", SYMBOL_PERP),
     ("Symbol (base)", SYM_BASE),
     ("Status", "COLD_START — PENDING"),
     ("Ngay mo", NOW.strftime("%Y-%m-%d")),
-    ("Alpha ID", "ALPHA_21"),
-    ("Alpha status", "fullyDelisted=True (offsell=True, offline=True)"),
-    ("Contract (BSC)", "0x3d4f0513e8a29669b960f9dbca61861548a9a760"),
-    ("Total supply", "10,000,000,000 tokens (= circ supply)"),
-    ("Holders", "158,024"),
-    ("Alpha listing", "2024-12-20"),
-    ("Perp onboard", "2025-03-22"),
-    ("Venue", "Binance perp + spot"),
-    ("Cau hoi mo", "Ho so dep nhung gia dump lien tuc — build-into-weakness hay bay (BTW/phan phoi/short-side)?"),
+    ("Alpha ID", meta["alpha_id"]),
+    ("Alpha status", meta["alpha_status"]),
+    ("Contract (BSC)", meta["contract"]),
+    ("Total supply", str(meta["total_supply"])),
+    ("Circ supply", str(meta["circ_supply"])),
+    ("Holders", str(meta["holders"])),
+    ("Alpha listing", meta["alpha_listing_date"]),
+    ("Perp onboard", meta["perp_onboard"]),
+    ("Venue", venue_str),
+    ("Cau hoi mo", CASE_QUESTION),
     ("Verdict", ""),
     ("T0 (GOM-A open)", ""),
     ("B_ref OI", ""),
     ("Archetype", ""),
-    ("CAN OPERATOR", "BscScan top holders (0-credit NOTOK) | depth snap #2 >=17:09 UTC | contract verify | Nansen unlock"),
+    ("CAN OPERATOR", "BscScan top holders | contract verify L-28 | Nansen (LOCKED) | depth snap #2"),
 ]
 for ri, (k, v) in enumerate(case_meta, 3):
     ws_case.cell(ri, 1).value = k
@@ -693,10 +769,20 @@ for ci, h in enumerate(ev_headers, 1):
     c.value = h
     c.font  = Font(bold=True, size=9)
 
-events_seed = [
-    ("2024-12-20", "LISTING_ALPHA", "BANANAS31 listed on Binance Alpha (ALPHA_21)", "", ""),
-    ("2025-03-22", "LISTING_PERP",  "BANANAS31USDT perp listed on Binance fapi", "", ""),
-]
+# A-0a: EVENTS seed uses dynamic meta — no hardcoded dates
+events_seed = []
+if meta.get("alpha_listing_date") and meta["alpha_listing_date"] != "UNKNOWN":
+    events_seed.append((meta["alpha_listing_date"], "LISTING_ALPHA",
+                         f"{SYM_BASE} listed on Binance Alpha ({meta.get('alpha_id','?')})", "", ""))
+else:
+    events_seed.append(("UNKNOWN", "LISTING_ALPHA",
+                         f"{SYM_BASE} Alpha listing date unknown — CAN OPERATOR", "", ""))
+if meta.get("perp_onboard") and meta["perp_onboard"] != "UNKNOWN":
+    events_seed.append((meta["perp_onboard"], "LISTING_PERP",
+                         f"{SYMBOL_PERP} perp listed on Binance fapi (onboardDate)", "", ""))
+else:
+    events_seed.append(("UNKNOWN", "LISTING_PERP",
+                         f"{SYMBOL_PERP} perp onboard date unknown — CAN OPERATOR", "", ""))
 for ri, ev in enumerate(events_seed, 2):
     for ci, v in enumerate(ev, 1):
         ws_ev.cell(ri, ci).value = v
@@ -742,6 +828,29 @@ cnt = sum(1 for ri in range(3, ws2.max_row+100) if ws2.cell(ri,1).value not in (
 log(f"  L-32: expected {len(daily_data)}, count non-empty date={cnt}")
 assert cnt == len(daily_data), f"ROW COUNT MISMATCH: {len(daily_data)} vs {cnt}"
 log(f"  L-32: PASS  Sheets: {wb2.sheetnames}")
+
+# ── A-0b: LSR + spot coverage guard ────────────────────────────────────────────
+log(f"\n--- A-0b COVERAGE GUARD ---")
+N_check = N
+last30_start = max(0, N_check - 30)
+last30_dates = all_dates[last30_start:]
+
+lsr_null = sum(1 for i, d in enumerate(all_dates) if i >= last30_start and pos_r_all[i] is None)
+lsr_null_pct = lsr_null / len(last30_dates) * 100 if last30_dates else 100
+if lsr_null_pct > 50:
+    log(f"!!!! LSR COVERAGE FAIL: pos_r null {lsr_null_pct:.1f}% in last 30d ({lsr_null}/{len(last30_dates)}) !!!!")
+    log(f"!!!! ABORT: Check A-1 LSR persist — do not ship !!!!")
+    raise ValueError(f"A-0b guard: LSR pos_r null {lsr_null_pct:.1f}% > 50% in last 30d")
+else:
+    log(f"  LSR guard: pos_r null {lsr_null_pct:.1f}% in last 30d ({lsr_null}/{len(last30_dates)}) — PASS")
+
+spot_null = sum(1 for d in last30_dates if spot_by_d.get(d,{}).get("vol_spot_usd") is None)
+spot_null_pct = spot_null / len(last30_dates) * 100 if last30_dates else 100
+if spot_null_pct > 50:
+    log(f"  SPOT WARNING: vol_spot_usd null {spot_null_pct:.1f}% in last 30d ({spot_null}/{len(last30_dates)})")
+    log(f"  → Reason required in report: no spot pair or collect not run")
+else:
+    log(f"  Spot guard: vol_spot_usd null {spot_null_pct:.1f}% in last 30d — PASS")
 
 log(f"\n[BUILD_CASE DONE — {SYM_BASE}]")
 log(f"  DAILY: {len(daily_data)} rows, 50 cols")

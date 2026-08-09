@@ -146,7 +146,7 @@ ARIA/FHE/TRADOOR GOM-C miss trên 08-07 = **C2 funding filter** chính xác, kh�
 | X-3 A.5 | div_avg3 -18.7%/28d, gLSR +37.7%/28d, vol_vs_m14 +2.6%/28d |
 | X-3 Trigger-check | T1: 0/4 met; T3 gLSR cần -52.4%; T2 div cần +75.6% |
 | X-4 Depth snap #1 | 09:18 UTC, mid=0.001699, bid±2%=$44,772, ask±2%=$16,348, ratio=2.74 (bid-heavy) |
-| X-4 Depth snap #2 | MISSING — CẦN ≥13:18 UTC |
+| X-4 Depth snap #2 | DONE — 13:21:27 UTC, mid=0.001675, bid2=$34,419, ask2=$15,489, ratio=2.2221 (bid-heavy maintained) |
 | X-5 Contract | PASS (BAPI+alpha_id_map+CASE 3 sources); holders=69,247 (live) |
 | X-5 BscScan | NOTOK (deprecated V1) |
 | X-5 Operator checklist | 5 mục: unlock, top holders, exchange balance, BitMart wash, Nansen |
@@ -166,7 +166,8 @@ ARIA/FHE/TRADOOR GOM-C miss trên 08-07 = **C2 funding filter** chính xác, kh�
 | acc_r | 2.186 (+24% vs 28d) |
 | div_raw | 0.854 (inverted) |
 | OI | $13,001,000 |
-| depth ratio | 2.74 bid/ask (bid-heavy, snap #1) |
+| depth ratio snap1 | 2.74 bid/ask (bid-heavy, 09:18 UTC) |
+| depth ratio snap2 | 2.22 bid/ask (bid-heavy maintained, 13:21 UTC) |
 
 ### Schema thay đổi
 
@@ -176,7 +177,7 @@ ARIA/FHE/TRADOOR GOM-C miss trên 08-07 = **C2 funding filter** chính xác, kh�
 
 ### MISSING
 
-- M-1: Depth snap #2 (CẦN ≥13:18 UTC 08/08)
+- ~~M-1: Depth snap #2~~ → DONE 13:21 UTC, ratio=2.22 (bid-heavy maintained)
 - M-2: Spot vol 08-06/08-07 (GeckoTerminal 403)
 - M-3: BscScan holders/exchange balance (NOTOK)
 - M-4: Nansen (LOCKED) → CẦN OPERATOR
@@ -1245,7 +1246,7 @@ Format output 2-3 token mẫu + OPEN SERIES list ← operator duyệt trước V
 | A-2 OI | 30 records 2026-07-10→2026-08-08 |
 | A-3 build_case.py | CASE_AGT.xlsx: 7 sheets, 445 DAILY rows, 50 cols, L-32 PASS, A-0b guard PASS |
 | A-4 Depth snap #1 | 08:44:20 UTC, mid=0.0155015, bid2pct=$8,669, ask2pct=$16,547, ratio=0.524 (ask-heavy) |
-| A-4 Depth snap #2 | MISSING — CẦN ≥12:44 UTC |
+| A-4 Depth snap #2 | DONE — 13:21:23 UTC, mid=0.01563, bid2=$15,990, ask2=$14,480, ratio=1.1043 (bid-slight, đảo chiều từ snap1 ask-heavy) |
 | A-5 BAPI | ALPHA_191, contract=0x5dbde81...e274 (PARTIAL — L-28 cần cross-verify) |
 | A-5 BscScan | NOTOK (deprecated V1) → CẦN OPERATOR |
 | A-6 Freshwatch | 32 rows AGTUSDT; không có gom_state open chain |
@@ -1281,6 +1282,7 @@ Format output 2-3 token mẫu + OPEN SERIES list ← operator duyệt trước V
 | div_avg3 | N/A | N/A | N/A | N/A | 0.664 |
 
 *Depth snap #1 (08:44 UTC):* mid=0.0155015, bid/ask ratio=0.524 (ask-heavy)
+*Depth snap #2 (13:21 UTC):* mid=0.01563, bid2=$15,990, ask2=$14,480, ratio=1.1043 (bid-slight) | Δbid=+$7,321 (+84.5%), Δask=-$2,067 (-12.5%)
 
 ### A-0 Bug fix (retroactive — ảnh hưởng TST cũng như AGT)
 

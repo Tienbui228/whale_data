@@ -54,6 +54,7 @@
 | `docs/case_files/CASE_HEI.xlsx` | HEI | TRACKING (doi chung DUONG cap L-46) |
 | `docs/case_files/CASE_BANANAS31.xlsx` | BANANAS31 | COLD_START — PENDING (doi chung AM cap L-46, TRACKING-passive) |
 | `docs/case_files/CASE_TST.xlsx` | TST | COLD_START — PENDING (Alpha fullyDelisted, vol spike 07/08, -94% ATH) |
+| `docs/case_files/CASE_AGT.xlsx` | AGT | COLD_START — PENDING (Alaya Governance Token, perp 2025-05-20, ATH -56%, 19 vol spikes, gLSR >1.5) |
 | `docs/case_files/CASE_IDOL.xlsx` | IDOL | PARTIAL (post-climax) |
 | `docs/case_files/CASE_TAG.xlsx` | TAG | TRACKING |
 | `docs/case_files/CASE_TUT.xlsx` | TUT | LIVE (T+30=08/08) |
