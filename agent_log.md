@@ -54,6 +54,42 @@ Run: `_probe_b23_a6_3case_20260809.py` trên VPS (freshwatch CSV 75 FF / 43 HEI 
 
 **CẦN OPERATOR:** Ký `proposals/l44_acceptance_gom_daily_20260809.md` (bản v2 sau sửa) để tuyên bố fully L-44 compliant.
 
+### L-44 Chữ ký Operator
+
+"Tôi ký l44_acceptance_gom_daily_20260809.md — acceptance gom_scan delivery chain; A6 PENDING-alias flag OFF; GOM-C ngoài phạm vi, chờ gate 15/08."
+
+**Ghi nhận:** Đây là hồ sơ nghiệm thu đầu tiên của hệ theo format L-44 — code + dependency + verified-first-output + ranh giới khai tường minh.
+
+---
+
+### ADDENDUM — Khép đuôi 4 việc
+
+**①Kỷ luật report (ghi án L-10):** Report kế tiếp sau việc khẩn PHẢI mở đầu bằng trạng thái việc khẩn — không được chôn trong commit ref. Không-báo = không-làm theo luật hệ. Session 25 không báo R1-R5 → operator phải giả định xấu nhất. Bài học ghi vào L-10 (fail-silent family, chứng cứ phụ án ①).
+
+TST R4: T-1 là universe-timing (không phải guard-câm), nhưng hiệu ứng giống fail-silent — data mất không ai hay. Ghi làm chứng cứ phụ án guard-câm (không mở án mới, phụ lục ①).
+
+**②ACX 60/60 vá xong:** `collect_daily_metrics --symbols ACXUSDT --days-back 3 --skip-guard` trên VPS → 5 metrics × 2–3 rows, errors=0. ACX 08-08/09 nay đủ. Coverage 60/60.
+
+**③TST Q2 Seat-Rotation:**
+
+```
+Q2 = N/A
+Lý do: GOM-A/B fire = 0/545 (A2 structural block avg5 gLSR 1.54→2.37 >> 1.1)
+       Không có ngày seat-rotation eligible trong 30d window.
+
+Hypothetical bound (tham chiếu, không phải số chốt):
+  Q2_hyp_lower = $213k (pos_r=1.30, oi=$1.63M — 07-11)
+  Q2_hyp_upper = $2,991k (pos_r=5.34, oi=$4.37M — 08-07)
+  Dùng pos_r tại ngày fire thực tế × oi ngày đó nếu gLSR điều kiện thay đổi.
+
+GOM-C Q1 = $0 (OI declining on 08-04 fire day per baseline v9).
+TST chỉ track được trong GOM-C campaign track.
+```
+
+Probe: `_probe_tst_q2_20260809.py`
+
+**④A6 price-slope:** N và X = spec ANALYSIS từ operator, DEV không tự chọn. Flag giữ False.
+
 ### ADDENDUM — Sửa packet v2 (theo phản hồi operator)
 
 **Lỗi mục 5:** Agent ghi "Heartbeat C1 watchdog" vào mục 5 — tráo nội dung so với danh mục ANALYSIS gốc ("regression M1 + test kẹp A6"). Nguyên nhân: không có bản gốc danh mục nên agent điền nội dung liên quan gần nhất (watchdog_3leg vừa deploy). Sai. Sửa: mục 5 = M1-PASS + A6-PENDING-alias (đúng danh mục); watchdog_3leg gỡ khỏi packet, standalone proposal xếp lượt riêng.

@@ -1,8 +1,10 @@
 ---
 title: L-44 Acceptance — GOM Daily Cron (v2)
 date: 2026-08-09
-status: PENDING OPERATOR SIGNATURE
+status: SIGNED
 author: agent session 25 (v2 sau sửa)
+signed_by: Tien (operator)
+signed_text: "Tôi ký l44_acceptance_gom_daily_20260809.md — acceptance gom_scan delivery chain; A6 PENDING-alias flag OFF; GOM-C ngoài phạm vi, chờ gate 15/08."
 ---
 
 # L-44 Acceptance — GOM Daily Delivery Chain
