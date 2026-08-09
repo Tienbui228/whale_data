@@ -2,6 +2,60 @@
 
 ---
 
+## SESSION 2026-08-09 (25) — M1 REGRESSION + B2.3 A6 TEST + L-44 ACCEPTANCE
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### P2 — M1 Regression (backtest6)
+
+Run: `python scripts/gom_scan.py --backtest6` (code a4acb95, post session-24 4-bug fixes)
+
+| Kết quả | Số |
+|---------|---|
+| PASSes | 5/10 (BANK open, BAS SUPP, BTW SUPP, BULLA open, AKE SUPP) |
+| Pre-existing FAILs | 5/10 (BANK chapter/close-iv, TAG open, TUT chapter, IDOL open) |
+| Delta vs baseline B2.2 | ZERO — NO REGRESSION |
+
+Session 24's 4 bug fixes (churn-net≤0, GOM-C VWAP fallback, $0→N/A, header) không tạo thêm FAIL nào.
+
+### P2 — B2.3 A6 3-Case Test
+
+Run: `_probe_b23_a6_3case_20260809.py` trên VPS (freshwatch CSV 75 FF / 43 HEI / 43 TUT rows)
+
+| Case | Token | Expected | Raw | Fire-day check |
+|------|-------|----------|-----|----------------|
+| FF BLOCK | FFUSDT | A6=False (some days) | 24/75 A6=False | A3=False too (non-fire days) — consistent |
+| HEI PASS | HEIUSDT | A6=True (fire days) | PASS — 08-03 A6=True (slope=1.091) | ✓ |
+| TUT PASS | TUTUSDT | A6=True (fire days) | PASS — 08-04→08-08 all A6=True | ✓ |
+
+**Kết luận B2.3:** A6 = `_a3_slope_ok()` = alias của A3. Vì A3 đã trong formula GOM-A:
+- Enabling A6 flag = zero effect (redundant condition)
+- "FF BLOCK" confirmed nhưng chỉ trên non-fire days (những ngày A3 cũng False)
+- HEI + TUT PASS hoàn toàn
+- **STATUS: DEFERRED** — A6 cần re-spec thành independent guard (price-slope hoặc khác) trước khi test có ý nghĩa. Không block production (flag=False).
+
+### P1-P3 — L-44 Acceptance Packet
+
+**Tài liệu:** `proposals/l44_acceptance_gom_daily_20260809.md`
+
+7 mục compliance checklist cho `scripts/run_gom_daily.py` cron:
+
+| Mục | Nội dung | Status |
+|-----|----------|--------|
+| 1 | Script: run_gom_daily.py (c7e67cd) | DONE ✓ |
+| 2 | Spec: gom_detect_spec.md v1.9 | DONE ✓ |
+| 3 | Cron: `25 1 * * *` VPS 01:25 UTC | DONE ✓ |
+| 4 | L-44 Chân 3: natural cron 08-08 01:25:03Z SỐNG | DONE ✓ |
+| 5 | Heartbeat C1: ghi SAU TG send (c7e67cd) | C1 DEPLOYED ✓; C2+C3 PENDING |
+| 6 | GOM-A/B ≠ GOM-C: COOKIE ở CAMPAIGN-TRACK, absent OPEN | CONFIRMED ✓ |
+| 7 | Blocking lines verbatim: `sys.exit(1)` tại L76 + L641 | DONE ✓ |
+
+**M1:** No regression ✓ | **B2.3:** DEFERRED (A6=A3 redundant)
+
+**CẦN OPERATOR:** Ký `proposals/l44_acceptance_gom_daily_20260809.md` để tuyên bố fully L-44 compliant.
+
+---
+
 ## SESSION 2026-08-09 (24) — 4-BUG FIX + BASELINE V9 CANONICAL
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
