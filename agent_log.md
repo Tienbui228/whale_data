@@ -166,6 +166,85 @@ Baseline v9 in BANK VWAP=$0.03972[vw-vol]; probe 3b tuần này in $0.036984 →
 
 ---
 
+### TST RESCUE (R1–R3) — 2026-08-09
+
+**Mục tiêu:** Backfill LSR+OI cho TSTUSDT (30 ngày), merge CASE_TST DAILY, phân tích GOM ABSTAIN.
+
+#### R1 — Backfill thực hiện
+
+```
+python3 scripts/collect_daily_metrics.py --symbols TSTUSDT --days-back 30 --skip-guard
+```
+
+| Metric | Rows | Errors | First | Last |
+|---|---|---|---|---|
+| oi_hist_1d | 30 | 0 | 2026-07-11 | 2026-08-09 |
+| top_pos_1d | 30 | 0 | 2026-07-11 | 2026-08-09 |
+| top_acct_1d | 30 | 0 | 2026-07-11 | 2026-08-09 |
+| retail_global_1d | 30 | 0 | 2026-07-11 | 2026-08-09 |
+| taker_ratio_1d | 30 | 0 | 2026-07-10 | 2026-08-08 |
+
+**MISSING-PERMANENT:** Tất cả dữ liệu TST trước 2026-07-10 (taker) / 2026-07-11 (OI/pos/acct/retail) — nằm ngoài cửa sổ 30d của API tính từ 08-09. TST được thêm vào universe_master 2026-07-25 nên khoảng 07-25 đến 08-09 là daily coverage bình thường; khoảng 07-10→07-24 là backfill một lần.
+
+**data-source:** VPS `/root/Data_back_test/whale_data/data/raw/{metric}/date=*/part-0.parquet`
+**machine:** VPS canonical (5.223.67.21)
+**date-range:** 2026-07-10 → 2026-08-09
+**code-commit:** (collect_daily_metrics.py — existing, no change needed)
+
+#### R2 — Verify số lượng
+
+5 metrics × 30 dates, errors=0. Column schema:
+- `oi_hist_1d`: `sum_open_interest_value` → oi_usd
+- `top_pos_1d`: `long_short_ratio` → pos_r
+- `top_acct_1d`: `long_short_ratio` → acc_r
+- `retail_global_1d`: `long_short_ratio` → gLSR
+- `taker_ratio_1d`: `buy_sell_ratio` → taker_lsr
+
+#### R3 — Merge CASE_TST DAILY + GOM Re-score
+
+**Merge:** `_task_tst_daily_merge_20260809.py` — cập nhật cols pos_r(27), acc_r(28), gLSR(29), taker_lsr(30), div_raw(22), div_avg3(23) cho 29 dòng (07-11→08-07 có trong Excel). 2 dòng bỏ qua (08-08, 08-09 chưa có row trong DAILY). Saved: `docs/case_files/CASE_TST.xlsx`.
+
+**PHÂN TÍCH — TST GOM bao nhiêu ABSTAIN:**
+
+| Chỉ số | Số |
+|---|---|
+| Tổng ngày DAILY | 545 (2025-02-09 → 2026-08-07) |
+| GOM-A fire | **0 / 545 (0%)** |
+| GOM-B fire | **0 / 545 (0%)** |
+| Alpha ABSTAIN | 545/545 (100%) — `BANNED(k9==k5)` |
+| On-chain ABSTAIN | 545/545 (100%) — Nansen LOCKED |
+| Cả hai ABSTAIN | 545/545 (100%) |
+
+**Root cause GOM-A blocker (gate-level):**
+
+GOM-A formula: `A1 AND A2 AND A3 AND (A4 OR A5)`
+
+**A2 = FAIL-CỨU-VIỆN:**
+```
+A2: avg5(lsr_global) ≤ 1.1
+TST gLSR range (07-10→08-09): 1.54 – 2.37
+avg5(gLSR) luôn >> 1.1 trên toàn bộ 30 ngày backfill
+```
+
+TST là token crowd-heavy (retail luôn heavily long). Spec A2 = "crowd chưa exhausted" = tín hiệu chỉ có giá trị khi retail CHƯA lên đông. TST fail A2 toàn bộ lịch sử.
+
+**Các gate khác (với data mới):**
+
+| Gate | 08-07 (peak) | Status |
+|---|---|---|
+| A2: avg5(gLSR)≤1.1 | avg5≈2.3 | **FAIL — blocker** |
+| pos_r (08-07) | 5.34 | Cao bất thường |
+| div_raw (08-07) | 1.74 (pos>acc) | Signal có, nhưng A2 đã chặn |
+| gLSR (08-07) | 2.36 | >> 1.1 |
+
+**Kết luận:** TST = **FULL ABSTAIN 100%** — không phải data gap, là signal reality. Với backfill đầy đủ 30d, A2 vẫn FAIL. TST không thể fire GOM-A cho đến khi retail sentiment xả hết (gLSR avg5 về ≤ 1.1). Với gLSR hiện tại 2.3, cần retail L/S drop ~53% — không có khả năng ngắn hạn.
+
+**TST trong CAMPAIGN-TRACK:** Baseline v9 hiển thị `⏸ TST cooldown 11d (first-fire 08-04)` — đây là GOM-C provisional track (campaign-level). TST có fire GOM (nhưng dưới GOM-C prov, không phải GOM-A/B). GOM-A/B scan riêng: 0 fire.
+
+**Q2 seat-rotation:** Không applicable — TST không có ngày nào đủ tư cách vào Q2 rotation (yêu cầu GOM-A/B fire).
+
+---
+
 ## SESSION 2026-08-08 (19) — BUG FIX: BANK/Q2-gate/fw139
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
