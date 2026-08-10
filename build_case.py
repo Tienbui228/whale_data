@@ -202,7 +202,12 @@ oi_vals   = [oi_by_d.get(d,{}).get("oi_usd")                      for d in all_d
 pos_r_all = [safe_float(lsr_by_d.get(d,{}).get("pos_r_raw"))      for d in all_dates]
 acc_r_all = [safe_float(lsr_by_d.get(d,{}).get("acc_r_raw"))      for d in all_dates]
 glsr_all  = [safe_float(lsr_by_d.get(d,{}).get("glsr_raw"))       for d in all_dates]
-taker_all = [safe_float(perp_by_d.get(d,{}).get("taker_pct"))     for d in all_dates]
+taker_all = [safe_float(perp_by_d.get(d,{}).get("taker_buy_pct") or
+              perp_by_d.get(d,{}).get("taker_pct"))                for d in all_dates]
+# Scale guard: CSV stores fraction (0-1); rolling arrays need percentage (0-100)
+_tk_raw = [v for v in taker_all if v is not None]
+if _tk_raw and max(_tk_raw) <= 1.0:
+    taker_all = [v * 100.0 if v is not None else None for v in taker_all]
 ret_all   = [safe_float(perp_by_d.get(d,{}).get("ret_1d"))        for d in all_dates]
 
 def rolling_med14(vals):
@@ -382,7 +387,9 @@ for i, dt in enumerate(all_dates):
     c  = safe_float(pr.get("close", pr.get("c")))
     px_avg = round((h+l+c)/3, 8) if (h and l and c) else None
     vol_p  = safe_float(pr.get("vol_quote_usd", pr.get("vol_perp_usd")))
-    taker  = safe_float(pr.get("taker_pct", pr.get("taker_buy_pct")))
+    taker  = safe_float(pr.get("taker_buy_pct", pr.get("taker_pct")))
+    if taker is not None and taker <= 1.0:
+        taker *= 100.0
     ret_1d = safe_float(pr.get("ret_1d"))
     if ret_1d is None and c and _prev_close:
         ret_1d = round((c - _prev_close) / _prev_close, 8)

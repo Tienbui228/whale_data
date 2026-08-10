@@ -95,6 +95,12 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     a2 = _avg5_glsr(days, i) <= 1.1
     # A3: gLSR slope 5d ≤ 1.15 — "fuel not exhausted" (§1; NaN/early → FAIL-CLOSED → False)
     a3 = _a3_slope_ok(days, i, sc)
+    _a3_slope = _a3_slope_value(days, i)
+    _slope_max = _scfg(sc).get("slope_5d_max", 1.15)
+    _a3_eps    = _scfg(sc).get("a3_marginal_eps", 0.005)
+    # a3_marginal: display-only tag — A3 passes but within ε of threshold; behavior unchanged
+    a3_marginal = (a3 and not math.isnan(_a3_slope) and
+                   abs(_a3_slope - _slope_max) < _a3_eps)
     # A4: d_pos_3d ≥ 0 OR pos_rerate sống (spec v1.4; NaN d_pos_3d → only pos_rerate)
     _d3 = d.get("d_pos_3d", float("nan"))
     a4 = (not math.isnan(_d3) and _d3 >= 0) or pos_rerate(days, i, cfg)
@@ -184,6 +190,8 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
         "low_conf":      lc,
         "crowd_flush":   cf_today,
         "struct_alive":  any_supp_dq and a1 and a2 and a3,  # ⏸ A1∧A2∧A3 pass under suppressor
+        "a3_marginal":   a3_marginal,                     # display-only: A3 PASS but within ε
+        "a3_slope_val":  _a3_slope,                       # raw slope value for display
     }
 
 
@@ -264,6 +272,17 @@ def _slope_dq(days: list[DayData], i: int, sc: dict) -> bool:
     return (g1 / g0) > slope_max
 
 
+def _a3_slope_value(days: list[DayData], i: int) -> float:
+    """Return raw A3 slope = lsr_global[i] / lsr_global[i-5]. NaN if unavailable."""
+    if i < 5:
+        return float("nan")
+    g0 = days[i-5].get("lsr_global", float("nan"))
+    g1 = days[i].get("lsr_global",   float("nan"))
+    if math.isnan(g0) or math.isnan(g1) or g0 <= 0:
+        return float("nan")
+    return g1 / g0
+
+
 def _a3_slope_ok(days: list[DayData], i: int, sc: dict) -> bool:
     """A3 GOM-A condition: gLSR slope_5d ≤ 1.15 ('fuel not exhausted').
     FAIL-CLOSED: i<5 or g0/g1 NaN → returns False (condition NOT satisfied).
@@ -271,13 +290,10 @@ def _a3_slope_ok(days: list[DayData], i: int, sc: dict) -> bool:
     """
     g = _scfg(sc)
     slope_max = g.get("slope_5d_max", 1.15)
-    if i < 5:
+    slope = _a3_slope_value(days, i)
+    if math.isnan(slope):
         return False
-    g0 = days[i-5].get("lsr_global", float("nan"))
-    g1 = days[i].get("lsr_global",   float("nan"))
-    if math.isnan(g0) or math.isnan(g1) or g0 <= 0:
-        return False
-    return (g1 / g0) <= slope_max
+    return slope <= slope_max
 
 
 def _gomc_beta_check(
@@ -695,7 +711,12 @@ def format_chain_report(token: str, chain: dict, result: dict | None, date_str: 
         if not cond_str:
             cond_str = "(break day)"
         lc = "low_conf" if result.get("low_conf") else ""
-        lines.append(f" Điều kiện hôm nay: {cond_str}  {lc}")
+        marginal_tag = ""
+        if result.get("a3_marginal"):
+            slope_v = result.get("a3_slope_val", float("nan"))
+            slope_s = f"{slope_v:.5f}" if not math.isnan(slope_v) else "?"
+            marginal_tag = f" [A3:marginal slope={slope_s}]"
+        lines.append(f" Điều kiện hôm nay: {cond_str}{marginal_tag}  {lc}")
         if dq_list:
             lines.append(f" !! DISQUALIFIER: {', '.join(dq_list)}")
 
@@ -765,7 +786,57 @@ def load_state() -> dict:
     return {}
 
 
+def validate_gom_state(state: dict) -> None:
+    """Pre-write validator — 4 invariants (ii/iii/iv/v from probe E).
+
+    Invariant (i) append-only md5 is checked externally via probe; not checkable here.
+    Raises RuntimeError listing all violations — caller exits≠0 → cron alert fires.
+    """
+    def _pd(s):
+        if not s or not isinstance(s, str):
+            return None
+        try:
+            return datetime.strptime(s[:10], "%Y-%m-%d")
+        except Exception:
+            return None
+
+    VALID_VWAP: frozenset[str] = frozenset({"oi_weighted", "vol_weighted", "N/A", "unknown", ""})
+    violations: list[str] = []
+
+    open_tokens = [(t, v) for t, v in state.items() if v.get("chain_open")]
+    eval_dates  = [v.get("last_eval_date", "") for v in state.values() if v.get("last_eval_date")]
+    ref_date    = _pd(max(eval_dates)) if eval_dates else None
+
+    for tok, v in open_tokens:
+        # (ii) open chain must have last_gom_date within ≤3d of last_eval_date
+        last_gom  = _pd(v.get("last_gom_date", ""))
+        last_eval = _pd(v.get("last_eval_date", ""))
+        if last_eval and last_gom and (last_eval - last_gom).days > 3:
+            violations.append(f"inv(ii) {tok}: gap={(last_eval-last_gom).days}d > 3")
+        # (iii) not both chain_open=True AND cooldown active
+        cd_end = _pd(v.get("dq_cooldown_end", ""))
+        if cd_end and ref_date and cd_end >= ref_date:
+            violations.append(f"inv(iii) {tok}: chain_open + cooldown_end={v.get('dq_cooldown_end')}")
+
+    for tok, v in state.items():
+        # (iv) valid vwap_type
+        if v.get("vwap_type", "") not in VALID_VWAP:
+            violations.append(f"inv(iv) {tok}: vwap_type='{v.get('vwap_type')}' invalid")
+        # (v) DQ not negative
+        ep = _pd(v.get("dq_episode_start", ""))
+        cd = _pd(v.get("dq_cooldown_end",  ""))
+        if ep and cd and cd < ep:
+            violations.append(f"inv(v) {tok}: dq_cooldown_end < dq_episode_start")
+
+    if violations:
+        raise RuntimeError(
+            f"gom_state INVARIANT FAIL ({len(violations)} violation(s)) — "
+            f"state NOT written: {violations[:5]}"
+        )
+
+
 def save_state(state: dict) -> None:
+    validate_gom_state(state)  # pre-write: raise → caller exits≠0 → alert
     STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(STATE_PATH, "w", encoding="utf-8") as fh:
         json.dump(state, fh, indent=2, ensure_ascii=False)

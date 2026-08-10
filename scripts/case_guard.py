@@ -171,6 +171,30 @@ def validate_written_pack(
                 failures.append(
                     f"{col_name}: {valid}/{n} non-null in last {n}d = {pct:.0f}% < 50%"
                 )
+
+            # Range check for taker_buy_pct: expect percentage [20,80], not fraction [0,1]
+            if col_name == "taker_buy_pct" and valid > 0:
+                num_vals: list[float] = []
+                for row in window_rows:
+                    cell_v = row[col_idx_0]
+                    if _is_valid(cell_v):
+                        try:
+                            num_vals.append(float(cell_v))
+                        except (TypeError, ValueError):
+                            pass
+                if num_vals:
+                    _tk_max = max(num_vals)
+                    _tk_min = min(num_vals)
+                    if _tk_max <= 1.0:
+                        failures.append(
+                            f"taker_buy_pct: fraction scale (max={_tk_max:.4f} ≤ 1.0)"
+                            f" — expected pct [20,80]; rebuild needed"
+                        )
+                    elif _tk_max == _tk_min:
+                        failures.append(
+                            f"taker_buy_pct: constant value={_tk_max:.2f} across {n}d"
+                            f" — likely stale/zero fill"
+                        )
     finally:
         wb.close()
 

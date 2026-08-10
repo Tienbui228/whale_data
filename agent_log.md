@@ -7066,3 +7066,62 @@ Dữ liệu đủ để chạy ngay. Status TASKS.md: BLOCKED — wait 15/08.
 **Report:** `docs/reports/audit_20260811.md`
 
 **GUARD-CÂM:** Chờ cron 01:25 UTC 08-11 → verify md5 closed-chapters = a5a929dc → đóng án chính thức.
+
+---
+
+## Session 2026-08-11 — F/B/C/A-tag/H fixes (đêm)
+
+**Task:** Implement 5 mục sửa theo hàng đợi operator.
+
+### F — validate_gom_state() (gom_scan.py)
+
+`scripts/gom_scan.py`: thêm `validate_gom_state(state)` trước `json.dump()` trong `save_state()`.
+- 4 invariants: (ii) open chain ≤3d gap, (iii) not open+cooldown, (iv) valid vwap_type, (v) DQ not negative
+- Invariant (i) md5 = external only, skip tại write-time
+- vi phạm → RuntimeError → caller exit≠0 → cron alert (L-44 compliant)
+- Thêm `_a3_slope_value()` helper tách raw slope từ boolean `_a3_slope_ok()`
+
+### A-tag — marginal display (gom_scan.py + screen_thresholds.yaml)
+
+`screen_thresholds.yaml` v1.3: `a3_marginal_eps: 0.005` (display-only)
+- `eval_gom()`: compute `a3_marginal = a3 AND |slope - 1.15| < 0.005`
+- `format_token_block()`: hiển thị `[A3:marginal slope=X.XXXXX]` khi flag set
+- KHÔNG đổi eval behavior — hysteresis thật cần re-gate riêng
+
+### B — taker scale fix (build_case.py + case_guard.py)
+
+**build_case.py:**
+- Line 205: đọc `taker_buy_pct` (primary) hoặc `taker_pct` (fallback) + scale guard ×100 nếu max≤1.0
+- Line 385: `pr.get("taker_buy_pct", pr.get("taker_pct"))` + `if taker ≤ 1.0: taker *= 100`
+
+**case_guard.py:** thêm range-check sau null-check cho `taker_buy_pct`:
+- max(vals) ≤ 1.0 → FAIL "fraction scale detected"
+- constant (max == min) → FAIL "constant value"
+
+**Sweep `_probe_taker_sweep_20260811.py`:**
+
+| Token | Status | Action |
+|-------|--------|--------|
+| BROCCOLIF3B | FRACTION 0.437-0.538 | REBUILD |
+| COOKIE | FRACTION 0.431-0.532 | REBUILD |
+| KOMA | FRACTION 0.445-0.527 | REBUILD |
+| TUT | FRACTION 0.426-0.533 | REBUILD |
+| XPIN | FRACTION 0.443-0.536 | REBUILD |
+| BANK | OK (min=0.465 mixed?) | NOTE |
+| CLO | ALL_NULL | CHECK |
+
+**ANALYSIS WARNING:** 5 pack BROCCOLIF3B/COOKIE/KOMA/TUT/XPIN — cột `taker_buy_pct` đang ở fraction scale (0.52 thay vì 52%). B3-streak, flag_dist_wall, flag_decay trong các pack này đều tính SAI. Đừng chấm taker-based flags cho 5 pack này cho đến khi rebuild. Rebuild sau khi SCP code mới + xác nhận.
+
+### C — fundingInfo fail-open (export_freshwatch_daily_vps.py)
+
+`scripts/export_freshwatch_daily_vps.py:371-374`: thay `log.warning + _FUNDING_INTERVALS_CACHE = {}`
+→ `log.error + raise RuntimeError(...)` — L-44 compliant: fail ≠ silent.
+
+### H — CLAUDE.md docs drift
+
+- Universe count: 525 → 527 (xác nhận 08-11 qua gom_state.json)
+- screen_thresholds.yaml changelog: v1.3 entry
+- repair_gaps cron claim: không có trong CLAUDE.md trực tiếp — nguồn là agent_log cũ, không action
+
+**Files changed:** gom_scan.py, build_case.py, case_guard.py, export_freshwatch_daily_vps.py, screen_thresholds.yaml, CLAUDE.md
+**New files:** _probe_taker_sweep_20260811.py

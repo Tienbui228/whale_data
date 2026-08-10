@@ -54,7 +54,7 @@
 
 \## FACTS ĐÃ CHỐT (không hỏi lại)
 
-\- Snapshot phủ TOÀN universe 525 by design; filter 137 chỉ ở SCREEN.
+\- Snapshot phủ TOÀN universe 527 by design (xác nhận 08-11 qua gom_state.json 527 tokens); filter 137 chỉ ở SCREEN.
 
 \- Án R1: export lành, bug ở join ledger (nghi symbol format
 

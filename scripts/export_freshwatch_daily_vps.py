@@ -369,9 +369,11 @@ def _load_funding_intervals() -> dict[str, int]:
             _FUNDING_INTERVALS_CACHE = intervals
             log.info("funding_intervals_refreshed", n=len(intervals))
         except Exception as exc:
-            log.warning("funding_intervals_refresh_failed", error=str(exc),
-                        note="using default 8h for all symbols")
-            _FUNDING_INTERVALS_CACHE = {}
+            log.error("funding_intervals_refresh_FAIL", error=str(exc))
+            raise RuntimeError(
+                f"fundingInfo fetch FAIL — L-44: missing dependency must not be silent. "
+                f"Error: {exc}"
+            ) from exc
 
     return _FUNDING_INTERVALS_CACHE
 
