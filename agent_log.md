@@ -7125,3 +7125,17 @@ Dữ liệu đủ để chạy ngay. Status TASKS.md: BLOCKED — wait 15/08.
 
 **Files changed:** gom_scan.py, build_case.py, case_guard.py, export_freshwatch_daily_vps.py, screen_thresholds.yaml, CLAUDE.md
 **New files:** _probe_taker_sweep_20260811.py
+
+---
+## 2026-08-10 04:51 UTC — BR3 Depth Snap2
+
+**Script:** _probe_br3_snap2_20260810.py (auto-collect post-gate)
+
+| Metric | Snap1 (00:45) | Snap2 (04:51) | Delta |
+|--------|---------------|---------------|-------|
+| mid | $0.006935 | $0.006992 | +0.83% |
+| bid2_usd | $377,765 | $45,247 | -88.0% |
+| ask2_usd | $238,360 | $38,326 | -83.9% |
+| ratio_2pct | 1.585 BID-HEAVY | 1.181 BALANCED | -0.404 |
+
+**Wall collapse:** Both walls pulled -84-88%, ratio giảm từ BID-HEAVY xuống BALANCED. Price +0.83% snap1→snap2. 24h vol=$7.6M 24h_pct=-8.18%.

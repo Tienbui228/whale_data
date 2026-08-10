@@ -1,0 +1,21 @@
+{
+  "snap": 2,
+  "symbol": "BROCCOLIF3BUSDT",
+  "time": "2026-08-10 04:51 UTC",
+  "mid": 0.006992,
+  "spread_pct": 0.05720823798627761,
+  "bid2_usd": 45246.903487999996,
+  "ask2_usd": 38325.816519,
+  "ratio": 1.1805855060013888,
+  "bid5_usd": 67479.143239,
+  "ask5_usd": 50490.358336,
+  "ratio5": 1.3364758235610872,
+  "vs_snap1": {
+    "mid_chg_pct": 0.8292,
+    "bid2_chg_pct": -88.02,
+    "ask2_chg_pct": -83.92,
+    "ratio_delta": -0.4043
+  },
+  "bias": "BALANCED",
+  "trend": "Depth stable"
+}
