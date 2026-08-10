@@ -1,0 +1,24 @@
+{
+  "snap": 2,
+  "symbol": "BTWUSDT",
+  "time": "2026-08-10 12:57 UTC",
+  "time_ts": 1786366623.451364,
+  "mid": 0.17757,
+  "spread_pct": 0.033789491468155936,
+  "bid2_usd": 29837.38168,
+  "ask2_usd": 41489.94145,
+  "ratio": 0.7191473556538365,
+  "bid5_usd": 140378.58223,
+  "ask5_usd": 104690.0426,
+  "ratio5": 1.340897173634353,
+  "bias": "ASK-HEAVY",
+  "trend": "BID weakening significantly",
+  "top_bid_wall_usd": 17203.83,
+  "top_ask_wall_usd": 4278.07874,
+  "vs_snap1": {
+    "mid_chg_pct": -10.6723,
+    "bid2_chg_pct": -37.51,
+    "ask2_chg_pct": 8.56,
+    "ratio_delta": -0.5302
+  }
+}

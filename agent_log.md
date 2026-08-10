@@ -7286,3 +7286,20 @@ APR BID deepened thêm (1.64→1.95). 24h price -11.76% (pullback từ $0.2148 c
 - BscScan v2: top holders ON (BSC contract confirmed 0x0e4f6209...)
 - Nansen: exchange balance trend 30d
 - C1 gate 2026-08-15: GOM-C active filter
+
+---
+
+## 2026-08-10 12:57 UTC — BTW Depth Snap2
+
+**Script:** _probe_btw_snap2_20260810.py
+
+| Metric | Snap1 (08:01) | Snap2 (12:57) | Delta |
+|--------|---------------|---------------|-------|
+| mid | $0.198785 | $0.177570 | -10.67% |
+| bid2_usd (±2%) | $47,746 | $29,837 | -37.5% |
+| ask2_usd (±2%) | $38,218 | $41,490 | +8.6% |
+| ratio_2pct | 1.249 BID-HEAVY | 0.719 ASK-HEAVY | -0.530 |
+
+**Trend:** BID weakening significantly — ratio sụp từ 1.25 xuống 0.72, bias đổi chiều BID→ASK.
+**Live (12:57 UTC):** last=$0.1764 24h_pct=-5.26% vol=$67.6M
+**Kết luận:** Áp lực bán tăng mạnh trong ~5h. BLOWOFF 2.0 phase — consistent với S3 xả.
