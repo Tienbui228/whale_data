@@ -1,6 +1,6 @@
 # FRESHWATCH CASE INDEX
 
-Generated: 2026-08-10 01:54 UTC
+Generated: 2026-08-10 03:44 UTC
 
 | file | token | status | loai | action_class | ngay_mo | T0 | moc_ke_tiep | han | MM_ID | ghi_chu |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -19,3 +19,4 @@ Generated: 2026-08-10 01:54 UTC
 | CASE_COOKIE.xlsx | COOKIE | OPEN — audit-collect complete, awaiting operator verdict | GOM-C fire 08-03; pump pattern; ATH-97.9%; OI $1.1M | COLD_START | 2026-08-09 | 2026-08-03 | depth snap #2 ≥05:50 UTC |  |  | fullyDelisted=True; Q1=0(chain); oi_cycle=0.289; VWAP=$0.007 |
 | CASE_BROCCOLIF3B.xlsx | BROCCOLIF3B | OPEN | COLD_START | COLD_START | 2026-08-10 |  | depth snap#2 >=04:45 UTC 2026-08-10 |  |  | BR3 audit-collect 10/08; two-broccoli confirmed distinct; DU |
 | CASE_KOMA.xlsx | KOMA | OPEN | GOM-C PROVISIONAL | COLD_START | 2026-08-10 |  | depth snap#2 >=05:51 UTC; GOM-C gate 15/08 |  | ALPHA_1 | K audit-collect 10/08; pump 07-31 +100%/$604M; OI UNCALIB; G |
+| CASE_APR.xlsx | APR | OPEN | GOM-C 22ngay PROVISIONAL | COLD_START | 2026-08-10 |  | depth snap#2 >=07:42 UTC; GOM-C C1 gate 15/08 |  | N/A (not Alpha) | perp-only (not Alpha); onboard 2025-10-23; ATH=$0.75→-73%; G |

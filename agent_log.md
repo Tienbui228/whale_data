@@ -6990,3 +6990,40 @@ ALLUSDT + FORMUSDT oi_usd partial: ghi nhận, không actionable (1 ngày/9, kh�
 Dữ liệu đủ để chạy ngay. Status TASKS.md: BLOCKED — wait 15/08.
 
 **Action:** Dữ liệu SẠCH, không cần backfill thêm. Test chạy đúng nguyên văn khi operator unblock.
+
+---
+## Session 2026-08-10 — APR audit-collect
+
+**Task:** A-0→A-8 audit-collect pipeline APRUSDT (tiếp từ session BROCCOLIF3B+KOMA)
+
+**Scripts:**
+-  — A-0 identity lock
+-  — A-1 LSR+OI persist
+-  — A-2 klines+funding collect
+-  — A-2b build CASE_APR.xlsx
+-  — A-3/4/5 analytics (LSR null fix needed)
+-  — A-345b fix: freshwatch LSR + GOM-C
+-  — A-5 depth snap #1
+-  — A-6 crossref
+-  — A-7 sanity 6/6 PASS
+-  — A-8 register CASE_INDEX row 20
+-  — full report
+
+**Key results:**
+- APRUSDT: perp-only (NOT Alpha), onboard 2025-10-23, LSR endpoint all 404
+- LSR source: freshwatch_daily_2026-06/07/08.csv (65 dates, Jun→Aug 07)
+- 291 klines (2025-10-23→2026-08-09), 1744 funding records
+- ATH=/usr/bin/bash.75 (2025-10-24), ATL=/usr/bin/bash.062 (2026-02-06), current=/usr/bin/bash.199 (-73.45%/+219%)
+- 7 pump clusters, largest: C3 Mar 14 (58.4×vol), C5 Apr 14 (+66.5%), C7 Jun 2 (+41%)
+- GOM-C PROVISIONAL: **22 ngày** (2026-06-02→2026-08-04) — C1 PROVISIONAL
+- Q1_NET=.20M (89.7% of gross .79M) — NET dominant
+- Q2: OI calibrated, oi_cycle_pos=0.532
+- Q3: VWAP M2=/usr/bin/bash.2065, px vs VWAP=-3.58%
+- div_avg3=1.6959 (08-07, peak 2.164 on 08-04), >1.5 liên tục 6 ngày
+- gLSR=1.1891, slope5d=1.4009 (rising)
+- pin%=46.4% lifetime, current=0 (f_avg elevated từ 07-26)
+- Depth snap1: mid=/usr/bin/bash.19755, ±2% ratio=1.638 BID-HEAVY, depth mỏng (7K bid)
+- Sanity: 6/6 PASS, build exit=0 (no guard-câm)
+- CASE_INDEX: row 20
+
+**CẦN OPERATOR:** APR không có BSC contract (perp-only, không Alpha) — không check được BscScan on-chain; venue_top (Bitget); snap#2 ≥07:42 UTC; GOM-C C1 gate 15/08; div_avg3 08-08/09 data; verdict.
