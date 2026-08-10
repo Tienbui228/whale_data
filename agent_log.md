@@ -7027,3 +7027,42 @@ Dữ liệu đủ để chạy ngay. Status TASKS.md: BLOCKED — wait 15/08.
 - CASE_INDEX: row 20
 
 **CẦN OPERATOR:** APR không có BSC contract (perp-only, không Alpha) — không check được BscScan on-chain; venue_top (Bitget); snap#2 ≥07:42 UTC; GOM-C C1 gate 15/08; div_avg3 08-08/09 data; verdict.
+
+---
+
+## Session 2026-08-11 — PROJECT AUDIT A–H
+
+**Task:** Audit toàn dự án 8 items theo spec operator. Output: `docs/reports/audit_20260811.md`.
+
+### Kết quả audit
+
+| Item | Topic | Severity | Kết quả |
+|------|-------|----------|---------|
+| A | Root cause A3 slope boundary | P1 | slope=1.14902, margin=+0.00098, no hysteresis |
+| B | Agent B taker_pct column mismatch | P1 | build_case.py đọc "taker_pct", CSV có "taker_buy_pct" |
+| C | fundingInfo fail-open (L-44) | P1 | export_freshwatch_daily_vps.py:371-374 silent default |
+| D | Spec conformance A1-A6 B1-B4 | — | PASS |
+| E | State invariants (5) | — | PASS (527 tokens, md5=a5a929dc) |
+| F | gom_state.json post-write guard | P1 | save_state() gom_scan.py:768 không có validator |
+| G | Deploy parity local↔VPS | — | PASS (md5 match cả 2 script) |
+| H | Docs/CLAUDE.md drift | P2 | 3 entries stale |
+
+**P0:** 0 | **P1:** 4 (A,B,C,F) | **P2:** 3 (H×3)
+
+### Thứ tự fix
+
+**Trước gate 15/08:**
+1. F: `gom_scan.py:768` — thêm validate_gom_state() sau save_state()
+2. B: `build_case.py` — grep+fix "taker_pct" → "taker_buy_pct"
+3. C: `export_freshwatch_daily_vps.py:371-374` — fundingInfo fail → exit(1)
+
+**Sau gate 15/08:**
+4. A: A3 hysteresis proposal (thresholds.yaml gated)
+5. H×3: conformance table v1.9, universe 527, repair_gaps manual note
+6. C.2: BTC bail raise (P2)
+7. TASKS.md: TUT-T30 + BANK-V2 stale status
+
+**Probes:** `_probe_a_ff_signals_20260811.py`, `_probe_e_state_invariants_20260811.py`  
+**Report:** `docs/reports/audit_20260811.md`
+
+**GUARD-CÂM:** Chờ cron 01:25 UTC 08-11 → verify md5 closed-chapters = a5a929dc → đóng án chính thức.
