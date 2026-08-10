@@ -2,9 +2,8 @@
 tests/test_guard_v2.py — Standing regression for validate_written_pack (Guard V2).
 
 Acceptance table (án GUARD-CÂM P1, 2026-08-10):
-  PASS: ZBT, HEI, COOKIE (rebuilt), FF (rebuilt)
-  FAIL: BROCCOLIF3B (px_avg=None — rebuild blocked by Excel lock, pending close)
-        CLO          (taker_buy_pct=None — no scratch data, needs data collection)
+  PASS: ZBT, HEI, COOKIE (rebuilt), FF (rebuilt), BROCCOLIF3B (rebuilt after Excel close)
+  FAIL: CLO (taker_buy_pct=None — no scratch data, needs data collection)
 
 Root cause fixed in build_case.py: OHLC keys "open/high/low/close" with
 fallback "o/h/l/c"; vol/taker fallback for alternate CSV schemas.
@@ -32,8 +31,8 @@ CASES: list[tuple[str, str, str | None]] = [
     ("CASE_HEI",         "PASS", None),
     ("CASE_COOKIE",      "PASS", None),  # rebuilt 2026-08-10 with OHLC fix
     ("CASE_FF",          "PASS", None),  # rebuilt 2026-08-10 with OHLC + vol/taker fallback
-    # FAIL — known data gaps (not fixable without data collection or Excel close)
-    ("CASE_BROCCOLIF3B", "FAIL", "px_avg"),    # pending Excel close → rebuild
+    ("CASE_BROCCOLIF3B", "PASS", None),  # rebuilt 2026-08-10 after Excel close
+    # FAIL — known data gaps (not fixable without data collection)
     ("CASE_CLO",         "FAIL", "taker_buy_pct"),  # no scratch data, needs collection
 ]
 

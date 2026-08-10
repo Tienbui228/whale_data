@@ -6803,4 +6803,36 @@ Pipeline audit-collect KOMAUSDT.
 
 Scripts: _probe_koma_{0,1,2,345,345b,6,7,snap1}*, _task_koma_{2_build,8b_register}*, _collect_koma_20260810.md. DỪNG chờ đọc.
 
+---
+
+## P0 STATE INTEGRITY — GOM CRON DISABLE + BACKUP RESTORE (2026-08-10 ~02:xx UTC)
+
+**Incident:** gom_daily cron (25 1 * * *) ran 2026-08-10T01:25 UTC → full rebuild clobbered FF Aug-01 chain.
+
+**Root cause:** `scripts/run_gom_daily.py` → `gom_scan.py --daily` = FULL REBUILD từ freshwatch history, không incremental. FF chapter=1 (start 2026-08-01, Q1=$1.99M) không được tái tạo vì freshwatch CSVs thiếu derived signals (oi_vs_med14, glsr_slope_5d) tại thời điểm rebuild — những cột này computed in-memory trong scan, không persist trong export CSV.
+
+**State diff (trước → sau cron 08-10T01:25):**
+| metric | backup bc3f8c35 (08-08T14:36Z) | corrupted (post-cron) |
+|--------|-------------------------------|----------------------|
+| tokens | 527 | 527 |
+| open chains | 59 | 44 (−15) |
+| FF chain_open | True, start=2026-08-01, Q1=$1,988,262 | False, start=2026-07-17, Q1=0 (wrong chain) |
+| PARTI chain_open | None (từ backup) | None, no close_date |
+
+**Guard-cam commits 08-09→08-10:** NOT đụng loader/exporter. Chỉ wiring guard V2 + case_guard.py. Không liên quan đến state corruption.
+
+**Actions taken:**
+1. GOM cron DISABLED: `crontab -l` xác nhận `# 25 1 * * * ...run_gom_daily.py` (commented). Crontab mới apply lúc ~02:xx UTC 08-10.
+2. Corrupted state backed up: `gom_state_corrupted_20260810.json` (md5 12c34344).
+3. Backup restored: `cp gom_state_v9_vps.json gom_state.json`. VPS md5 confirmed bc3f8c35f21f528afeaac4ef13680048.
+4. Verify post-restore: tokens=527 open=59, FF chain_open=True start=2026-08-01 Q1=$1,988,262 last=2026-08-07.
+
+**Miss window:** 2026-08-08T14:36Z → 2026-08-10T01:25Z (backup cut point → cron). Hai ngày 08-08 và 08-09 không được capture vào state. FF last_gom_date=2026-08-07 (kể cả backup). Cần reconcile sau khi fix incremental.
+
+**CẦN OPERATOR:**
+- Fix run_gom_daily.py: cần incremental mode (đọc last_gom_date từ state, chỉ scan ngày mới hơn) KHÔNG full rebuild.
+- Hoặc: persist derived signals (oi_vs_med14, glsr_slope_5d) vào freshwatch export CSV để full rebuild reproducible.
+- Sau khi fix xác nhận: re-enable cron, replay 08-08/09 manually (`python3 scripts/run_gom_daily.py --date 2026-08-08 --date 2026-08-09`), reconcile open chain list.
+- Verify PARTI closed properly (backup chain_open=None — không rõ đóng hay chưa từng mở trong fw universe).
+
 **CẦN OPERATOR:** BscScan, Nansen, unlock, verdict, snap #2, GOM-C C1 spec.
