@@ -998,11 +998,18 @@ def run_daily(
     token_filter: str | None = None,
     lookback_days: int = 60,
     fw_filter_path: Path | None = None,
+    incremental: bool = True,
 ) -> dict:
     """Run daily GOM scan from freshwatch CSV store.
 
-    Strategy: re-run chain state from scratch over trailing window per token.
-    This is idempotent and avoids state divergence issues.
+    §8.2 — incremental=True (default, cron path): continue from last_eval_date per token.
+      Existing chain state is preserved; only new days (after last_eval_date) are processed.
+      Closed chapters are NOT rewritten. "cron không có quyền viết lại lịch sử."
+      Migrates old state: if last_eval_date absent, derives from last_gom_date/close_date.
+
+    incremental=False (--full-rebuild, operator only): rebuild each token from scratch
+      over the full lookback window. Requires GOM_ALLOW_FULL_REBUILD=1 env var.
+      FORBIDDEN from cron (asserted in run_gom_daily.py main() §8.2).
 
     S-rules applied (via fw_loader_utils.build_token_days):
       S1: _partial_day → skip Q1 (handled in update_chain)
@@ -1085,20 +1092,65 @@ def run_daily(
     gomc_beta_fires:      list[dict] = []    # GOM-C PROVISIONAL-β fires
     gomc_beta_suppressed: list[dict] = []    # GOM-C tokens in 14d cooldown but otherwise passing
 
+    # §8.2: signal context window — 30d covers A5 oi_cycle_pos (30d rolling)
+    _INCR_CTX = 30
+
     for sym in all_symbols:
         token = sym[:-4] if sym.endswith("USDT") else sym
 
-        days, suspect_dates = build_token_days(df_all, sym, date_from, date_to, intervals)
+        # ── §8.2 incremental: resume from last_eval_date ──────────────────────
+        existing_chain = all_state.get(token, {})
+        if incremental and existing_chain:
+            last_eval = existing_chain.get("last_eval_date", "")
+            if not last_eval:
+                # Migrate old state: derive resume point from most recent chain event date
+                _cands = [existing_chain.get("last_gom_date", ""),
+                          existing_chain.get("close_date", "")]
+                _cands = [c for c in _cands if c]
+                _fallback = max(_cands) if _cands else ""
+                _cutoff = (datetime.strptime(target_date, "%Y-%m-%d")
+                           - timedelta(days=_INCR_CTX)).strftime("%Y-%m-%d")
+                last_eval = _fallback if _fallback >= _cutoff else ""
+        else:
+            last_eval = ""
+
+        # Already current → preserve state, report to open_chains if applicable
+        if incremental and last_eval and last_eval >= target_date:
+            all_state[token] = existing_chain
+            if existing_chain.get("chain_open"):
+                open_chains.append((token, existing_chain, None))
+            continue
+
+        # Load data: in incremental mode, 30d context before last_eval + new days
+        if incremental and last_eval:
+            _ctx_from = (datetime.strptime(last_eval, "%Y-%m-%d")
+                         - timedelta(days=_INCR_CTX)).strftime("%Y-%m-%d")
+            token_date_from = max(_ctx_from, date_from)
+        else:
+            token_date_from = date_from
+
+        days, suspect_dates = build_token_days(df_all, sym, token_date_from, date_to, intervals)
         if not days:
             continue
         enrich_token_days(days)
 
-        chain: dict     = {}
+        # Find index where new chain updates start (context days are signal-only)
+        if incremental and last_eval:
+            new_start_i = next(
+                (idx for idx, _d in enumerate(days) if (_d.get("date") or "") > last_eval),
+                len(days),
+            )
+            chain = dict(existing_chain)  # continue from existing state
+        else:
+            new_start_i = 0
+            chain = {}
+
         last_result     = None
         prev_open       = False
         event_on_target = False
 
-        for i, d in enumerate(days):
+        for i in range(new_start_i, len(days)):
+            d = days[i]
             was_open = chain.get("chain_open", False)
             skip     = d.get("_skip_eval") or d.get("_suspect")
 
@@ -1108,6 +1160,7 @@ def run_daily(
                 result = eval_gom(days, i, cfg, sc)
 
             chain = update_chain(chain, token, days, i, result, cfg, sc)
+            chain["last_eval_date"] = d.get("date", "")  # §8.2: track last processed date
 
             if d.get("date", "") == target_date:
                 last_result = result
@@ -1321,6 +1374,9 @@ def main() -> None:
     parser.add_argument("--store",     help="Path to daily store CSV (--daily only)")
     parser.add_argument("--date",      help="Target date YYYY-MM-DD (--daily, default=latest)")
     parser.add_argument("--fw-filter", help="Path to freshwatch_symbols.txt — restrict --daily to listed symbols")
+    parser.add_argument("--full-rebuild", action="store_true",
+                        help="§8.2 operator-only: full rebuild from scratch (requires GOM_ALLOW_FULL_REBUILD=1). "
+                             "FORBIDDEN from cron — asserted in run_gom_daily.py.")
     args = parser.parse_args()
 
     # Dependency gate: screen_thresholds.yaml must exist
@@ -1356,10 +1412,40 @@ def main() -> None:
             print(f"ERROR: store not found: {store}", file=sys.stderr)
             sys.exit(1)
         fw_filter_path = Path(args.fw_filter) if args.fw_filter else None
+        _full_rebuild  = getattr(args, "full_rebuild", False)
+        _incremental   = not _full_rebuild
+
+        if _full_rebuild:
+            # §8.2: full-rebuild FORBIDDEN from cron; operator must set env var explicitly
+            _allow = os.environ.get("GOM_ALLOW_FULL_REBUILD", "")
+            if _allow != "1":
+                print("ERROR: --full-rebuild requires GOM_ALLOW_FULL_REBUILD=1 env var. "
+                      "Set explicitly for operator rebuilds; NEVER set from cron.", file=sys.stderr)
+                sys.exit(1)
+            # L-48 provenance header (mandatory for all full-rebuild runs)
+            import socket as _sock
+            import subprocess as _sub
+            try:
+                _commit = _sub.run(
+                    ["git", "rev-parse", "--short", "HEAD"],
+                    capture_output=True, text=True, cwd=str(REPO_ROOT),
+                ).stdout.strip()
+            except Exception:
+                _commit = "unknown"
+            _tgt = args.date or (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+            _from_dt = (datetime.strptime(_tgt, "%Y-%m-%d") - timedelta(days=60)).strftime("%Y-%m-%d")
+            print("# PROVENANCE full-rebuild")
+            print(f"# data-source: {args.store}")
+            print(f"# machine: {_sock.gethostname()}")
+            print(f"# date-range: {_from_dt} → {_tgt}")
+            print(f"# code-commit: {_commit}")
+            print()
+
         final_state = run_daily(cfg, sc, store,
                                 target_date=args.date,
                                 token_filter=args.token,
-                                fw_filter_path=fw_filter_path)
+                                fw_filter_path=fw_filter_path,
+                                incremental=_incremental)
         save_state(final_state)
         HB_PATH.parent.mkdir(parents=True, exist_ok=True)
         HB_PATH.write_text(datetime.now(timezone.utc).isoformat())

@@ -6836,3 +6836,90 @@ Scripts: _probe_koma_{0,1,2,345,345b,6,7,snap1}*, _task_koma_{2_build,8b_registe
 - Verify PARTI closed properly (backup chain_open=None — không rõ đóng hay chưa từng mở trong fw universe).
 
 **CẦN OPERATOR:** BscScan, Nansen, unlock, verdict, snap #2, GOM-C C1 spec.
+
+---
+
+## P0 GIAI ĐOẠN 2 — FIX + REPLAY HOÀN THÀNH (2026-08-10)
+
+### (a) Incremental mode — §8.2
+
+**gom_scan.py rewrite (incremental):**
+- Thêm `last_eval_date` vào chain state, update cuối mỗi ngày trong inner loop.
+- Migration: nếu `last_eval_date` absent → fallback từ `max(last_gom_date, close_date)`.
+- Nếu `last_eval_date >= target_date` → skip token (already current).
+- Context window: load 30d trước `last_eval_date` để đủ tín hiệu lookback (A1 avg3/avg5, A3 5d slope, A5 30d OI cycle). Những ngày context không update chain state.
+- Constant `_INCR_CTX = 30` trước main loop.
+- Full rebuild chỉ qua `--full-rebuild` tường minh + `GOM_ALLOW_FULL_REBUILD=1` env + L-48 provenance header in ra stdout.
+
+**run_gom_daily.py — §8.2 assert:**
+```
+assert "--full-rebuild" not in cmd, "ASSERT §8.2 VIOLATED: ..."
+```
+Cron KHÔNG THỂ tự gọi `--full-rebuild`. Fail loudly nếu ai sửa cron.
+
+**Deploy:** SCP cả hai file lên VPS. `python -c "import py_compile; py_compile.compile('...')"` syntax PASS.
+
+### (b) Data guard — freshwatch FF 08-01→08-09
+
+Probe `_probe_p0_data_guard_20260810.py` + VPS probe `scratch/probe_vps_ff_data.py`:
+- VPS freshwatch_daily_2026-08.csv: 9 rows (08-01→08-09), 0 NULLs (px_avg, oi_usd, lsr_*, taker_ratio).
+- Local scratch: 7 rows (08-01→08-07), 0 NULLs.
+- Data COMPLETE → root cause KHÔNG phải thiếu data, mà là A3 slope boundary:
+  FF 08-01: `lsr_global(i)/lsr_global(i-5) = 0.7001/0.6093 = 1.149 ≈ 1.15 threshold`.
+  Full rebuild floating-point khác run → flip A3 True↔False → chain không mở.
+
+### (c) Replay + Reconcile
+
+**08-08 incremental:** 13 open chains (FF Q1=$1.99M start=08-01 ✓), S-MISS=0.
+**08-09 incremental:** 13 open chains, S-MISS=0.
+
+**State sau replay:**
+| metric | backup bc3f8c35 | sau replay 08-09 |
+|--------|----------------|-----------------|
+| fw-scanned open | 59 (all) | 13 (fw139 only) |
+| fw-scanned closed | — | 126 |
+| legacy backup open | — | 43 (không scan, giữ nguyên) |
+| Total open state | 59 | 56 |
+| FF chain_open | True, start=08-01 | True, start=08-01 |
+| FF last_eval_date | — | 2026-08-09 |
+| FF Q1_cum_usd | $1,988,262 | $1,988,262 |
+
+**13 open scanned 08-08/09:** FF(08-01), COAI(08-02), POWER(08-02), ROBO(08-03), HUMA(08-04), CAP(08-05), APR(08-06), GIGGLE(08-06), IN(08-06), SOPH(08-06), AKE(08-08), ALLO(08-09), ZAMA(08-09).
+
+### (d) Anchor check 3/3 PASS
+
+- **FF:** chain_open=True, start=2026-08-01, Q1_cum_usd=$1,988,262, last_eval=2026-08-09, n_days=6. PASS.
+- **PARTI:** chain_open=False, close_date=2026-07-11, last_eval=2026-08-09. PASS.
+- **BANK:** chain_open=False, close_date=2026-07-14, retro_tag=2026-07-16 (47% drop), retro_note="gap→chuyển pha phân phối". PASS.
+
+### (d) Cron re-enable + Telegram
+
+- **Cron RE-ENABLED:** `25 1 * * * ... .venv/bin/python3 scripts/run_gom_daily.py` (thêm .venv path so với cron cũ).
+  Comment cập nhật: "re-enabled 2026-08-10 after P0 fix (incremental mode §8.2)".
+- **pyyaml install VPS:** `pip install pyyaml` trong .venv (bị thiếu, chặn run_gom_daily.py).
+- **Báo cáo bù 08-09:** `run_gom_daily.py` chạy VPS → TG gửi thành công (13 open / 139 scanned, S-MISS=0).
+- **P0 reconcile TG:** `scratch/send_p0_tg_vps.py` → TG gửi thành công. Summary: nguyên nhân + 3 anchor PASS + trạng thái sau replay.
+
+### MD5 reference — closed chapters trước cron 08-11
+
+**Probe:** `_probe_md5_closed_chapters_20260810.py`
+**Kết quả:** 169 closed tokens, aggregate MD5 = `a5a929dcc4ba17f71eb3243146be2314`.
+**Lưu tại:** `scratch/md5_closed_chapters_20260810.json`
+
+**Sau khi cron 08-11 01:25 UTC chạy lần đầu:** re-run probe → so sánh aggregate_md5.
+Nếu IDENTICAL → §8.2 "không viết lại sổ" PASS.
+Nếu KHÁC → escalate, disable cron, investigate.
+
+### Tóm tắt P0 trạng thái
+
+| item | kết quả |
+|------|---------|
+| Root cause xác định | A3 slope boundary flip (full-rebuild) |
+| Data guard | PASS (0 NULLs, data đủ) |
+| Incremental mode deploy | PASS (gom_scan.py + run_gom_daily.py §8.2) |
+| Replay 08-08/09 | PASS (13 open, FF Q1=$1.99M) |
+| Anchor 3/3 | PASS (FF / PARTI / BANK) |
+| Cron re-enable | PASS (01:25 UTC, incremental) |
+| TG bù 08-09 + P0 note | PASS (gửi thành công) |
+| MD5 reference | DONE (a5a929dcc4ba17f71eb3243146be2314, 169 closed) |
+| md5 verify sau cron 08-11 | **PENDING — confirm sau 01:25 UTC ngày 08-11** |

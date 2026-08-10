@@ -590,7 +590,9 @@ def main() -> None:
     # Dependency gate
     check_deps(target_date)
 
-    # Run gom_scan --daily
+    # §8.2: cron không có quyền viết lại lịch sử — full-rebuild FORBIDDEN from cron
+    # This assert fails loudly if anyone accidentally adds --full-rebuild to the cron cmd.
+    # Full rebuilds require explicit operator invocation with GOM_ALLOW_FULL_REBUILD=1.
     gom_scan = SCRIPTS / "gom_scan.py"
     cmd = [
         sys.executable, str(gom_scan),
@@ -599,6 +601,9 @@ def main() -> None:
         "--date", target_date,
         "--fw-filter", str(FW_SYM_PATH),
     ]
+    assert "--full-rebuild" not in cmd, \
+        "ASSERT §8.2 VIOLATED: cron entry (run_gom_daily.py) must never pass --full-rebuild to gom_scan. " \
+        "Full rebuilds require GOM_ALLOW_FULL_REBUILD=1 and manual invocation."
 
     _log(f"exec: {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, encoding="utf-8", errors="replace",
