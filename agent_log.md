@@ -6923,3 +6923,70 @@ Nếu KHÁC → escalate, disable cron, investigate.
 | TG bù 08-09 + P0 note | PASS (gửi thành công) |
 | MD5 reference | DONE (a5a929dcc4ba17f71eb3243146be2314, 169 closed) |
 | md5 verify sau cron 08-11 | **PENDING — confirm sau 01:25 UTC ngày 08-11** |
+
+---
+
+## HÀNG ĐỢI PRE-WORK — 2026-08-10 (sau P0)
+
+### Item 1 — KOMA build path / án GUARD-CÂM
+
+**Câu hỏi:** KOMA dùng `build_case.py` chuẩn hay đường builder riêng của agent ANALYSIS?
+
+**Kết quả:** KOMA dùng `build_case.py` (xác nhận bởi `_task_koma_2_build_20260810.py:59`).
+Không có đường riêng — analysis probes (K-3/K-4/K-5) là read-only từ scratch CSV, không viết XLSX.
+
+**Entry-point table (đầy đủ, guard V2 đã wired):**
+| Entry point | Guard V2 | Dùng bởi |
+|------------|----------|---------|
+| `build_case.py:863` | `validate_written_pack` ✓ | Initial build: KOMA, BROCCOLIF3B, FF, HEI, COOKIE, BANANAS31... |
+| `scripts/case_daily.py:446` | `validate_written_pack` ✓ | Daily append (cron 02:00 UTC) |
+
+**Verdict:** Án GUARD-CÂM đóng được sau md5 check 08-11 PASS.
+
+**Lesson (ghi khi đóng án):** Guard trên file-đã-ghi (post-write validate_written_pack): wired ở cả 2 entry-point. Fixture thường trực: `tests/test_guard_v2.py` 6/6 (ZBT, HEI, COOKIE, FF, BROCCOLIF3B, CLO). CLO FAIL accepted (taker_buy_pct thiếu data — án riêng).
+
+### Item 2 — NaN% lsr/oi/taker probe (đo đúng nghĩa)
+
+**Probe:** `scripts/archive/_probe_nan_lsr_oi_taker_20260810.py`
+**Data:** VPS freshwatch_daily_2026-08.csv, 526 symbols, 4726 rows, 08-01→08-09.
+
+**Kết quả:**
+| col | null_count | null% |
+|-----|-----------|-------|
+| px_avg | 0 | 0% ✓ |
+| vol_quote | 0 | 0% ✓ |
+| taker_buy_pct | 0 | 0% ✓ |
+| funding_avg | 0 | 0% ✓ |
+| oi_usd | 2 rows | 0.0% (ALLUSDT 1/9, FORMUSDT 1/9) |
+| lsr_pos_r | 0 | 0% ✓ |
+| lsr_acc_r | 0 | 0% ✓ |
+| lsr_global_r | 0 | 0% ✓ |
+| taker_ratio | 0 | 0% ✓ |
+
+4 FAPI delist symbols (ACXUSDT/HFTUSDT/VANRYUSDT/VICUSDT): **0 nulls** — data vẫn có trong CSV.
+oi_usd partial: ALLUSDT + FORMUSDT, 11% each — isolated, không phải FAPI.
+
+**Verdict:** "freshwatch thiếu OI/LSR" = CHẨN ĐOÁN SAI. Data đầy đủ. Gộp vào án FAPI: KHÔNG CẦN.
+Root cause P0 confirmed = A3 slope boundary (0.7001/0.6093=1.149≈1.15 threshold, floating-point flip).
+
+ALLUSDT + FORMUSDT oi_usd partial: ghi nhận, không actionable (1 ngày/9, không ảnh hưởng GOM scan).
+
+### Item 4 — BANANAS31 store verify (gate prep 15/08)
+
+**Probes:** `scripts/archive/_probe_bananas31_store_20260810.py`, `_probe_bananas31_alpha_20260810.py`
+
+**Freshwatch (VPS canonical):**
+- 67 rows: 2026-06-01 → 2026-08-09 | 0 NULLs tất cả col ✓
+- Gap: 07-23→07-27 (4 ngày, system-wide, xử lý bởi gom_gap rule)
+
+**GOM state BANANAS31:**
+- chain_open=False, start=08-01, close_date=08-06, close_reason=gom_gap>2d
+- Q1=$459k, n_days=3 (fired 08-01, 08-02, 08-03; break 08-04,05,06 → close)
+- last_eval_date=2026-08-09 ✓
+
+**Alpha klines:** VPS store có BANANAS31 từ 07-30→08-09 ✓. Local store thiếu BANANAS31 (minor — gate không cần local).
+
+**PASS-definition (frozen TASKS.md):** "GOM-C code (post-conformance whale:04cd2ad) KHÔNG fire trên bất kỳ non-suspect row nào trong backtest window BANANAS31; suspect rows liệt kê tường minh".
+Dữ liệu đủ để chạy ngay. Status TASKS.md: BLOCKED — wait 15/08.
+
+**Action:** Dữ liệu SẠCH, không cần backfill thêm. Test chạy đúng nguyên văn khi operator unblock.
