@@ -1,0 +1,1274 @@
+Loaded 28216 freshwatch rows
+Symbols with ≥30 rows in window: 525
+
+Total events collected: 199216
+
+================================================================================
+VÙNG-RUNG ANALYSIS — fw tokens=525, window=2026-06-10→2026-08-09
+================================================================================
+
+ε values: [0.005, 0.01, 0.02]
+(a) = changed-outcome (GOM-A flip); (b) = harmless or scope=display/chain
+
+Condition |      ε | n_marginal | n(a)_changed | n(b)_harmless | scope
+----------------------------------------------------------------------
+  A2     |  0.005 |        105 |           17 |            88 | GOM-A
+  A2     |  0.010 |        223 |           35 |           188 | GOM-A
+  A2     |  0.020 |        447 |           66 |           381 | GOM-A
+
+  A3     |  0.005 |        306 |           32 |           274 | GOM-A
+  A3     |  0.010 |        602 |           63 |           539 | GOM-A
+  A3     |  0.020 |       1145 |          117 |          1028 | GOM-A
+
+  B1     |  0.005 |        220 |            0 |           220 | gom_b
+  B1     |  0.010 |        426 |            0 |           426 | gom_b
+  B1     |  0.020 |        830 |            0 |           830 | gom_b
+
+  C3lo   |  0.005 |          0 |            0 |             0 | gomc
+  C3lo   |  0.010 |          0 |            0 |             0 | gomc
+  C3lo   |  0.020 |          0 |            0 |             0 | gomc
+
+  C3hi   |  0.005 |          1 |            0 |             1 | gomc
+  C3hi   |  0.010 |          2 |            0 |             2 | gomc
+  C3hi   |  0.020 |          5 |            0 |             5 | gomc
+
+  quiet  |  0.005 |      25467 |            0 |         25467 | gomc
+  quiet  |  0.010 |      25516 |            0 |         25516 | gomc
+  quiet  |  0.020 |      25530 |            0 |         25530 | gomc
+
+  riv    |  0.005 |        262 |            0 |           262 | chain
+  riv    |  0.010 |        548 |            0 |           548 | chain
+  riv    |  0.020 |       1103 |            0 |          1103 | chain
+
+  Q2d    |  0.005 |         10 |            0 |            10 | display
+  Q2d    |  0.010 |         14 |            0 |            14 | display
+  Q2d    |  0.020 |         25 |            0 |            25 | display
+
+
+================================================================================
+CHANGED-OUTCOME EVENTS (ε=0.005, GOM-A scope only)
+================================================================================
+
+  A2 — 17 events where gom_A flips:
+  Token                Date              Value    Thr     Dist  Passes   GOM-A    CF_A
+  --------------------------------------------------------------------------------
+  PYTHUSDT             2026-06-22      1.10194  1.100  0.00194    >thr   False    True
+  STXUSDT              2026-06-25      1.10484  1.100  0.00484    >thr   False    True
+  ARUSDT               2026-06-26      1.10460  1.100  0.00460    >thr   False    True
+  STXUSDT              2026-06-26      1.10092  1.100  0.00092    >thr   False    True
+  BTWUSDT              2026-07-03      1.09602  1.100  0.00398    ≤thr    True   False
+  CAPUSDT              2026-07-05      1.10360  1.100  0.00360    >thr   False    True
+  USUSDT               2026-07-06      1.10188  1.100  0.00188    >thr   False    True
+  AUSDT                2026-07-11      1.09756  1.100  0.00244    ≤thr    True   False
+  AUSDT                2026-07-12      1.09910  1.100  0.00090    ≤thr    True   False
+  BANUSDT              2026-07-16      1.10252  1.100  0.00252    >thr   False    True
+  XPINUSDT             2026-07-19      1.10478  1.100  0.00478    >thr   False    True
+  HOLOUSDT             2026-07-20      1.09814  1.100  0.00186    ≤thr    True   False
+  OPENUSDT             2026-07-23      1.10282  1.100  0.00282    >thr   False    True
+  CHIPUSDT             2026-07-27      1.10084  1.100  0.00084    >thr   False    True
+  LDOUSDT              2026-07-27      1.10174  1.100  0.00174    >thr   False    True
+  INJUSDT              2026-07-28      1.10494  1.100  0.00494    >thr   False    True
+  API3USDT             2026-08-01      1.10166  1.100  0.00166    >thr   False    True
+
+  A3 — 32 events where gom_A flips:
+  Token                Date              Value    Thr     Dist  Passes   GOM-A    CF_A
+  --------------------------------------------------------------------------------
+  RIFUSDT              2026-06-23      1.15078  1.150  0.00078    >thr   False    True
+  ESPUSDT              2026-06-25      1.14631  1.150  0.00369    ≤thr    True   False
+  PROMUSDT             2026-06-25      1.14627  1.150  0.00373    ≤thr    True   False
+  SENTUSDT             2026-06-27      1.15116  1.150  0.00116    >thr   False    True
+  KITEUSDT             2026-06-30      1.14775  1.150  0.00225    ≤thr    True   False
+  1000LUNCUSDT         2026-07-04      1.15474  1.150  0.00474    >thr   False    True
+  CHZUSDT              2026-07-04      1.14514  1.150  0.00486    ≤thr    True   False
+  GENIUSUSDT           2026-07-04      1.14522  1.150  0.00478    ≤thr    True   False
+  ATUSDT               2026-07-05      1.14525  1.150  0.00475    ≤thr    True   False
+  BANANAS31USDT        2026-07-05      1.15455  1.150  0.00455    >thr   False    True
+  PARTIUSDT            2026-07-07      1.14811  1.150  0.00189    ≤thr    True   False
+  CUSDT                2026-07-08      1.14945  1.150  0.00055    ≤thr    True   False
+  STGUSDT              2026-07-08      1.14565  1.150  0.00435    ≤thr    True   False
+  币安人生USDT             2026-07-08      1.14867  1.150  0.00133    ≤thr    True   False
+  CHZUSDT              2026-07-09      1.14627  1.150  0.00373    ≤thr    True   False
+  CUSDT                2026-07-09      1.15095  1.150  0.00095    >thr   False    True
+  MEGAUSDT             2026-07-09      1.14650  1.150  0.00350    ≤thr    True   False
+  HOMEUSDT             2026-07-14      1.15388  1.150  0.00388    >thr   False    True
+  BELUSDT              2026-07-16      1.14729  1.150  0.00271    ≤thr    True   False
+  HYPERUSDT            2026-07-17      1.14930  1.150  0.00070    ≤thr    True   False
+  CATIUSDT             2026-07-20      1.14889  1.150  0.00111    ≤thr    True   False
+  JTOUSDT              2026-07-23      1.14732  1.150  0.00268    ≤thr    True   False
+  OPGUSDT              2026-07-23      1.14576  1.150  0.00424    ≤thr    True   False
+  币安人生USDT             2026-07-30      1.14516  1.150  0.00484    ≤thr    True   False
+  FFUSDT               2026-08-01      1.14902  1.150  0.00098    ≤thr    True   False
+  XPLUSDT              2026-08-01      1.14786  1.150  0.00214    ≤thr    True   False
+  ZBTUSDT              2026-08-01      1.14681  1.150  0.00319    ≤thr    True   False
+  DODOXUSDT            2026-08-03      1.15191  1.150  0.00191    >thr   False    True
+  TUSDT                2026-08-04      1.15407  1.150  0.00407    >thr   False    True
+  AIGENSYNUSDT         2026-08-05      1.14967  1.150  0.00033    ≤thr    True   False
+  AWEUSDT              2026-08-07      1.15291  1.150  0.00291    >thr   False    True
+  SKYUSDT              2026-08-07      1.14578  1.150  0.00422    ≤thr    True   False
+
+================================================================================
+CHANGED-OUTCOME EVENTS (ε=0.01, GOM-A scope)
+================================================================================
+
+  A2 — 18 additional events in [0.005,0.01):
+  DUSKUSDT             2026-06-22      1.09198  1.100  0.00802    ≤thr gom_a=True → False
+  GIGGLEUSDT           2026-06-22      1.09486  1.100  0.00514    ≤thr gom_a=True → False
+  STXUSDT              2026-06-24      1.10732  1.100  0.00732    >thr gom_a=False → True
+  STXUSDT              2026-06-29      1.10508  1.100  0.00508    >thr gom_a=False → True
+  STXUSDT              2026-07-02      1.09084  1.100  0.00916    ≤thr gom_a=True → False
+  KAITOUSDT            2026-07-05      1.09028  1.100  0.00972    ≤thr gom_a=True → False
+  AUSDT                2026-07-10      1.10906  1.100  0.00906    >thr gom_a=False → True
+  AUSDT                2026-07-13      1.10602  1.100  0.00602    >thr gom_a=False → True
+  AUSDT                2026-07-14      1.09184  1.100  0.00816    ≤thr gom_a=True → False
+  APTUSDT              2026-07-22      1.09234  1.100  0.00766    ≤thr gom_a=True → False
+  ENSOUSDT             2026-07-22      1.09290  1.100  0.00710    ≤thr gom_a=True → False
+  LITUSDT              2026-07-22      1.09474  1.100  0.00526    ≤thr gom_a=True → False
+  ETHFIUSDT            2026-07-28      1.09102  1.100  0.00898    ≤thr gom_a=True → False
+  LDOUSDT              2026-07-28      1.09198  1.100  0.00802    ≤thr gom_a=True → False
+  APTUSDT              2026-08-01      1.09398  1.100  0.00602    ≤thr gom_a=True → False
+  MANTAUSDT            2026-08-03      1.10864  1.100  0.00864    >thr gom_a=False → True
+  GIGGLEUSDT           2026-08-05      1.10610  1.100  0.00610    >thr gom_a=False → True
+  1000SATSUSDT         2026-08-07      1.10958  1.100  0.00958    >thr gom_a=False → True
+
+  A3 — 31 additional events in [0.005,0.01):
+  BATUSDT              2026-06-20      1.14093  1.150  0.00907    ≤thr gom_a=True → False
+  ZESTUSDT             2026-06-21      1.15935  1.150  0.00935    >thr gom_a=False → True
+  FFUSDT               2026-06-24      1.14202  1.150  0.00798    ≤thr gom_a=True → False
+  SKYAIUSDT            2026-06-24      1.14199  1.150  0.00801    ≤thr gom_a=True → False
+  REUSDT               2026-06-27      1.14024  1.150  0.00976    ≤thr gom_a=True → False
+  CHZUSDT              2026-07-02      1.14239  1.150  0.00761    ≤thr gom_a=True → False
+  ROBOUSDT             2026-07-02      1.15935  1.150  0.00935    >thr gom_a=False → True
+  OPNUSDT              2026-07-03      1.15825  1.150  0.00825    >thr gom_a=False → True
+  GENIUSUSDT           2026-07-11      1.14356  1.150  0.00644    ≤thr gom_a=True → False
+  BANANAS31USDT        2026-07-14      1.14449  1.150  0.00551    ≤thr gom_a=True → False
+  OPNUSDT              2026-07-14      1.14392  1.150  0.00608    ≤thr gom_a=True → False
+  WIFUSDT              2026-07-15      1.15935  1.150  0.00935    >thr gom_a=False → True
+  MANTAUSDT            2026-07-18      1.15875  1.150  0.00875    >thr gom_a=False → True
+  GRAMUSDT             2026-07-22      1.14471  1.150  0.00529    ≤thr gom_a=True → False
+  AWEUSDT              2026-07-27      1.14101  1.150  0.00899    ≤thr gom_a=True → False
+  ARUSDT               2026-07-29      1.15852  1.150  0.00852    >thr gom_a=False → True
+  CATIUSDT             2026-07-29      1.15985  1.150  0.00985    >thr gom_a=False → True
+  HUMAUSDT             2026-07-29      1.14383  1.150  0.00617    ≤thr gom_a=True → False
+  HMSTRUSDT            2026-07-30      1.15899  1.150  0.00899    >thr gom_a=False → True
+  MEGAUSDT             2026-07-30      1.15942  1.150  0.00942    >thr gom_a=False → True
+  XPLUSDT              2026-07-30      1.14489  1.150  0.00511    ≤thr gom_a=True → False
+  AKEUSDT              2026-07-31      1.14438  1.150  0.00562    ≤thr gom_a=True → False
+  BANANAS31USDT        2026-07-31      1.15969  1.150  0.00969    >thr gom_a=False → True
+  HMSTRUSDT            2026-08-01      1.15828  1.150  0.00828    >thr gom_a=False → True
+  TIAUSDT              2026-08-02      1.14405  1.150  0.00595    ≤thr gom_a=True → False
+  VANRYUSDT            2026-08-02      1.14403  1.150  0.00597    ≤thr gom_a=True → False
+  NIGHTUSDT            2026-08-03      1.15822  1.150  0.00822    >thr gom_a=False → True
+  TIAUSDT              2026-08-03      1.15840  1.150  0.00840    >thr gom_a=False → True
+  ORDIUSDT             2026-08-04      1.14374  1.150  0.00626    ≤thr gom_a=True → False
+  MEGAUSDT             2026-08-06      1.15774  1.150  0.00774    >thr gom_a=False → True
+  SYRUPUSDT            2026-08-07      1.14225  1.150  0.00775    ≤thr gom_a=True → False
+
+================================================================================
+DISPLAY-ONLY / PROVISIONAL / CHAIN-RULE MARGINAL COUNTS
+================================================================================
+(no changed-outcome — scope không compute được from fw data alone)
+
+  B1       thr=0.5   ε=0.005:   220   ε=0.01:   426   ε=0.02:   830
+  C3lo     thr=40.0   ε=0.005:     0   ε=0.01:     0   ε=0.02:     0
+  C3hi     thr=55.0   ε=0.005:     1   ε=0.01:     2   ε=0.02:     5
+  quiet    thr=0.0002   ε=0.005: 25467   ε=0.01: 25516   ε=0.02: 25530
+  riv      thr=0.3   ε=0.005:   262   ε=0.01:   548   ε=0.02:  1103
+  Q2d      thr=3.0   ε=0.005:    10   ε=0.01:    14   ε=0.02:    25
+
+================================================================================
+FRAGILITY RANKING (GOM-A scope, ε=0.005, by n_changed_outcome)
+================================================================================
+  A3: 32 changed / 306 marginal (10%)  Aug-01 onward: 8
+  A2: 17 changed / 105 marginal (16%)  Aug-01 onward: 1
+
+================================================================================
+TOKEN FRAGILITY (A2+A3 combined, ε=0.005, changed-outcome events)
+================================================================================
+  AUSDT                  2 event(s)
+  STXUSDT                2 event(s)
+  CHZUSDT                2 event(s)
+  CUSDT                  2 event(s)
+  币安人生USDT               2 event(s)
+  API3USDT               1 event(s)
+  ARUSDT                 1 event(s)
+  BANUSDT                1 event(s)
+  BTWUSDT                1 event(s)
+  CHIPUSDT               1 event(s)
+  HOLOUSDT               1 event(s)
+  LDOUSDT                1 event(s)
+  OPENUSDT               1 event(s)
+  PYTHUSDT               1 event(s)
+  XPINUSDT               1 event(s)
+  USUSDT                 1 event(s)
+  INJUSDT                1 event(s)
+  CAPUSDT                1 event(s)
+  ATUSDT                 1 event(s)
+  AWEUSDT                1 event(s)
+  BANANAS31USDT          1 event(s)
+  CATIUSDT               1 event(s)
+  ESPUSDT                1 event(s)
+  FFUSDT                 1 event(s)
+  GENIUSUSDT             1 event(s)
+  HOMEUSDT               1 event(s)
+  HYPERUSDT              1 event(s)
+  JTOUSDT                1 event(s)
+  KITEUSDT               1 event(s)
+  MEGAUSDT               1 event(s)
+
+================================================================================
+AUG-01 MARGINAL CHECK (P0 root cause validation)
+================================================================================
+  A2 on 2026-08-01 (525 tokens):
+    XTZUSDT                val=1.10152 dist=0.00152 passes=False gom_a=False →cf=False
+    API3USDT               val=1.10166 dist=0.00166 passes=False gom_a=False →cf=True
+    TURBOUSDT              val=1.10230 dist=0.00230 passes=False gom_a=False →cf=False
+    METUSDT                val=1.09700 dist=0.00300 passes=True gom_a=False →cf=False
+    APTUSDT                val=1.09398 dist=0.00602 passes=True gom_a=True →cf=False
+    COTIUSDT               val=1.10760 dist=0.00760 passes=False gom_a=False →cf=False
+    BEATUSDT               val=1.09190 dist=0.00810 passes=True gom_a=False →cf=False
+    TNSRUSDT               val=1.09126 dist=0.00874 passes=True gom_a=False →cf=False
+    EGLDUSDT               val=1.08836 dist=0.01164 passes=True gom_a=False →cf=False
+    SLXUSDT                val=1.08092 dist=0.01908 passes=True gom_a=False →cf=False
+    ARBUSDT                val=1.11932 dist=0.01932 passes=False gom_a=False →cf=False
+    BIOUSDT                val=1.12090 dist=0.02090 passes=False gom_a=False →cf=False
+    ARCUSDT                val=1.12200 dist=0.02200 passes=False gom_a=False →cf=True
+    NEOUSDT                val=1.07788 dist=0.02212 passes=True gom_a=False →cf=False
+    FETUSDT                val=1.07520 dist=0.02480 passes=True gom_a=False →cf=False
+    MORPHOUSDT             val=1.07508 dist=0.02492 passes=True gom_a=False →cf=False
+    BASEDUSDT              val=1.07388 dist=0.02612 passes=True gom_a=False →cf=False
+    VVVUSDT                val=1.06980 dist=0.03020 passes=True gom_a=False →cf=False
+    STGUSDT                val=1.13252 dist=0.03252 passes=False gom_a=False →cf=False
+    ENJUSDT                val=1.06084 dist=0.03916 passes=True gom_a=False →cf=False
+    DYDXUSDT               val=1.13972 dist=0.03972 passes=False gom_a=False →cf=False
+    ZROUSDT                val=1.05820 dist=0.04180 passes=True gom_a=True →cf=False
+    SUSHIUSDT              val=1.14366 dist=0.04366 passes=False gom_a=False →cf=False
+    PIEVERSEUSDT           val=1.05624 dist=0.04376 passes=True gom_a=True →cf=False
+    ENSUSDT                val=1.14778 dist=0.04778 passes=False gom_a=False →cf=False
+    IOUSDT                 val=1.14842 dist=0.04842 passes=False gom_a=False →cf=False
+    HOLOUSDT               val=1.14880 dist=0.04880 passes=False gom_a=False →cf=True
+    LINEAUSDT              val=1.05044 dist=0.04956 passes=True gom_a=True →cf=False
+    MMTUSDT                val=1.04978 dist=0.05022 passes=True gom_a=False →cf=False
+    KAITOUSDT              val=1.04652 dist=0.05348 passes=True gom_a=True →cf=False
+    ALGOUSDT               val=1.15358 dist=0.05358 passes=False gom_a=False →cf=False
+    FARTCOINUSDT           val=1.04580 dist=0.05420 passes=True gom_a=False →cf=False
+    MANTRAUSDT             val=1.15646 dist=0.05646 passes=False gom_a=False →cf=False
+    ASTERUSDT              val=1.15662 dist=0.05662 passes=False gom_a=False →cf=True
+    BLURUSDT               val=1.04000 dist=0.06000 passes=True gom_a=False →cf=False
+    ARUSDT                 val=1.03866 dist=0.06134 passes=True gom_a=True →cf=False
+    BEAMXUSDT              val=1.03772 dist=0.06228 passes=True gom_a=False →cf=False
+    ACEUSDT                val=1.03188 dist=0.06812 passes=True gom_a=False →cf=False
+    BANKUSDT               val=1.16946 dist=0.06946 passes=False gom_a=False →cf=False
+    MANTAUSDT              val=1.02806 dist=0.07194 passes=True gom_a=False →cf=False
+    ZENUSDT                val=1.02296 dist=0.07704 passes=True gom_a=True →cf=False
+    BANANAS31USDT          val=1.02206 dist=0.07794 passes=True gom_a=True →cf=False
+    1000LUNCUSDT           val=1.02066 dist=0.07934 passes=True gom_a=False →cf=False
+    NXPCUSDT               val=1.18020 dist=0.08020 passes=False gom_a=False →cf=False
+    MIRAUSDT               val=1.18272 dist=0.08272 passes=False gom_a=False →cf=False
+    RENDERUSDT             val=1.01616 dist=0.08384 passes=True gom_a=False →cf=False
+    NILUSDT                val=1.01522 dist=0.08478 passes=True gom_a=False →cf=False
+    WLDUSDT                val=1.00976 dist=0.09024 passes=True gom_a=False →cf=False
+    SUNUSDT                val=1.00806 dist=0.09194 passes=True gom_a=True →cf=False
+    AVNTUSDT               val=1.00802 dist=0.09198 passes=True gom_a=True →cf=False
+    QTUMUSDT               val=1.00604 dist=0.09396 passes=True gom_a=False →cf=False
+    ANKRUSDT               val=1.19438 dist=0.09438 passes=False gom_a=False →cf=False
+    POLUSDT                val=1.19514 dist=0.09514 passes=False gom_a=False →cf=False
+    OPGUSDT                val=1.00268 dist=0.09732 passes=True gom_a=False →cf=False
+    ROBOUSDT               val=1.19742 dist=0.09742 passes=False gom_a=False →cf=True
+    ZKCUSDT                val=1.19808 dist=0.09808 passes=False gom_a=False →cf=False
+    ETCUSDT                val=1.19850 dist=0.09850 passes=False gom_a=False →cf=False
+    HYPERUSDT              val=0.99688 dist=0.10312 passes=True gom_a=True →cf=False
+    BANUSDT                val=0.99684 dist=0.10316 passes=True gom_a=True →cf=False
+    BERAUSDT               val=0.99472 dist=0.10528 passes=True gom_a=False →cf=False
+    WIFUSDT                val=1.20704 dist=0.10704 passes=False gom_a=False →cf=True
+    SUSDT                  val=1.20734 dist=0.10734 passes=False gom_a=False →cf=False
+    OGNUSDT                val=1.21054 dist=0.11054 passes=False gom_a=False →cf=False
+    0GUSDT                 val=0.98628 dist=0.11372 passes=True gom_a=False →cf=False
+    SAHARAUSDT             val=0.98596 dist=0.11404 passes=True gom_a=False →cf=False
+    AXSUSDT                val=1.21480 dist=0.11480 passes=False gom_a=False →cf=False
+    THETAUSDT              val=1.21534 dist=0.11534 passes=False gom_a=False →cf=False
+    VELVETUSDT             val=0.98362 dist=0.11638 passes=True gom_a=False →cf=False
+    UMAUSDT                val=1.22014 dist=0.12014 passes=False gom_a=False →cf=False
+    IDUSDT                 val=0.97930 dist=0.12070 passes=True gom_a=False →cf=False
+    SANDUSDT               val=1.22318 dist=0.12318 passes=False gom_a=False →cf=False
+    PNUTUSDT               val=1.22438 dist=0.12438 passes=False gom_a=False →cf=False
+    APEUSDT                val=1.22606 dist=0.12606 passes=False gom_a=False →cf=False
+    NEARUSDT               val=0.97282 dist=0.12718 passes=True gom_a=True →cf=False
+    MOVEUSDT               val=0.96932 dist=0.13068 passes=True gom_a=False →cf=False
+    QNTUSDT                val=0.96834 dist=0.13166 passes=True gom_a=False →cf=False
+    GRASSUSDT              val=1.23268 dist=0.13268 passes=False gom_a=False →cf=False
+    KAVAUSDT               val=1.23348 dist=0.13348 passes=False gom_a=False →cf=False
+    PROMUSDT               val=1.23350 dist=0.13350 passes=False gom_a=False →cf=False
+    ATOMUSDT               val=1.23598 dist=0.13598 passes=False gom_a=False →cf=False
+    EDENUSDT               val=1.24306 dist=0.14306 passes=False gom_a=False →cf=True
+    LAUSDT                 val=0.95554 dist=0.14446 passes=True gom_a=False →cf=False
+    CFGUSDT                val=0.95548 dist=0.14452 passes=True gom_a=False →cf=False
+    FILUSDT                val=1.24470 dist=0.14470 passes=False gom_a=False →cf=False
+    CHZUSDT                val=1.24644 dist=0.14644 passes=False gom_a=False →cf=False
+    ENSOUSDT               val=0.95152 dist=0.14848 passes=True gom_a=True →cf=False
+    OPUSDT                 val=0.94980 dist=0.15020 passes=True gom_a=False →cf=False
+    UAIUSDT                val=1.25284 dist=0.15284 passes=False gom_a=False →cf=False
+    BARDUSDT               val=1.25288 dist=0.15288 passes=False gom_a=False →cf=False
+    GASUSDT                val=1.25716 dist=0.15716 passes=False gom_a=False →cf=False
+    1000BONKUSDT           val=0.94222 dist=0.15778 passes=True gom_a=False →cf=False
+    LPTUSDT                val=0.94144 dist=0.15856 passes=True gom_a=False →cf=False
+    OPNUSDT                val=0.93616 dist=0.16384 passes=True gom_a=False →cf=False
+    ZILUSDT                val=1.26438 dist=0.16438 passes=False gom_a=False →cf=False
+    BABYUSDT               val=0.93274 dist=0.16726 passes=True gom_a=True →cf=False
+    SPXUSDT                val=1.26874 dist=0.16874 passes=False gom_a=False →cf=False
+    PARTIUSDT              val=0.93056 dist=0.16944 passes=True gom_a=False →cf=False
+    XAUTUSDT               val=0.92964 dist=0.17036 passes=True gom_a=False →cf=False
+    SNXUSDT                val=1.27256 dist=0.17256 passes=False gom_a=False →cf=False
+    COMPUSDT               val=1.27276 dist=0.17276 passes=False gom_a=False →cf=False
+    IOTAUSDT               val=1.27338 dist=0.17338 passes=False gom_a=False →cf=False
+    ZKUSDT                 val=0.92542 dist=0.17458 passes=True gom_a=False →cf=False
+    ZESTUSDT               val=0.92530 dist=0.17470 passes=True gom_a=False →cf=False
+    EULUSDT                val=0.92518 dist=0.17482 passes=True gom_a=False →cf=False
+    SEIUSDT                val=1.27500 dist=0.17500 passes=False gom_a=False →cf=False
+    QUSDT                  val=1.28390 dist=0.18390 passes=False gom_a=False →cf=False
+    ZAMAUSDT               val=1.28466 dist=0.18466 passes=False gom_a=False →cf=False
+    RESOLVUSDT             val=1.28762 dist=0.18762 passes=False gom_a=False →cf=False
+    AUSDT                  val=1.28916 dist=0.18916 passes=False gom_a=False →cf=False
+    CAKEUSDT               val=1.28978 dist=0.18978 passes=False gom_a=False →cf=False
+    IMXUSDT                val=0.90766 dist=0.19234 passes=True gom_a=False →cf=False
+    DATAIPUSDT             val=0.90630 dist=0.19370 passes=True gom_a=False →cf=False
+    ONUSDT                 val=0.90358 dist=0.19642 passes=True gom_a=False →cf=False
+    PEOPLEUSDT             val=1.29694 dist=0.19694 passes=False gom_a=False →cf=False
+    YBUSDT                 val=1.30328 dist=0.20328 passes=False gom_a=False →cf=False
+    HBARUSDT               val=1.30386 dist=0.20386 passes=False gom_a=False →cf=False
+    CRVUSDT                val=1.30478 dist=0.20478 passes=False gom_a=False →cf=False
+    ARKMUSDT               val=1.30800 dist=0.20800 passes=False gom_a=False →cf=False
+    APRUSDT                val=1.31536 dist=0.21536 passes=False gom_a=False →cf=False
+    ALTUSDT                val=1.31858 dist=0.21858 passes=False gom_a=False →cf=False
+    XLMUSDT                val=0.88042 dist=0.21958 passes=True gom_a=False →cf=False
+    SYRUPUSDT              val=0.87920 dist=0.22080 passes=True gom_a=True →cf=False
+    1000RATSUSDT           val=1.32344 dist=0.22344 passes=False gom_a=False →cf=False
+    TRBUSDT                val=1.32354 dist=0.22354 passes=False gom_a=False →cf=True
+    TRXUSDT                val=1.32396 dist=0.22396 passes=False gom_a=False →cf=False
+    SPKUSDT                val=0.87292 dist=0.22708 passes=True gom_a=False →cf=False
+    DASHUSDT               val=0.87134 dist=0.22866 passes=True gom_a=True →cf=False
+    LDOUSDT                val=0.86996 dist=0.23004 passes=True gom_a=True →cf=False
+    VETUSDT                val=1.33078 dist=0.23078 passes=False gom_a=False →cf=False
+    USELESSUSDT            val=1.33528 dist=0.23528 passes=False gom_a=False →cf=False
+    ATHUSDT                val=0.86372 dist=0.23628 passes=True gom_a=False →cf=False
+    UBUSDT                 val=1.33696 dist=0.23696 passes=False gom_a=False →cf=False
+    JASMYUSDT              val=1.34214 dist=0.24214 passes=False gom_a=False →cf=False
+    STORJUSDT              val=0.85638 dist=0.24362 passes=True gom_a=False →cf=False
+    PUMPUSDT               val=1.35320 dist=0.25320 passes=False gom_a=False →cf=False
+    BILLUSDT               val=1.35338 dist=0.25338 passes=False gom_a=False →cf=False
+    SOONUSDT               val=1.35392 dist=0.25392 passes=False gom_a=False →cf=False
+    USDCUSDT               val=1.35592 dist=0.25592 passes=False gom_a=False →cf=False
+    GUSDT                  val=1.36362 dist=0.26362 passes=False gom_a=False →cf=False
+    KATUSDT                val=1.36450 dist=0.26450 passes=False gom_a=False →cf=False
+    JUPUSDT                val=1.36890 dist=0.26890 passes=False gom_a=False →cf=False
+    STRKUSDT               val=1.36976 dist=0.26976 passes=False gom_a=False →cf=False
+    PENGUUSDT              val=0.82920 dist=0.27080 passes=True gom_a=True →cf=False
+    PLUMEUSDT              val=1.37624 dist=0.27624 passes=False gom_a=False →cf=False
+    STXUSDT                val=0.81850 dist=0.28150 passes=True gom_a=False →cf=False
+    SSVUSDT                val=1.38608 dist=0.28608 passes=False gom_a=False →cf=False
+    IDOLUSDT               val=1.38662 dist=0.28662 passes=False gom_a=False →cf=True
+    GMXUSDT                val=1.38676 dist=0.28676 passes=False gom_a=False →cf=False
+    WUSDT                  val=1.38818 dist=0.28818 passes=False gom_a=False →cf=False
+    EPICUSDT               val=0.81012 dist=0.28988 passes=True gom_a=True →cf=False
+    XMRUSDT                val=1.39058 dist=0.29058 passes=False gom_a=False →cf=False
+    BOMEUSDT               val=1.39380 dist=0.29380 passes=False gom_a=False →cf=False
+    KMNOUSDT               val=1.39404 dist=0.29404 passes=False gom_a=False →cf=False
+    SKYAIUSDT              val=1.39410 dist=0.29410 passes=False gom_a=False →cf=False
+    LUMIAUSDT              val=0.80258 dist=0.29742 passes=True gom_a=False →cf=False
+    CHIPUSDT               val=0.80002 dist=0.29998 passes=True gom_a=True →cf=False
+    RVNUSDT                val=1.40334 dist=0.30334 passes=False gom_a=False →cf=False
+    CFXUSDT                val=1.40624 dist=0.30624 passes=False gom_a=False →cf=False
+    ZETAUSDT               val=1.40656 dist=0.30656 passes=False gom_a=False →cf=False
+    ETHFIUSDT              val=0.79156 dist=0.30844 passes=True gom_a=False →cf=False
+    1000FLOKIUSDT          val=1.41528 dist=0.31528 passes=False gom_a=False →cf=False
+    ATUSDT                 val=0.78232 dist=0.31768 passes=True gom_a=False →cf=False
+    ORDIUSDT               val=0.78052 dist=0.31948 passes=True gom_a=False →cf=False
+    PENDLEUSDT             val=0.77872 dist=0.32128 passes=True gom_a=True →cf=False
+    EIGENUSDT              val=0.77862 dist=0.32138 passes=True gom_a=False →cf=False
+    MINAUSDT               val=1.42158 dist=0.32158 passes=False gom_a=False →cf=False
+    GIGGLEUSDT             val=1.42802 dist=0.32802 passes=False gom_a=False →cf=False
+    GALAUSDT               val=1.43096 dist=0.33096 passes=False gom_a=False →cf=False
+    ORCAUSDT               val=1.43302 dist=0.33302 passes=False gom_a=False →cf=False
+    PRLUSDT                val=1.43496 dist=0.33496 passes=False gom_a=False →cf=False
+    ENAUSDT                val=1.43818 dist=0.33818 passes=False gom_a=False →cf=False
+    RUNEUSDT               val=1.44016 dist=0.34016 passes=False gom_a=False →cf=False
+    TAOUSDT                val=1.44490 dist=0.34490 passes=False gom_a=False →cf=False
+    YFIUSDT                val=1.44540 dist=0.34540 passes=False gom_a=False →cf=False
+    ONTUSDT                val=1.44552 dist=0.34552 passes=False gom_a=False →cf=False
+    DIAUSDT                val=0.75440 dist=0.34560 passes=True gom_a=True →cf=False
+    HEMIUSDT               val=1.44800 dist=0.34800 passes=False gom_a=False →cf=False
+    GWEIUSDT               val=1.44982 dist=0.34982 passes=False gom_a=False →cf=False
+    TIAUSDT                val=0.74922 dist=0.35078 passes=True gom_a=True →cf=False
+    ARXUSDT                val=1.45128 dist=0.35128 passes=False gom_a=False →cf=False
+    1INCHUSDT              val=1.45868 dist=0.35868 passes=False gom_a=False →cf=False
+    MAGMAUSDT              val=1.45944 dist=0.35944 passes=False gom_a=False →cf=False
+    ACHUSDT                val=1.46194 dist=0.36194 passes=False gom_a=False →cf=False
+    PYTHUSDT               val=0.73690 dist=0.36310 passes=True gom_a=False →cf=False
+    OPENUSDT               val=1.46874 dist=0.36874 passes=False gom_a=False →cf=False
+    LITUSDT                val=1.47094 dist=0.37094 passes=False gom_a=False →cf=False
+    ACXUSDT                val=1.48356 dist=0.38356 passes=False gom_a=False →cf=False
+    AUCTIONUSDT            val=1.48438 dist=0.38438 passes=False gom_a=False →cf=False
+    RIFUSDT                val=0.71248 dist=0.38752 passes=True gom_a=False →cf=False
+    TRUMPUSDT              val=1.49364 dist=0.39364 passes=False gom_a=False →cf=False
+    USUSDT                 val=0.69896 dist=0.40104 passes=True gom_a=False →cf=False
+    INJUSDT                val=0.69886 dist=0.40114 passes=True gom_a=False →cf=False
+    GENIUSUSDT             val=0.69662 dist=0.40338 passes=True gom_a=True →cf=False
+    SKLUSDT                val=0.69378 dist=0.40622 passes=True gom_a=False →cf=False
+    GMTUSDT                val=1.50942 dist=0.40942 passes=False gom_a=False →cf=False
+    TWTUSDT                val=1.51054 dist=0.41054 passes=False gom_a=False →cf=True
+    AVAAIUSDT              val=1.51318 dist=0.41318 passes=False gom_a=False →cf=False
+    VANAUSDT               val=0.68354 dist=0.41646 passes=True gom_a=False →cf=False
+    HYPEUSDT               val=1.51886 dist=0.41886 passes=False gom_a=False →cf=False
+    AAVEUSDT               val=1.51982 dist=0.41982 passes=False gom_a=False →cf=False
+    CATIUSDT               val=0.67988 dist=0.42012 passes=True gom_a=False →cf=False
+    HOMEUSDT               val=0.67898 dist=0.42102 passes=True gom_a=False →cf=False
+    ONGUSDT                val=1.52286 dist=0.42286 passes=False gom_a=False →cf=False
+    UNIUSDT                val=1.52566 dist=0.42566 passes=False gom_a=False →cf=False
+    JSTUSDT                val=0.67138 dist=0.42862 passes=True gom_a=False →cf=False
+    ESPUSDT                val=0.66986 dist=0.43014 passes=True gom_a=False →cf=False
+    HMSTRUSDT              val=0.66710 dist=0.43290 passes=True gom_a=False →cf=False
+    EVAAUSDT               val=1.53322 dist=0.43322 passes=False gom_a=False →cf=False
+    JCTUSDT                val=1.53636 dist=0.43636 passes=False gom_a=False →cf=False
+    BELUSDT                val=1.54122 dist=0.44122 passes=False gom_a=False →cf=False
+    CLOUSDT                val=1.54134 dist=0.44134 passes=False gom_a=False →cf=False
+    ONEUSDT                val=1.54310 dist=0.44310 passes=False gom_a=False →cf=False
+    GPSUSDT                val=0.65478 dist=0.44522 passes=True gom_a=True →cf=False
+    POLYXUSDT              val=1.54818 dist=0.44818 passes=False gom_a=False →cf=False
+    VANRYUSDT              val=0.64370 dist=0.45630 passes=True gom_a=True →cf=False
+    ZECUSDT                val=0.64226 dist=0.45774 passes=True gom_a=False →cf=False
+    MANAUSDT               val=1.55912 dist=0.45912 passes=False gom_a=False →cf=False
+    HUMAUSDT               val=0.64046 dist=0.45954 passes=True gom_a=False →cf=False
+    BULLAUSDT              val=1.56050 dist=0.46050 passes=False gom_a=False →cf=False
+    MEGAUSDT               val=0.63914 dist=0.46086 passes=True gom_a=True →cf=False
+    AEROUSDT               val=0.63838 dist=0.46162 passes=True gom_a=False →cf=False
+    XPLUSDT                val=0.63566 dist=0.46434 passes=True gom_a=True →cf=False
+    AIXBTUSDT              val=1.57290 dist=0.47290 passes=False gom_a=False →cf=False
+    CCUSDT                 val=1.57750 dist=0.47750 passes=False gom_a=False →cf=False
+    FFUSDT                 val=0.62182 dist=0.47818 passes=True gom_a=True →cf=False
+    WLFIUSDT               val=0.62098 dist=0.47902 passes=True gom_a=False →cf=False
+    CVXUSDT                val=1.58316 dist=0.48316 passes=False gom_a=False →cf=False
+    ERAUSDT                val=0.61652 dist=0.48348 passes=True gom_a=True →cf=False
+    GRAMUSDT               val=0.61262 dist=0.48738 passes=True gom_a=False →cf=False
+    XVGUSDT                val=1.58804 dist=0.48804 passes=False gom_a=False →cf=False
+    KAIAUSDT               val=1.58890 dist=0.48890 passes=False gom_a=False →cf=False
+    TLMUSDT                val=0.60970 dist=0.49030 passes=True gom_a=True →cf=False
+    B2USDT                 val=1.59668 dist=0.49668 passes=False gom_a=False →cf=False
+    CELOUSDT               val=1.59864 dist=0.49864 passes=False gom_a=False →cf=False
+    PROVEUSDT              val=1.59964 dist=0.49964 passes=False gom_a=False →cf=False
+    MEMEUSDT               val=1.59972 dist=0.49972 passes=False gom_a=False →cf=False
+    DOTUSDT                val=1.60320 dist=0.50320 passes=False gom_a=False →cf=False
+    NMRUSDT                val=1.60372 dist=0.50372 passes=False gom_a=False →cf=False
+    CYSUSDT                val=1.60924 dist=0.50924 passes=False gom_a=False →cf=False
+    NEIROUSDT              val=1.61078 dist=0.51078 passes=False gom_a=False →cf=False
+    NIGHTUSDT              val=0.57702 dist=0.52298 passes=True gom_a=True →cf=False
+    SXTUSDT                val=0.57466 dist=0.52534 passes=True gom_a=True →cf=False
+    WALUSDT                val=1.62710 dist=0.52710 passes=False gom_a=False →cf=False
+    AIGENSYNUSDT           val=0.56798 dist=0.53202 passes=True gom_a=False →cf=False
+    HEIUSDT                val=0.56766 dist=0.53234 passes=True gom_a=True →cf=False
+    PHAUSDT                val=1.63404 dist=0.53404 passes=False gom_a=False →cf=False
+    BTCDOMUSDT             val=1.63500 dist=0.53500 passes=False gom_a=False →cf=False
+    DODOXUSDT              val=0.56316 dist=0.53684 passes=True gom_a=False →cf=False
+    ZORAUSDT               val=1.63784 dist=0.53784 passes=False gom_a=False →cf=False
+    EDUUSDT                val=1.64020 dist=0.54020 passes=False gom_a=False →cf=False
+    MEUSDT                 val=1.64388 dist=0.54388 passes=False gom_a=False →cf=False
+    AKEUSDT                val=0.55282 dist=0.54718 passes=True gom_a=False →cf=False
+    VIRTUALUSDT            val=0.54936 dist=0.55064 passes=True gom_a=True →cf=False
+    ARPAUSDT               val=1.65336 dist=0.55336 passes=False gom_a=False →cf=False
+    ALICEUSDT              val=1.65416 dist=0.55416 passes=False gom_a=False →cf=False
+    1000CHEEMSUSDT         val=1.65570 dist=0.55570 passes=False gom_a=False →cf=False
+    BSVUSDT                val=1.65734 dist=0.55734 passes=False gom_a=False →cf=False
+    MUSDT                  val=1.66498 dist=0.56498 passes=False gom_a=False →cf=False
+    SENTUSDT               val=0.52318 dist=0.57682 passes=True gom_a=False →cf=False
+    TUSDT                  val=0.52248 dist=0.57752 passes=True gom_a=True →cf=False
+    GLMUSDT                val=1.67810 dist=0.57810 passes=False gom_a=False →cf=False
+    REUSDT                 val=0.51450 dist=0.58550 passes=True gom_a=True →cf=False
+    BTCUSDT                val=1.68790 dist=0.58790 passes=False gom_a=False →cf=False
+    SKYUSDT                val=0.51202 dist=0.58798 passes=True gom_a=False →cf=False
+    REZUSDT                val=1.69046 dist=0.59046 passes=False gom_a=False →cf=False
+    EDGEUSDT               val=1.69666 dist=0.59666 passes=False gom_a=False →cf=False
+    JTOUSDT                val=0.50130 dist=0.59870 passes=True gom_a=True →cf=False
+    AKTUSDT                val=1.69992 dist=0.59992 passes=False gom_a=False →cf=False
+    REDUSDT                val=1.70524 dist=0.60524 passes=False gom_a=False →cf=False
+    2ZUSDT                 val=1.70550 dist=0.60550 passes=False gom_a=False →cf=False
+    AGLDUSDT               val=1.71080 dist=0.61080 passes=False gom_a=False →cf=False
+    1000XECUSDT            val=0.48896 dist=0.61104 passes=True gom_a=True →cf=False
+    RSRUSDT                val=1.71364 dist=0.61364 passes=False gom_a=False →cf=False
+    BCHUSDT                val=1.71394 dist=0.61394 passes=False gom_a=False →cf=False
+    MOODENGUSDT            val=1.71576 dist=0.61576 passes=False gom_a=False →cf=False
+    TAGUSDT                val=1.72890 dist=0.62890 passes=False gom_a=False →cf=False
+    ZBTUSDT                val=0.47038 dist=0.62962 passes=True gom_a=True →cf=False
+    FIDAUSDT               val=1.73066 dist=0.63066 passes=False gom_a=False →cf=False
+    FLOWUSDT               val=1.73090 dist=0.63090 passes=False gom_a=False →cf=False
+    ZKPUSDT                val=1.74156 dist=0.64156 passes=False gom_a=False →cf=False
+    YGGUSDT                val=1.74682 dist=0.64682 passes=False gom_a=False →cf=False
+    BATUSDT                val=1.75062 dist=0.65062 passes=False gom_a=False →cf=False
+    HANAUSDT               val=1.75076 dist=0.65076 passes=False gom_a=False →cf=False
+    LAYERUSDT              val=1.75764 dist=0.65764 passes=False gom_a=False →cf=False
+    AWEUSDT                val=0.43784 dist=0.66216 passes=True gom_a=False →cf=False
+    RPLUSDT                val=1.76408 dist=0.66408 passes=False gom_a=False →cf=False
+    ZEREBROUSDT            val=1.76848 dist=0.66848 passes=False gom_a=False →cf=False
+    HOTUSDT                val=1.77244 dist=0.67244 passes=False gom_a=False →cf=False
+    1MBABYDOGEUSDT         val=1.77406 dist=0.67406 passes=False gom_a=False →cf=False
+    ICPUSDT                val=1.77578 dist=0.67578 passes=False gom_a=False →cf=True
+    币安人生USDT               val=0.41276 dist=0.68724 passes=True gom_a=True →cf=False
+    OUSDT                  val=0.41210 dist=0.68790 passes=True gom_a=False →cf=False
+    KGENUSDT               val=1.78890 dist=0.68890 passes=False gom_a=False →cf=False
+    CROSSUSDT              val=1.79132 dist=0.69132 passes=False gom_a=False →cf=False
+    LUNA2USDT              val=1.79608 dist=0.69608 passes=False gom_a=False →cf=False
+    CAPUSDT                val=1.79724 dist=0.69724 passes=False gom_a=False →cf=False
+    PIXELUSDT              val=1.80216 dist=0.70216 passes=False gom_a=False →cf=False
+    MONUSDT                val=1.80356 dist=0.70356 passes=False gom_a=False →cf=False
+    TRIAUSDT               val=1.80720 dist=0.70720 passes=False gom_a=False →cf=False
+    ALLOUSDT               val=0.38878 dist=0.71122 passes=True gom_a=True →cf=False
+    XPINUSDT               val=1.81398 dist=0.71398 passes=False gom_a=False →cf=False
+    SUPERUSDT              val=1.81466 dist=0.71466 passes=False gom_a=False →cf=False
+    DEXEUSDT               val=1.81806 dist=0.71806 passes=False gom_a=False →cf=False
+    SAPIENUSDT             val=1.81840 dist=0.71840 passes=False gom_a=False →cf=False
+    SOMIUSDT               val=1.82432 dist=0.72432 passes=False gom_a=False →cf=False
+    龙虾USDT                 val=1.83074 dist=0.73074 passes=False gom_a=False →cf=False
+    COWUSDT                val=1.83468 dist=0.73468 passes=False gom_a=False →cf=False
+    SPELLUSDT              val=1.83708 dist=0.73708 passes=False gom_a=False →cf=False
+    GRTUSDT                val=1.84168 dist=0.74168 passes=False gom_a=False →cf=False
+    MEWUSDT                val=1.84276 dist=0.74276 passes=False gom_a=False →cf=False
+    PORTALUSDT             val=1.84564 dist=0.74564 passes=False gom_a=False →cf=False
+    WCTUSDT                val=1.85062 dist=0.75062 passes=False gom_a=False →cf=False
+    KITEUSDT               val=0.34714 dist=0.75286 passes=True gom_a=False →cf=False
+    BTWUSDT                val=1.85588 dist=0.75588 passes=False gom_a=False →cf=False
+    SYNUSDT                val=0.34198 dist=0.75802 passes=True gom_a=True →cf=False
+    ONDOUSDT               val=1.86366 dist=0.76366 passes=False gom_a=False →cf=False
+    LINKUSDT               val=1.86490 dist=0.76490 passes=False gom_a=False →cf=False
+    BRUSDT                 val=1.86876 dist=0.76876 passes=False gom_a=False →cf=False
+    BICOUSDT               val=1.87154 dist=0.77154 passes=False gom_a=False →cf=False
+    1000SHIBUSDT           val=1.87502 dist=0.77502 passes=False gom_a=False →cf=False
+    LISTAUSDT              val=1.87538 dist=0.77538 passes=False gom_a=False →cf=False
+    CKBUSDT                val=1.87796 dist=0.77796 passes=False gom_a=False →cf=False
+    SUIUSDT                val=1.88390 dist=0.78390 passes=False gom_a=False →cf=False
+    ANIMEUSDT              val=1.88468 dist=0.78468 passes=False gom_a=False →cf=False
+    BSBUSDT                val=1.88662 dist=0.78662 passes=False gom_a=False →cf=False
+    MOCAUSDT               val=1.89110 dist=0.79110 passes=False gom_a=False →cf=False
+    CHRUSDT                val=1.89356 dist=0.79356 passes=False gom_a=False →cf=False
+    AVAXUSDT               val=1.89448 dist=0.79448 passes=False gom_a=False →cf=False
+    HUSDT                  val=1.89580 dist=0.79580 passes=False gom_a=False →cf=False
+    CUSDT                  val=1.89906 dist=0.79906 passes=False gom_a=False →cf=False
+    COLLECTUSDT            val=1.90332 dist=0.80332 passes=False gom_a=False →cf=False
+    NEWTUSDT               val=1.91858 dist=0.81858 passes=False gom_a=False →cf=False
+    XVSUSDT                val=1.92146 dist=0.82146 passes=False gom_a=False →cf=False
+    PUNDIXUSDT             val=1.92200 dist=0.82200 passes=False gom_a=False →cf=False
+    SIGNUSDT               val=1.92892 dist=0.82892 passes=False gom_a=False →cf=False
+    LQTYUSDT               val=1.93432 dist=0.83432 passes=False gom_a=False →cf=False
+    TUTUSDT                val=1.93592 dist=0.83592 passes=False gom_a=False →cf=False
+    WOOUSDT                val=1.94012 dist=0.84012 passes=False gom_a=False →cf=False
+    BREVUSDT               val=1.95710 dist=0.85710 passes=False gom_a=False →cf=False
+    AXLUSDT                val=1.95970 dist=0.85970 passes=False gom_a=False →cf=False
+    FUSDT                  val=1.96450 dist=0.86450 passes=False gom_a=False →cf=False
+    KSMUSDT                val=1.96972 dist=0.86972 passes=False gom_a=False →cf=False
+    IOSTUSDT               val=1.97052 dist=0.87052 passes=False gom_a=False →cf=False
+    FORMUSDT               val=1.97886 dist=0.87886 passes=False gom_a=False →cf=True
+    BNTUSDT                val=1.97892 dist=0.87892 passes=False gom_a=False →cf=False
+    PAXGUSDT               val=1.98388 dist=0.88388 passes=False gom_a=False →cf=False
+    ZRXUSDT                val=1.98952 dist=0.88952 passes=False gom_a=False →cf=False
+    KASUSDT                val=1.99186 dist=0.89186 passes=False gom_a=False →cf=False
+    ROSEUSDT               val=1.99468 dist=0.89468 passes=False gom_a=False →cf=False
+    ASTRUSDT               val=2.00652 dist=0.90652 passes=False gom_a=False →cf=False
+    STABLEUSDT             val=2.01242 dist=0.91242 passes=False gom_a=False →cf=False
+    BIGTIMEUSDT            val=2.02266 dist=0.92266 passes=False gom_a=False →cf=False
+    MUBARAKUSDT            val=2.02404 dist=0.92404 passes=False gom_a=False →cf=False
+    BLESSUSDT              val=2.02598 dist=0.92598 passes=False gom_a=False →cf=False
+    STEEMUSDT              val=2.03090 dist=0.93090 passes=False gom_a=False →cf=False
+    AZTECUSDT              val=2.03254 dist=0.93254 passes=False gom_a=False →cf=False
+    DOGSUSDT               val=2.04064 dist=0.94064 passes=False gom_a=False →cf=False
+    KNCUSDT                val=2.05322 dist=0.95322 passes=False gom_a=False →cf=False
+    RAYSOLUSDT             val=2.05326 dist=0.95326 passes=False gom_a=False →cf=False
+    GUNUSDT                val=2.06042 dist=0.96042 passes=False gom_a=False →cf=False
+    CYBERUSDT              val=2.06048 dist=0.96048 passes=False gom_a=False →cf=False
+    RIVERUSDT              val=2.06084 dist=0.96084 passes=False gom_a=False →cf=False
+    1000PEPEUSDT           val=2.06864 dist=0.96864 passes=False gom_a=False →cf=False
+    IOTXUSDT               val=2.08292 dist=0.98292 passes=False gom_a=False →cf=False
+    XANUSDT                val=2.08440 dist=0.98440 passes=False gom_a=False →cf=False
+    MOVRUSDT               val=2.09466 dist=0.99466 passes=False gom_a=False →cf=False
+    DUSKUSDT               val=2.09604 dist=0.99604 passes=False gom_a=False →cf=True
+    DEEPUSDT               val=2.09714 dist=0.99714 passes=False gom_a=False →cf=False
+    SFPUSDT                val=2.10430 dist=1.00430 passes=False gom_a=False →cf=False
+    TAUSDT                 val=2.10880 dist=1.00880 passes=False gom_a=False →cf=False
+    4USDT                  val=2.10900 dist=1.00900 passes=False gom_a=False →cf=False
+    PHAROSUSDT             val=2.11176 dist=1.01176 passes=False gom_a=False →cf=False
+    AIOUSDT                val=2.12090 dist=1.02090 passes=False gom_a=False →cf=False
+    NOMUSDT                val=2.12758 dist=1.02758 passes=False gom_a=False →cf=False
+    TSTUSDT                val=2.13904 dist=1.03904 passes=False gom_a=False →cf=False
+    THEUSDT                val=2.14070 dist=1.04070 passes=False gom_a=False →cf=False
+    JELLYJELLYUSDT         val=2.14126 dist=1.04126 passes=False gom_a=False →cf=False
+    MITOUSDT               val=2.15366 dist=1.05366 passes=False gom_a=False →cf=False
+    MASKUSDT               val=2.15684 dist=1.05684 passes=False gom_a=False →cf=False
+    NAORISUSDT             val=2.16494 dist=1.06494 passes=False gom_a=False →cf=False
+    ADAUSDT                val=2.17160 dist=1.07160 passes=False gom_a=False →cf=False
+    RLCUSDT                val=2.18366 dist=1.08366 passes=False gom_a=False →cf=False
+    ALLUSDT                val=2.19084 dist=1.09084 passes=False gom_a=False →cf=False
+    TOWNSUSDT              val=2.20534 dist=1.10534 passes=False gom_a=False →cf=False
+    HIVEUSDT               val=2.20672 dist=1.10672 passes=False gom_a=False →cf=False
+    WETUSDT                val=2.21252 dist=1.11252 passes=False gom_a=False →cf=False
+    BROCCOLIF3BUSDT        val=2.21268 dist=1.11268 passes=False gom_a=False →cf=False
+    ETHUSDT                val=2.22526 dist=1.12526 passes=False gom_a=False →cf=False
+    INITUSDT               val=2.23642 dist=1.13642 passes=False gom_a=False →cf=False
+    OGUSDT                 val=2.24242 dist=1.14242 passes=False gom_a=False →cf=False
+    XAIUSDT                val=2.26194 dist=1.16194 passes=False gom_a=False →cf=False
+    SCRTUSDT               val=2.26532 dist=1.16532 passes=False gom_a=False →cf=False
+    ICXUSDT                val=2.27722 dist=1.17722 passes=False gom_a=False →cf=False
+    POWRUSDT               val=2.28192 dist=1.18192 passes=False gom_a=False →cf=False
+    NOTUSDT                val=2.28468 dist=1.18468 passes=False gom_a=False →cf=False
+    BIRBUSDT               val=2.28898 dist=1.18898 passes=False gom_a=False →cf=False
+    RAREUSDT               val=2.29210 dist=1.19210 passes=False gom_a=False →cf=False
+    LSKUSDT                val=2.29360 dist=1.19360 passes=False gom_a=False →cf=False
+    MAGICUSDT              val=2.29872 dist=1.19872 passes=False gom_a=False →cf=False
+    VELODROMEUSDT          val=2.31782 dist=1.21782 passes=False gom_a=False →cf=False
+    MTLUSDT                val=2.32696 dist=1.22696 passes=False gom_a=False →cf=False
+    BANDUSDT               val=2.33224 dist=1.23224 passes=False gom_a=False →cf=False
+    BROCCOLI714USDT        val=2.33574 dist=1.23574 passes=False gom_a=False →cf=False
+    FOLKSUSDT              val=2.35030 dist=1.25030 passes=False gom_a=False →cf=False
+    WAXPUSDT               val=2.36692 dist=1.26692 passes=False gom_a=False →cf=False
+    CTSIUSDT               val=2.36766 dist=1.26766 passes=False gom_a=False →cf=False
+    ELSAUSDT               val=2.37328 dist=1.27328 passes=False gom_a=False →cf=False
+    FLUIDUSDT              val=2.38530 dist=1.28530 passes=False gom_a=False →cf=False
+    BANANAUSDT             val=2.39174 dist=1.29174 passes=False gom_a=False →cf=False
+    USUALUSDT              val=2.41360 dist=1.31360 passes=False gom_a=False →cf=False
+    TRUTHUSDT              val=2.43528 dist=1.33528 passes=False gom_a=False →cf=False
+    LTCUSDT                val=2.43682 dist=1.33682 passes=False gom_a=False →cf=False
+    FLOCKUSDT              val=2.44672 dist=1.34672 passes=False gom_a=False →cf=False
+    TREEUSDT               val=2.45304 dist=1.35304 passes=False gom_a=False →cf=False
+    AEVOUSDT               val=2.45610 dist=1.35610 passes=False gom_a=False →cf=False
+    TOSHIUSDT              val=2.45880 dist=1.35880 passes=False gom_a=False →cf=False
+    ICNTUSDT               val=2.46716 dist=1.36716 passes=False gom_a=False →cf=False
+    IRYSUSDT               val=2.46756 dist=1.36756 passes=False gom_a=False →cf=False
+    RONINUSDT              val=2.48564 dist=1.38564 passes=False gom_a=False →cf=False
+    TACUSDT                val=2.49958 dist=1.39958 passes=False gom_a=False →cf=False
+    ESPORTSUSDT            val=2.50426 dist=1.40426 passes=False gom_a=False →cf=False
+    MAVUSDT                val=2.51466 dist=1.41466 passes=False gom_a=False →cf=False
+    SQDUSDT                val=2.51756 dist=1.41756 passes=False gom_a=False →cf=False
+    ARKUSDT                val=2.52642 dist=1.42642 passes=False gom_a=False →cf=False
+    ORDERUSDT              val=2.53494 dist=1.43494 passes=False gom_a=False →cf=False
+    METISUSDT              val=2.53700 dist=1.43700 passes=False gom_a=False →cf=False
+    KERNELUSDT             val=2.53868 dist=1.43868 passes=False gom_a=False →cf=False
+    BLUAIUSDT              val=2.55428 dist=1.45428 passes=False gom_a=False →cf=False
+    VTHOUSDT               val=2.56488 dist=1.46488 passes=False gom_a=False →cf=False
+    BRETTUSDT              val=2.57856 dist=1.47856 passes=False gom_a=False →cf=False
+    CGPTUSDT               val=2.58860 dist=1.48860 passes=False gom_a=False →cf=False
+    ILVUSDT                val=2.59038 dist=1.49038 passes=False gom_a=False →cf=False
+    BNBUSDT                val=2.60054 dist=1.50054 passes=False gom_a=False →cf=False
+    ACTUSDT                val=2.61306 dist=1.51306 passes=False gom_a=False →cf=False
+    MERLUSDT               val=2.62244 dist=1.52244 passes=False gom_a=False →cf=False
+    BBUSDT                 val=2.62824 dist=1.52824 passes=False gom_a=False →cf=False
+    SOLUSDT                val=2.62994 dist=1.52994 passes=False gom_a=False →cf=False
+    1000SATSUSDT           val=2.63248 dist=1.53248 passes=False gom_a=False →cf=False
+    AIOTUSDT               val=2.65368 dist=1.55368 passes=False gom_a=False →cf=False
+    XRPUSDT                val=2.66500 dist=1.56500 passes=False gom_a=False →cf=False
+    SPACEUSDT              val=2.68672 dist=1.58672 passes=False gom_a=False →cf=False
+    TAIKOUSDT              val=2.69086 dist=1.59086 passes=False gom_a=False →cf=False
+    C98USDT                val=2.72576 dist=1.62576 passes=False gom_a=False →cf=False
+    SOLVUSDT               val=2.73110 dist=1.63110 passes=False gom_a=False →cf=False
+    FOGOUSDT               val=2.73272 dist=1.63272 passes=False gom_a=False →cf=False
+    POPCATUSDT             val=2.73594 dist=1.63594 passes=False gom_a=False →cf=False
+    CETUSUSDT              val=2.74768 dist=1.64768 passes=False gom_a=False →cf=False
+    STOUSDT                val=2.74870 dist=1.64870 passes=False gom_a=False →cf=False
+    ASRUSDT                val=2.75044 dist=1.65044 passes=False gom_a=False →cf=False
+    AVAUSDT                val=2.75448 dist=1.65448 passes=False gom_a=False →cf=False
+    VICUSDT                val=2.76962 dist=1.66962 passes=False gom_a=False →cf=False
+    PTBUSDT                val=2.77346 dist=1.67346 passes=False gom_a=False →cf=False
+    COOKIEUSDT             val=2.77838 dist=1.67838 passes=False gom_a=False →cf=False
+    INUSDT                 val=2.80306 dist=1.70306 passes=False gom_a=False →cf=False
+    DOGEUSDT               val=2.80640 dist=1.70640 passes=False gom_a=False →cf=False
+    KOMAUSDT               val=2.80702 dist=1.70702 passes=False gom_a=False →cf=False
+    DOODUSDT               val=2.81644 dist=1.71644 passes=False gom_a=False →cf=False
+    HFTUSDT                val=2.81752 dist=1.71752 passes=False gom_a=False →cf=False
+    CHILLGUYUSDT           val=2.81940 dist=1.71940 passes=False gom_a=False →cf=False
+    AGTUSDT                val=2.82954 dist=1.72954 passes=False gom_a=False →cf=False
+    SOPHUSDT               val=2.83740 dist=1.73740 passes=False gom_a=False →cf=False
+    DYMUSDT                val=2.87448 dist=1.77448 passes=False gom_a=False →cf=False
+    CVCUSDT                val=2.87980 dist=1.77980 passes=False gom_a=False →cf=False
+    1000000MOGUSDT         val=2.89022 dist=1.79022 passes=False gom_a=False →cf=False
+    ETHWUSDT               val=2.91512 dist=1.81512 passes=False gom_a=False →cf=False
+    CELRUSDT               val=2.98512 dist=1.88512 passes=False gom_a=False →cf=False
+    BASUSDT                val=2.99846 dist=1.89846 passes=False gom_a=False →cf=False
+    FLUXUSDT               val=3.03694 dist=1.93694 passes=False gom_a=False →cf=False
+    SONICUSDT              val=3.04368 dist=1.94368 passes=False gom_a=False →cf=False
+    GOATUSDT               val=3.11468 dist=2.01468 passes=False gom_a=False →cf=False
+    ACUUSDT                val=3.12032 dist=2.02032 passes=False gom_a=False →cf=False
+    USTCUSDT               val=3.13568 dist=2.03568 passes=False gom_a=False →cf=False
+    1000CATUSDT            val=3.15080 dist=2.05080 passes=False gom_a=False →cf=False
+    SWARMSUSDT             val=3.17960 dist=2.07960 passes=False gom_a=False →cf=False
+    PIPPINUSDT             val=3.18288 dist=2.08288 passes=False gom_a=False →cf=False
+    STARUSDT               val=3.18486 dist=2.08486 passes=False gom_a=False →cf=False
+    XNYUSDT                val=3.20650 dist=2.10650 passes=False gom_a=False →cf=False
+    PLAYUSDT               val=3.21198 dist=2.11198 passes=False gom_a=False →cf=False
+    DOLOUSDT               val=3.22060 dist=2.12060 passes=False gom_a=False →cf=False
+    SLPUSDT                val=3.22998 dist=2.12998 passes=False gom_a=False →cf=False
+    CARVUSDT               val=3.24284 dist=2.14284 passes=False gom_a=False →cf=False
+    TRUSTUSDT              val=3.25258 dist=2.15258 passes=False gom_a=False →cf=False
+    AINUSDT                val=3.26652 dist=2.16652 passes=False gom_a=False →cf=False
+    INXUSDT                val=3.28628 dist=2.18628 passes=False gom_a=False →cf=False
+    SAGAUSDT               val=3.29816 dist=2.19816 passes=False gom_a=False →cf=False
+    CLANKERUSDT            val=3.30632 dist=2.20632 passes=False gom_a=False →cf=False
+    GTCUSDT                val=3.39638 dist=2.29638 passes=False gom_a=False →cf=False
+    CTKUSDT                val=3.39724 dist=2.29724 passes=False gom_a=False →cf=False
+    JOEUSDT                val=3.44046 dist=2.34046 passes=False gom_a=False →cf=False
+    SHELLUSDT              val=3.47100 dist=2.37100 passes=False gom_a=False →cf=False
+    MYXUSDT                val=3.57424 dist=2.47424 passes=False gom_a=False →cf=False
+    TAKEUSDT               val=3.58428 dist=2.48428 passes=False gom_a=False →cf=False
+    ALCHUSDT               val=3.58582 dist=2.48582 passes=False gom_a=False →cf=False
+    MELANIAUSDT            val=3.59754 dist=2.49754 passes=False gom_a=False →cf=False
+    STBLUSDT               val=3.59974 dist=2.49974 passes=False gom_a=False →cf=False
+    BMTUSDT                val=3.61060 dist=2.51060 passes=False gom_a=False →cf=False
+    FHEUSDT                val=3.63720 dist=2.53720 passes=False gom_a=False →cf=False
+    RECALLUSDT             val=3.66190 dist=2.56190 passes=False gom_a=False →cf=False
+    GRIFFAINUSDT           val=3.68936 dist=2.58936 passes=False gom_a=False →cf=False
+    HAEDALUSDT             val=3.76596 dist=2.66596 passes=False gom_a=False →cf=False
+    ALPINEUSDT             val=3.77106 dist=2.67106 passes=False gom_a=False →cf=False
+    LABUSDT                val=3.78934 dist=2.68934 passes=False gom_a=False →cf=False
+    AIAUSDT                val=3.81234 dist=2.71234 passes=False gom_a=False →cf=False
+    我踏马来了USDT              val=3.84454 dist=2.74454 passes=False gom_a=False →cf=False
+    TURTLEUSDT             val=3.88664 dist=2.78664 passes=False gom_a=False →cf=False
+    SANTOSUSDT             val=3.89252 dist=2.79252 passes=False gom_a=False →cf=False
+    FIGHTUSDT              val=3.92246 dist=2.82246 passes=False gom_a=False →cf=False
+    MAVIAUSDT              val=3.93176 dist=2.83176 passes=False gom_a=False →cf=False
+    DRIFTUSDT              val=3.98646 dist=2.88646 passes=False gom_a=False →cf=False
+    RAVEUSDT               val=3.98654 dist=2.88654 passes=False gom_a=False →cf=False
+    CTRUSDT                val=4.01930 dist=2.91930 passes=False gom_a=False →cf=False
+    POWERUSDT              val=4.03898 dist=2.93898 passes=False gom_a=False →cf=False
+    SCRUSDT                val=4.17056 dist=3.07056 passes=False gom_a=False →cf=False
+    TRADOORUSDT            val=4.19034 dist=3.09034 passes=False gom_a=False →cf=False
+    BTRUSDT                val=4.31446 dist=3.21446 passes=False gom_a=False →cf=False
+    PROMPTUSDT             val=4.36186 dist=3.26186 passes=False gom_a=False →cf=False
+    ARIAUSDT               val=4.54020 dist=3.44020 passes=False gom_a=False →cf=False
+    LIGHTUSDT              val=4.71800 dist=3.61800 passes=False gom_a=False →cf=False
+    COAIUSDT               val=4.86802 dist=3.76802 passes=False gom_a=False →cf=False
+    LYNUSDT                val=5.03284 dist=3.93284 passes=False gom_a=False →cf=False
+    1000000BOBUSDT         val=5.40976 dist=4.30976 passes=False gom_a=False →cf=False
+    SIRENUSDT              val=5.60580 dist=4.50580 passes=False gom_a=False →cf=False
+    GUAUSDT                val=5.72524 dist=4.62524 passes=False gom_a=False →cf=False
+    PUMPBTCUSDT            val=5.72718 dist=4.62718 passes=False gom_a=False →cf=False
+    SPORTFUNUSDT           val=6.39238 dist=5.29238 passes=False gom_a=False →cf=False
+  A3 on 2026-08-01 (525 tokens):
+    FFUSDT                 val=1.14902 dist=0.00098 passes=True gom_a=True →cf=False
+    HFTUSDT                val=1.14823 dist=0.00177 passes=True gom_a=False →cf=False
+    XPLUSDT                val=1.14786 dist=0.00214 passes=True gom_a=True →cf=False
+    PORTALUSDT             val=1.14727 dist=0.00273 passes=True gom_a=False →cf=False
+    ZBTUSDT                val=1.14681 dist=0.00319 passes=True gom_a=True →cf=False
+    ENSUSDT                val=1.14401 dist=0.00599 passes=True gom_a=False →cf=False
+    RIFUSDT                val=1.14393 dist=0.00607 passes=True gom_a=False →cf=False
+    VTHOUSDT               val=1.14352 dist=0.00648 passes=True gom_a=False →cf=False
+    SLPUSDT                val=1.15676 dist=0.00676 passes=False gom_a=False →cf=False
+    ANKRUSDT               val=1.15697 dist=0.00697 passes=False gom_a=False →cf=False
+    BTRUSDT                val=1.14244 dist=0.00756 passes=True gom_a=False →cf=False
+    SSVUSDT                val=1.14203 dist=0.00797 passes=True gom_a=False →cf=False
+    HMSTRUSDT              val=1.15828 dist=0.00828 passes=False gom_a=False →cf=True
+    EGLDUSDT               val=1.13931 dist=0.01069 passes=True gom_a=False →cf=False
+    BBUSDT                 val=1.13846 dist=0.01154 passes=True gom_a=False →cf=False
+    MINAUSDT               val=1.13784 dist=0.01216 passes=True gom_a=False →cf=False
+    BANANAUSDT             val=1.13719 dist=0.01281 passes=True gom_a=False →cf=False
+    BRETTUSDT              val=1.13716 dist=0.01284 passes=True gom_a=False →cf=False
+    CVXUSDT                val=1.16295 dist=0.01295 passes=False gom_a=False →cf=False
+    DEXEUSDT               val=1.16463 dist=0.01463 passes=False gom_a=False →cf=False
+    MONUSDT                val=1.13433 dist=0.01567 passes=True gom_a=False →cf=False
+    GMXUSDT                val=1.13326 dist=0.01674 passes=True gom_a=False →cf=False
+    DASHUSDT               val=1.13323 dist=0.01677 passes=True gom_a=True →cf=False
+    CFGUSDT                val=1.13267 dist=0.01733 passes=True gom_a=False →cf=False
+    MANTRAUSDT             val=1.13138 dist=0.01862 passes=True gom_a=False →cf=False
+    TNSRUSDT               val=1.16918 dist=0.01918 passes=False gom_a=False →cf=False
+    ALPINEUSDT             val=1.13045 dist=0.01955 passes=True gom_a=False →cf=False
+    HOTUSDT                val=1.17025 dist=0.02025 passes=False gom_a=False →cf=False
+    ETCUSDT                val=1.17281 dist=0.02281 passes=False gom_a=False →cf=False
+    ZECUSDT                val=1.17302 dist=0.02302 passes=False gom_a=False →cf=True
+    MANAUSDT               val=1.12687 dist=0.02313 passes=True gom_a=False →cf=False
+    MYXUSDT                val=1.12611 dist=0.02389 passes=True gom_a=False →cf=False
+    HUMAUSDT               val=1.17412 dist=0.02412 passes=False gom_a=False →cf=True
+    UAIUSDT                val=1.12399 dist=0.02601 passes=True gom_a=False →cf=False
+    SUSDT                  val=1.17800 dist=0.02800 passes=False gom_a=False →cf=False
+    NAORISUSDT             val=1.12177 dist=0.02823 passes=True gom_a=False →cf=False
+    MIRAUSDT               val=1.17824 dist=0.02824 passes=False gom_a=False →cf=False
+    GRASSUSDT              val=1.17985 dist=0.02985 passes=False gom_a=False →cf=False
+    ACTUSDT                val=1.11990 dist=0.03010 passes=True gom_a=False →cf=False
+    POLUSDT                val=1.18051 dist=0.03051 passes=False gom_a=False →cf=False
+    COMPUSDT               val=1.11932 dist=0.03068 passes=True gom_a=False →cf=False
+    STOUSDT                val=1.11930 dist=0.03070 passes=True gom_a=False →cf=False
+    TRADOORUSDT            val=1.11873 dist=0.03127 passes=True gom_a=False →cf=False
+    ZKCUSDT                val=1.11847 dist=0.03153 passes=True gom_a=False →cf=False
+    DEEPUSDT               val=1.11827 dist=0.03173 passes=True gom_a=False →cf=False
+    SCRTUSDT               val=1.18176 dist=0.03176 passes=False gom_a=False →cf=False
+    VELVETUSDT             val=1.18222 dist=0.03222 passes=False gom_a=False →cf=True
+    OPGUSDT                val=1.11547 dist=0.03453 passes=True gom_a=False →cf=False
+    EDUUSDT                val=1.11490 dist=0.03510 passes=True gom_a=False →cf=False
+    VELODROMEUSDT          val=1.11455 dist=0.03545 passes=True gom_a=False →cf=False
+    龙虾USDT                 val=1.18568 dist=0.03568 passes=False gom_a=False →cf=False
+    MOVRUSDT               val=1.18611 dist=0.03611 passes=False gom_a=False →cf=False
+    STARUSDT               val=1.11385 dist=0.03615 passes=True gom_a=False →cf=False
+    MERLUSDT               val=1.11385 dist=0.03615 passes=True gom_a=False →cf=False
+    RAYSOLUSDT             val=1.11370 dist=0.03630 passes=True gom_a=False →cf=False
+    SAHARAUSDT             val=1.18852 dist=0.03852 passes=False gom_a=False →cf=False
+    AIAUSDT                val=1.11129 dist=0.03871 passes=True gom_a=False →cf=False
+    SPELLUSDT              val=1.18888 dist=0.03888 passes=False gom_a=False →cf=False
+    KGENUSDT               val=1.11005 dist=0.03995 passes=True gom_a=False →cf=False
+    CARVUSDT               val=1.10862 dist=0.04138 passes=True gom_a=False →cf=False
+    SUIUSDT                val=1.10817 dist=0.04183 passes=True gom_a=False →cf=False
+    FOLKSUSDT              val=1.10663 dist=0.04337 passes=True gom_a=False →cf=False
+    1INCHUSDT              val=1.10629 dist=0.04371 passes=True gom_a=False →cf=False
+    IOTAUSDT               val=1.19443 dist=0.04443 passes=False gom_a=False →cf=False
+    KERNELUSDT             val=1.19568 dist=0.04568 passes=False gom_a=False →cf=False
+    FARTCOINUSDT           val=1.10208 dist=0.04792 passes=True gom_a=False →cf=False
+    TRIAUSDT               val=1.19833 dist=0.04833 passes=False gom_a=False →cf=False
+    ALCHUSDT               val=1.10045 dist=0.04955 passes=True gom_a=False →cf=False
+    XAUTUSDT               val=1.09905 dist=0.05095 passes=True gom_a=False →cf=False
+    1000XECUSDT            val=1.09865 dist=0.05135 passes=True gom_a=True →cf=False
+    BCHUSDT                val=1.20135 dist=0.05135 passes=False gom_a=False →cf=False
+    WALUSDT                val=1.09605 dist=0.05395 passes=True gom_a=False →cf=False
+    ONEUSDT                val=1.20553 dist=0.05553 passes=False gom_a=False →cf=False
+    IOUSDT                 val=1.09349 dist=0.05651 passes=True gom_a=False →cf=False
+    ATUSDT                 val=1.20689 dist=0.05689 passes=False gom_a=False →cf=True
+    SOMIUSDT               val=1.09246 dist=0.05754 passes=True gom_a=False →cf=False
+    TAOUSDT                val=1.20754 dist=0.05754 passes=False gom_a=False →cf=False
+    CHZUSDT                val=1.09168 dist=0.05832 passes=True gom_a=False →cf=False
+    DOGSUSDT               val=1.09036 dist=0.05964 passes=True gom_a=False →cf=False
+    SOLUSDT                val=1.08945 dist=0.06055 passes=True gom_a=False →cf=False
+    LUMIAUSDT              val=1.21149 dist=0.06149 passes=False gom_a=False →cf=True
+    GENIUSUSDT             val=1.08814 dist=0.06186 passes=True gom_a=True →cf=False
+    RVNUSDT                val=1.08744 dist=0.06256 passes=True gom_a=False →cf=False
+    IDOLUSDT               val=1.08743 dist=0.06257 passes=True gom_a=False →cf=False
+    PTBUSDT                val=1.08651 dist=0.06349 passes=True gom_a=False →cf=False
+    GUNUSDT                val=1.08620 dist=0.06380 passes=True gom_a=False →cf=False
+    LUNA2USDT              val=1.08577 dist=0.06423 passes=True gom_a=False →cf=False
+    QNTUSDT                val=1.21451 dist=0.06451 passes=False gom_a=False →cf=False
+    SNXUSDT                val=1.21591 dist=0.06591 passes=False gom_a=False →cf=False
+    TIAUSDT                val=1.08365 dist=0.06635 passes=True gom_a=True →cf=False
+    BANDUSDT               val=1.08112 dist=0.06888 passes=True gom_a=False →cf=False
+    TRBUSDT                val=1.08107 dist=0.06893 passes=True gom_a=False →cf=False
+    ARXUSDT                val=1.21917 dist=0.06917 passes=False gom_a=False →cf=False
+    ADAUSDT                val=1.21987 dist=0.06987 passes=False gom_a=False →cf=False
+    METUSDT                val=1.07817 dist=0.07183 passes=True gom_a=False →cf=False
+    CYSUSDT                val=1.07782 dist=0.07218 passes=True gom_a=False →cf=False
+    币安人生USDT               val=1.07769 dist=0.07231 passes=True gom_a=True →cf=False
+    SXTUSDT                val=1.07760 dist=0.07240 passes=True gom_a=True →cf=False
+    ARCUSDT                val=1.07738 dist=0.07262 passes=True gom_a=False →cf=False
+    AWEUSDT                val=1.22320 dist=0.07320 passes=False gom_a=False →cf=True
+    AEROUSDT               val=1.22374 dist=0.07374 passes=False gom_a=False →cf=False
+    PYTHUSDT               val=1.22494 dist=0.07494 passes=False gom_a=False →cf=True
+    SEIUSDT                val=1.07390 dist=0.07610 passes=True gom_a=False →cf=False
+    1000CATUSDT            val=1.22640 dist=0.07640 passes=False gom_a=False →cf=False
+    WOOUSDT                val=1.07339 dist=0.07661 passes=True gom_a=False →cf=False
+    CATIUSDT               val=1.23104 dist=0.08104 passes=False gom_a=False →cf=True
+    ONGUSDT                val=1.06857 dist=0.08143 passes=True gom_a=False →cf=False
+    QUSDT                  val=1.23205 dist=0.08205 passes=False gom_a=False →cf=False
+    BASEDUSDT              val=1.06783 dist=0.08217 passes=True gom_a=False →cf=False
+    SKLUSDT                val=1.23335 dist=0.08335 passes=False gom_a=False →cf=True
+    TUTUSDT                val=1.06658 dist=0.08342 passes=True gom_a=False →cf=False
+    RUNEUSDT               val=1.06642 dist=0.08358 passes=True gom_a=False →cf=False
+    SAPIENUSDT             val=1.06625 dist=0.08375 passes=True gom_a=False →cf=False
+    XVSUSDT                val=1.06585 dist=0.08415 passes=True gom_a=False →cf=False
+    YBUSDT                 val=1.23463 dist=0.08463 passes=False gom_a=False →cf=False
+    LQTYUSDT               val=1.23488 dist=0.08488 passes=False gom_a=False →cf=False
+    DOGEUSDT               val=1.06483 dist=0.08517 passes=True gom_a=False →cf=False
+    NEWTUSDT               val=1.06471 dist=0.08529 passes=True gom_a=False →cf=False
+    INUSDT                 val=1.06408 dist=0.08592 passes=True gom_a=False →cf=False
+    PUMPUSDT               val=1.23592 dist=0.08592 passes=False gom_a=False →cf=False
+    USTCUSDT               val=1.06339 dist=0.08661 passes=True gom_a=False →cf=False
+    SIRENUSDT              val=1.06176 dist=0.08824 passes=True gom_a=False →cf=False
+    FUSDT                  val=1.06145 dist=0.08855 passes=True gom_a=False →cf=False
+    GWEIUSDT               val=1.06138 dist=0.08862 passes=True gom_a=False →cf=False
+    TUSDT                  val=1.06124 dist=0.08876 passes=True gom_a=True →cf=False
+    MANTAUSDT              val=1.24048 dist=0.09048 passes=False gom_a=False →cf=True
+    ONTUSDT                val=1.05765 dist=0.09235 passes=True gom_a=False →cf=False
+    1000000MOGUSDT         val=1.05746 dist=0.09254 passes=True gom_a=False →cf=False
+    1000LUNCUSDT           val=1.24387 dist=0.09387 passes=False gom_a=False →cf=True
+    GUAUSDT                val=1.05604 dist=0.09396 passes=True gom_a=False →cf=False
+    1000SHIBUSDT           val=1.05524 dist=0.09476 passes=True gom_a=False →cf=False
+    CCUSDT                 val=1.05476 dist=0.09524 passes=True gom_a=False →cf=False
+    YGGUSDT                val=1.24550 dist=0.09550 passes=False gom_a=False →cf=False
+    LSKUSDT                val=1.05341 dist=0.09659 passes=True gom_a=False →cf=False
+    DUSKUSDT               val=1.05340 dist=0.09660 passes=True gom_a=False →cf=False
+    FILUSDT                val=1.05318 dist=0.09682 passes=True gom_a=False →cf=False
+    AZTECUSDT              val=1.05243 dist=0.09757 passes=True gom_a=False →cf=False
+    STBLUSDT               val=1.24765 dist=0.09765 passes=False gom_a=False →cf=False
+    NIGHTUSDT              val=1.05071 dist=0.09929 passes=True gom_a=True →cf=False
+    INITUSDT               val=1.05067 dist=0.09933 passes=True gom_a=False →cf=False
+    MITOUSDT               val=1.24959 dist=0.09959 passes=False gom_a=False →cf=False
+    SOLVUSDT               val=1.04997 dist=0.10003 passes=True gom_a=False →cf=False
+    INJUSDT                val=1.04967 dist=0.10033 passes=True gom_a=False →cf=False
+    BNTUSDT                val=1.04953 dist=0.10047 passes=True gom_a=False →cf=False
+    KITEUSDT               val=1.25140 dist=0.10140 passes=False gom_a=False →cf=True
+    PHAROSUSDT             val=1.04683 dist=0.10317 passes=True gom_a=False →cf=False
+    ORDERUSDT              val=1.04632 dist=0.10368 passes=True gom_a=False →cf=False
+    WLDUSDT                val=1.04581 dist=0.10419 passes=True gom_a=False →cf=False
+    SPACEUSDT              val=1.25484 dist=0.10484 passes=False gom_a=False →cf=False
+    NOTUSDT                val=1.04467 dist=0.10533 passes=True gom_a=False →cf=False
+    PROMPTUSDT             val=1.04463 dist=0.10537 passes=True gom_a=False →cf=False
+    EIGENUSDT              val=1.25588 dist=0.10588 passes=False gom_a=False →cf=True
+    FLOCKUSDT              val=1.25633 dist=0.10633 passes=False gom_a=False →cf=False
+    CUSDT                  val=1.04357 dist=0.10643 passes=True gom_a=False →cf=False
+    AUCTIONUSDT            val=1.04315 dist=0.10685 passes=True gom_a=False →cf=False
+    OPENUSDT               val=1.04291 dist=0.10709 passes=True gom_a=False →cf=False
+    EPICUSDT               val=1.04226 dist=0.10774 passes=True gom_a=True →cf=False
+    ALTUSDT                val=1.04001 dist=0.10999 passes=True gom_a=False →cf=False
+    AIOTUSDT               val=1.03951 dist=0.11049 passes=True gom_a=False →cf=False
+    KAIAUSDT               val=1.03825 dist=0.11175 passes=True gom_a=False →cf=False
+    BSBUSDT                val=1.03651 dist=0.11349 passes=True gom_a=False →cf=False
+    FIDAUSDT               val=1.03616 dist=0.11384 passes=True gom_a=False →cf=False
+    BOMEUSDT               val=1.03572 dist=0.11428 passes=True gom_a=False →cf=False
+    SANDUSDT               val=1.03551 dist=0.11449 passes=True gom_a=False →cf=False
+    DYDXUSDT               val=1.03508 dist=0.11492 passes=True gom_a=False →cf=False
+    SQDUSDT                val=1.03480 dist=0.11520 passes=True gom_a=False →cf=False
+    WLFIUSDT               val=1.03448 dist=0.11552 passes=True gom_a=False →cf=False
+    BEAMXUSDT              val=1.26617 dist=0.11617 passes=False gom_a=False →cf=False
+    ZILUSDT                val=1.03279 dist=0.11721 passes=True gom_a=False →cf=False
+    FLUXUSDT               val=1.03137 dist=0.11863 passes=True gom_a=False →cf=False
+    RSRUSDT                val=1.03070 dist=0.11930 passes=True gom_a=False →cf=False
+    VICUSDT                val=1.02983 dist=0.12017 passes=True gom_a=False →cf=False
+    SKYUSDT                val=1.27054 dist=0.12054 passes=False gom_a=False →cf=True
+    2ZUSDT                 val=1.02893 dist=0.12107 passes=True gom_a=False →cf=False
+    APRUSDT                val=1.27199 dist=0.12199 passes=False gom_a=False →cf=False
+    CHRUSDT                val=1.27204 dist=0.12204 passes=False gom_a=False →cf=False
+    TOWNSUSDT              val=1.02569 dist=0.12431 passes=True gom_a=False →cf=False
+    BLESSUSDT              val=1.27501 dist=0.12501 passes=False gom_a=False →cf=False
+    SOPHUSDT               val=1.02479 dist=0.12521 passes=True gom_a=False →cf=False
+    SENTUSDT               val=1.27568 dist=0.12568 passes=False gom_a=False →cf=True
+    ARUSDT                 val=1.02315 dist=0.12685 passes=True gom_a=True →cf=False
+    BRUSDT                 val=1.02272 dist=0.12728 passes=True gom_a=False →cf=False
+    LTCUSDT                val=1.02222 dist=0.12778 passes=True gom_a=False →cf=False
+    SOONUSDT               val=1.27856 dist=0.12856 passes=False gom_a=False →cf=False
+    MEWUSDT                val=1.01900 dist=0.13100 passes=True gom_a=False →cf=False
+    ACXUSDT                val=1.28334 dist=0.13334 passes=False gom_a=False →cf=False
+    BILLUSDT               val=1.01564 dist=0.13436 passes=True gom_a=False →cf=False
+    KATUSDT                val=1.01411 dist=0.13589 passes=True gom_a=False →cf=False
+    SKYAIUSDT              val=1.01293 dist=0.13707 passes=True gom_a=False →cf=False
+    MOODENGUSDT            val=1.01288 dist=0.13712 passes=True gom_a=False →cf=False
+    CYBERUSDT              val=1.01097 dist=0.13903 passes=True gom_a=False →cf=False
+    BIGTIMEUSDT            val=1.01022 dist=0.13978 passes=True gom_a=False →cf=False
+    BMTUSDT                val=1.00851 dist=0.14149 passes=True gom_a=False →cf=False
+    KASUSDT                val=1.00800 dist=0.14200 passes=True gom_a=False →cf=False
+    JASMYUSDT              val=1.00788 dist=0.14212 passes=True gom_a=False →cf=False
+    PARTIUSDT              val=1.29241 dist=0.14241 passes=False gom_a=False →cf=True
+    POWRUSDT               val=1.00680 dist=0.14320 passes=True gom_a=False →cf=False
+    OUSDT                  val=1.00659 dist=0.14341 passes=True gom_a=False →cf=False
+    XLMUSDT                val=1.00602 dist=0.14398 passes=True gom_a=False →cf=False
+    XRPUSDT                val=1.00561 dist=0.14439 passes=True gom_a=False →cf=False
+    PLAYUSDT               val=1.00498 dist=0.14502 passes=True gom_a=False →cf=False
+    PAXGUSDT               val=1.00278 dist=0.14722 passes=True gom_a=False →cf=False
+    LINKUSDT               val=1.00215 dist=0.14785 passes=True gom_a=False →cf=False
+    LABUSDT                val=1.00060 dist=0.14940 passes=True gom_a=False →cf=False
+    RECALLUSDT             val=1.00059 dist=0.14941 passes=True gom_a=False →cf=False
+    ZKUSDT                 val=1.00000 dist=0.15000 passes=True gom_a=False →cf=False
+    REUSDT                 val=0.99920 dist=0.15080 passes=True gom_a=True →cf=False
+    UNIUSDT                val=0.99835 dist=0.15165 passes=True gom_a=False →cf=False
+    JOEUSDT                val=0.99832 dist=0.15168 passes=True gom_a=False →cf=False
+    AUSDT                  val=1.30231 dist=0.15231 passes=False gom_a=False →cf=False
+    STXUSDT                val=1.30252 dist=0.15252 passes=False gom_a=False →cf=False
+    RAVEUSDT               val=0.99694 dist=0.15306 passes=True gom_a=False →cf=False
+    AGTUSDT                val=0.99691 dist=0.15309 passes=True gom_a=False →cf=False
+    SIGNUSDT               val=0.99499 dist=0.15501 passes=True gom_a=False →cf=False
+    METISUSDT              val=0.99451 dist=0.15549 passes=True gom_a=False →cf=False
+    CELRUSDT               val=0.99369 dist=0.15631 passes=True gom_a=False →cf=False
+    BANANAS31USDT          val=0.99320 dist=0.15680 passes=True gom_a=True →cf=False
+    AIGENSYNUSDT           val=1.30710 dist=0.15710 passes=False gom_a=False →cf=True
+    MELANIAUSDT            val=0.99288 dist=0.15712 passes=True gom_a=False →cf=False
+    STGUSDT                val=1.30743 dist=0.15743 passes=False gom_a=False →cf=False
+    ANIMEUSDT              val=0.99195 dist=0.15805 passes=True gom_a=False →cf=False
+    CGPTUSDT               val=0.99041 dist=0.15959 passes=True gom_a=False →cf=False
+    SONICUSDT              val=0.99013 dist=0.15987 passes=True gom_a=False →cf=False
+    1MBABYDOGEUSDT         val=0.98952 dist=0.16048 passes=True gom_a=False →cf=False
+    DOLOUSDT               val=0.98769 dist=0.16231 passes=True gom_a=False →cf=False
+    ROSEUSDT               val=0.98751 dist=0.16249 passes=True gom_a=False →cf=False
+    BASUSDT                val=1.31309 dist=0.16309 passes=False gom_a=False →cf=False
+    ARBUSDT                val=0.98682 dist=0.16318 passes=True gom_a=False →cf=False
+    TREEUSDT               val=1.31442 dist=0.16442 passes=False gom_a=False →cf=False
+    SYNUSDT                val=0.98526 dist=0.16474 passes=True gom_a=True →cf=False
+    FOGOUSDT               val=0.98523 dist=0.16477 passes=True gom_a=False →cf=False
+    ACUUSDT                val=0.98508 dist=0.16492 passes=True gom_a=False →cf=False
+    MEGAUSDT               val=0.98442 dist=0.16558 passes=True gom_a=True →cf=False
+    PUMPBTCUSDT            val=0.98442 dist=0.16558 passes=True gom_a=False →cf=False
+    TAUSDT                 val=1.31609 dist=0.16609 passes=False gom_a=False →cf=False
+    GLMUSDT                val=0.98333 dist=0.16667 passes=True gom_a=False →cf=False
+    EVAAUSDT               val=0.98293 dist=0.16707 passes=True gom_a=False →cf=False
+    POWERUSDT              val=0.98256 dist=0.16744 passes=True gom_a=False →cf=False
+    CROSSUSDT              val=1.32056 dist=0.17056 passes=False gom_a=False →cf=False
+    XMRUSDT                val=1.32111 dist=0.17111 passes=False gom_a=False →cf=False
+    NMRUSDT                val=0.97722 dist=0.17278 passes=True gom_a=False →cf=False
+    ZEREBROUSDT            val=0.97667 dist=0.17333 passes=True gom_a=False →cf=False
+    RONINUSDT              val=0.97621 dist=0.17379 passes=True gom_a=False →cf=False
+    KNCUSDT                val=0.97492 dist=0.17508 passes=True gom_a=False →cf=False
+    ZETAUSDT               val=0.97420 dist=0.17580 passes=True gom_a=False →cf=False
+    OPUSDT                 val=0.97399 dist=0.17601 passes=True gom_a=False →cf=False
+    LYNUSDT                val=0.97114 dist=0.17886 passes=True gom_a=False →cf=False
+    PHAUSDT                val=0.97106 dist=0.17894 passes=True gom_a=False →cf=False
+    SAGAUSDT               val=0.96765 dist=0.18235 passes=True gom_a=False →cf=False
+    TOSHIUSDT              val=1.33350 dist=0.18350 passes=False gom_a=False →cf=False
+    ZORAUSDT               val=0.96598 dist=0.18402 passes=True gom_a=False →cf=False
+    我踏马来了USDT              val=0.96562 dist=0.18438 passes=True gom_a=False →cf=False
+    GASUSDT                val=0.96534 dist=0.18466 passes=True gom_a=False →cf=False
+    SHELLUSDT              val=0.96462 dist=0.18538 passes=True gom_a=False →cf=False
+    AKEUSDT                val=1.33568 dist=0.18568 passes=False gom_a=False →cf=True
+    FIGHTUSDT              val=0.96352 dist=0.18648 passes=True gom_a=False →cf=False
+    AXLUSDT                val=0.96339 dist=0.18661 passes=True gom_a=False →cf=False
+    MEMEUSDT               val=0.96262 dist=0.18738 passes=True gom_a=False →cf=False
+    CKBUSDT                val=0.96253 dist=0.18747 passes=True gom_a=False →cf=False
+    HAEDALUSDT             val=0.96246 dist=0.18754 passes=True gom_a=False →cf=False
+    BICOUSDT               val=0.96213 dist=0.18787 passes=True gom_a=False →cf=False
+    JTOUSDT                val=0.96102 dist=0.18898 passes=True gom_a=True →cf=False
+    ASTRUSDT               val=0.96035 dist=0.18965 passes=True gom_a=False →cf=False
+    1000CHEEMSUSDT         val=0.95958 dist=0.19042 passes=True gom_a=False →cf=False
+    ZKPUSDT                val=0.95927 dist=0.19073 passes=True gom_a=False →cf=False
+    ESPORTSUSDT            val=0.95921 dist=0.19079 passes=True gom_a=False →cf=False
+    EDGEUSDT               val=0.95885 dist=0.19115 passes=True gom_a=False →cf=False
+    POLYXUSDT              val=0.95874 dist=0.19126 passes=True gom_a=False →cf=False
+    OGUSDT                 val=0.95678 dist=0.19322 passes=True gom_a=False →cf=False
+    BLUAIUSDT              val=1.34400 dist=0.19400 passes=False gom_a=False →cf=False
+    ETHUSDT                val=1.34490 dist=0.19490 passes=False gom_a=False →cf=False
+    MASKUSDT               val=0.95491 dist=0.19509 passes=True gom_a=False →cf=False
+    BANUSDT                val=0.95461 dist=0.19539 passes=True gom_a=True →cf=False
+    ROBOUSDT               val=0.95254 dist=0.19746 passes=True gom_a=False →cf=False
+    CELOUSDT               val=0.95141 dist=0.19859 passes=True gom_a=False →cf=False
+    BIOUSDT                val=0.95036 dist=0.19964 passes=True gom_a=False →cf=False
+    MAGICUSDT              val=0.94942 dist=0.20058 passes=True gom_a=False →cf=False
+    ARIAUSDT               val=0.94907 dist=0.20093 passes=True gom_a=False →cf=False
+    TAIKOUSDT              val=1.35240 dist=0.20240 passes=False gom_a=False →cf=False
+    XAIUSDT                val=0.94704 dist=0.20296 passes=True gom_a=False →cf=False
+    GRIFFAINUSDT           val=0.94687 dist=0.20313 passes=True gom_a=False →cf=False
+    TAGUSDT                val=0.94646 dist=0.20354 passes=True gom_a=False →cf=False
+    STEEMUSDT              val=0.94626 dist=0.20374 passes=True gom_a=False →cf=False
+    WCTUSDT                val=0.94538 dist=0.20462 passes=True gom_a=False →cf=False
+    NXPCUSDT               val=0.94502 dist=0.20498 passes=True gom_a=False →cf=False
+    SANTOSUSDT             val=0.94416 dist=0.20584 passes=True gom_a=False →cf=False
+    AKTUSDT                val=0.94346 dist=0.20654 passes=True gom_a=False →cf=False
+    ARKUSDT                val=0.94307 dist=0.20693 passes=True gom_a=False →cf=False
+    NEIROUSDT              val=0.94272 dist=0.20728 passes=True gom_a=False →cf=False
+    HEMIUSDT               val=0.94257 dist=0.20743 passes=True gom_a=False →cf=False
+    MAVIAUSDT              val=0.94204 dist=0.20796 passes=True gom_a=False →cf=False
+    ICXUSDT                val=0.94195 dist=0.20805 passes=True gom_a=False →cf=False
+    SWARMSUSDT             val=0.94184 dist=0.20816 passes=True gom_a=False →cf=False
+    FLUIDUSDT              val=0.94138 dist=0.20862 passes=True gom_a=False →cf=False
+    BABYUSDT               val=0.94096 dist=0.20904 passes=True gom_a=True →cf=False
+    HIVEUSDT               val=0.93967 dist=0.21033 passes=True gom_a=False →cf=False
+    TURTLEUSDT             val=0.93951 dist=0.21049 passes=True gom_a=False →cf=False
+    XANUSDT                val=0.93951 dist=0.21049 passes=True gom_a=False →cf=False
+    IOTXUSDT               val=0.93870 dist=0.21130 passes=True gom_a=False →cf=False
+    ATOMUSDT               val=0.93784 dist=0.21216 passes=True gom_a=False →cf=False
+    AINUSDT                val=0.93783 dist=0.21217 passes=True gom_a=False →cf=False
+    SUNUSDT                val=0.93595 dist=0.21405 passes=True gom_a=True →cf=False
+    GRTUSDT                val=0.93573 dist=0.21427 passes=True gom_a=False →cf=False
+    BSVUSDT                val=0.93501 dist=0.21499 passes=True gom_a=False →cf=False
+    NEARUSDT               val=0.93497 dist=0.21503 passes=True gom_a=True →cf=False
+    FORMUSDT               val=0.93493 dist=0.21507 passes=True gom_a=False →cf=False
+    VVVUSDT                val=0.93408 dist=0.21592 passes=True gom_a=False →cf=False
+    HEIUSDT                val=0.93327 dist=0.21673 passes=True gom_a=True →cf=False
+    AVAUSDT                val=0.93141 dist=0.21859 passes=True gom_a=False →cf=False
+    GMTUSDT                val=0.92848 dist=0.22152 passes=True gom_a=False →cf=False
+    MAVUSDT                val=0.92765 dist=0.22235 passes=True gom_a=False →cf=False
+    1000PEPEUSDT           val=0.92712 dist=0.22288 passes=True gom_a=False →cf=False
+    DOODUSDT               val=0.92666 dist=0.22334 passes=True gom_a=False →cf=False
+    VETUSDT                val=0.92591 dist=0.22409 passes=True gom_a=False →cf=False
+    CTRUSDT                val=0.92576 dist=0.22424 passes=True gom_a=False →cf=False
+    LAYERUSDT              val=0.92575 dist=0.22425 passes=True gom_a=False →cf=False
+    NOMUSDT                val=0.92493 dist=0.22507 passes=True gom_a=False →cf=False
+    BATUSDT                val=0.92485 dist=0.22515 passes=True gom_a=False →cf=False
+    TSTUSDT                val=0.92362 dist=0.22638 passes=True gom_a=False →cf=False
+    AAVEUSDT               val=1.37834 dist=0.22834 passes=False gom_a=False →cf=False
+    CFXUSDT                val=0.92129 dist=0.22871 passes=True gom_a=False →cf=False
+    PIXELUSDT              val=0.92008 dist=0.22992 passes=True gom_a=False →cf=False
+    AVAAIUSDT              val=1.38056 dist=0.23056 passes=False gom_a=False →cf=False
+    HYPEUSDT               val=1.38208 dist=0.23208 passes=False gom_a=False →cf=False
+    1000FLOKIUSDT          val=0.91770 dist=0.23230 passes=True gom_a=False →cf=False
+    TWTUSDT                val=0.91713 dist=0.23287 passes=True gom_a=False →cf=False
+    PUNDIXUSDT             val=0.91698 dist=0.23302 passes=True gom_a=False →cf=False
+    WAXPUSDT               val=0.91499 dist=0.23501 passes=True gom_a=False →cf=False
+    KAITOUSDT              val=0.91303 dist=0.23697 passes=True gom_a=True →cf=False
+    CAKEUSDT               val=0.91246 dist=0.23754 passes=True gom_a=False →cf=False
+    GOATUSDT               val=0.91161 dist=0.23839 passes=True gom_a=False →cf=False
+    TURBOUSDT              val=0.90947 dist=0.24053 passes=True gom_a=False →cf=False
+    ETHFIUSDT              val=0.90928 dist=0.24072 passes=True gom_a=False →cf=False
+    RAREUSDT               val=0.90859 dist=0.24141 passes=True gom_a=False →cf=False
+    4USDT                  val=0.90753 dist=0.24247 passes=True gom_a=False →cf=False
+    BELUSDT                val=1.39283 dist=0.24283 passes=False gom_a=False →cf=False
+    ATHUSDT                val=0.90640 dist=0.24360 passes=True gom_a=False →cf=False
+    ETHWUSDT               val=0.90563 dist=0.24437 passes=True gom_a=False →cf=False
+    TRUTHUSDT              val=0.90445 dist=0.24555 passes=True gom_a=False →cf=False
+    PENDLEUSDT             val=0.90072 dist=0.24928 passes=True gom_a=True →cf=False
+    AIXBTUSDT              val=0.90047 dist=0.24953 passes=True gom_a=False →cf=False
+    ENJUSDT                val=0.90003 dist=0.24997 passes=True gom_a=False →cf=False
+    CETUSUSDT              val=0.89965 dist=0.25035 passes=True gom_a=False →cf=False
+    OPNUSDT                val=1.40128 dist=0.25128 passes=False gom_a=False →cf=True
+    BARDUSDT               val=0.89641 dist=0.25359 passes=True gom_a=False →cf=False
+    DYMUSDT                val=0.89501 dist=0.25499 passes=True gom_a=False →cf=False
+    COWUSDT                val=0.89442 dist=0.25558 passes=True gom_a=False →cf=False
+    ENSOUSDT               val=0.89219 dist=0.25781 passes=True gom_a=True →cf=False
+    AEVOUSDT               val=0.89026 dist=0.25974 passes=True gom_a=False →cf=False
+    GALAUSDT               val=0.88968 dist=0.26032 passes=True gom_a=False →cf=False
+    BLURUSDT               val=1.41068 dist=0.26068 passes=False gom_a=False →cf=False
+    XTZUSDT                val=0.88928 dist=0.26072 passes=True gom_a=False →cf=False
+    1000BONKUSDT           val=0.88863 dist=0.26137 passes=True gom_a=False →cf=False
+    USDCUSDT               val=0.88812 dist=0.26188 passes=True gom_a=False →cf=False
+    MTLUSDT                val=0.88751 dist=0.26249 passes=True gom_a=False →cf=False
+    BTCUSDT                val=1.41351 dist=0.26351 passes=False gom_a=False →cf=False
+    XNYUSDT                val=0.88533 dist=0.26467 passes=True gom_a=False →cf=False
+    CTSIUSDT               val=0.88269 dist=0.26731 passes=True gom_a=False →cf=False
+    INXUSDT                val=0.87902 dist=0.27098 passes=True gom_a=False →cf=False
+    VIRTUALUSDT            val=0.87859 dist=0.27141 passes=True gom_a=True →cf=False
+    DRIFTUSDT              val=0.87689 dist=0.27311 passes=True gom_a=False →cf=False
+    AXSUSDT                val=1.42337 dist=0.27337 passes=False gom_a=False →cf=False
+    AVAXUSDT               val=0.87524 dist=0.27476 passes=True gom_a=False →cf=False
+    BTCDOMUSDT             val=0.87259 dist=0.27741 passes=True gom_a=False →cf=False
+    DOTUSDT                val=0.87252 dist=0.27748 passes=True gom_a=False →cf=False
+    CHIPUSDT               val=0.87181 dist=0.27819 passes=True gom_a=True →cf=False
+    SUPERUSDT              val=0.87159 dist=0.27841 passes=True gom_a=False →cf=False
+    PIPPINUSDT             val=0.87060 dist=0.27940 passes=True gom_a=False →cf=False
+    USELESSUSDT            val=0.86998 dist=0.28002 passes=True gom_a=False →cf=False
+    RESOLVUSDT             val=0.86873 dist=0.28127 passes=True gom_a=False →cf=False
+    RIVERUSDT              val=0.86828 dist=0.28172 passes=True gom_a=False →cf=False
+    ACEUSDT                val=0.86752 dist=0.28248 passes=True gom_a=False →cf=False
+    IDUSDT                 val=1.43405 dist=0.28405 passes=False gom_a=False →cf=False
+    COLLECTUSDT            val=0.86398 dist=0.28602 passes=True gom_a=False →cf=False
+    PROVEUSDT              val=0.86379 dist=0.28621 passes=True gom_a=False →cf=False
+    BEATUSDT               val=0.86271 dist=0.28729 passes=True gom_a=False →cf=False
+    CVCUSDT                val=0.86237 dist=0.28763 passes=True gom_a=False →cf=False
+    MOCAUSDT               val=0.86139 dist=0.28861 passes=True gom_a=False →cf=False
+    COAIUSDT               val=0.85904 dist=0.29096 passes=True gom_a=False →cf=False
+    SPXUSDT                val=1.44114 dist=0.29114 passes=False gom_a=False →cf=False
+    QTUMUSDT               val=0.85845 dist=0.29155 passes=True gom_a=False →cf=False
+    IOSTUSDT               val=0.85831 dist=0.29169 passes=True gom_a=False →cf=False
+    KSMUSDT                val=0.85604 dist=0.29396 passes=True gom_a=False →cf=False
+    ERAUSDT                val=0.85419 dist=0.29581 passes=True gom_a=True →cf=False
+    ENAUSDT                val=0.85289 dist=0.29711 passes=True gom_a=False →cf=False
+    REDUSDT                val=0.85191 dist=0.29809 passes=True gom_a=False →cf=False
+    SFPUSDT                val=0.85053 dist=0.29947 passes=True gom_a=False →cf=False
+    SLXUSDT                val=0.84962 dist=0.30038 passes=True gom_a=False →cf=False
+    C98USDT                val=0.84948 dist=0.30052 passes=True gom_a=False →cf=False
+    PEOPLEUSDT             val=0.84814 dist=0.30186 passes=True gom_a=False →cf=False
+    VANRYUSDT              val=0.84113 dist=0.30887 passes=True gom_a=True →cf=False
+    ALLUSDT                val=0.83869 dist=0.31131 passes=True gom_a=False →cf=False
+    CTKUSDT                val=0.83769 dist=0.31231 passes=True gom_a=False →cf=False
+    ZAMAUSDT               val=0.83648 dist=0.31352 passes=True gom_a=False →cf=False
+    POPCATUSDT             val=0.83632 dist=0.31368 passes=True gom_a=False →cf=False
+    ELSAUSDT               val=0.83575 dist=0.31425 passes=True gom_a=False →cf=False
+    THEUSDT                val=0.83556 dist=0.31444 passes=True gom_a=False →cf=False
+    TRUSTUSDT              val=0.83480 dist=0.31520 passes=True gom_a=False →cf=False
+    TAKEUSDT               val=0.83305 dist=0.31695 passes=True gom_a=False →cf=False
+    XVGUSDT                val=0.83275 dist=0.31725 passes=True gom_a=False →cf=False
+    JCTUSDT                val=0.83211 dist=0.31789 passes=True gom_a=False →cf=False
+    BTWUSDT                val=0.83020 dist=0.31980 passes=True gom_a=False →cf=False
+    YFIUSDT                val=1.47007 dist=0.32007 passes=False gom_a=False →cf=False
+    HOMEUSDT               val=0.82901 dist=0.32099 passes=True gom_a=False →cf=False
+    ALLOUSDT               val=0.82822 dist=0.32178 passes=True gom_a=True →cf=False
+    ILVUSDT                val=0.82806 dist=0.32194 passes=True gom_a=False →cf=False
+    TRXUSDT                val=0.82791 dist=0.32209 passes=True gom_a=False →cf=False
+    ONDOUSDT               val=0.82754 dist=0.32246 passes=True gom_a=False →cf=False
+    COOKIEUSDT             val=0.82253 dist=0.32747 passes=True gom_a=False →cf=False
+    GPSUSDT                val=0.82232 dist=0.32768 passes=True gom_a=True →cf=False
+    TRUMPUSDT              val=0.82038 dist=0.32962 passes=True gom_a=False →cf=False
+    USUALUSDT              val=0.81981 dist=0.33019 passes=True gom_a=False →cf=False
+    SUSHIUSDT              val=0.81806 dist=0.33194 passes=True gom_a=False →cf=False
+    LDOUSDT                val=0.81791 dist=0.33209 passes=True gom_a=True →cf=False
+    HBARUSDT               val=0.81408 dist=0.33592 passes=True gom_a=False →cf=False
+    GUSDT                  val=1.48734 dist=0.33734 passes=False gom_a=False →cf=False
+    ICPUSDT                val=0.80978 dist=0.34022 passes=True gom_a=False →cf=False
+    VANAUSDT               val=0.80883 dist=0.34117 passes=True gom_a=False →cf=False
+    ASRUSDT                val=0.80846 dist=0.34154 passes=True gom_a=False →cf=False
+    1000000BOBUSDT         val=0.80476 dist=0.34524 passes=True gom_a=False →cf=False
+    MOVEUSDT               val=0.80218 dist=0.34782 passes=True gom_a=False →cf=False
+    BROCCOLI714USDT        val=0.79974 dist=0.35026 passes=True gom_a=False →cf=False
+    UBUSDT                 val=1.50131 dist=0.35131 passes=False gom_a=False →cf=False
+    GTCUSDT                val=0.79858 dist=0.35142 passes=True gom_a=False →cf=False
+    JUPUSDT                val=1.50321 dist=0.35321 passes=False gom_a=False →cf=False
+    ZRXUSDT                val=0.79648 dist=0.35352 passes=True gom_a=False →cf=False
+    GRAMUSDT               val=0.79537 dist=0.35463 passes=True gom_a=False →cf=False
+    FETUSDT                val=0.79003 dist=0.35997 passes=True gom_a=False →cf=False
+    FHEUSDT                val=0.78739 dist=0.36261 passes=True gom_a=False →cf=False
+    JSTUSDT                val=0.78668 dist=0.36332 passes=True gom_a=False →cf=False
+    PLUMEUSDT              val=0.78658 dist=0.36342 passes=True gom_a=False →cf=False
+    KAVAUSDT               val=0.78500 dist=0.36500 passes=True gom_a=False →cf=False
+    SPORTFUNUSDT           val=0.78464 dist=0.36536 passes=True gom_a=False →cf=False
+    CLANKERUSDT            val=0.78002 dist=0.36998 passes=True gom_a=False →cf=False
+    LIGHTUSDT              val=1.52005 dist=0.37005 passes=False gom_a=False →cf=False
+    SPKUSDT                val=0.77971 dist=0.37029 passes=True gom_a=False →cf=False
+    DODOXUSDT              val=1.52148 dist=0.37148 passes=False gom_a=False →cf=True
+    WUSDT                  val=0.77775 dist=0.37225 passes=True gom_a=False →cf=False
+    DATAIPUSDT             val=0.77693 dist=0.37307 passes=True gom_a=False →cf=False
+    JELLYJELLYUSDT         val=1.52414 dist=0.37414 passes=False gom_a=False →cf=False
+    EDENUSDT               val=0.77506 dist=0.37494 passes=True gom_a=False →cf=False
+    USUSDT                 val=1.53014 dist=0.38014 passes=False gom_a=False →cf=True
+    BREVUSDT               val=0.76180 dist=0.38820 passes=True gom_a=False →cf=False
+    RPLUSDT                val=1.53849 dist=0.38849 passes=False gom_a=False →cf=False
+    HYPERUSDT              val=0.76122 dist=0.38878 passes=True gom_a=True →cf=False
+    THETAUSDT              val=0.75993 dist=0.39007 passes=True gom_a=False →cf=False
+    ALICEUSDT              val=0.75474 dist=0.39526 passes=True gom_a=False →cf=False
+    EULUSDT                val=0.75460 dist=0.39540 passes=True gom_a=False →cf=False
+    ZENUSDT                val=0.75231 dist=0.39769 passes=True gom_a=True →cf=False
+    GIGGLEUSDT             val=0.74994 dist=0.40006 passes=True gom_a=False →cf=False
+    AVNTUSDT               val=0.74823 dist=0.40177 passes=True gom_a=True →cf=False
+    ZESTUSDT               val=0.74681 dist=0.40319 passes=True gom_a=False →cf=False
+    ONUSDT                 val=0.74410 dist=0.40590 passes=True gom_a=False →cf=False
+    ACHUSDT                val=0.73810 dist=0.41190 passes=True gom_a=False →cf=False
+    CRVUSDT                val=1.56201 dist=0.41201 passes=False gom_a=False →cf=False
+    SCRUSDT                val=1.56351 dist=0.41351 passes=False gom_a=False →cf=False
+    KMNOUSDT               val=0.73649 dist=0.41351 passes=True gom_a=False →cf=False
+    SYRUPUSDT              val=0.73554 dist=0.41446 passes=True gom_a=True →cf=False
+    HUSDT                  val=0.73235 dist=0.41765 passes=True gom_a=False →cf=False
+    BERAUSDT               val=0.72651 dist=0.42349 passes=True gom_a=False →cf=False
+    ORCAUSDT               val=0.72557 dist=0.42443 passes=True gom_a=False →cf=False
+    IMXUSDT                val=0.72547 dist=0.42453 passes=True gom_a=False →cf=False
+    WETUSDT                val=0.72366 dist=0.42634 passes=True gom_a=False →cf=False
+    IRYSUSDT               val=0.72283 dist=0.42717 passes=True gom_a=False →cf=False
+    1000SATSUSDT           val=0.71813 dist=0.43187 passes=True gom_a=False →cf=False
+    MEUSDT                 val=0.71406 dist=0.43594 passes=True gom_a=False →cf=False
+    PENGUUSDT              val=0.71308 dist=0.43692 passes=True gom_a=True →cf=False
+    TLMUSDT                val=0.70281 dist=0.44719 passes=True gom_a=True →cf=False
+    RENDERUSDT             val=0.70095 dist=0.44905 passes=True gom_a=False →cf=False
+    ZROUSDT                val=0.69932 dist=0.45068 passes=True gom_a=True →cf=False
+    CAPUSDT                val=0.68966 dist=0.46034 passes=True gom_a=False →cf=False
+    BNBUSDT                val=0.68906 dist=0.46094 passes=True gom_a=False →cf=False
+    WIFUSDT                val=0.67728 dist=0.47272 passes=True gom_a=False →cf=False
+    REZUSDT                val=0.67395 dist=0.47605 passes=True gom_a=False →cf=False
+    LISTAUSDT              val=1.62611 dist=0.47611 passes=False gom_a=False →cf=False
+    LINEAUSDT              val=0.67260 dist=0.47740 passes=True gom_a=True →cf=False
+    ARKMUSDT               val=0.66925 dist=0.48075 passes=True gom_a=False →cf=False
+    MUBARAKUSDT            val=0.66529 dist=0.48471 passes=True gom_a=False →cf=False
+    PNUTUSDT               val=0.66143 dist=0.48857 passes=True gom_a=False →cf=False
+    APEUSDT                val=0.66030 dist=0.48970 passes=True gom_a=False →cf=False
+    ALGOUSDT               val=0.65800 dist=0.49200 passes=True gom_a=False →cf=False
+    NEOUSDT                val=0.65485 dist=0.49515 passes=True gom_a=False →cf=False
+    0GUSDT                 val=0.64436 dist=0.50564 passes=True gom_a=False →cf=False
+    HOLOUSDT               val=0.64373 dist=0.50627 passes=True gom_a=False →cf=False
+    AIOUSDT                val=0.64243 dist=0.50757 passes=True gom_a=False →cf=False
+    CLOUSDT                val=1.65796 dist=0.50796 passes=False gom_a=False →cf=False
+    API3USDT               val=0.63962 dist=0.51038 passes=True gom_a=False →cf=False
+    STABLEUSDT             val=0.63590 dist=0.51410 passes=True gom_a=False →cf=False
+    MMTUSDT                val=1.68300 dist=0.53300 passes=False gom_a=False →cf=False
+    ARPAUSDT               val=1.68489 dist=0.53489 passes=False gom_a=False →cf=False
+    APTUSDT                val=0.61411 dist=0.53589 passes=True gom_a=True →cf=False
+    AGLDUSDT               val=1.69959 dist=0.54959 passes=False gom_a=False →cf=False
+    ESPUSDT                val=0.59705 dist=0.55295 passes=True gom_a=False →cf=False
+    RLCUSDT                val=0.58425 dist=0.56575 passes=True gom_a=False →cf=False
+    LAUSDT                 val=0.58243 dist=0.56757 passes=True gom_a=False →cf=False
+    FLOWUSDT               val=0.58225 dist=0.56775 passes=True gom_a=False →cf=False
+    ICNTUSDT               val=0.57629 dist=0.57371 passes=True gom_a=False →cf=False
+    UMAUSDT                val=0.56264 dist=0.58736 passes=True gom_a=False →cf=False
+    PIEVERSEUSDT           val=0.56206 dist=0.58794 passes=True gom_a=True →cf=False
+    STORJUSDT              val=0.55284 dist=0.59716 passes=True gom_a=False →cf=False
+    ASTERUSDT              val=0.54374 dist=0.60626 passes=True gom_a=False →cf=False
+    STRKUSDT               val=0.53706 dist=0.61294 passes=True gom_a=False →cf=False
+    HANAUSDT               val=1.76905 dist=0.61905 passes=False gom_a=False →cf=False
+    BROCCOLIF3BUSDT        val=1.77658 dist=0.62658 passes=False gom_a=False →cf=False
+    BIRBUSDT               val=0.51991 dist=0.63009 passes=True gom_a=False →cf=False
+    OGNUSDT                val=0.51514 dist=0.63486 passes=True gom_a=False →cf=False
+    BULLAUSDT              val=0.48913 dist=0.66087 passes=True gom_a=False →cf=False
+    ORDIUSDT               val=0.48443 dist=0.66557 passes=True gom_a=False →cf=False
+    PRLUSDT                val=0.44743 dist=0.70257 passes=True gom_a=False →cf=False
+    LPTUSDT                val=0.43618 dist=0.71382 passes=True gom_a=False →cf=False
+    PROMUSDT               val=0.41890 dist=0.73110 passes=True gom_a=False →cf=False
+    NILUSDT                val=0.41828 dist=0.73172 passes=True gom_a=False →cf=False
+    DIAUSDT                val=0.40941 dist=0.74059 passes=True gom_a=True →cf=False
+    MUSDT                  val=0.39822 dist=0.75178 passes=True gom_a=False →cf=False
+    1000RATSUSDT           val=0.39236 dist=0.75764 passes=True gom_a=False →cf=False
+    TACUSDT                val=1.91896 dist=0.76896 passes=False gom_a=False →cf=False
+    COTIUSDT               val=0.37794 dist=0.77206 passes=True gom_a=False →cf=False
+    MAGMAUSDT              val=1.95587 dist=0.80587 passes=False gom_a=False →cf=False
+    LITUSDT                val=1.99447 dist=0.84447 passes=False gom_a=False →cf=False
+    CHILLGUYUSDT           val=2.02154 dist=0.87154 passes=False gom_a=False →cf=False
+    XPINUSDT               val=2.04712 dist=0.89712 passes=False gom_a=False →cf=False
+    KOMAUSDT               val=0.17330 dist=0.97670 passes=True gom_a=False →cf=False
+    B2USDT                 val=2.15410 dist=1.00410 passes=False gom_a=False →cf=False
+    MORPHOUSDT             val=2.53071 dist=1.38071 passes=False gom_a=False →cf=False
+    BANKUSDT               val=4.62741 dist=3.47741 passes=False gom_a=False →cf=False
+
+Probe complete. Tokens=525, total events=199216

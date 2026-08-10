@@ -7187,3 +7187,63 @@ APR BID deepened thêm (1.64→1.95). 24h price -11.76% (pullback từ $0.2148 c
 | ratio_2pct | 1.585 BID-HEAVY | 1.181 BALANCED | -0.404 |
 
 **Wall collapse:** Both walls pulled -84-88%, ratio giảm từ BID-HEAVY xuống BALANCED. Price +0.83% snap1→snap2. 24h vol=$7.6M 24h_pct=-8.18%.
+
+---
+
+## SESSION 2026-08-11 — ÁN AUDIT + FIX QUEUE + VÙNG-RUNG
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Fixes đã commit đêm 08-11 (commit c3d49e1)
+
+**F — validate_gom_state():** Wired vào `save_state()` (pre-write). 4 invariants (ii/iii/iv/v). Violation → RuntimeError → caller exit≠0 → ping. Invariant (i) md5 = external check only.
+
+**B — taker scale fix:** `build_case.py` line 205 + 385: `taker_buy_pct` fallback + auto-scale fraction→pct khi max≤1.0. `case_guard.py`: range-check taker_buy_pct [20,80] — fraction scale → fail với message "rebuild needed".
+
+**B sweep:** 5 packs FRACTION: BROCCOLIF3B (0.437–0.538), COOKIE (0.431–0.532), KOMA (0.445–0.527), TUT (0.426–0.533), XPIN (0.443–0.536). → cần rebuild.
+
+**C — fundingInfo fail-open:** `export_freshwatch_daily_vps.py` line 371-374: `raise RuntimeError` (L-44). Exit≠0 + alert.
+
+**A-consequence — [A3:marginal] tag:** `gom_scan.py`: `_a3_slope_value()` helper, `a3_marginal` bool (display-only, không đổi eval), tag `[A3:marginal slope=X.XXXXX]` in format output. `screen_thresholds.yaml` v1.3: `a3_marginal_eps: 0.005`.
+
+**H — CLAUDE.md:** universe 525→527 (xác nhận qua gom_state.json).
+
+**Audit report:** `docs/reports/audit_20260811.md` (commit c2993d5).
+
+---
+
+### Vùng-rung probe — 2026-08-11
+
+**Script:** `_probe_vung_rung_20260811.py` (commit 31098aa)
+**Output:** `docs/reports/vung_rung_20260811.txt`
+**Scope:** 525 symbols × window 2026-06-10→2026-08-09 × 7 thresholds × ε∈{0.005,0.01,0.02}
+
+**Main table (GOM-A scope, counterfactual computable):**
+
+| Condition | ε | n_marginal | n(a)_changed | n(b)_harmless |
+|-----------|---|-----------|-------------|--------------|
+| A2 avg5gLSR≤1.10 | 0.005 | 105 | **17** | 88 |
+| A2 | 0.010 | 223 | **35** | 188 |
+| A2 | 0.020 | 447 | **66** | 381 |
+| A3 slope_5d≤1.15 | 0.005 | 306 | **32** | 274 |
+| A3 | 0.010 | 602 | **63** | 539 |
+| A3 | 0.020 | 1145 | **117** | 1028 |
+
+**Non-GOM-A (no changed-outcome):**
+- B1 ≤0.5: 220/426/830 — streak input only
+- C3lo ≥40: 0 marginal (taker far from threshold)
+- C3hi ≤55: 1/2/5 marginal (near-zero)
+- quiet ≤2e-4: 25467/25516/25530 — threshold ở noise floor, không đại diện fragility thật
+- riv ≥0.30: 262/548/1103 marginal
+- Q2d ≥3.0: 10/14/25 marginal
+
+**Fragility ranking (ε=0.005):**
+- A3: 32 changed / 306 marginal (10%), Aug-01+: 8 events
+- A2: 17 changed / 105 marginal (16%), Aug-01+: 1 event
+
+**Kết luận:**
+- A3 (slope_5d) có nhiều vùng-rung tuyệt đối hơn A2 (32 vs 17 changed-outcome tại ε=0.005)
+- A2 có tỷ lệ chuyển đổi cao hơn (16% vs 10%) — khi A2 marginal thì khả năng đổi kết cục cao hơn
+- FFUSDT 2026-08-01: A3 slope=1.14902, dist=0.00098, passes=True, GOM-A=True→CF=False → ĐÚNG là nằm trong vùng-rung tại ε=0.005 (xác nhận P0 root cause pattern)
+- Các token fragile nhất (A2+A3 combined, ε=0.005): AUSDT, STXUSDT, CHZUSDT, CUSDT, 币安人生USDT (mỗi cái 2 events)
+- `[A3:marginal]` tag (ε=0.005) sẽ fire ≈32 lần / 60d / 525 tokens — mật độ hiển thị hợp lý, không spam
