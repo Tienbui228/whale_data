@@ -1,0 +1,18 @@
+{
+  "snap": 2,
+  "symbol": "ONUSDT",
+  "time": "2026-08-10 13:05 UTC",
+  "time_ts": 1786367120,
+  "mid": 0.398605,
+  "bid2_usd": 1090.02,
+  "ask2_usd": 1773.62,
+  "ratio": 0.6146,
+  "bias": "ASK-HEAVY",
+  "snap1_ref": {
+    "time": "2026-08-10 09:02 UTC",
+    "mid": 0.40197499999999997,
+    "ratio": 0.7739
+  },
+  "delta_mid_pct": -0.8384,
+  "delta_ratio": -0.1593
+}

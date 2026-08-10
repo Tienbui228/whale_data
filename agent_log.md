@@ -7303,3 +7303,20 @@ APR BID deepened thêm (1.64→1.95). 24h price -11.76% (pullback từ $0.2148 c
 **Trend:** BID weakening significantly — ratio sụp từ 1.25 xuống 0.72, bias đổi chiều BID→ASK.
 **Live (12:57 UTC):** last=$0.1764 24h_pct=-5.26% vol=$67.6M
 **Kết luận:** Áp lực bán tăng mạnh trong ~5h. BLOWOFF 2.0 phase — consistent với S3 xả.
+
+---
+
+## 2026-08-10 13:05 UTC — ON Depth Snap2
+
+**Script:** _probe_on_snap2_20260810.py
+
+| Metric | Snap1 (09:02) | Snap2 (13:05) | Delta |
+|--------|---------------|---------------|-------|
+| mid | $0.401975 | $0.398605 | -0.84% |
+| bid2_usd (±2%) | $2,707 | $1,090 | -59.7% |
+| ask2_usd (±2%) | $3,497 | $1,774 | -49.2% |
+| ratio_2pct | 0.7739 ASK-HEAVY | 0.6146 ASK-HEAVY | -0.159 |
+
+**Trend:** ASK strengthening — ratio tiếp tục giảm (0.77→0.61). Cả hai bên wall rút mạnh (thị trường mỏng hơn).
+**Live (13:05 UTC):** last=$0.3987 24h_pct=-3.11% vol=$49.5M
+**Kết luận:** ON duy trì ASK-HEAVY, depth rút. Consistent với S3 xả-vùng-nhớ — không có lực mua bảo vệ rõ ràng ở $0.39-$0.40.
