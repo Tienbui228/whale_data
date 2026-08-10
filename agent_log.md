@@ -7127,6 +7127,54 @@ Dữ liệu đủ để chạy ngay. Status TASKS.md: BLOCKED — wait 15/08.
 **New files:** _probe_taker_sweep_20260811.py
 
 ---
+## 2026-08-10 08:07 UTC — KOMA+APR Snap2 + BTW W-0→W-7 (Session 26 tiếp)
+
+**BTW CASE Build** (commits e5650b4, 6966436):
+
+| Bước | Kết quả |
+|------|---------|
+| W-0 án tích | calib#6, DQ cool end 31/07, S5 SUPP 20/07, FW 60 rows Jun6→Aug7 |
+| W-1 LSR+OI | 4 endpoint 404, OI UNCALIB $6.6M→$48.8M |
+| W-2 collect | 67 klines Jun5→Aug9, blowoff 2.0 Aug5-9 (peak $198M vol 08-08) |
+| W-2b build | exit=0, 66 rows × 50 cols, 5 GOM-A fires (Jun19-21, Jul3, Jul13) |
+| W-3 triage | div_avg3=2.3739, gLSR=0.7995 BEAR↓, f_avg_3=0.000832 (14×pin) |
+| W-3 trigger | 0/3 FAIL — funding HOT, d_pos_28d +0.05, div đỉnh không outflow |
+| W-4 phase | BLOWOFF 2.0: ATH $0.224 (Aug7) vượt original Jun blowoff $0.20 |
+| W-5 snap1 | 08:01 UTC mid=$0.1988, BID-HEAVY 1.249, live $0.2001 |
+| W-6 sanity | 5/5 PASS |
+| W-7 INDEX | CASE_INDEX row 21 BTW registered |
+
+**neg_div window:** Jul 22-30 (6 ngày, min 0.7979 Jul 28) → cleared Jul 31.
+**GOM-C:** 14 ngày (Jun-Jul), 0 post-cooldown (Aug1+). C1 PROVISIONAL gate 15/08.
+**Q2: UNCALIBRATED** (OI max $48.8M > $18M). Q3: VWAP_M2=$0.0844, px +154%.
+**CẦN OPERATOR:** BscScan top holders, depth snap2 ≥12:01 UTC, GOM-A live vs retroactive.
+
+**KOMA Snap2** (08:07 UTC, 6h16m after snap1):
+
+| Metric | Snap1 (01:51) | Snap2 (08:07) | Delta |
+|--------|---------------|---------------|-------|
+| mid | $0.013910 | $0.013428 | -3.46% |
+| bid2_usd | $580,395 | $132,429 | -77.2% |
+| ask2_usd | $267,614 | $34,495 | -87.1% |
+| ratio_2pct | 2.169 BID-HEAVY | 3.839 BID-HEAVY | +1.670 |
+
+BID tăng tỷ lệ mạnh (ratio 2.17→3.84) dù price -3.5%. Cả hai bên wall rút, nhưng ask rút mạnh hơn.
+
+**APR Snap2** (08:07 UTC, 4h25m after snap1):
+
+| Metric | Snap1 (03:42) | Snap2 (08:07) | Delta |
+|--------|---------------|---------------|-------|
+| mid | $0.19755 | $0.19585 | -0.86% |
+| bid2_usd | $47,293 | $43,595 | -7.8% |
+| ask2_usd | $28,879 | $22,341 | -22.6% |
+| ratio_2pct | 1.638 BID-HEAVY | 1.951 BID-HEAVY | +0.314 |
+
+APR BID deepened thêm (1.64→1.95). 24h price -11.76% (pullback từ $0.2148 close Aug9 về $0.196).
+
+**BTW snap2 probe:** `_probe_btw_snap2_20260810.py` — gate ≥12:01 UTC.
+
+---
+
 ## 2026-08-10 04:51 UTC — BR3 Depth Snap2
 
 **Script:** _probe_br3_snap2_20260810.py (auto-collect post-gate)
