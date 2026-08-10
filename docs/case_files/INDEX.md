@@ -1,11 +1,9 @@
 # FRESHWATCH CASE INDEX
 
-Generated: 2026-08-10 00:48 UTC
+Generated: 2026-08-10 01:54 UTC
 
-| Moi token mot file rieng (CASE_<TOKEN>.xlsx, 7 sheet). File nay la noi tong hop cross-case. |  |  |  |  |  |  |  |  |  |  |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CASE_TST.xlsx | TST | COLD_START — PENDING | Alpha fullyDelisted, ATH=listing day, -94% drawdown. Massive | COLD_START | 2026-08-08 |  |  |  |  | ALPHA_87 | BSC 0x86bb94...666429 | cold-start 08/08/2026 |
 | file | token | status | loai | action_class | ngay_mo | T0 | moc_ke_tiep | han | MM_ID | ghi_chu |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | CASE_BANK.xlsx | BANK | TRACKING | pump da chay tron (+6.8x) | WATCH-only | 2026-07-29 | 2026-07-10 | T+30 | 2026-08-09 | MM-BIDWALK-A | dien E tu export; backfill DAILY; tra unlock |
 | CASE_TAG.xlsx | TAG | OPEN — WATCH-nong | pump vong 2 nghi an | WATCH | 2026-07-28 | chua | T+7 | 2026-08-04 | unknown | verify txhash 2 vi; watcher 6 dia chi; tra supply/unlock |
 | CASE_BR.xlsx | BR | OPEN | pump-to-distribute | STAND_ASIDE | 2026-07-29 | chua | T+7 | 2026-08-05 | MM-BAIT-B | TRA UNLOCK NGAY; backfill DAILY; snapshot wall tu 30/07 |
@@ -20,3 +18,4 @@ Generated: 2026-08-10 00:48 UTC
 | FFUSDT | FF | COLD_START — AUDIT PENDING | ALPHA_398 | 2026-08-08 | Bot báo gom ~$2M trên perp — tái lập số, ba phương pháp §3 đ |  |  |  |  |  |
 | CASE_COOKIE.xlsx | COOKIE | OPEN — audit-collect complete, awaiting operator verdict | GOM-C fire 08-03; pump pattern; ATH-97.9%; OI $1.1M | COLD_START | 2026-08-09 | 2026-08-03 | depth snap #2 ≥05:50 UTC |  |  | fullyDelisted=True; Q1=0(chain); oi_cycle=0.289; VWAP=$0.007 |
 | CASE_BROCCOLIF3B.xlsx | BROCCOLIF3B | OPEN | COLD_START | COLD_START | 2026-08-10 |  | depth snap#2 >=04:45 UTC 2026-08-10 |  |  | BR3 audit-collect 10/08; two-broccoli confirmed distinct; DU |
+| CASE_KOMA.xlsx | KOMA | OPEN | GOM-C PROVISIONAL | COLD_START | 2026-08-10 |  | depth snap#2 >=05:51 UTC; GOM-C gate 15/08 |  | ALPHA_1 | K audit-collect 10/08; pump 07-31 +100%/$604M; OI UNCALIB; G |

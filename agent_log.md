@@ -6780,3 +6780,27 @@ Script: _probe_br3_{0,1,2,345,6,7}*, _task_br3_{2_build,8_register}*, _collect_b
 Commit: TBD. DỪNG chờ đọc.
 
 **CẦN OPERATOR:** contract address BSC, BscScan holders, Nansen, unlock, ledger_v2 path, verdict, snap #2, C1 GOM-C spec.
+
+---
+
+## SESSION KOMA — K-0→K-8 (2026-08-10 01:44–02:00 UTC)
+
+Pipeline audit-collect KOMAUSDT.
+
+**K-0 Identity:** KOMAUSDT TRADING, onboard 2024-12-10 12:15 UTC. Alpha token ALPHA_1 (first ever). fullyDelisted=False (ACTIVE). contract=0xd5eaaac47bd1993d661bc087e15dfb079a7f3c19. holders=54,850. No KOMAINU variant. PASS all gates.
+
+**K-1:** 4 LSR endpoints 30 records (07-12→08-10). OI hist range $1.60M→$19.38M (UNCALIBRATED). FW 7 rows, in u137.
+
+**K-2:** 608 perp klines (2024-12-10→2026-08-09), funding 500 records. Spot N/A. CASE_KOMA.xlsx 608 DAILY × 50 cols, 7 sheets, 128KB. Guard-câm present.
+
+**K-3:** Q1_GROSS=$19.04M / Q1_NET=$8.96M (89% từ FLUSH 08-01). Q2_net=+$2.54M UNCALIBRATED. VWAP=-28.61% vs px. GOM-C PROVISIONAL: 07-23 + 08-02.
+
+**K-4:** ATH=$0.167 (12-24-2024). MEGA-PUMP 07-31 (+100.5%/$604M). FLUSH 08-01 (-39.2%/$457M). px-vs-ATH=-92%. flag_hedge_struct=66.7%. oi_cycle_pos=0.185.
+
+**K-5:** Alpha ACTIVE. Depth snap #1 01:51 UTC mid=$0.01391 ratio=2.169. SNAP#2 GATE >=05:51 UTC.
+
+**K-7:** 6/6 PASS. **K-8:** CASE_INDEX row 19 OPEN GOM-C PROVISIONAL.
+
+Scripts: _probe_koma_{0,1,2,345,345b,6,7,snap1}*, _task_koma_{2_build,8b_register}*, _collect_koma_20260810.md. DỪNG chờ đọc.
+
+**CẦN OPERATOR:** BscScan, Nansen, unlock, verdict, snap #2, GOM-C C1 spec.
