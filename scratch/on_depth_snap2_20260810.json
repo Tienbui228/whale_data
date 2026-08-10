@@ -1,18 +1,18 @@
 {
   "snap": 2,
   "symbol": "ONUSDT",
-  "time": "2026-08-10 13:05 UTC",
-  "time_ts": 1786367120,
-  "mid": 0.398605,
-  "bid2_usd": 1090.02,
-  "ask2_usd": 1773.62,
-  "ratio": 0.6146,
-  "bias": "ASK-HEAVY",
+  "time": "2026-08-10 13:57 UTC",
+  "time_ts": 1786370262,
+  "mid": 0.403845,
+  "bid2_usd": 1769.94,
+  "ask2_usd": 1942.87,
+  "ratio": 0.911,
+  "bias": "BALANCED",
   "snap1_ref": {
     "time": "2026-08-10 09:02 UTC",
     "mid": 0.40197499999999997,
     "ratio": 0.7739
   },
-  "delta_mid_pct": -0.8384,
-  "delta_ratio": -0.1593
+  "delta_mid_pct": 0.4652,
+  "delta_ratio": 0.1371
 }
