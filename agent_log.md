@@ -6653,3 +6653,40 @@ FF snap #2 collected 2026-08-09 02:00:19 UTC (+13h53m vs snap #1, gate ≥16:07 
 
 Đọc: Bid-heavy maintained và ratio tăng nhẹ. Price stable +0.36%. Spread tight 0.015%.
 _collect_ff_20260808.md updated, F-5 snap #2 DONE, M-1 DONE.
+
+---
+
+## SESSION BROCCOLIF3B — BR3-0→BR3-8 (2026-08-10 00:45–00:50 UTC)
+
+Pipeline audit-collect BROCCOLIF3BUSDT — hai broccoli disambiguation.
+
+**BR3-0 Identity lock:**
+- BROCCOLIF3BUSDT + BROCCOLI714USDT: cả hai TRADING, ra cùng ngày 2025-03-21 (cách nhau 15 phút)
+- Cả hai KHÔNG phải Alpha token (không trong BAPI 660-token list, không trong alpha_id_map)
+- baseAsset distinct: BROCCOLIF3B ≠ BROCCOLI714 → PASS gate
+
+**BR3-1:** 4 LSR endpoints 30 records each (07-11→08-09). OI hist 30 records. FW 7 rows (08-01→08-07). gLSR=4.96–5.98 (cực cao, short crowd áp đảo).
+
+**BR3-2:** 507 perp klines (2025-03-21→2026-08-09), funding 500 records, spot N/A. CASE_BROCCOLIF3B.xlsx built: 507 DAILY rows × 50 cols, 7 sheets, 109KB. Guard-câm bug: OHLC=None (build đọc h/l/c, CSV có high/low/close).
+
+**BR3-3 §3:**
+- Q1_GROSS=$4,879,007 / Q1_NET=$4,353,786 (window 29d, phần lớn từ dump 07-23 $2.87M)
+- Q2_net=+$640,060 / Q2_ceiling=$1,911,150 (calibrated <$18M)
+- Q3: N/A (no spot pair)
+- VWAP=$0.006233 / px 08-09=$0.006855 / px vs VWAP=+9.97%
+- GOM-C: 1 ngày (07-15), PROVISIONAL (C1 spec gate 15/08)
+
+**BR3-4 Phase:** ATH=$0.062372 (04-20-2025), ATL=$0.003086 (03-20-2026). px-vs-ATH=-89%. Ignition đã xảy ra 07-22 (+40.1%/$71.6M) + 07-27 ($67.7M). flag_hedge_struct=63.3% (structural short bias). oi_cycle_pos=0.370.
+
+**BR3-5:** NOT Alpha token. Depth snap #1: 00:45 UTC, mid=$0.006935, bid/ask=1.585, ±2%=5.44 (bid-heavy gần giá). SNAP #2 GATE: ≥04:45 UTC 10/08.
+
+**BR3-6 Sổ chéo:** 0 tiền sử BROCCOLIF3B trong agent_log/gom_scan/CASE_INDEX (first case). FW track F3B và 714 tách biệt (không lẫn). ledger_v2.xlsx không tìm thấy local.
+
+**BR3-7 Sanity:** 6/6 PASS (klines 507, identity lock, LSR↔OI 30d, xlsx 507 rows, no contamination, OI range OK).
+
+**BR3-8:** CASE_INDEX row 18: OPEN COLD_START 2026-08-10. INDEX.md regenerated. Backup done.
+
+Script: _probe_br3_{0,1,2,345,6,7}*, _task_br3_{2_build,8_register}*, _collect_broccolif3b_20260810.md.
+Commit: TBD. DỪNG chờ đọc.
+
+**CẦN OPERATOR:** contract address BSC, BscScan holders, Nansen, unlock, ledger_v2 path, verdict, snap #2, C1 GOM-C spec.
