@@ -2,6 +2,96 @@
 
 ---
 
+## SESSION 2026-08-10 (26) — ÁN GUARD-CÂM P1
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### (0) R5 FAIL-OPEN — Xác nhận
+
+`collect_daily_metrics.py` trả `(sym, 0, None)` tại line 298-299 và 306-307 khi endpoint cho 0 rows. Main loop không check `total_rows==0`. `return 0` luôn (line ~432). Vi phạm L-44.
+
+Negative test: block endpoint → exit=0, no ping, no log warning → CONFIRMED FAIL-OPEN.
+
+**ACX 60/60:** `oi_hist_1d` patched 27 rows (07-12→08-10). Freshwatch 08-08/09 gap 4 symbols (ACXUSDT, HFTUSDT, VANRYUSDT, VICUSDT) = systemic FAPI delist — không thể patch từ phía này.
+
+### (1a) BROCCOLIF3B — Root cause
+
+Column key mismatch: collect probe viết `"open","high","low","close"`, analytics probe đọc `"o","h","l","c"` → `pr.get("h")=None` → `px_avg=None`. `vol_quote_usd`/`taker_pct` khớp nên CÓ. Fix: đổi analytics sang `pr.get("open")`, `pr.get("high")`, etc.
+
+### (1b) Guard hiện tại — Tầng bị bỏ
+
+A-0b: check `pos_r null%` (LSR schema-level). L-32: check row count. Không check `px_avg null%`. CASE_FF: 313 rows px_avg=None vì PERP klines không collect trên VPS — A-0b PASS, L-32 PASS, guard không detect. FF-1c debt answered.
+
+### (1c) TST persist — Code branch
+
+`if not data: return symbol, 0, None` (line 298-299 `collect_daily_metrics.py`) = silent 0 rows, exit=0, no ping. Loại "ghi-rỗng-không-lỗi" — không phải except-pass.
+
+### (2) Guard V2 — Triển khai
+
+`scripts/case_guard.py` — `validate_written_pack(xlsx_path)`:
+- Reload XLSX từ disk (`data_only=True, read_only=True`)
+- `REQUIRED_COLS = [px_avg, vol_perp_usd, taker_buy_pct, f_avg, fn, oi_usd, pos_r, acc_r, gLSR]`
+- ≥50% non-null trong last 30 data rows → FAIL → `raise RuntimeError`
+- Header normalization: strip parenthetical suffix ("px_avg (H+L+C)/3" → "px_avg")
+- V1 schema aliases: lsr_pos_r→pos_r, lsr_acc_r→acc_r, lsr_global_r→gLSR, f_n→fn
+- Bug fix: `_is_valid` substring check với "-" falsely invalid scientific notation (5e-05 có "-") → fix: chỉ substring-match cho multi-char tokens
+
+Entry-points wired:
+- `scripts/case_daily.py`: import + call sau `wb.save(str(xlsx_path))` (line 444→445)
+- `build_case.py`: import + call sau A-0b guard block (sau line 853)
+
+### (4) Regression acceptance
+
+`tests/test_guard_v2.py` — 6 cases, PASS tất cả:
+
+| File | Expected | Actual | Reason |
+|------|----------|--------|--------|
+| ZBT | PASS | **PASS** | — |
+| HEI | PASS | **PASS** | — |
+| BROCCOLIF3B | FAIL | **FAIL** | px_avg: 0/30 non-null = 0% < 50% |
+| CLO | FAIL | **FAIL** | taker_buy_pct: 0/30 non-null = 0% < 50% |
+| COOKIE | FAIL | **FAIL** | px_avg: 0/30 non-null = 0% < 50% |
+| FF | FAIL | **FAIL** | px_avg: 0/30 non-null = 0% < 50% |
+
+Full sweep 15 CASE files: 11 PASS / 4 FAIL (BROCCOLIF3B, CLO, COOKIE, FF).
+
+**Probes viết session này:** `_probe_guard_cam_p1_20260810.py` (findings report), `_probe_guard_v2_regression_20260810.py`, `_probe_guard_v2_headers_20260810.py`, `_probe_guard_v2_headers2_20260810.py`, `_probe_guard_v2_zbt_data_20260810.py`.
+
+### (5) Backfill + re-score derive-px
+
+**Root cause tổng quát:** `build_case.py` đọc `pr.get("o"/"h"/"l"/"c")` nhưng scratch CSV ghi `"open"/"high"/"low"/"close"` → px_avg=None cho mọi file xây bằng build_case.py.
+
+**Fix (`build_case.py`):**
+- OHLC: `pr.get("open", pr.get("o"))` + tương tự h/l/c
+- Vol fallback: `pr.get("vol_quote_usd", pr.get("vol_perp_usd"))`
+- Taker fallback: `pr.get("taker_pct", pr.get("taker_buy_pct"))`
+- ret_1d: tính close-to-close nếu không có trong CSV
+
+**Re-score BROCCOLIF3B** (`_probe_br3_rederive_px_20260810.py`):
+- px_avg: 507/507 = 100% (was 0%)
+- ret_1d: 506/507 = 100% (first row no prev_close)
+- Guard V2 last-30d: px_avg 30/30, vol 30/30, taker 30/30, pos_r 29/30 — tất cả PASS
+- Rebuild blocked: Excel lock `~$CASE_BROCCOLIF3B.xlsx` — cần đóng Excel → chạy lại build_case.py
+
+**Rebuild thực hiện được:**
+- COOKIE: rebuilt 20260809 scratch → Guard V2 PASS (579 rows, GOM-A 0)
+- FF: rebuilt 20260808 scratch → Guard V2 PASS (313 rows, GOM-A 34 fires)
+
+**Không rebuild được:**
+- CLO: scratch 20260804 = txt probe only, không có klines CSV → cần collect mới
+- BROCCOLIF3B: Excel lock — pending operator đóng file
+
+**Sweep cuối:** 13 PASS / 3 FAIL (BROCCOLIF3B locked, CLO no-data, KOMA mới phát hiện — pending check)
+
+**Standing test cập nhật:** `tests/test_guard_v2.py` — 6 cases, ALL 6 PASS hiện tại.
+
+**CẦN OPERATOR:**
+1. Đóng CASE_BROCCOLIF3B.xlsx → `python build_case.py BROCCOLIF3BUSDT 20260810`
+2. CLO scratch data cần collect mới (không có klines CSV trong scratch/)
+3. CASE_KOMA.xlsx: file mới phát hiện, chưa có trong standing test — kiểm tra nguồn gốc
+
+---
+
 ## SESSION 2026-08-09 (25) — M1 REGRESSION + B2.3 A6 TEST + L-44 ACCEPTANCE
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6

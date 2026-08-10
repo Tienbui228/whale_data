@@ -36,6 +36,8 @@ CASE_QUESTION = sys.argv[3] if len(sys.argv) > 3 else "Cau hoi case: TBD — ope
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
+sys.path.insert(0, str(Path(__file__).resolve().parent / "scripts"))
+from case_guard import validate_written_pack
 
 def log(s=""): print(s)
 
@@ -364,6 +366,7 @@ assert len(DAILY_HEADERS) == 50, f"Expected 50, got {len(DAILY_HEADERS)}"
 
 daily_data = []
 pin_streak = 0
+_prev_close = None  # for ret_1d close-to-close computation
 
 for i, dt in enumerate(all_dates):
     pr = perp_by_d.get(dt, {})
@@ -372,14 +375,18 @@ for i, dt in enumerate(all_dates):
     fd = fund_by_day.get(dt, [])
     oi = oi_by_d.get(dt, {})
 
-    o  = safe_float(pr.get("o"))
-    h  = safe_float(pr.get("h"))
-    l  = safe_float(pr.get("l"))
-    c  = safe_float(pr.get("c"))
+    # Accept both "open/high/low/close" (current CSV schema) and "o/h/l/c" (legacy)
+    o  = safe_float(pr.get("open",  pr.get("o")))
+    h  = safe_float(pr.get("high",  pr.get("h")))
+    l  = safe_float(pr.get("low",   pr.get("l")))
+    c  = safe_float(pr.get("close", pr.get("c")))
     px_avg = round((h+l+c)/3, 8) if (h and l and c) else None
-    vol_p  = safe_float(pr.get("vol_quote_usd"))
-    taker  = safe_float(pr.get("taker_pct"))
+    vol_p  = safe_float(pr.get("vol_quote_usd", pr.get("vol_perp_usd")))
+    taker  = safe_float(pr.get("taker_pct", pr.get("taker_buy_pct")))
     ret_1d = safe_float(pr.get("ret_1d"))
+    if ret_1d is None and c and _prev_close:
+        ret_1d = round((c - _prev_close) / _prev_close, 8)
+    _prev_close = c if c is not None else _prev_close
 
     fn    = len(fd)
     f_avg = round(sum(fd)/fn, 8)   if fn > 0 else None
@@ -851,6 +858,10 @@ if spot_null_pct > 50:
     log(f"  → Reason required in report: no spot pair or collect not run")
 else:
     log(f"  Spot guard: vol_spot_usd null {spot_null_pct:.1f}% in last 30d — PASS")
+
+# ── Guard V2: validate_written_pack — ONE DOOR ─────────────────────────────────
+validate_written_pack(XLSX)
+log(f"  Guard V2: validate_written_pack PASS")
 
 log(f"\n[BUILD_CASE DONE — {SYM_BASE}]")
 log(f"  DAILY: {len(daily_data)} rows, 50 cols")

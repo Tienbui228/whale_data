@@ -42,6 +42,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from whale_collector.alert import telegram_error
 from scripts.fw_loader_utils import taker_scale_check_dict_rows
+from scripts.case_guard import validate_written_pack
 
 WHALE      = Path(r"D:\Data back test\whale_data")
 CASE_DIR   = WHALE / "docs" / "case_files"
@@ -442,6 +443,7 @@ def main(
             _append_daily_row(ws, row_n, csv_row, fn_suspect, fn_n, src_ratio)
             try:
                 wb.save(str(xlsx_path))
+                validate_written_pack(xlsx_path)
                 if _overwrite_mode:
                     log.info("case_daily_overwrite_saved", token=token, row=row_n, date=date_str)
                     status = "OVERWRITE_OK"
