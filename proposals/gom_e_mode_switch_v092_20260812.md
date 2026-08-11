@@ -47,7 +47,10 @@ Bảng B — MODE-SWITCH alerts: symbol · E1..E5 giá trị · tag · ngày-tro
 ## §3. CALIB SET (chạy TRƯỚC khi ký — tránh án C1/GOM-C)
 POSITIVE (phải fire, đúng cửa sổ, tag NUM-DRIVEN):
   ON 17–18/07 [ground truth: pos +30%/1d, oi_token ↓2 ngày, pin-47d vỡ cùng ngày — E1✓E2✓E3✓E4✓]
-  GUA 08–10/08 [PENDING data — nếu confirm → positive #2; nếu không → ghi negative-shape]
+  GUA 08–10/08 [RETIRED từ positive #2 — 11/08 confirmed dead-cat: px sập 96.6% từ switch
+               06-20 (1.048→0.036), bounced 1 ngày lên 0.058 → fire trigger trên bounce-thoát-xác.
+               E3 có HAI NGHĨA: cover-để-kéo vs cover-vì-chết. Bài học L-?? (ghi lessons).
+               Calib set hiện tại: chỉ 1 positive = ON 17-18/07.]
 NEGATIVE-BY-TAG (fire được nhưng PHẢI mang tag đúng):
   GUA 05–07/08 flush [DENOM-ASSIST — acc sập 6.1→2.76]
   COOKIE 07–08/08 [DENOM-ASSIST — flush hậu-grind]
@@ -106,8 +109,16 @@ PING khi:
   AND [d_pos_2d_prov ≥ (2/3)·0.15]      (E2_prov, = +0.10)
   AND NOT [d_oitok_prov > +0.10]        (OI-EXPAND chặn ping)
 
-Tag cơ chế (bộ ba OI + DENOM chồng độc lập):
-  d_oitok_prov ≤ 0          → [NUM-forming]  (ưu tiên cao nhất)
+TAG VOCABULARY CANONICAL (chặn nhánh 3 đẻ tên 3 — ký 11/08/2026):
+  [NUM-DRIVEN]   = E3 pass (d_oitok ≤ 0). Canonical cho cả T1 daily và T2 prov.
+                   Tên cũ "NUM-forming" RETIRED — xóa khỏi mọi code, log, doc.
+  [MIXED]        = 0 < d_oitok ≤ +0.10. Cơ chế chưa phân định — ping vẫn bắn.
+  [OI-EXPAND]    = d_oitok > +0.10 → T2 suppress; T1 tag (không chặn, ghi để phân tích).
+  [DENOM-ASSIST] = |d_acc_2d| > d_pos_2d. Chồng độc lập, không loại trừ NUM/MIXED.
+  [SHORT-BASE]   = min5d_count < 5. Flag, không chặn ping.
+
+Tag cơ chế T2 (bộ ba OI + DENOM chồng độc lập):
+  d_oitok_prov ≤ 0          → [NUM-DRIVEN]   (ưu tiên cao nhất)
   0 < d_oitok_prov ≤ +0.10  → [MIXED]        (OI nhích nhẹ, cơ-chế-chưa-phân-định, chờ close;
                                               ping VẪN bắn vì E2 đã bảo đảm pos tăng ≥ forming)
   d_oitok_prov > +0.10      → suppress (log, KHÔNG ping) → verdict suppress_oi_expand

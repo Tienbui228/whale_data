@@ -356,7 +356,7 @@ def run_t2_poll(run_date: str, store_dir: Path):
         tag_parts = []
         if not math.isnan(d_oitok_prov):
             if d_oitok_prov <= 0:
-                tag_parts.append("NUM-forming")
+                tag_parts.append("NUM-DRIVEN")    # canonical §1 — was "NUM-forming", aligned 11/08
             elif not oi_expand_blocks:  # 0 < d_oitok_prov ≤ 0.10
                 tag_parts.append("MIXED")
         if (not math.isnan(d_acc_2d_prov) and not math.isnan(d_pos_2d_prov) and

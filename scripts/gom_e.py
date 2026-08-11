@@ -359,6 +359,8 @@ def eval_mode_switch(df_sym: pd.DataFrame, target_date: str,
     tags = []
     if e3:                                                        # E3: d_oitok_2d ≤ 0
         tags.append("NUM-DRIVEN")
+    elif not math.isnan(d_oitok_2d) and 0 < d_oitok_2d <= OI_EXPAND_THRESH:
+        tags.append("MIXED")                                     # (0, +0.10] — OI mở nhẹ
     if not math.isnan(d_acc_2d) and not math.isnan(d_pos_2d) and abs(d_acc_2d) > d_pos_2d:
         tags.append("DENOM-ASSIST")                              # |d_acc_2d| > d_pos_2d
     if not math.isnan(d_oitok_2d) and d_oitok_2d > OI_EXPAND_THRESH:
