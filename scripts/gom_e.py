@@ -540,13 +540,15 @@ def _append_alert_log(target_date: str, symbol: str, fire_result: dict,
 # ── Main daily run ────────────────────────────────────────────────────────────
 
 def run_daily(target_date: str, store_dir: Path,
-              do_t1_store: bool = True, fw_filter: Optional[Path] = None):
+              do_t1_store: bool = True, fw_filter: Optional[Path] = None,
+              dry_run: bool = False):
     """Main T1 daily function.
 
     target_date = YYYY-MM-DD (= EVAL date, ngày đã đóng = D_run − 1, L-41).
     store_dir   = data/export/ with freshwatch_daily_YYYY-MM.csv files.
     do_t1_store = True in production (False in backtest to skip live API calls).
     fw_filter   = optional path to freshwatch_symbols.txt (filter universe).
+    dry_run     = True → skip ALL writes (state + T1-STORE + log). Read-only.
 
     Returns (table_a_lines, table_b_lines) for Telegram/stdout.
     """
@@ -635,11 +637,12 @@ def run_daily(target_date: str, store_dir: Path,
                     "short_base": fire_res["short_base"],
                 })
 
-    _save_state(state)
-    _log(f"state saved symbols={len(state)}")
+    if not dry_run:
+        _save_state(state)
+        _log(f"state saved symbols={len(state)}")
 
-    # T1-STORE (production only — skip in backtest)
-    if do_t1_store and capture_set:
+    # T1-STORE (production only — skip in backtest or dry-run)
+    if do_t1_store and capture_set and not dry_run:
         eval_d = datetime.strptime(target_date, "%Y-%m-%d").date()
         n_stored = capture_t1_store(capture_set, eval_d, df_all)
         _log(f"t1_store captured={n_stored} eval={target_date}")
@@ -796,6 +799,8 @@ def main():
                     help="Path to freshwatch_symbols.txt for universe filter")
     ap.add_argument("--no-store",  action="store_true",
                     help="Skip T1-STORE API fetch (backtest/debug mode)")
+    ap.add_argument("--dry-run",   action="store_true",
+                    help="Read-only: skip ALL writes (state.json + T1-STORE + log). Safe for Q1 registry check.")
     args = ap.parse_args()
 
     store_dir = Path(args.store)
@@ -807,7 +812,10 @@ def main():
         else:
             # L-41: D_run-1 = yesterday (ngày đã đóng gần nhất)
             target_date = (datetime.now(timezone.utc).date() - timedelta(days=1)).strftime("%Y-%m-%d")
-        run_daily(target_date, store_dir, do_t1_store=not args.no_store, fw_filter=fw_filter)
+        run_daily(target_date, store_dir,
+                  do_t1_store=not args.no_store and not args.dry_run,
+                  fw_filter=fw_filter,
+                  dry_run=args.dry_run)
 
     elif args.backtest:
         target_date = args.date or (datetime.now(timezone.utc).date() - timedelta(days=1)).strftime("%Y-%m-%d")

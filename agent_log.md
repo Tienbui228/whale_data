@@ -7569,3 +7569,26 @@ GATE VERDICT:
 - `_probe_gom_e_b1_agt_20260812.py`: DONE (mapping confirm)
 - `_probe_gom_e_b1b_retest_20260812.py`: DONE (startTime+endTime verify)
 - NEXT: commit gom_e.py + probes; sau đó gom_e_t2.py + run_gom_daily.py integration
+
+### ON calib — forensic [1][2][3] (12/08/2026)
+
+**[1] WINDOW-EDGE flag — pin_streak E4:**
+Pin_streak = 21 trên 07-17, vỡ 07-18 → E4✓ 07-18. Nhưng data bắt đầu 06-27, pin_streak bắt đầu tích từ 06-27. Ground-truth 47d = ngoài lookback. Observation không sạch — 07-18 E4 là WINDOW-EDGE artifact.
+Flag: [WINDOW-EDGE] cho E4 trong calib record. FIRE 07-17 (E1E2E3) không bị ảnh hưởng. E4 = điểm-cộng, không required.
+
+**[2] 07-12 fire — cover sóng đầu:**
+- E1_d = +0.318 (div_raw=0.902 vs min5d=0.585)
+- d_pos2d = +0.572 (pos_r +57.2% over 2d)
+- d_oi2d = -0.038 → E3 = TRUE → [NUM-DRIVEN] → cover THAT, không phải false-positive
+- Story: 07-12 = cover wave-1; cooldown 3d (07-13/07-14 blocked); 07-15 (3d since 07-12 = unblocked) E2 fail (-0.116); 07-16 E1 fail; 07-17 = cover wave-2 FIRE.
+- Tóm tắt: 2 cover events riêng biệt, E3 ca hai. Story "hai sóng" — CHUA VERDICT, operator xem xét.
+
+**[3] min5d(07-17) = từ đáy post-spike, KHÔNG đáy hedge-farm:**
+- 5 ngày window 07-12→07-16: div_raw = {0.902, 0.626, 0.763, 0.601, 0.565}
+- min = 0.565 (07-16 — đáy sau 07-12 spike)
+- E1_d(07-17) = 0.813 - 0.565 = +0.247
+- Đáy hedge-farm thật (pre-07-02): ~0.409. Nếu min5d dùng đó, E1_d = 0.813-0.409 = +0.404.
+- Kết luận: 07-12 và 07-17 KHÔNG ĐỘC LẬP — min5d(07-17) bị kéo lên bởi 07-12 spike.
+- Ghi chú calib: "E1_d(07-17) bị giảm bởi post-cover dip 07-16 từ cooldown window 07-12".
+
+PENDING operator: 2-fire story = hai cover độc lập hay cùng sự kiện? CHUA đóng ON làm calib trích dẫn.
