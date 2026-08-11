@@ -85,8 +85,11 @@ Candidate set live = registry lần T1 ghi gần nhất.
 
 ĐỒNG-PHƯƠNG-PHÁP BẮT BUỘC (đóng seam by construction — mọi cặp so sánh _prov cùng chuỗi 1h):
   pos_now / acc_now      := nến 1h ĐÓNG gần nhất, 4 endpoint canonical period=1h.
-  pos_close(D−2)/acc_close(D−2) := T1 store, bar 00:00-MỞ ngày D−2 (v2: "snapshot 00:00 UTC mở ngày D"). KHÔNG fetch live — xem T1-STORE.
-  oi_close(D−2)          := T1 store, bar 00:00-MỞ ngày D−2 từ openInterestHist (v2 same). KHÔNG fetch live.
+  pos_close(D−2)/acc_close(D−2) := T1 store[date=D−2].pos_raw_1h — v2 nguyên văn: "snapshot tại
+                                   00:00 UTC của ngày D = giá trị as_of_ts_ms == midnight_ms(D)"
+                                   (ratio_daily_canonical_20260731_v2.md). KHÔNG fetch live.
+  oi_close(D−2)          := T1 store[date=D−2].oi_raw_1h — v2: "Ratio và OI cùng boundary:
+                             00:00 UTC đầu ngày D" (same file). KHÔNG fetch live.
   oi_now                 := /fapi/v1/openInterest.
   CẤM mọi nguồn OI thứ ba — án Coinglass lệch 22% so openInterestHist 00:00 (L-21). Ghi bia này vào comment.
 
@@ -132,20 +135,23 @@ RÀNG BUỘC:
   - log bắt buộc gom_e_t2_log.csv append-only.
 
 T1-STORE (spec change v0.9.2, required trước B2):
-  T1 mỗi đêm sau khi fetch daily: capture bar 00:00-MỞ ngày D (theo v2 canonical boundary:
-  "snapshot 00:00 UTC mở ngày D") cho mỗi token trong registry. Nguồn: cùng 4 endpoint
-  canonical, period=1h.
-  Store append-only: gom_e_ref_store.csv. Schema tối thiểu:
-    date · symbol · pos_raw_1h · acc_raw_1h · oi_raw_1h · pos_canonical · acc_canonical · oi_canonical
-    pos_raw_1h   = longShortRatio từ topLongShortPositionRatio period=1h, bar 00:00-MỞ ngày D.
-    pos_canonical = pos_r daily từ T1 canonical pipeline ngày D (cột RIÊNG — KHÔNG copy pos_raw_1h).
+  T1 chạy 01:25 UTC ngày D_run; ngày EVAL = ngày đã đóng gần nhất = D_run − 1.
+  Capture bar 00:00 UTC ngày EVAL — v2 nguyên văn: "snapshot tại 00:00 UTC của ngày D =
+  giá trị as_of_ts_ms == midnight_ms(D)" (ratio_daily_canonical_20260731_v2.md).
+  Capture set: registry ∪ vừa-ra-≤3d. Nguồn: cùng 4 endpoint canonical, period=1h.
+  Store append-only: gom_e_ref_store.csv. Schema:
+    date(=EVAL) · symbol · pos_raw_1h · acc_raw_1h · oi_raw_1h
+    · pos_canonical · acc_canonical · oi_canonical · backfill_src
+    pos_raw_1h   = longShortRatio từ topLongShortPositionRatio period=1h, bar 00:00 UTC ngày EVAL.
+    pos_canonical = pos_r daily từ T1 canonical pipeline ngày EVAL (cột RIÊNG — KHÔNG copy pos_raw_1h).
     (acc / oi tương tự — hai cột độc lập.)
-  T2 đọc: pos_close_Dm2 = store[date=D−2].pos_raw_1h.
+    backfill_src = "t1_capture" | "fetch" (phân biệt nguồn ghi).
+  T2 đọc: pos_close_Dm2 = store[date=D−2].pos_raw_1h.   (D−2 = 2 ngày trước ngày forming)
   gap_pct = (store[D−2].pos_raw_1h − store[D−2].pos_canonical) / store[D−2].pos_canonical.
     Hai cột bắt buộc độc lập — nếu chỉ lưu canonical thì gap=0 hiển nhiên = mất phép đo (Note-2).
-  WARMUP: 2 ngày đầu store chưa có D−2 entry → suppress_no_ref (luôn log). Chấp nhận.
-    Nếu [cơ chế] re-test confirm fetch historical chạy: backfill 2 ngày warmup bằng
-    fetch, ghi cột backfill_src="fetch" (phân biệt với "t1_capture").
+  WARMUP: 2 ngày đầu store chưa có D−2 entry → bước 0 PRECOND bắn suppress_no_ref (luôn log).
+    Nếu re-test [cơ chế] confirm fetch historical chạy → backfill 2 ngày bằng fetch,
+    ghi backfill_src="fetch".
 
 TEMPLATE PING:
   "⚡ MODE-SWITCH FORMING <SYM> [INTRADAY-PROVISIONAL·SUSPECT] — pos_prov <x> vs close
@@ -153,11 +159,19 @@ TEMPLATE PING:
 
 verdict enum (Note-3) — 5 nhánh:
   {ping · suppress_oi_expand · suppress_t1_dup · suppress_daily_quota · suppress_no_ref}
-  Thứ tự đánh giá: tính E1_prov/E2_prov/E3_prov (luôn, để có pass_E1/pass_E2 + quyết log) → daily_quota → t1_dup → oi_expand → no_ref → verdict.
+  Thứ tự đánh giá (0→6):
+    0. PRECOND: store D−2 tồn tại → không có → suppress_no_ref (luôn log), EXIT.
+                min5d<5 nến → flag SHORT-BASE vào log, TIẾP TỤC.
+    1. Fetch D−2 ref từ store: pos_close_Dm2, acc_close_Dm2, oi_close_Dm2.
+    2. Tính E1_prov, E2_prov, E3_prov (luôn, để có pass_E1/pass_E2 + quyết log bước 3–5).
+    3. daily_quota → nếu hit → [log if E1∧E2: suppress_daily_quota]; EXIT.
+    4. t1_dup    → nếu hit → [log if E1∧E2: suppress_t1_dup]; EXIT.
+    5. oi_expand: d_oitok_prov > +0.10 → [log if pass_E1: suppress_oi_expand]; EXIT.
+    6. Verdict: E1∧E2 → ping (luôn log); else no_signal (KHÔNG log).
   Quy ước log (GẬT 12/08):
-    suppress_oi_expand   → log VÔ ĐIỀU KIỆN (không kèm ràng E1∧E2 — cần thống kê 2 tuần
-                           để biết OI-EXPAND-block là guard hay mù; đòi E1∧E2 mới log sẽ
-                           mất ca "E1 pass, E2 chưa, OI đã nở" = tiền-cảnh-báo false-shape).
+    suppress_oi_expand   → log khi pass_E1 ∧ d_oitok_prov>+0.10 (bắt ca "E1 pass, E2
+                           chưa, OI nở" = tiền-cảnh-báo false-shape; E1 fail → no_log,
+                           tránh nổ dòng — bước 5 khối thứ-tự).
     suppress_t1_dup      → log CHỈ KHI E1_prov ∧ E2_prov đều pass ("suýt-ping").
     suppress_daily_quota → log CHỈ KHI E1_prov ∧ E2_prov đều pass ("suýt-ping").
     ping                 → luôn log.
