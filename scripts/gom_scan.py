@@ -14,6 +14,7 @@ Usage:
 """
 from __future__ import annotations
 
+import csv
 import sys
 import json
 import math
@@ -58,9 +59,10 @@ _SCRIPTS_DIR = Path(__file__).resolve().parent
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-SCREEN_CFG  = REPO_ROOT / "screen_thresholds.yaml"
-STATE_PATH  = REPO_ROOT / "data" / "gom_state.json"
-HB_PATH     = REPO_ROOT / "data" / "gom_heartbeat.txt"
+SCREEN_CFG       = REPO_ROOT / "screen_thresholds.yaml"
+STATE_PATH       = REPO_ROOT / "data" / "gom_state.json"
+HB_PATH          = REPO_ROOT / "data" / "gom_heartbeat.txt"
+MARGINAL_LOG_PATH = REPO_ROOT / "data" / "logs" / "marginal_hits.csv"
 
 # ── Load screen thresholds ───────────────────────────────────────────────────
 
@@ -92,7 +94,9 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     # GOM-A signals
     a1 = lsr_accum(days, i, cfg)
     # A2: avg5(lsr_global) ≤ 1.1 — inline check (spec v1.3; stealth_grind = SG = auxiliary only)
-    a2 = _avg5_glsr(days, i) <= 1.1
+    _avg5_val  = _avg5_glsr(days, i)
+    _a2_thr    = 1.1
+    a2 = not math.isnan(_avg5_val) and _avg5_val <= _a2_thr
     # A3: gLSR slope 5d ≤ 1.15 — "fuel not exhausted" (§1; NaN/early → FAIL-CLOSED → False)
     a3 = _a3_slope_ok(days, i, sc)
     _a3_slope = _a3_slope_value(days, i)
@@ -101,6 +105,9 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     # a3_marginal: display-only tag — A3 passes but within ε of threshold; behavior unchanged
     a3_marginal = (a3 and not math.isnan(_a3_slope) and
                    abs(_a3_slope - _slope_max) < _a3_eps)
+    # a2_marginal / a3_near: both-sides (pass OR fail) within ε — for marginal_hits.csv logger
+    a2_marginal = not math.isnan(_avg5_val) and abs(_avg5_val - _a2_thr) < _a3_eps
+    a3_near     = not math.isnan(_a3_slope) and abs(_a3_slope - _slope_max) < _a3_eps
     # A4: d_pos_3d ≥ 0 OR pos_rerate sống (spec v1.4; NaN d_pos_3d → only pos_rerate)
     _d3 = d.get("d_pos_3d", float("nan"))
     a4 = (not math.isnan(_d3) and _d3 >= 0) or pos_rerate(days, i, cfg)
@@ -192,7 +199,29 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
         "struct_alive":  any_supp_dq and a1 and a2 and a3,  # ⏸ A1∧A2∧A3 pass under suppressor
         "a3_marginal":   a3_marginal,                     # display-only: A3 PASS but within ε
         "a3_slope_val":  _a3_slope,                       # raw slope value for display
+        "a2_marginal":   a2_marginal,                     # both-sides: |avg5 - 1.1| < ε (logger)
+        "a2_avg5_val":   _avg5_val,                       # raw avg5 value for logging
+        "a3_near":       a3_near,                         # both-sides: |slope - 1.15| < ε (logger)
     }
+
+
+def _append_marginal_hit(
+    date: str, token: str, condition: str,
+    value: float, threshold: float,
+    outcome_changed: bool, chain_id: str,
+) -> None:
+    """Append one row to marginal_hits.csv (append-only log, V4 monitor)."""
+    margin = abs(value - threshold)
+    MARGINAL_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    is_new = not MARGINAL_LOG_PATH.exists()
+    with open(MARGINAL_LOG_PATH, "a", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh)
+        if is_new:
+            w.writerow(["date", "token", "condition", "value", "threshold",
+                        "margin", "outcome_changed", "chain_id"])
+        w.writerow([date, token, condition,
+                    f"{value:.6f}", f"{threshold:.4f}",
+                    f"{margin:.6f}", outcome_changed, chain_id])
 
 
 def _avg5_glsr(days: list[DayData], i: int) -> float:
@@ -1232,6 +1261,26 @@ def run_daily(
 
             chain = update_chain(chain, token, days, i, result, cfg, sc)
             chain["last_eval_date"] = d.get("date", "")  # §8.2: track last processed date
+
+            # ── Marginal logger (V4 monitor) ──────────────────────────────────
+            if not skip and (result.get("a2_marginal") or result.get("a3_near")):
+                _gaf  = result["gom_a_fire"]
+                _ga   = result["gom_a"]
+                _a1, _a2, _a3 = _ga["A1"], _ga["A2"], _ga["A3"]
+                _a4, _a5 = _ga["A4"], _ga["A5"]
+                _cid  = (f"{token}.{chain.get('start_date','')}.c{chain.get('chapter',0)}"
+                         if chain.get("chain_open") else "")
+                _dt   = d.get("date", "")
+                if result.get("a2_marginal"):
+                    _a2_cf = _a1 and (not _a2) and _a3 and (_a4 or _a5)
+                    _append_marginal_hit(_dt, token, "A2",
+                                        result["a2_avg5_val"], 1.1,
+                                        bool(_gaf != _a2_cf), _cid)
+                if result.get("a3_near"):
+                    _a3_cf = _a1 and _a2 and (not _a3) and (_a4 or _a5)
+                    _append_marginal_hit(_dt, token, "A3",
+                                        result["a3_slope_val"], 1.15,
+                                        bool(_gaf != _a3_cf), _cid)
 
             if d.get("date", "") == target_date:
                 last_result = result

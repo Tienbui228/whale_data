@@ -7391,3 +7391,79 @@ Gate ON  ≥13:02 UTC: PASS (13:58 UTC)
 **Nhận xét:** Cả BTW và ON đều hồi nhẹ trong 1 giờ sau run 1.
 BTW có bid wall mạnh ở $0.177 → buyers stacking.
 ON thoát ASK-HEAVY sang BALANCED → áp lực sell giảm.
+
+---
+
+## SESSION 2026-08-11 (tiếp theo) — LỆNH V1-V6
+
+### (1) MARGINAL LOGGER — deploy
+
+**Commit:** (session này)
+- `gom_scan.py`: `_append_marginal_hit()` + `a2_marginal` / `a3_near` trong `eval_gom` return
+- Logger gọi từ `run_daily` loop — mọi ngày eval, không chỉ target_date
+- CSV: `data/logs/marginal_hits.csv` (append-only, header auto-tạo lần đầu)
+- Cột: `date, token, condition, value, threshold, margin, outcome_changed, chain_id`
+- `chain_id` = `TOKEN.YYYY-MM-DD.cN` (start_date + chapter#) khi chain open, "" khi không
+- `outcome_changed` = GOM-A counterfactual (A2/A3 flip thay đổi gom_a_fire?)
+
+**TASKS.md:** MARGINAL-V4 thêm vào (đồng hồ V4 từ 11/08, mốc nộp 25/08)
+
+### (2) PERSIST-2d proposal
+
+**proposals/persist2d_contingency_PENDING.md** tạo trạng thái DORMANT.
+Kích hoạt khi: >3 chuỗi mở-đóng-lặp / 2 tuần VÌ A2/A3 marginal, HOẶC giết-mở-giết ≥2 vòng.
+V2 nguyên văn frozen: persist-2d (không δ), không thay đổi ngưỡng, kill-list là phụ lục.
+
+### (3) C1-SPEC STATUS — KHẨN
+
+**Đánh giá tiêu chí "thành văn":**
+
+Mục C1 trong `gom_detect_spec.md` v1.5 hiện hành (binance-bot-signals/docs/):
+
+```
+| C1 | stealth_grind | stealth_grind(days, i, cfg) từ signals.py
+     | Giá tăng chậm +9%+ trên range 14d trong 5d + OI ≥1.3×med14 + taker<55%
+     | Giữ nguyên từ auxiliary
+```
+
+**KẾT LUẬN: THIẾU THÀNH VĂN — vi phạm tiêu chí.**
+
+Lý do chi tiết:
+- C1 chỉ trỏ `stealth_grind(days, i, cfg)` — code-pointer, không self-standing
+- Dòng diễn giải "+9%+ trên range 14d trong 5d" mơ hồ: "trong 5d" là gì (5d build window hay 5d cửa sổ so sánh?); "range 14d" là range của 14 ngày trước build window
+- Logic thực tế trong `stealth_grind()` (signals.py:392):
+  - `range_end = i - brk_days` (5d); `range_px = _window(days, range_end, 14, "avg_px")` = 14d ending trước build window
+  - `breakout_target = range_hi * (1 + brk_pct)` với `brk_pct=0.15` (KHÔNG phải 9% như spec nói)
+  - `oi_mult = 1.5` (spec nói ≥1.3×med14 — KHÔNG KHỚP)
+  - Giá phải ≥ target trong bất kỳ ngày nào trong 5d build window (OR check)
+  - taker: `max(tb_window) < 55%` — 5 ngày
+
+**Lỗi cụ thể trong spec v1.5 so với code:**
+1. `+9%` ≠ `+15%` (`brk_pct=0.15`)
+2. `≥1.3×med14` ≠ `≥1.5×med14` (`oi_mult=1.5`)
+3. Không ghi rõ `range_end = i - 5` = 14d range kết thúc TRƯỚC build window 5d
+4. Không ghi OR-check: "giá đạt target BẤT KỲ ngày nào trong 5d"
+5. Không ghi `brk_days=5` và `breakout_days: 5` config key
+
+**DEADINE 14/08 để gate 15/08 chấm được:** ANALYSIS cần nhả text C1 thành văn
+(tự đứng, không trỏ code), operator ký. Agent sẵn sàng draft nếu ANALYSIS gửi
+spec text để so — hoặc agent draft dựa trên code, ANALYSIS review.
+
+### (4) docs/handover/ quy ước
+
+- Thư mục tạo: `docs/handover/`
+- CLAUDE.md cập nhật: quy ước tên + đọc-xác nhận khi ANALYSIS commit
+- Kênh liên-topic từ nay = repo, hết đính-kèm
+
+### (5) V5(a) — COOKIE-GATE-PASS
+
+TASKS.md thêm COOKIE-GATE-PASS = BLOCKED (chờ C1-spec thành văn + operator V5(a) ký).
+Án COOKIE ②③ KHÔNG chấm hồi tố cho đến khi C1-spec ký.
+
+### (6) Trạng thái sáng nay (chưa báo)
+
+| Hạng mục | Trạng thái |
+|----------|-----------|
+| md5 verify post-cron | **CHƯA CHẠY** — cần re-run `_probe_md5_closed_chapters_20260810.py`, compare `a5a929dc` |
+| SCP batch 5 file | **CHƯA** — gom_scan.py, export_freshwatch_daily_vps.py, case_guard.py, build_case.py, screen_thresholds.yaml |
+| Rebuild 5 packs qua guard range-check | **CHƯA** — BROCCOLIF3B/COOKIE/KOMA/TUT/XPIN cần rebuild với build_case.py đã fix |

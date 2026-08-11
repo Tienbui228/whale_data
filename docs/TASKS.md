@@ -1,10 +1,12 @@
 # TASKS — FreshWatch Task Ledger
 
-Cập nhật: 08/08/2026 (D1-D5 session). **Mỗi session mở đầu bằng diff file này.**
+Cập nhật: 11/08/2026. **Mỗi session mở đầu bằng diff file này.**
 Format cột Status: `QUEUED` / `DOING` / `DONE <commit>` / `BLOCKED <lý do>`
 
 | ID | Ngày giao | Tóm tắt | Status |
 |----|-----------|---------|--------|
+| MARGINAL-V4 | 11/08 | Marginal logger chạy từ 11/08. Đồng hồ V4: nếu đến 25/08 — **≤3 chuỗi/2 tuần mở-đóng-lặp vì A2/A3 marginal → đóng án (logger-only)**; **>3 HOẶC giết-mở-giết ≥2 vòng → mở proposals/persist2d_contingency_PENDING.md + re-gate + operator ký**. data/logs/marginal_hits.csv; mốc nộp 25/08. | DOING — đồng hồ bắt đầu 11/08 |
+| COOKIE-GATE-PASS | 11/08 | V5(a): khi operator ký → đóng băng. Án COOKIE ②③ chấm hồi tố CHỈ SAU khi C1-spec thành văn ký (không chấm trên con trỏ). C1 hiện tại (v1.5) = code-pointer `stealth_grind(days,i,cfg)` — THIẾU thành văn tự đứng. | BLOCKED — chờ C1-spec thành văn (deadline 14/08) + operator V5(a) ký |
 | XS | 06/08 | XPIN spot/DEX/Alpha audit XS1-XS4: 181 bars GeckoTerminal, wash test, detection floor $571K/day | DONE 4d3f676 7104037 |
 | K0 | 06/08 | Tạo TASKS.md task ledger — baseline tracking từ nay | DONE c0c5d24 |
 | K1 | 06/08 | Merge MM-ECON section VII vào analysis_playbook.md + LAYER COVERAGE + lesson ô-điền | DONE c0c5d24 |

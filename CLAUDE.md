@@ -74,10 +74,16 @@ scripts/           — script SỐNG: job chạy lịch, tool dùng lại
 scripts/archive/   — probe/task ĐÃ XONG án (giữ vết, khỏi mắt)
 docs/reports/      — report đang sống; đã xử xong → docs/reports/archive/
 docs/case_files/   — chỉ CASE_*.xlsx + CASE_INDEX (cấm CSV song song)
+docs/handover/     — file liên-topic từ ANALYSIS → agent (kênh chính thức thay đính-kèm)
 proposals/         — active; SUPERSEDED/đã ký → proposals/archive/
 scratch/           — data dump tạm (không commit)
 backtest/          — module Python sống
 ```
+
+**docs/handover/ quy ước (ký 11/08/2026):**
+- Tên file: `<topic>_<YYYYMMDD>.md` (ví dụ: `gom_c_cookie_gate_20260811.md`)
+- Khi ANALYSIS commit file vào đây: agent đọc, xác nhận từng file mở được + một dòng tóm mỗi file vào agent_log.md
+- File trong handover/ không xóa sau đọc — giữ vết lịch sử; ANALYSIS archive bằng subfolder archive/ khi cần
 
 Quy ước vòng đời artifact:
 - Probe/task mới: tên `_probe_<án>_<YYYYMMDD>.py` / `_task_<mô_tả>_<YYYYMMDD>.py`
