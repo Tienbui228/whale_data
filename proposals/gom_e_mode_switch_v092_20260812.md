@@ -114,10 +114,10 @@ Tag cơ chế (bộ ba OI + DENOM chồng độc lập):
   chồng độc lập: |d_acc_2d_prov| > d_pos_2d_prov → [DENOM-ASSIST] (tag, không chặn;
                  NUM-forming + DENOM-ASSIST cùng lúc → ghi CẢ HAI, người đọc tự cân).
 
-REFERENCE BAR — bar TỒN TẠI, không nội suy (Note-1):
-  Bar 23:00 D−2 khuyết → lùi bar 1h ĐÓNG gần nhất TRONG D−2, ghi bar-time thật (ref_bar_ts).
-  ĐỪNG lấy bar D−1 rồi gọi D−2 (L-24). Cùng luật cho oi_close_Dm2.
-  Không có bar nào trong CẢ ngày D−2 → verdict suppress_no_ref, log, KHÔNG ping.
+REFERENCE BAR (Note-1, v0.9.2 — live-fetch rule RETIRED, thay bằng T1-STORE):
+  T2 không fetch bar D−2 live — nguồn duy nhất = T1 store[date=D−2].pos_raw_1h (bar 00:00 UTC).
+  ĐỪNG tự chọn bar khác hoặc lùi về D−1 (L-24). Store thiếu entry → bước 0 bắn suppress_no_ref.
+  ref_bar_ts: T1 ghi timestamp thật của bar đã capture — audit "đúng 00:00 hoặc vắng".
 
 gap_pct — PHÉP ĐO SEAM, cùng boundary (Note-2):
   gap_pct = pos_close_Dm2 (1h-series, mốc D−2 00:00) vs pos_close_Dm2_canon (canonical 00:00 D−2).
@@ -136,6 +136,8 @@ RÀNG BUỘC:
 
 T1-STORE (spec change v0.9.2, required trước B2):
   T1 chạy 01:25 UTC ngày D_run; ngày EVAL = ngày đã đóng gần nhất = D_run − 1.
+  Quan hệ ngày: forming=D_run (poll) · EVAL=D_run−1 (bar mới nhất store) · T2 ref =
+    store[D_run−2] = EVAL−1. Luôn tồn tại sau warmup ≥2 ngày.
   Capture bar 00:00 UTC ngày EVAL — v2 nguyên văn: "snapshot tại 00:00 UTC của ngày D =
   giá trị as_of_ts_ms == midnight_ms(D)" (ratio_daily_canonical_20260731_v2.md).
   Capture set: registry ∪ vừa-ra-≤3d. Nguồn: cùng 4 endpoint canonical, period=1h.
@@ -156,6 +158,8 @@ T1-STORE (spec change v0.9.2, required trước B2):
 TEMPLATE PING:
   "⚡ MODE-SWITCH FORMING <SYM> [INTRADAY-PROVISIONAL·SUSPECT] — pos_prov <x> vs close
    D−2 <y> (+z%) · div_prov <d> · oiΔ_prov <w>. Chấm chính thức tại close."
+  Khi SHORT-BASE flag (min5d<5 nến): chèn [SHORT-BASE] sau [SUSPECT]:
+  → "⚡ MODE-SWITCH FORMING <SYM> [INTRADAY-PROVISIONAL·SUSPECT·SHORT-BASE] — ..."
 
 verdict enum (Note-3) — 5 nhánh:
   {ping · suppress_oi_expand · suppress_t1_dup · suppress_daily_quota · suppress_no_ref}
