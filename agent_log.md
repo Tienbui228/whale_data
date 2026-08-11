@@ -7428,13 +7428,14 @@ Mục C1 trong `gom_detect_spec.md` v1.5 hiện hành (binance-bot-signals/docs/
 
 **KẾT LUẬN: THIẾU THÀNH VĂN — nhưng số (+9%/1.3×) là ĐÚNG.**
 
-**ĐÍNH CHÍNH (phát hiện sau khi trace thresholds.yaml):**
-- Audit ban đầu nhìn nhầm comments `# 0.15 / # 1.5` trong `signals.py` là giá trị running.
-- Thực tế `load_thresholds()` load từ `scanner/screener/thresholds.yaml`, trong đó:
+**ĐÍNH CHÍNH — comment signals.py lệch yaml (comment sai = bug, đã sửa):**
+- Comments `# 0.15 / # 1.5` trong `signals.py` là COMMENTS SAI (lying comments) — không phải giá trị running.
+- Running values = `load_thresholds()` → `scanner/screener/thresholds.yaml`:
   `breakout_pct: 0.09` (calibrated từ 0.15, changelog: "TUT chỉ 9.7% trên range")
   `oi_mult: 1.3` (calibrated từ 1.5, changelog: "TUT OI đỉnh 1.47×med14")
-- Spec v1.5 "+9%/1.3×" KHỚP thresholds.yaml hiện hành = ĐÚNG về số.
-- Comments trong signals.py (`# 0.15 / # 1.5`) là stale defaults, không phải running values.
+- Runtime-confirmed bằng `_probe_c1_runtime_20260811.py` (STEP 1+2): `breakout_pct=0.09`, `oi_mult=1.3`.
+- Spec v1.5 "+9%/1.3×" KHỚP thresholds.yaml = ĐÚNG về số.
+- **Đã sửa** comments trong `signals.py` lines 394/396: `# 0.15 → # 0.09`, `# 1.5 → # 1.3`.
 
 **Vấn đề thật còn lại với C1:**
 1. Code-pointer, không self-standing
@@ -7477,3 +7478,27 @@ Root cause confirmed: A3 slope boundary (FFUSDT 08-01: slope=1.14902, dist=0.000
 
 **GUARD-CÂM (save_state fail-open) — ĐÓNG.**
 validate_gom_state() wired vào save_state() pre-write. 4 invariants (ii/iii/iv/v). Violation → RuntimeError → exit≠0 → alert. Đã commit c3d49e1.
+
+### C1 comment fix — 2026-08-11 (commit 4606b86b binance-bot-signals)
+
+- `signals.py` lines 394/396: `# 0.15 → # 0.09 (runtime; thresholds.yaml; was 0.15 pre-TUT-calibration)`, `# 1.5 → # 1.3 (runtime; thresholds.yaml; was 1.5 pre-TUT-calibration)`
+- Runtime confirm: `_probe_c1_runtime_20260811.py` STEP 1+2 — `breakout_pct=0.09, oi_mult=1.3` từ `load_thresholds()`.
+- CASE_INDEX L-51 framing corrected: "comment sai (lying comments = bug), đã sửa".
+
+### WARN — LESSONS sheet L-43 gap + L-44/L-45 column mismatch — 2026-08-11
+
+**CẦN OPERATOR xem xét:**
+
+Probe `_probe_lessons_l43_check_20260811.py` phát hiện:
+
+| Issue | Chi tiết |
+|-------|---------|
+| L-43 MISSING | Row 46=L-42, row 47=L-44 — L-43 KHÔNG TỒN TẠI trong sheet |
+| L-44 col mismatch | Row 47: col1=`L-44`, col2 (ngay) = `"L-44(a) DIEU..."` (lesson text nhầm vào cột ngày) |
+| L-45 col mismatch | Row 48: col1=`L-45`, col2 (ngay) = `"L-45(b) DURA..."` (lesson text nhầm vào cột ngày) |
+
+Agent KHÔNG tự sửa L-43/L-44/L-45 — cần operator xác nhận:
+1. L-43 có tồn tại và bị bỏ sót, hay đánh số bỏ qua có chủ ý?
+2. L-44/L-45: nội dung thật ở đâu (cột nào)? Muốn sửa layout không?
+
+L-49/50/51 (rows 52-54) không bị ảnh hưởng — đã append đúng.
