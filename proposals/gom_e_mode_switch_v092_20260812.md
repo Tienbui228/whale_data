@@ -138,9 +138,14 @@ TEMPLATE PING:
 verdict enum (Note-3) — 5 nhánh:
   {ping · suppress_oi_expand · suppress_t1_dup · suppress_daily_quota · suppress_no_ref}
   Thứ tự đánh giá: daily_quota → t1_dup → tính E1/E2/E3 → verdict.
-  Quy ước log (KHAI trong spec, CHỜ operator xác nhận): ghi một dòng khi
-  verdict ∈ {ping, suppress_oi_expand}; và khi suppress_t1_dup / suppress_daily_quota
-  CHỈ nếu E1_prov & E2_prov đều pass tại thời điểm chặn ("suýt-ping" — post-mortem cần).
+  Quy ước log (GẬT 12/08):
+    suppress_oi_expand   → log VÔ ĐIỀU KIỆN (không kèm ràng E1∧E2 — cần thống kê 2 tuần
+                           để biết OI-EXPAND-block là guard hay mù; đòi E1∧E2 mới log sẽ
+                           mất ca "E1 pass, E2 chưa, OI đã nở" = tiền-cảnh-báo false-shape).
+    suppress_t1_dup      → log CHỈ KHI E1_prov ∧ E2_prov đều pass ("suýt-ping").
+    suppress_daily_quota → log CHỈ KHI E1_prov ∧ E2_prov đều pass ("suýt-ping").
+    ping                 → luôn log.
+    suppress_no_ref      → luôn log (missing-bar = data gap, cần audit).
   Symbol không đạt E1_prov/E2_prov và không bị chặn → no_signal, KHÔNG log
   (tránh nổ dòng registry×poll×ngày).
 
