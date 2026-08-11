@@ -7479,6 +7479,14 @@ Root cause confirmed: A3 slope boundary (FFUSDT 08-01: slope=1.14902, dist=0.000
 **GUARD-CÂM (save_state fail-open) — ĐÓNG.**
 validate_gom_state() wired vào save_state() pre-write. 4 invariants (ii/iii/iv/v). Violation → RuntimeError → exit≠0 → alert. Đã commit c3d49e1.
 
+### P0 state-integrity + guard-câm ĐÓNG — verify PASS 11/08
+
+P0 state-integrity + guard-câm — check 11/08 sáng là vacuous (file untouched từ baseline 03:09 08-10, cron 08-11 chưa chạy). Xác nhận được: restore intact. Đóng chính thức chờ re-probe sau run-tay/cron 08-11.
+
+CORRECTION: entry trước ghi "ĐÓNG" là sớm — bằng chứng là vacuous identical (không gì chạy kể từ baseline). Bằng chứng sống thật = frozen-hash sau ≥1 chu kỳ run thật qua code patched.
+
+Script: `_probe_md5_closed_chapters_20260810.py` — chạy local, SSH vào VPS đọc `gom_state.json`. VPS path: `/root/Data_back_test/whale_data/data/gom_state.json`, mtime=2026-08-10T03:09:06Z, 7874 lines.
+
 ### C1 comment fix — 2026-08-11 (commit 4606b86b binance-bot-signals)
 
 - `signals.py` lines 394/396: `# 0.15 → # 0.09 (runtime; thresholds.yaml; was 0.15 pre-TUT-calibration)`, `# 1.5 → # 1.3 (runtime; thresholds.yaml; was 1.5 pre-TUT-calibration)`
@@ -7502,3 +7510,31 @@ Agent KHÔNG tự sửa L-43/L-44/L-45 — cần operator xác nhận:
 2. L-44/L-45: nội dung thật ở đâu (cột nào)? Muốn sửa layout không?
 
 L-49/50/51 (rows 52-54) không bị ảnh hưởng — đã append đúng.
+
+## SESSION 2026-08-12 — GOM-E v0.9.2 SPEC NHẬN
+
+### GOM-E "Đổi-Chế-Độ" v0.9.2 — ANALYSIS soạn, CHỜ OPERATOR KÝ HƯỚNG
+
+Spec lưu tại `proposals/gom_e_mode_switch_v092_20260812.md`. Tóm tắt:
+
+**§0 Thesis:** captive dùng pha chờ làm MÁY THU (kho spot + SHORT hedge + crowd trả funding). Cú đóng hedge = tiếng mở khóa. Bot phát hiện ĐỔI CHẾ ĐỘ (không dự đoán giá).
+
+**§1 Hai trạng thái:**
+- STATE 1 HEDGE-FARM: div_avg3 ≤ 0.85 ≥10/20d (H1) + f_avg > 0 ≥12/20d (H2) → registry
+- STATE 2 MODE-SWITCH-CANDIDATE: FIRE = E1 (div-thaw +0.15) AND E2 (d_pos_2d ≥+0.15)
+- Tags: NUM-DRIVEN (E3: oi_token ↓) / DENOM-ASSIST (|d_acc_2d| > d_pos_2d) / OI-EXPAND (oi_tok >+0.10)
+- Cooldown 3d, trừ khi tag đổi (DENOM→NUM = bắn lại)
+
+**§3 Calib:** ON 17–18/07 (positive ground truth E1✓E2✓E3✓E4✓) · GUA 08–10/08 (PENDING) · BROCCOLI/AGT (không-fire) · GATE PASS = ON đúng + tags đúng + BROCCOLI im + AGT bảng A.
+
+**§5 Hai tầng:**
+- T1 DAILY: cron 01:25 UTC, chấm nến đóng, ghi sổ/calib, MD5 theo chuẩn 11/08
+- T2 INTRADAY: _prov variant, E1_prov/E2_prov tại 2/3 ngưỡng (+0.10), chỉ registry members, 1h-series cùng endpoint, KHÔNG nguồn mới (L-21/L-25)
+- gap_pct: phép đo seam D−2 1h vs canonical daily, KHÔNG chấm (chỉ đo)
+- log: gom_e_t2_log.csv append-only, 21 fields schema §5
+- 5 verdict: ping / suppress_oi_expand / suppress_t1_dup / suppress_daily_quota / suppress_no_ref
+
+**Pending trước ký:**
+- GUA 08–10/08 data: cần xác nhận positive #2 hay negative-shape
+- Calib backtest ON 17–18/07: chạy T1 verify fire đúng cửa sổ
+- GATE chưa chạy (spec-trước-code rule)
