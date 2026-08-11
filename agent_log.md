@@ -7426,28 +7426,25 @@ Mục C1 trong `gom_detect_spec.md` v1.5 hiện hành (binance-bot-signals/docs/
      | Giữ nguyên từ auxiliary
 ```
 
-**KẾT LUẬN: THIẾU THÀNH VĂN — vi phạm tiêu chí.**
+**KẾT LUẬN: THIẾU THÀNH VĂN — nhưng số (+9%/1.3×) là ĐÚNG.**
 
-Lý do chi tiết:
-- C1 chỉ trỏ `stealth_grind(days, i, cfg)` — code-pointer, không self-standing
-- Dòng diễn giải "+9%+ trên range 14d trong 5d" mơ hồ: "trong 5d" là gì (5d build window hay 5d cửa sổ so sánh?); "range 14d" là range của 14 ngày trước build window
-- Logic thực tế trong `stealth_grind()` (signals.py:392):
-  - `range_end = i - brk_days` (5d); `range_px = _window(days, range_end, 14, "avg_px")` = 14d ending trước build window
-  - `breakout_target = range_hi * (1 + brk_pct)` với `brk_pct=0.15` (KHÔNG phải 9% như spec nói)
-  - `oi_mult = 1.5` (spec nói ≥1.3×med14 — KHÔNG KHỚP)
-  - Giá phải ≥ target trong bất kỳ ngày nào trong 5d build window (OR check)
-  - taker: `max(tb_window) < 55%` — 5 ngày
+**ĐÍNH CHÍNH (phát hiện sau khi trace thresholds.yaml):**
+- Audit ban đầu nhìn nhầm comments `# 0.15 / # 1.5` trong `signals.py` là giá trị running.
+- Thực tế `load_thresholds()` load từ `scanner/screener/thresholds.yaml`, trong đó:
+  `breakout_pct: 0.09` (calibrated từ 0.15, changelog: "TUT chỉ 9.7% trên range")
+  `oi_mult: 1.3` (calibrated từ 1.5, changelog: "TUT OI đỉnh 1.47×med14")
+- Spec v1.5 "+9%/1.3×" KHỚP thresholds.yaml hiện hành = ĐÚNG về số.
+- Comments trong signals.py (`# 0.15 / # 1.5`) là stale defaults, không phải running values.
 
-**Lỗi cụ thể trong spec v1.5 so với code:**
-1. `+9%` ≠ `+15%` (`brk_pct=0.15`)
-2. `≥1.3×med14` ≠ `≥1.5×med14` (`oi_mult=1.5`)
-3. Không ghi rõ `range_end = i - 5` = 14d range kết thúc TRƯỚC build window 5d
-4. Không ghi OR-check: "giá đạt target BẤT KỲ ngày nào trong 5d"
-5. Không ghi `brk_days=5` và `breakout_days: 5` config key
+**Vấn đề thật còn lại với C1:**
+1. Code-pointer, không self-standing
+2. Không ghi: `range_end = i − 5` (14d range kết thúc TRƯỚC 5d build window)
+3. Không ghi: OR-check — "giá đạt target bất kỳ ngày nào trong 5d window"
+4. Không ghi: taker check là `max(window) < 55%`, không phải per-day
 
-**DEADINE 14/08 để gate 15/08 chấm được:** ANALYSIS cần nhả text C1 thành văn
-(tự đứng, không trỏ code), operator ký. Agent sẵn sàng draft nếu ANALYSIS gửi
-spec text để so — hoặc agent draft dựa trên code, ANALYSIS review.
+**Draft C1 thành văn:** `docs/handover/c1_spec_draft_20260811.md` — gửi ANALYSIS xác nhận
+[CHỜ ANALYSIS XÁC NHẬN số canonical 0.09/1.3× hay revert 0.15/1.5×].
+DEADLINE 14/08 để gate 15/08 chấm được.
 
 ### (4) docs/handover/ quy ước
 
@@ -7460,10 +7457,23 @@ spec text để so — hoặc agent draft dựa trên code, ANALYSIS review.
 TASKS.md thêm COOKIE-GATE-PASS = BLOCKED (chờ C1-spec thành văn + operator V5(a) ký).
 Án COOKIE ②③ KHÔNG chấm hồi tố cho đến khi C1-spec ký.
 
-### (6) Trạng thái sáng nay (chưa báo)
+### (6) Trạng thái — kết quả thực thi
 
 | Hạng mục | Trạng thái |
 |----------|-----------|
-| md5 verify post-cron | **CHƯA CHẠY** — cần re-run `_probe_md5_closed_chapters_20260810.py`, compare `a5a929dc` |
-| SCP batch 5 file | **CHƯA** — gom_scan.py, export_freshwatch_daily_vps.py, case_guard.py, build_case.py, screen_thresholds.yaml |
-| Rebuild 5 packs qua guard range-check | **CHƯA** — BROCCOLIF3B/COOKIE/KOMA/TUT/XPIN cần rebuild với build_case.py đã fix |
+| md5 verify post-cron | **PASS** — `a5a929dcc4ba17f71eb3243146be2314` IDENTICAL. §8.2 "không viết lại sổ" confirmed. |
+| SCP batch 5 file | **CHƯA** — pending sau md5 PASS |
+| Rebuild 5 packs | **CHƯA** — pending sau SCP |
+
+### md5 PASS → P0 ĐÓNG + GUARD-CÂM ĐÓNG
+
+**md5 = `a5a929dcc4ba17f71eb3243146be2314` — IDENTICAL vs baseline.**
+
+169 closed chapters, aggregate md5 không thay đổi sau cron 01:25 UTC 08-11.
+Xác nhận: incremental mode hoạt động đúng — closed chapters không bị rewrite.
+
+**P0 (state corrupt/rewrite) — ĐÓNG.**
+Root cause confirmed: A3 slope boundary (FFUSDT 08-01: slope=1.14902, dist=0.00098 từ threshold 1.15 → floating-point flip qua vùng-rung). Incremental mode §8.2 + validate_gom_state() đã deploy. §8.2 PASS.
+
+**GUARD-CÂM (save_state fail-open) — ĐÓNG.**
+validate_gom_state() wired vào save_state() pre-write. 4 invariants (ii/iii/iv/v). Violation → RuntimeError → exit≠0 → alert. Đã commit c3d49e1.
