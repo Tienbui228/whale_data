@@ -85,8 +85,8 @@ Candidate set live = registry lần T1 ghi gần nhất.
 
 ĐỒNG-PHƯƠNG-PHÁP BẮT BUỘC (đóng seam by construction — mọi cặp so sánh _prov cùng chuỗi 1h):
   pos_now / acc_now      := nến 1h ĐÓNG gần nhất, 4 endpoint canonical period=1h.
-  pos_close(D−2)/acc_close(D−2) := nến 1h CUỐI ngày D−2 (boundary 00:00 UTC), cùng 4 endpoint period=1h.
-  oi_close(D−2)          := bar 1h cuối D−2 từ Binance openInterestHist (period=1h).
+  pos_close(D−2)/acc_close(D−2) := T1 store, bar 00:00-MỞ ngày D−2 (v2: "snapshot 00:00 UTC mở ngày D"). KHÔNG fetch live — xem T1-STORE.
+  oi_close(D−2)          := T1 store, bar 00:00-MỞ ngày D−2 từ openInterestHist (v2 same). KHÔNG fetch live.
   oi_now                 := /fapi/v1/openInterest.
   CẤM mọi nguồn OI thứ ba — án Coinglass lệch 22% so openInterestHist 00:00 (L-21). Ghi bia này vào comment.
 
@@ -131,13 +131,29 @@ RÀNG BUỘC:
   - T2 = process/entrypoint RIÊNG đọc config flag; tắt T2 ⇏ đụng T1 (T1 tự đứng trọn vẹn).
   - log bắt buộc gom_e_t2_log.csv append-only.
 
+T1-STORE (spec change v0.9.2, required trước B2):
+  T1 mỗi đêm sau khi fetch daily: capture bar 00:00-MỞ ngày D (theo v2 canonical boundary:
+  "snapshot 00:00 UTC mở ngày D") cho mỗi token trong registry. Nguồn: cùng 4 endpoint
+  canonical, period=1h.
+  Store append-only: gom_e_ref_store.csv. Schema tối thiểu:
+    date · symbol · pos_raw_1h · acc_raw_1h · oi_raw_1h · pos_canonical · acc_canonical · oi_canonical
+    pos_raw_1h   = longShortRatio từ topLongShortPositionRatio period=1h, bar 00:00-MỞ ngày D.
+    pos_canonical = pos_r daily từ T1 canonical pipeline ngày D (cột RIÊNG — KHÔNG copy pos_raw_1h).
+    (acc / oi tương tự — hai cột độc lập.)
+  T2 đọc: pos_close_Dm2 = store[date=D−2].pos_raw_1h.
+  gap_pct = (store[D−2].pos_raw_1h − store[D−2].pos_canonical) / store[D−2].pos_canonical.
+    Hai cột bắt buộc độc lập — nếu chỉ lưu canonical thì gap=0 hiển nhiên = mất phép đo (Note-2).
+  WARMUP: 2 ngày đầu store chưa có D−2 entry → suppress_no_ref (luôn log). Chấp nhận.
+    Nếu [cơ chế] re-test confirm fetch historical chạy: backfill 2 ngày warmup bằng
+    fetch, ghi cột backfill_src="fetch" (phân biệt với "t1_capture").
+
 TEMPLATE PING:
   "⚡ MODE-SWITCH FORMING <SYM> [INTRADAY-PROVISIONAL·SUSPECT] — pos_prov <x> vs close
    D−2 <y> (+z%) · div_prov <d> · oiΔ_prov <w>. Chấm chính thức tại close."
 
 verdict enum (Note-3) — 5 nhánh:
   {ping · suppress_oi_expand · suppress_t1_dup · suppress_daily_quota · suppress_no_ref}
-  Thứ tự đánh giá: daily_quota → t1_dup → tính E1/E2/E3 → verdict.
+  Thứ tự đánh giá: tính E1_prov/E2_prov/E3_prov (luôn, để có pass_E1/pass_E2 + quyết log) → daily_quota → t1_dup → oi_expand → no_ref → verdict.
   Quy ước log (GẬT 12/08):
     suppress_oi_expand   → log VÔ ĐIỀU KIỆN (không kèm ràng E1∧E2 — cần thống kê 2 tuần
                            để biết OI-EXPAND-block là guard hay mù; đòi E1∧E2 mới log sẽ
