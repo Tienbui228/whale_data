@@ -7538,3 +7538,34 @@ Spec lưu tại `proposals/gom_e_mode_switch_v092_20260812.md`. Tóm tắt:
 - GUA 08–10/08 data: cần xác nhận positive #2 hay negative-shape
 - Calib backtest ON 17–18/07: chạy T1 verify fire đúng cửa sổ
 - GATE chưa chạy (spec-trước-code rule)
+
+## SESSION 2026-08-12 (tiếp) — GOM-E GATE ON + B2 CODE DONE
+
+### GATE ON 17-18/07 — KẾT QUẢ BACKTEST
+
+Chạy: `python scripts/gom_e.py --backtest ONUSDT --store data/export --date-from 2026-06-15 --date-to 2026-07-25 --no-store` (VPS data)
+
+Data range ONUSDT có trong store: 2026-06-27 → 2026-07-23 (27 rows)
+
+Bảng gate (window 17-18/07):
+```
+date       | in_reg | div_r | div_a3 | min5d | E1_d   | d_pos2d | d_oi2d  | pin_s | E1 E2 E3 E4 | tag
+2026-07-17 | Y      | 0.813 | 0.660  | 0.565 | +0.247 | +0.297  | -0.027  |    21 | ✓ ✓ ✓ ✗   | [NUM-DRIVEN] *** FIRE *** ◀ GATE CHECK
+2026-07-18 | Y      | 0.832 | 0.737  | 0.565 | +0.267 | +0.370  | -0.020  |     0 | ✓ ✓ ✓ ✓   | [cooldown 07-17] ◀ GATE CHECK
+```
+
+Ngoài gate: fire 2026-07-12 [NUM-DRIVEN] E1✓E2✓E3✓E4✗ (div_r=0.902, đợt tăng pos trước) → cooldown expire → 07-17 fire lại.
+E4 trên 07-18: pin_streak 21d→0 (data window từ 06-27 nên chỉ thấy 21d; ground-truth 47d = ngoài lookback). Không ảnh hưởng gate.
+
+GATE VERDICT:
+- ✓ Fire trong gate window: 2026-07-17
+- ✓ Tag [NUM-DRIVEN]: E3 (d_oitok_2d = -0.027 ≤ 0)
+- ✅ GATE GREEN
+
+### B2 CODE STATUS
+
+- `scripts/gom_e.py` (T1 daily): DONE — ~825 lines, spec-compliant
+- `_probe_gom_e_gate_on_20260812.py`: DONE — gate probe viết + chạy → GREEN
+- `_probe_gom_e_b1_agt_20260812.py`: DONE (mapping confirm)
+- `_probe_gom_e_b1b_retest_20260812.py`: DONE (startTime+endTime verify)
+- NEXT: commit gom_e.py + probes; sau đó gom_e_t2.py + run_gom_daily.py integration
