@@ -616,6 +616,31 @@ def main() -> None:
         err_snippet = (stderr or stdout)[:500]
         tg_error(f"gom_scan exit={result.returncode}\n{err_snippet}")
 
+    # ── GOM-E T1 (mode-switch detector — §5 spec v0.9.2) ─────────────────────
+    gom_e_script = SCRIPTS / "gom_e.py"
+    if gom_e_script.exists():
+        cmd_e = [
+            sys.executable, str(gom_e_script),
+            "--daily",
+            "--store", str(STORE),
+            "--date", target_date,
+            "--fw-filter", str(FW_SYM_PATH),
+        ]
+        _log(f"exec gom_e: {' '.join(cmd_e)}")
+        result_e = subprocess.run(cmd_e, capture_output=True, encoding="utf-8",
+                                  errors="replace", timeout=180)
+        gom_e_out = result_e.stdout or ""
+        gom_e_err = result_e.stderr or ""
+        if result_e.returncode != 0:
+            _log(f"gom_e exit={result_e.returncode} stderr={gom_e_err[:300]}")
+        else:
+            _log(f"gom_e OK lines={gom_e_out.count(chr(10))}")
+        # Send Bảng B alerts as additional TG message (Bảng A included for context)
+        if gom_e_out.strip():
+            tg_send(gom_e_out[:4000])
+    else:
+        _log("WARN: gom_e.py not found — skip")
+
     # Format and send Telegram report (split into ≤4096-char parts; footer always last)
     report   = format_tg_report(stdout, target_date, run_utc, run_date)
     messages = _tg_split(report)
