@@ -100,6 +100,6 @@ Từ `scanner/screener/thresholds.yaml` (calibrated P0-close 2026-07-28), runtim
 - [x] GHI 1: cửa sổ co quanh gap, verdict template đúng
 - [x] GHI 2: existential (i)/(ii) độc lập — "grind confirmed" = 3 điều kiện thỏa, không nhất thiết cùng ngày
 - [x] **ANALYSIS confirm logic** — 2026-08-12
-- [ ] **Operator ký — deadline 14/08/2026**
+- [x] **Operator ký — 2026-08-12** ✓ (commit 36caec0, sớm hơn deadline 14/08)
 
-Sau khi operator ký → agent cập nhật gom_detect_spec.md §1.3 C1 row + xóa [PROVISIONAL] + §6 nếu số thay đổi.
+→ Agent đã cập nhật: gom_detect_spec.md v2.0 §1.3 C1 row (canonical 0.09/1.3) + §9 conformance + §6 C4 BANANAS31 gate armed. Repo: binance-bot-signals.

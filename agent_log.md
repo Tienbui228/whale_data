@@ -2,6 +2,60 @@
 
 ---
 
+## SESSION 2026-08-12 (cont.2) — C1 SIGNED + BANANAS31 GATE ARMED
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Việc đã làm
+
+| Hạng mục | Kết quả |
+|---|---|
+| C1 operator ký | KÝ 12/08/2026. Canonical: breakout_pct=0.09, oi_mult=1.3, breakout_days=5, taker_buy_max=55.0. Ref: c1_spec_draft_20260811.md commit 36caec0. |
+| gom_detect_spec.md v2.0 | Changelog v2.0 thêm vào. §1.3 C1 row: "OPERATOR KÝ 12/08/2026" + số canonical. §9 C1 conformance: "SIGNED ✓" + 0.09/1.3 explicit. §6 C4: GATE ARMED 15/08. |
+| c1_spec_draft_20260811.md | Checkbox operator ký → checked [x] 12/08. |
+| bananas31_gate_20260815.md | Tạo verdict template: (i)/(ii) scan template, (iii) AUTO-THỎA (52.31%<55), GOM-C β compose, FAIL dump template. |
+| TASKS.md | COOKIE-GATE-PASS: unblock C1 ✓, vẫn chờ BANANAS31. GOM-C-BANANAS31: DOING. |
+
+### Số key
+
+| | |
+|---|---|
+| C1 canonical | breakout=0.09 / oi_mult=1.3 / days=5 / taker_max=55.0 |
+| BANANAS31 evaluable | 54 ngày (Jun 19–Aug 11) |
+| Condition (iii) | AUTO-THỎA: max taker=52.31% < 55.0 |
+| Gate date | 15/08/2026 |
+
+---
+
+## SESSION 2026-08-12 (cont.) — WATCHLIST CRON DEPLOY
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Việc đã làm
+
+| Hạng mục | Kết quả |
+|---|---|
+| Watchlist spec v1.3 | DUYỆT. pos_trend_threshold=0.02, oi_trend_threshold=0.02. Chốt 2026-08-12. |
+| scripts/watchlist_daily.py | Viết xong + §7 test PASS (8/8 checks). List A avg=70.9/day, List B avg=25.4/day. |
+| data/config/watchlist_thresholds.yaml | Tạo + SCP lên VPS. |
+| Cron deploy | VPS 5.223.67.21: `0 1 * * *` → `python3 scripts/watchlist_daily.py`. Log: `data/export/watchlist_cron.log`. **LIVE.** |
+
+### Số key
+
+| | |
+|---|---|
+| pos_trend_threshold | ±2% (5-ngày) |
+| List A avg / max | 70.9 / 89 token/ngày |
+| List B avg / max | 25.4 / 38 token/ngày |
+| §7 checks | 8/8 PASS |
+
+### Pending
+
+- Operator theo dõi List B avg=25.4 (target 5-15). Nếu quá đông → raise pos_thr thêm (0.03).
+- Cron log file: `/root/Data_back_test/whale_data/data/export/watchlist_cron.log` — kiểm sau run đầu 01:00 UTC 13/08.
+
+---
+
 ## SESSION 2026-08-12 — GOM-E L-28 + FRAME3 + COVERAGE
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
