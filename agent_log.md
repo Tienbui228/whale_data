@@ -2,6 +2,49 @@
 
 ---
 
+## SESSION 2026-08-12 — GOM-E L-28 + FRAME3 + COVERAGE
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+**Commit:** d965c5a
+
+### Việc đã làm
+
+| Hạng mục | Kết quả |
+|---|---|
+| Frame 3 forward-return backtest | 21 NUM-DRIVEN vs 11 OI-EXPAND vs base-rate 300 random pairs. 14d: NUM median terminal −6.2% (A), +13.6% (B, n=4). No aggregate edge vs base. GUA excluded (dead-cat). |
+| Export fire events | probe_fire_export.py: 47 events (Definition A canonical). Tags: NUM(26) · MIX(8) · OI(13). Không có fire ngoài registry. |
+| L-28 bug fix | Root cause: cooldown exception cũ dùng proxy tag-name DENOM→NUM (tags[0] phụ thuộc thứ-tự-append). Sau khi MIXED branch thêm, [MIXED][DENOM-ASSIST] puts "MIXED" tại tags[0] → exception fail → KOMA 08-03 bị block sai. |
+| Fix (4 chỗ) | Lưu `last_fire_e3=bool` trong state. Exception = `not last_fire_e3 AND e3`. Migration fallback: `tag=="NUM-DRIVEN" → e3=True`. |
+| Whipsaw check | 4 ca refire (INUSDT 07-03, SOONUSDT 07-06, POWERUSDT 07-07, TSTUSDT 08-02) đều 1-and-done. E1/E2 fail ngay N+1/N+2. Sau NUM refire lfe3=True → exception không trigger lại được. |
+| Coverage check | AGT: in registry (07-22→08-10, peak 20d), never fired → negative control ✓. BROCCOLIF3BUSDT NOT in fw139 (cần operator xác nhận tên). 81 ever-registry / 139 fw139 / 29 unique fire. Farm-not-switched: 52. Never-farm: 58 (54 high-div correct, 4 low-div anomaly). |
+| SCP + commit | gom_e.py → VPS d965c5a. probe scripts ở scratch/. |
+
+### Số key
+
+| | |
+|---|---|
+| Canonical fire events | 47 (Definition A) |
+| Old code (pre-L-28) | 42 |
+| P3 original | 43 |
+| Diff old→new | +5: KOMA(intended) + INUSDT 07-03 + SOONUSDT 07-06 + POWERUSDT 07-07 + TSTUSDT 08-02 |
+| Registry ever-OOS | 81 / 139 fw139 |
+| Farm-not-switched | 52 (intel: chưa đổi chế độ trong OOS) |
+| Never-farm | 58 (high-div throughout) |
+
+### Pending
+
+- T2 docstring "Same tag doesn't refire" SAI — code là unconditional 3d, zero tag check. Operator chưa quyết (a) sửa docstring, (b) add T2 exception giống T1.
+- BROCCOLIF3BUSDT không có trong fw139 — cần operator xác nhận tên symbol đúng.
+- BANANAS31 negative test C4 deadline 15/08.
+- C1 spec sign-off deadline ≤14/08.
+- proposals/gom_e_mode_switch spec: cập nhật wording cooldown exception → Definition A (xem bên dưới).
+
+### Low-div never-farm anomalies (cần kiểm nếu cần)
+
+BMTUSDT avg=0.47 · DOODUSDT avg=0.42 · TOSHIUSDT avg=0.53 · MIRAUSDT avg=0.76 — avg div thấp nhưng không vào registry. Có thể do LSR gap hoặc H2 fail.
+
+---
+
 ## SESSION 2026-08-10 (26) — ÁN GUARD-CÂM P1
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
@@ -7592,3 +7635,27 @@ Flag: [WINDOW-EDGE] cho E4 trong calib record. FIRE 07-17 (E1E2E3) không bị �
 - Ghi chú calib: "E1_d(07-17) bị giảm bởi post-cover dip 07-16 từ cooldown window 07-12".
 
 PENDING operator: 2-fire story = hai cover độc lập hay cùng sự kiện? CHUA đóng ON làm calib trích dẫn.
+
+### GOM-E BACKFILL WARMUP A — DONE (11/08/2026 09:03 UTC)
+
+**Script:** `scratch/gom_e_backfill_warmup_a.py` → SCP → VPS `/tmp/` → chạy SSH  
+**Store:** `/root/Data_back_test/whale_data/data/gom_e_ref_store.csv` — TẠO MỚI  
+**Kết quả:** ok_raw=128, miss_raw=0, miss_canonical=0, skipped_dup=0  
+**Ngày:** 2026-08-09 + 2026-08-10. **Symbols:** 64 registry tokens.
+
+**Bug fix phát hiện trong run:** Binance `topLongShortPositionRatio` + `openInterestHist` dùng **end-of-period timestamp** (`m_ms+3600000 = 01:00 UTC`), không phải start-of-period. Check ban đầu `ts == m_ms` → MISS_RAW toàn bộ. Fix: `m_ms <= ts <= m_ms + 3_600_000`. Store xóa + chạy lại sau fix.
+
+**5 dòng mẫu (pos_raw_1h ⟂ pos_canonical):**
+
+| date | symbol | pos_raw_1h | pos_canonical | gap_pct |
+|---|---|---|---|---|
+| 2026-08-09 | 1000000BOBUSDT | 1.7007 | 1.7115 | −0.0063 |
+| 2026-08-09 | 4USDT | 1.4824 | 1.4699 | +0.0085 |
+| 2026-08-09 | ACUUSDT | 1.111 | 1.1094 | +0.0014 |
+| 2026-08-09 | AGTUSDT | 1.5648 | 1.5628 | +0.0013 |
+| 2026-08-09 | AIAUSDT | 1.9226 | 1.9284 | −0.0030 |
+
+**gap_pct pattern:** phần lớn ±0.01 (tight seam). Outlier: COOKIEUSDT (±0.04), TRADOORUSDT 08-10 (−0.0335), XANUSDT 08-10 (+0.0226) — intra-day move giữa 00:00-01:00 UTC vs canonical snapshot.  
+**我踏马来了USDT:** OK (raw=1.5222, gap=−0.0037) — non-ASCII symbol handled gracefully.
+
+Store sẵn sàng. DỪNG — chờ operator duyệt sample rows.

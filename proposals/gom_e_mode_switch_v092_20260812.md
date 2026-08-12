@@ -35,8 +35,11 @@ FIRE = E1 AND E2 → alert "MODE-SWITCH-CANDIDATE" + tag cơ chế (KHÔNG chặ
   [DENOM-ASSIST] nếu |d_acc_2d| > d_pos_2d → div lên nhờ mẫu sập (flush-shape, GUA 05–07/08)
   [OI-EXPAND]    nếu d_oitok_2d > +0.10 → long mới chứ không phải cover — loại nghi ngờ
   + [marginal] cho mọi giá trị sát ngưỡng.
-Cooldown: cùng token không lặp alert trong 3 ngày trừ khi tag cơ chế ĐỔI (DENOM→NUM
-= tin mới, bắn lại).
+Cooldown: cùng token không lặp alert trong 3 ngày.
+Exception cooldown (L-28): lần trước E3=False (OI nở, d_oitok>0: OI-EXPAND hoặc MIXED)
+  VÀ lần này E3=True (OI co, d_oitok≤0: cover thật) → refire sớm.
+  Chiều ngược (E3=True→False) và E3=True→True: block bình thường.
+  [Implement: last_fire_e3 bool trong state; không phụ thuộc tag-name. Commit d965c5a]
 
 ## §2. OUTPUT HÀNG NGÀY (hai bảng, Telegram + log append-only)
 Bảng A — HEDGE-FARM REGISTRY: symbol · ngày-trong-mode · div_avg3 · gLSR · f_avg
