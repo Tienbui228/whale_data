@@ -212,7 +212,8 @@ def _t2_daily_quota_hit(symbol: str, run_date: str, t2_state: dict) -> bool:
 
 
 def _t2_cooldown_blocked(symbol: str, run_date: str, t2_state: dict) -> bool:
-    """T2 cooldown 3d (độc lập T1). Same tag doesn't refire."""
+    """T2 cooldown 3d (độc lập T1). Vô điều kiện — không có tag exception.
+    T2 = provisional early-warning, 1 ping/ngày; self-limit đủ qua unconditional block."""
     last_ping = t2_state.get(symbol, {}).get("last_ping_date")
     if last_ping:
         days_since = (pd.Timestamp(run_date) - pd.Timestamp(last_ping)).days

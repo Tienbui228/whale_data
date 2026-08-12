@@ -5,6 +5,8 @@ Format cột Status: `QUEUED` / `DOING` / `DONE <commit>` / `BLOCKED <lý do>`
 
 | ID | Ngày giao | Tóm tắt | Status |
 |----|-----------|---------|--------|
+| PARK-BROCCOLIF3B | 12/08 | BROCCOLIF3BUSDT không có trong fw139 — tra tên đúng, kiểm delist/drift. Chạy SAU C4 (15/08). | QUEUED — sau C4 |
+| PARK-H1-HIDDEN | 12/08 | DOODUSDT(avg_div=0.42)/TOSHIUSDT(avg_div=0.53) div thấp nhưng không vào registry — đọc code eval_hedge_farm entry, có điều kiện ẩn ngoài div_avg3 không (H2 funding? LSR gap?). Chạy SAU C4. | QUEUED — sau C4 |
 | MARGINAL-V4 | 11/08 | Marginal logger chạy từ 11/08. Đồng hồ V4: nếu đến 25/08 — **≤3 chuỗi/2 tuần mở-đóng-lặp vì A2/A3 marginal → đóng án (logger-only)**; **>3 HOẶC giết-mở-giết ≥2 vòng → mở proposals/persist2d_contingency_PENDING.md + re-gate + operator ký**. data/logs/marginal_hits.csv; mốc nộp 25/08. | DOING — đồng hồ bắt đầu 11/08 |
 | COOKIE-GATE-PASS | 11/08 | V5(a): khi operator ký → đóng băng. Án COOKIE ②③ chấm hồi tố CHỈ SAU khi C1-spec thành văn ký (không chấm trên con trỏ). C1 hiện tại (v1.5) = code-pointer `stealth_grind(days,i,cfg)` — THIẾU thành văn tự đứng. | BLOCKED — chờ C1-spec thành văn (deadline 14/08) + operator V5(a) ký |
 | XS | 06/08 | XPIN spot/DEX/Alpha audit XS1-XS4: 181 bars GeckoTerminal, wash test, detection floor $571K/day | DONE 4d3f676 7104037 |
