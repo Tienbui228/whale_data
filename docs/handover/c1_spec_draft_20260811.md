@@ -1,12 +1,12 @@
 ---
-topic: C1 stealth_grind — spec thành văn (FINAL v2)
+topic: C1 stealth_grind — spec thành văn (FINAL v3)
 purpose: Operator ký ≤14/08 → gate C4 15/08
 deadline: 14/08/2026 (đường găng gate 15/08)
 author: Agent claude-sonnet-4-6
 confirmed: 2026-08-12
 ---
 
-# C1 stealth_grind — Spec thành văn (FINAL v2 — sẵn sàng operator ký)
+# C1 stealth_grind — Spec thành văn (FINAL v3 — sẵn sàng operator ký)
 
 ## Số hiện hành — đã xác nhận
 
@@ -68,6 +68,21 @@ Từ `scanner/screener/thresholds.yaml` (calibrated P0-close 2026-07-28), runtim
 > - `avg_px[i] = NaN` — giá ngày i không có (early-exit; j=i trong existential cũng NaN-filtered)
 > - `median14_oi ≤ 0 hoặc NaN` — OI baseline vỡ; 1.3×0=0 trivially true → silent-pass → FALSE
 > - `tb_valid rỗng` (toàn bộ B không có taker data hợp lệ) → C1 FALSE
+>
+> **Ghi nhận về synthetic NaN trong B (gate BANANAS31):**
+>
+> *GHI 1 — cửa sổ co quanh gap:* Khi B chứa synthetic NaN (missing data, không phải tín hiệu),
+> cửa sổ hiệu dụng co lại nhưng không bao giờ về 0 real: 3 synthetic liên tiếp (Jul 24–26) +
+> B=5 → min real_oi = **2** (verified i=Jul26/27/28, probe 2026-08-12). (ii) không bao giờ
+> FALSE-by-toàn-synthetic. Verdict ghi rõ: "quanh gap Jul24–26, B hiệu dụng <5 ngày; breakout/
+> OI-surge trong gap không quan sát được — không kết luận không-grind cho vùng đó."
+> i∈{Jul24,25,26}: skip-by-guard (avg_px[i]=NaN), không đánh giá signal.
+>
+> *GHI 2 — existential độc lập:* j thỏa (i) và j thỏa (ii) có thể là **ngày khác nhau** trong B.
+> C1=TRUE không yêu cầu một ngày thỏa cả ba — chỉ cần breakout ∃ và OI-surge ∃ và taker-max<55
+> (trên toàn B). Thiết kế đúng cho grind: breakout và OI lệch ngày là bình thường.
+> Verdict ghi: "grind confirmed" = ba điều kiện thỏa đồng thời (có thể ngày khác nhau), không
+> phải một ngày thỏa cả ba.
 
 ---
 
@@ -81,6 +96,10 @@ Từ `scanner/screener/thresholds.yaml` (calibrated P0-close 2026-07-28), runtim
 - [x] ii-OI GUARD: `median14_oi ≤ 0/NaN → FALSE` thêm vào FALSE-cases (song song range_lo ≤ 0)
 - [x] nhỏ-(a): R = "≤14 ngày, min 7" (guard len<7 đã ghi)
 - [x] nhỏ-(b): vế thừa `avg_px[i] ≥ target` bỏ — existential trên B (i∈B) đã gồm
+- [x] synthetic NaN B: min real=2 trong B quanh gap Jul24-26 — (ii) không FALSE-by-toàn-synthetic (probe 2026-08-12)
+- [x] GHI 1: cửa sổ co quanh gap, verdict template đúng
+- [x] GHI 2: existential (i)/(ii) độc lập — "grind confirmed" = 3 điều kiện thỏa, không nhất thiết cùng ngày
+- [x] **ANALYSIS confirm logic** — 2026-08-12
 - [ ] **Operator ký — deadline 14/08/2026**
 
 Sau khi operator ký → agent cập nhật gom_detect_spec.md §1.3 C1 row + xóa [PROVISIONAL] + §6 nếu số thay đổi.
