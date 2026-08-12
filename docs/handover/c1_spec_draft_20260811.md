@@ -1,24 +1,16 @@
 ---
-topic: C1 stealth_grind — bản thảo spec thành văn
-purpose: ANALYSIS xác nhận số canonical + nhả bản cuối → operator ký ≤14/08
+topic: C1 stealth_grind — spec thành văn (FINAL)
+purpose: Operator ký ≤14/08 → gate C4 15/08
 deadline: 14/08/2026 (đường găng gate 15/08)
 author: Agent claude-sonnet-4-6
-date: 2026-08-11
+confirmed: 2026-08-12
 ---
 
-# C1 stealth_grind — Draft spec thành văn (chờ ANALYSIS xác nhận)
+# C1 stealth_grind — Spec thành văn (FINAL — sẵn sàng operator ký)
 
-## Tại sao cần file này
+## Số hiện hành — đã xác nhận
 
-Spec v1.5 §1.3 viết C1 dưới dạng code-pointer:
-> `stealth_grind(days, i, cfg)` từ signals.py | Giá tăng chậm +9%+ trên range 14d trong 5d + OI ≥1.3×med14 + taker<55%
-
-Con trỏ này **không đủ tự đứng**: thiếu định nghĩa `range_end`, thiếu OR-check, thiếu taker-max-window.
-Gate 15/08 không chấm được C1 nếu người chấm phải giải thích code.
-
-## Số hiện hành — xác nhận trước khi thành văn
-
-Từ `scanner/screener/thresholds.yaml` (calibrated P0-close 2026-07-28):
+Từ `scanner/screener/thresholds.yaml` (calibrated P0-close 2026-07-28), runtime-confirmed commit 4606b86b:
 
 | Tham số | Giá trị hiện hành | Gốc P0 lock | Lý do thay đổi |
 |---------|------------------|-------------|----------------|
@@ -27,14 +19,13 @@ Từ `scanner/screener/thresholds.yaml` (calibrated P0-close 2026-07-28):
 | `breakout_days` | 5 | 5 | không đổi |
 | `taker_buy_max` | 55.0 | 55.0 | không đổi |
 
-Spec v1.5 đang ghi "+9%" và "1.3×" — KHỚP giá trị thresholds.yaml hiện hành. Số trong spec đúng.
+0.09/1.3× là **canonical hiện hành** (runtime-confirmed). Comment cũ 0.15/1.5 = STALE (fix commit 4606b86b).
 
-**[CHỜ ANALYSIS XÁC NHẬN]:** 0.09/1.3× là semantic intent đã ký, hay ANALYSIS muốn revert về 0.15/1.5×?
-Đây là câu hỏi nghĩa-học (dùng TUT làm calibration case = ý định), không phải câu hỏi kỹ thuật.
+**Ngưỡng review v-tiếp (không block ký):** calibrate lại 0.09/1.3× khi có ≥2 case đối chứng mới sau TUT. Ghi nhận tồn đọng — không reopen C1.
 
 ---
 
-## C1 — Bản thảo thành văn (từ code, agent draft)
+## C1 — Bản thành văn (verified từ code scanner/screener/signals.py:392-436)
 
 > **C1: stealth_grind(days, i)**
 >
@@ -43,11 +34,14 @@ Spec v1.5 đang ghi "+9%" và "1.3×" — KHỚP giá trị thresholds.yaml hi�
 > **Định nghĩa:**
 >
 > Cho:
-> - `B = days[i−4 .. i]` — **build window** (5 ngày cuối, inclusive)
-> - `R = days[i−18 .. i−5]` — **range window** (14 ngày avg_px, kết thúc trước B)
->   (cụ thể: `range_end = i − breakout_days = i − 5`, `_window(days, range_end, 14, "avg_px")`)
+> - `B = days[i−4 .. i]` — **build window** (5 ngày cuối, inclusive; `range(i−4, i+1)`)
+> - `R = days[i−18 .. i−5]` — **range window** (14 ngày, kết thúc ngay trước B)
+>   (cụ thể: `range_end = i − breakout_days = i − 5`; `_window(days, range_end, 14, field)`)
+> - **B và R không chồng lấp (L-24 guard):** R kết thúc tại i−5, B bắt đầu tại i−4 — không có ngày chung.
 > - `range_hi = max(avg_px trong R)`, `range_lo = min(avg_px trong R)`
-> - `target = range_hi × (1 + breakout_pct)`   ← **[ANALYSIS XÁC NHẬN: breakout_pct = 0.09]**
+> - `target = range_hi × (1 + breakout_pct)`  (breakout_pct = **0.09**)
+> - `median14_oi = median(oi_usd trong R)` — **cùng window R** (i−18..i−5), KHÔNG phải 14d kết thúc tại i
+>   (code: `_median14(days, i − brk_days, "oi_usd")` = `_window(days, i−5, 14, "oi_usd")` ✓)
 >
 > **C1 = TRUE** khi tất cả đồng thời:
 >
@@ -58,8 +52,8 @@ Spec v1.5 đang ghi "+9%" và "1.3×" — KHỚP giá trị thresholds.yaml hi�
 >
 > **(ii) OI surge (≥1 ngày trong B):**
 >   Tồn tại ≥1 ngày j ∈ B sao cho:
->   `oi_usd[j] ≥ oi_mult × median14(oi_usd tại R)`  ← **[ANALYSIS XÁC NHẬN: oi_mult = 1.3]**
->   (median14 tính trên range window R, KHÔNG bao gồm B)
+>   `oi_usd[j] ≥ oi_mult × median14_oi`  (oi_mult = **1.3**)
+>   (median14_oi lấy trên R — cùng window với range_hi/lo, không bao gồm B)
 >
 > **(iii) Taker constraint (max trên B):**
 >   `max(taker_buy_pct[j] for j ∈ B where data valid) < taker_buy_max (= 55.0)`
@@ -74,11 +68,12 @@ Spec v1.5 đang ghi "+9%" và "1.3×" — KHỚP giá trị thresholds.yaml hi�
 
 ---
 
-## Checklist ANALYSIS cần làm
+## Trạng thái xác nhận
 
-- [ ] Xác nhận: `breakout_pct = 0.09` là ý định canonical (không phải artifact từ TUT calibration)?
-- [ ] Xác nhận: `oi_mult = 1.3` là ý định canonical?
-- [ ] Review 3 mục structural: range_end, OR-check, taker-max — đúng không, thiếu gì không?
-- [ ] Nhả bản C1 cuối (hoặc sửa draft này) để operator ký
+- [x] Số canonical 0.09/1.3× — runtime-confirmed (commit 4606b86b), không reopen
+- [x] Structural: range_end, OR-check, taker-max-window — verified từ signals.py:392-436
+- [x] B/R non-overlap — confirmed: R[i−18..i−5] → B[i−4..i], không chồng lấp (L-24 guard)
+- [x] median14_oi = R window — verified: `_median14(days, i−5, "oi_usd")` = `_window(days, i−5, 14, ...)` = i−18..i−5 ✓
+- [ ] **Operator ký — deadline 14/08/2026**
 
-Sau khi ANALYSIS xác nhận → agent cập nhật gom_detect_spec.md §1.3 C1 row + conformance row + rerun §6 nếu số thay đổi → operator ký ≤14/08.
+Sau khi operator ký → agent cập nhật gom_detect_spec.md §1.3 C1 row + xóa [PROVISIONAL] + §6 nếu số thay đổi.
