@@ -15,6 +15,7 @@ Usage:
 from __future__ import annotations
 
 import csv
+import os
 import sys
 import json
 import math
@@ -1181,6 +1182,13 @@ def run_daily(
 
     # ── Load existing state (carry over DQ episode fields if any) ─────────────
     all_state = load_state()
+    # §8.2 P0 guard: full-rebuild MUST NOT silently overwrite live chains (L-34/P0)
+    if not incremental:
+        _live = [t for t, c in all_state.items() if c.get("chain_open")]
+        if _live and os.environ.get("GOM_ALLOW_OVERWRITE_LIVE") != "1":
+            raise RuntimeError(
+                f"§8.2 BLOCK: full-rebuild sẽ xóa {len(_live)} chain đang sống: {_live}. "
+                f"Đây là kịch bản P0. Nếu THẬT muốn đè, set GOM_ALLOW_OVERWRITE_LIVE=1.")
     # Capture tokens that were open BEFORE this run — used to filter CLOSED TODAY
     prev_open_tokens: set[str] = {t for t, c in all_state.items() if c.get("chain_open")}
 

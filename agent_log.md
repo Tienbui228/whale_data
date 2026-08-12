@@ -2,6 +2,66 @@
 
 ---
 
+## SESSION 2026-08-12 (cont.4) — FORMAT MỚI + GUARD RAISE
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Việc đã làm
+
+| Hạng mục | Kết quả |
+|---|---|
+| run_gom_daily.py format mới | RÒNG(net>0) / CHURN(net≤0) tách nhóm, Δ=+X%vsVWAP, Q2 INFER bỏ, S-MISS 1 dòng |
+| closed_chapters_{YYYY-MM}.csv | Writer thêm vào main(), ghi sau mỗi cron run |
+| _tg_split split point | Cập nhật: "OPEN CHURN" thay "CHƯƠNG ĐÃ ĐÓNG" |
+| gom_scan.py guard RAISE | §8.2 P0: full-rebuild đè chain sống → RuntimeError (cần GOM_ALLOW_OVERWRITE_LIVE=1) |
+| `import os` thêm vào gom_scan | Guard cần os.environ — missing import fixed |
+| Test guard | TEST 1 (live chains): PASS (RuntimeError raised). TEST 2 (no live): PASS (no raise, ran ok) |
+
+### Lesson ghi (CẦN OPERATOR thêm vào CASE_INDEX.xlsx sheet LESSONS):
+
+> **L-xx: full-rebuild đè chain sống = kịch bản P0, phải RAISE không WARN.**
+> Env var thứ hai `GOM_ALLOW_OVERWRITE_LIVE=1` gate riêng — khác `GOM_ALLOW_FULL_REBUILD=1`.
+> Precedent: P0 10/08 mất chapter forensic dài. Chi phí guard = 1 env var khi hiếm khi thật muốn đè.
+> Áp dụng: bất kỳ incremental=False path nào viết lại state có chain_open=True.
+
+*(lessons_learned.md không edit trực tiếp — phải qua sheet LESSONS CASE_INDEX.xlsx per CLAUDE.md)*
+
+---
+
+## SESSION 2026-08-12 (cont.3) — GOM BACKTEST V3 COMPLETE
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Việc đã làm
+
+| Hạng mục | Kết quả |
+|---|---|
+| _probe_gom_backtest_v3_20260812.py | Fix f-string lỗi, SCP + chạy VPS. Output → docs/reports/gom_backtest_v3_20260812.txt |
+| Store status | 08-11 max (08-12 klines chưa đóng). complete_cutoff=2026-07-28. |
+| Backtest đủ-window | n=48 fires. Median max_gain +7.3% vs nền +8.4%. Edge overall +0.3%. |
+| Threshold hits (GOM vs nền) | ≥10%: 19/48 vs 7/48 (2.7×). ≥15%: 13/48 vs 0. ≥20%: 9/48 vs 0. ≥30%: 6/48 vs 0. |
+| Regime split | DOWN(n=25): edge=+1.3% hit≥20%=4/25. FLAT(n=21): edge=-2.0% hit≥20%=5/21. UP(n=2): edge=-11.2%. |
+| APR evidence | Store cắt cụt: +1.6% (6d avg_px). mark_price high 08-12: +90.7%. avg_px sẽ thấp hơn. Chờ 08-20 để chốt. |
+| Fires chưa-đủ | 33 fires, T+5 median edge = +0.1%. Notable: COOKIE T+5=+45.2%, CAP +68.9%, BANANAS31 +0.2%. |
+
+### Số key backtest
+
+| Metric | Giá trị |
+|---|---|
+| Complete fires (≤07-28) | n=48 |
+| Median max_gain | +7.3% (nền +8.4%) |
+| Hit ≥20% | 9/48 GOM vs 0/48 nền (inf lift) |
+| Hit ≥30% | 6/48 GOM vs 0/48 nền (inf lift) |
+| DOWN regime edge | +1.3% (n=25) |
+| APR mark high proxy | +90.7% (store max +1.6%, cắt cụt) |
+
+### Pending từ session này
+- Chờ 08-13 01:20 UTC: freshwatch export cập nhật 08-12
+- Chờ 08-20: APR đủ 14d window → tái chạy backtest (APR vào đủ-window group)
+- 15/08: BANANAS31 gate chạy verdict
+
+---
+
 ## SESSION 2026-08-12 (cont.2) — C1 SIGNED + BANANAS31 GATE ARMED
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6

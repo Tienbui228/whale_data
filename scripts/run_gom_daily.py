@@ -344,118 +344,109 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str, run_date: str 
 
             open_st = {t: c for t, c in _state_full.items()
                        if c.get("chain_open") and t in _fw_base}
-            sorted_chains = sorted(open_st.items(),
-                                   key=lambda x: x[1].get("Q1_cum_usd", 0), reverse=True)
-            for tok, ch in sorted_chains:
-                q1  = ch.get("Q1_cum_usd", 0.0)
-                nd  = ch.get("n_days", 0)
-                bk  = ch.get("break_streak", 0)
-                chp = ch.get("chapter", 1)
-                q1s = f"${q1/1_000:.0f}k" if q1 >= 1000 else "$0"
-                flag = "★" if q1 > 2_000_000 else " "
-                bk_s = f" brk={bk}" if bk > 0 else ""
 
-                # M4: gross (= Q1_cum) / net (oi_last - oi_start)
-                _net_raw = ch.get("net_oi_delta_usd", math.nan)
-                if not math.isnan(_net_raw):
-                    _net_s = f"${_net_raw/1_000:.0f}k" if abs(_net_raw) >= 1000 else f"${_net_raw:.0f}"
-                    if not math.isnan(q1) and q1 > 0:
-                        if _net_raw <= 0:
-                            _churn = " [churn-net<=0]"
-                        elif q1 > 2 * _net_raw:
-                            _churn = " [churn]"
-                        else:
-                            _churn = ""
-                    else:
-                        _churn = ""
-                    net_part = f" gross | net={_net_s}{_churn}"
+            # ── Build per-token info dict ─────────────────────────────────────
+            def _build_entry(tok, ch):
+                q1      = ch.get("Q1_cum_usd", 0.0)
+                net_raw = ch.get("net_oi_delta_usd", math.nan)
+                nd      = ch.get("n_days", 0)
+                bk      = ch.get("break_streak", 0)
+                chp     = ch.get("chapter", 1)
+                q1s     = f"${q1/1_000:.0f}k" if q1 >= 1_000 else "$0"
+                bk_s    = f" bk={bk}" if bk > 0 else ""
+                if not math.isnan(net_raw):
+                    _abs = abs(net_raw)
+                    _sgn = "+" if net_raw >= 0 else "-"
+                    net_s = f"{_sgn}${_abs/1_000:.0f}k" if _abs >= 1_000 else f"{_sgn}${_abs:.0f}"
                 else:
-                    net_part = ""
-
-                # M2: VWAP Tier 1 (ΔOI⁺-weighted) only when rep threshold met;
-                # else Tier 2 [vw-vol — seat-rotation chain]
-                _vn       = ch.get("vwap_num", 0.0)
-                _vd       = ch.get("vwap_den", 0.0)
-                _oi_st    = ch.get("oi_start_usd", 0.0) or 0.0
-                _t1_ok    = (_vd > 0
-                             and (_oi_st <= 0 or _vd >= _vwap_rep_frac * _oi_st))
+                    net_s = "N/A"
+                _vn    = ch.get("vwap_num", 0.0)
+                _vd    = ch.get("vwap_den", 0.0)
+                _oi_st = ch.get("oi_start_usd", 0.0) or 0.0
+                _t1_ok = _vd > 0 and (_oi_st <= 0 or _vd >= _vwap_rep_frac * _oi_st)
                 if _t1_ok:
-                    _vv       = _vn / _vd
-                    _vwap_tag = ""
+                    _vv = _vn / _vd
                 else:
                     _vvn = ch.get("vwap_vol_num", 0.0)
                     _vvd = ch.get("vwap_vol_den", 0.0)
                     _vv  = _vvn / _vvd if _vvd > 0 else math.nan
-                    _vwap_tag = "[vw-vol — seat-rotation chain]" if _vvd > 0 else ""
-                vwap_s = (f"VWAP=${_vv:.4f}{_vwap_tag}"
-                          if not math.isnan(_vv) else "VWAP=N/A")
-
-                # px_now and Δ% vs VWAP
                 _px = _px_map.get(tok, math.nan)
-                if not math.isnan(_px):
-                    px_s = f"px=${_px:.4f}"
-                    if not math.isnan(_vv) and _vv > 0:
-                        _pct  = (_px - _vv) / _vv * 100
-                        _arr  = "↑" if _pct >= 0 else "↓"
-                        pct_s = f" {_arr}{abs(_pct):.1f}%"
-                    else:
-                        pct_s = ""
+                px_s = f"{_px:.4f}" if not math.isnan(_px) else "N/A"
+                if not math.isnan(_px) and not math.isnan(_vv) and _vv > 0:
+                    _pct = (_px - _vv) / _vv * 100
+                    dpct_s = f"Δ={'+'if _pct>=0 else ''}{_pct:.1f}%vsVWAP"
                 else:
-                    px_s  = ""
-                    pct_s = ""
+                    dpct_s = "Δ=N/A"
+                return dict(tok=tok, chp=chp, nd=nd, bk_s=bk_s,
+                            q1=q1, q1s=q1s, net_raw=net_raw, net_s=net_s,
+                            px_s=px_s, dpct_s=dpct_s)
 
-                # Q2-dải [INFERENCE]: oi_last × [0.2, 0.8] — range estimate for dist phase
-                _oi_last = ch.get("oi_last_usd", math.nan)
-                if not math.isnan(_oi_last) and _oi_last > 0:
-                    _q2lo = _oi_last * 0.2 / 1e6
-                    _q2hi = _oi_last * 0.8 / 1e6
-                    _q2s = f" Q2=${_q2lo:.1f}–{_q2hi:.1f}M[INFER]"
+            ron_entries   = []   # net > 0
+            churn_entries = []   # net ≤ 0
+
+            for tok, ch in open_st.items():
+                e = _build_entry(tok, ch)
+                if not math.isnan(e["net_raw"]) and e["net_raw"] > 0:
+                    ron_entries.append(e)
                 else:
-                    _q2s = ""
+                    churn_entries.append(e)
 
-                # M5: CONFIRM 0.1 — đáy-nền chưa xác nhận = hiển thị nhãn (tầng HUMAN)
-                _c01 = ch.get("confirm_01", False)
-                _c01_tag = " [CONFIRM 0.1: unconfirmed]" if not _c01 else ""
+            ron_entries.sort(key=lambda x: -(x["net_raw"] if not math.isnan(x["net_raw"]) else 0))
+            churn_entries.sort(key=lambda x: -(x["net_raw"] if not math.isnan(x["net_raw"]) else float("-inf")))
 
-                _line = f"{flag} {tok} ch{chp} n={nd}{bk_s} Q1={q1s}{net_part} {vwap_s}"
-                if px_s:
-                    _line += f" {px_s}{pct_s}"
-                if _q2s:
-                    _line += _q2s
-                if _c01_tag:
-                    _line += _c01_tag
-                chain_details.append(_line)
+            def _ron_line(e):
+                flags = " [Q1=0]" if e["q1"] == 0 else ""
+                return (f"  {e['tok']}  ch{e['chp']} n={e['nd']}{e['bk_s']}"
+                        f"  Q1={e['q1s']}  net={e['net_s']}"
+                        f"  px={e['px_s']}  {e['dpct_s']}{flags}")
+
+            def _churn_line(e):
+                flags = "[Q1=0][churn]" if e["q1"] == 0 else "[churn]"
+                star  = f"  ★Q1={e['q1s']}" if e["q1"] >= 2_000_000 else ""
+                return (f"  {e['tok']}  ch{e['chp']} n={e['nd']}{e['bk_s']}"
+                        f"  net={e['net_s']}"
+                        f"  px={e['px_s']}  {e['dpct_s']}  {flags}{star}")
+
+            ron_lines   = [_ron_line(e)   for e in ron_entries]
+            churn_lines = [_churn_line(e) for e in churn_entries]
+            chain_details = ron_lines + churn_lines
         except Exception as exc:
-            chain_details.append(f"(state parse error: {exc})")
+            ron_lines     = [f"(state parse error: {exc})"]
+            churn_lines   = []
+            chain_details = ron_lines
 
-    n_open = len(chain_details)
-    stars = [l for l in chain_details if l.startswith("★")]
+    n_ron   = len(ron_lines)
+    n_churn = len(churn_lines)
+    n_open  = n_ron + n_churn
 
     msg_lines = [
-        f"📊 GOM Daily — data_date={target_date} · run={run_date}T{run_utc}Z",
+        f"📊 GOM Daily — data={target_date}  run={run_date}T{run_utc}Z",
         f"Universe: fw139@139 | A1∧A2∧A3∧(A4∨A5) | B1∧(B2∨B3)∧B4 | C β-PROV",
         f"",
-        f"OPEN ({n_open}/139):",
+        f"OPEN GOM RÒNG (net>0) — {n_ron}/{n_open}  ← soi trước",
     ]
-    msg_lines += [f"  {c}" for c in chain_details] if chain_details else ["  (none)"]
-
-    if stars:
-        msg_lines.append(f"★ Q1>$2M: {', '.join(t.split()[1] for t in stars)}")
-    else:
-        msg_lines.append("★ Q1>$2M: NONE")
+    msg_lines += ron_lines if ron_lines else ["  (none)"]
+    msg_lines += [
+        f"",
+        f"OPEN CHURN/ROTATION (net≤0) — {n_churn}/{n_open}  ← tin cậy thấp",
+    ]
+    msg_lines += churn_lines if churn_lines else ["  (none)"]
 
     if closed_today:
         closed_str = ", ".join(closed_today[:10])
         if len(closed_today) > 10:
             closed_str += f" (+{len(closed_today)-10})"
         msg_lines.append(f"CLOSED TODAY: {closed_str}")
+        msg_lines.append(f"xem đầy đủ: closed_chapters_{target_date[:7]}.csv (N chương)")
 
+    # S-MISS — one line
     if smissing_today_n > 0:
-        msg_lines.append(f"⚠ S-MISS TODAY: {smissing_today_n} — check export timing!")
+        smiss_s = f"⚠ S-MISS TODAY: {smissing_today_n} — check export timing!"
     else:
-        msg_lines.append(f"S-MISS today: 0 ✓")
+        smiss_s = "S-MISS today: 0 ✓"
     if smissing_hist_n > 0:
-        msg_lines.append(f"S-MISS hist: {smissing_hist_n} (short history, normal)")
+        smiss_s += f"  |  hist: {smissing_hist_n} (known NaN gap, normal)"
+    msg_lines.append(smiss_s)
 
     # GOM-C CAMPAIGN-TRACK section (D4: tách riêng, header, cột rõ ràng)
     if (gomc_beta_line and "0 fires" not in gomc_beta_line) or gomc_beta_supp:
@@ -500,15 +491,9 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str, run_date: str 
             first_s = parts_s.get("first", "?")[-5:]  # MM-DD
             msg_lines.append(f"  ⏸ {tok_s} cooldown {cd_s} (first-fire {first_s})")
 
-    # Closed chains (60d window)
-    closed_sec = _closed_section(_state_full, _fw_base, target_date)
-    if closed_sec:
-        msg_lines.append(closed_sec)
-
     msg_lines += [
         "",
-        "VWAP = giá vốn ước của build TRONG cửa sổ chuỗi — không đo kho hình thành trước (TUT kho 83% cost ABSTAIN). Đọc là floor kinh tế + mốc invalidate, không phải điểm entry.",
-        "PARTI [status pending] | ZBT perp sống",
+        "VWAP = giá vốn ước của build TRONG cửa sổ chuỗi — floor kinh tế + mốc invalidate, không phải điểm entry.",
         summary if summary else f"[{n_open} open / 139 scanned]",
     ]
 
@@ -542,12 +527,12 @@ def _tg_split(report: str) -> list:
     footer_str = "\n".join(lines[fi:])
     body_lines = lines[:fi]
 
-    # Natural split: blank line immediately before "CAMPAIGN-TRACK" or "CHƯƠNG ĐÃ ĐÓNG"
+    # Natural split: blank line before "OPEN CHURN" or "CAMPAIGN-TRACK"
     split_i = None
     for i in range(len(body_lines) - 1):
         if body_lines[i] == "" and (
-            body_lines[i + 1].startswith("CAMPAIGN-TRACK") or
-            body_lines[i + 1].startswith("CHƯƠNG ĐÃ ĐÓNG")
+            body_lines[i + 1].startswith("OPEN CHURN") or
+            body_lines[i + 1].startswith("CAMPAIGN-TRACK")
         ):
             split_i = i
             break
@@ -575,6 +560,50 @@ def _tg_split(report: str) -> list:
     if len(msg2) > _TG_LIMIT:
         msg2 = msg2[:_TG_LIMIT - 10].rsplit("\n", 1)[0] + "\n[+cont]"
     return [msg1, msg2, footer_str]
+
+
+# ── Closed-chapters CSV writer ────────────────────────────────────────────────
+
+def _write_closed_chapters_csv(target_date: str) -> int:
+    """Write closed_chapters_{YYYY-MM}.csv for the target month. Returns row count."""
+    import csv as _csv_w
+    from datetime import datetime as _dt, timedelta as _td
+    month = target_date[:7]
+    out_path = STORE / f"closed_chapters_{month}.csv"
+    try:
+        with open(STATE_PATH, encoding="utf-8") as f:
+            state = json.load(f)
+    except Exception:
+        return 0
+    fw_list = [l.strip() for l in FW_SYM_PATH.read_text(encoding="utf-8").splitlines() if l.strip()]
+    fw_base = {s[:-4] if s.endswith("USDT") else s for s in fw_list}
+    rows = []
+    for tok, ch in state.items():
+        if tok not in fw_base or ch.get("chain_open"):
+            continue
+        close_d = (ch.get("close_date") or "")[:10]
+        if not close_d or close_d[:7] != month:
+            continue
+        rows.append({
+            "token":        tok,
+            "chapter":      ch.get("chapter", 1),
+            "start_date":   ch.get("start_date", ""),
+            "close_date":   close_d,
+            "close_reason": ch.get("close_reason", ""),
+            "n_days":       ch.get("n_days", 0),
+            "Q1_cum_usd":   round(ch.get("Q1_cum_usd", 0.0), 2),
+            "net_oi_delta": round(ch.get("net_oi_delta_usd", float("nan")), 2),
+            "peak_pos_r":   round(ch.get("peak_pos_r", float("nan")), 3),
+        })
+    rows.sort(key=lambda r: r["close_date"])
+    if rows:
+        fieldnames = ["token","chapter","start_date","close_date","close_reason",
+                      "n_days","Q1_cum_usd","net_oi_delta","peak_pos_r"]
+        with open(out_path, "w", newline="", encoding="utf-8") as f:
+            w = _csv_w.DictWriter(f, fieldnames=fieldnames)
+            w.writeheader()
+            w.writerows(rows)
+    return len(rows)
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -673,6 +702,10 @@ def main() -> None:
     # Heartbeat: only written after confirmed TG delivery (C1 watchdog leg)
     HB_PATH.parent.mkdir(parents=True, exist_ok=True)
     HB_PATH.write_text(datetime.now(timezone.utc).isoformat(), encoding="utf-8")
+
+    # Write closed_chapters_{YYYY-MM}.csv after each successful run
+    _n_closed = _write_closed_chapters_csv(target_date)
+    _log(f"closed_chapters_{target_date[:7]}.csv written: {_n_closed} rows")
 
     print(stdout)
     if stderr:
