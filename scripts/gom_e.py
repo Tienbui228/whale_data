@@ -13,6 +13,13 @@ L-21: CẤM Coinglass — oi_token = oi_usd / px_avg (daily store). CẤM OI th�
       Khoản chứng kiến: probe B1b PART2 → Coinglass lệch 22% so openInterestHist.
 L-24: ĐỪNG lấy bar ngày-sai — T1-STORE capture EVAL=D_run-1, bar 00:00 UTC ngày EVAL.
 L-25: KHÔNG nguồn mới ngoài 4 endpoint canonical (period=1h) cho T1-STORE.
+L-28: RESTORE spec-intent cooldown exception — KHÔNG đổi luật.
+      Root cause: code cũ dùng proxy tag-name (DENOM→NUM) thay e3-gốc (off→on).
+      Sau khi MIXED branch thêm vào, [MIXED][DENOM-ASSIST] puts "MIXED" tại tags[0]
+      → old DENOM→NUM exception fail → KOMA 08-03 block sai.
+      Fix: exception quyết bằng e3-bool: last_fire_e3=False AND e3=True.
+      Lưu last_fire_e3 trong state (migration fallback: tag=="NUM-DRIVEN" → e3=True).
+      Canonical OOS fires: 47 (whipsaw-check 4 ca refire → 1-and-done, không loop).
 L-41: ngày-đã-đóng — EVAL = D_run − 1. CẤM gen pos_canonical ngày D_run trước 00:05 D_run+1.
 v2 boundary: "snapshot tại 00:00 UTC của ngày D = giá trị as_of_ts_ms == midnight_ms(D)"
              (proposals/archive/ratio_daily_canonical_20260731_v2.md)
@@ -341,14 +348,24 @@ def eval_mode_switch(df_sym: pd.DataFrame, target_date: str,
                 "d_oitok_2d": d_oitok_2d, "pin_streak": pin_streak}
 
     # Cooldown check
+    # L-28: exception quyết bằng e3-bool (d_oitok≤0), không tag-name.
+    # Proxy tag-name cũ (DENOM→NUM) phụ thuộc thứ-tự-append → MIXED+DENOM nuốt exception.
+    # Exception: OI nở (E3=False, d_oitok>0: OI-EXPAND hoặc MIXED) → OI co (E3=True,
+    #   d_oitok≤0: cover thật) = đổi cơ chế → refire sớm.
+    # Chiều ngược (E3=True→False) và E3=True→True: block bình thường.
     last_fire_date = sym_state.get("last_fire_date")
-    last_fire_tag  = sym_state.get("last_fire_tag", "")
     if last_fire_date:
+        # Derive last_fire_e3: ưu tiên field mới; fallback derive từ last_fire_tag (migration).
+        if "last_fire_e3" in sym_state:
+            last_fire_e3 = sym_state["last_fire_e3"]
+        elif sym_state.get("last_fire_tag"):
+            last_fire_e3 = (sym_state["last_fire_tag"] == "NUM-DRIVEN")
+        else:
+            _log(f"WARN cooldown {target_date} {target_date}: last_fire_date có, thiếu e3+tag → giả định False")
+            last_fire_e3 = False
         days_since = (pd.Timestamp(target_date) - pd.Timestamp(last_fire_date)).days
         if days_since < COOLDOWN_DAYS:
-            # Refire allowed if tag changes DENOM→NUM
-            new_tag = "NUM-DRIVEN" if e3 else ("DENOM-ASSIST" if not math.isnan(d_acc_2d) and not math.isnan(d_pos_2d) and abs(d_acc_2d) > d_pos_2d else "")
-            if not (last_fire_tag == "DENOM-ASSIST" and new_tag == "NUM-DRIVEN"):
+            if not (not last_fire_e3 and e3):           # exception: non-E3 → E3 only
                 return {"fire": False, "e1": e1, "e2": e2, "e3": e3, "e4": e4,
                         "div_raw": div_raw, "min5d": min5d, "min5d_count": min5d_cnt,
                         "d_pos_2d": d_pos_2d, "d_acc_2d": d_acc_2d,
@@ -623,8 +640,9 @@ def run_daily(target_date: str, store_dir: Path,
 
             if fire_res.get("fire"):
                 # Update state with last fire info
-                state[sym]["last_fire_date"] = target_date
-                state[sym]["last_fire_tag"]  = fire_res.get("tags", [""])[0] if fire_res.get("tags") else ""
+                state[sym]["last_fire_date"]  = target_date
+                state[sym]["last_fire_e3"]    = fire_res["e3"]          # L-28: e3-bool, không tags[0]
+                state[sym]["last_fire_tag"]   = fire_res.get("tags", [""])[0] if fire_res.get("tags") else ""  # audit only
                 state[sym]["last_fire_days_in_mode"] = days_in
 
                 alert_rows.append({
@@ -769,7 +787,8 @@ def run_backtest(symbols: list[str], store_dir: Path, date_from: str, date_to: s
 
             if fire and fire_res:
                 bt_state["last_fire_date"] = t_date
-                bt_state["last_fire_tag"]  = fire_res.get("tags", [""])[0] if fire_res.get("tags") else ""
+                bt_state["last_fire_e3"]   = fire_res["e3"]             # L-28: e3-bool, không tags[0]
+                bt_state["last_fire_tag"]  = fire_res.get("tags", [""])[0] if fire_res.get("tags") else ""  # audit only
 
             # Mark expected fire window
             marker = " *** FIRE ***" if fire else ""
