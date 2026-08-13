@@ -7865,3 +7865,42 @@ Store sẵn sàng. DỪNG — chờ operator duyệt sample rows.
 - Verdict: tầng HUMAN — operator đọc `_refresh_apr_20260811.md`
 
 **ÁN APR OPEN — DỪNG CHỜ ĐỌC.**
+
+---
+
+## GOM-A/B/C — ACUUSDT & CYSUSDT — 2026-08-13 06:06 UTC
+
+**Scope:** Chạy 3 detector GOM-A/B/C trên 2 token (3 tháng store, lsr_min_date Jun01→Aug07).
+**Output:** _collect_acu_cys_20260813.md
+
+### Lệnh chạy
+```
+python _probe_gom_acu_cys_20260813.py
+```
+
+### Kết quả số
+
+**ACUUSDT:**
+- Store: 68 rows (Jun01→Aug07), 65 LSR-valid, 3 NaN gaps (Jul24-26)
+- Peak: /usr/bin/bash.095635 Jun01 (TRONG store, ngay đầu → declining sau đó)
+- GOM-A: 0 fires. A1 fail (div_ratio=0.35–0.55 < 1.5). A2 fail (gLSR=2.9–4.2 >> 1.1). Suppressor DQ.
+- GOM-B: 0 fires. B1 số học thỏa (div_ratio≈0.44 ≤ 0.5) nhưng suppressor lsr_dist DQ (gLSR=3.0+).
+- GOM-C: 0 fires. Không có breakout 9% từ 14d high trong declining store.
+- Net OI: −0K (flat/slight decline Jun→Aug07). Verdict: churn/seat-rotation.
+
+**CYSUSDT:**
+- Store: 68 rows (Jun01→Aug07), 65 LSR-valid, 3 NaN gaps (Jul24-26)
+- Peak: /usr/bin/bash.812567 Aug06 (TRONG store = pump event)
+- GOM-A: 0 fires. gLSR > 1.1 phần lớn Jun–Jul → A2 fail. Post-pump DQ Aug04+.
+- GOM-B: 0 fires. Distribution Jun–Jul (OI −40%). Pump = short squeeze Aug04–07.
+- GOM-C: 0 fires. Aug05 funding_neg_div (f_avg=−0.001299) DQ ngay cửa pump.
+- OI narrative: 2.2M (Jun01) → .2M (Aug03) → 3.1M (Aug06, short squeeze).
+- Verdict: KHÔNG gom RÒNG. Pump = short squeeze (retail short vào pump, gLSR Aug05=0.459, funding crash −1.3e-3).
+
+### Ghi nhận kỹ thuật
+- fapi LSR endpoint 400 errors → toàn bộ LSR từ freshwatch CSV (đúng nguồn VPS canonical)
+- GOM-C dùng local reimplementation (_check_gom_c không export từ gom_scan.py)
+- taker CSV = ratio 0–1 (0.5 ≈ 50%), fapi days percentage (47–52) → display dị nhưng logic đúng
+- Store max = Aug07; Aug08–12 không có → analysis incomplete cho hậu-pump CYS
+
+**KẾT LUẬN: Cả 2 token KHÔNG có lực gom RÒNG. 0 chapter net>0. DỪNG chờ operator đọc _collect_acu_cys_20260813.md.**

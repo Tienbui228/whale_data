@@ -5,6 +5,7 @@ Format cột Status: `QUEUED` / `DOING` / `DONE <commit>` / `BLOCKED <lý do>`
 
 | ID | Ngày giao | Tóm tắt | Status |
 |----|-----------|---------|--------|
+| ACU-CYS-GOM | 13/08 | GOM-A/B/C on ACUUSDT + CYSUSDT (store Jun01→Aug07): 0/0/0 fires cả 2 token. ACU: churn/wrong-side (gLSR=3-4, div_ratio=0.44<1.5). CYS: distribution Jun-Jul + short squeeze Aug04-07 (funding=-1.3e-3). Kết luận: KHÔNG có lực gom RÒNG. | DONE — DỪNG CHỜ ĐỌC _collect_acu_cys_20260813.md |
 | APR-REFRESH | 13/08 | APR (aPriori) post-ignition audit P-0→P-6: multi-chain confirmed, DAILY Aug10-12 appended (294 rows), Aug12 SHORT SQUEEZE +192.3% $903M, GOM-D 4/4 PASS draft. Verdict tầng HUMAN. | DONE 75bd388 — DỪNG CHỜ ĐỌC |
 | VPS-SCP-P1 | 13/08 | SCP batch audit P1 fixes lên VPS: (B) taker_pct→taker_buy_pct (đã fix local 75bd388); (C) fundingInfo fail-open (đã fix local). Rebuild 5 CASE packs sau SCP. CẦN OPERATOR SSH vào VPS để pull/scp. | QUEUED — post-gate 15/08 |
 | PARK-BROCCOLIF3B | 12/08 | BROCCOLIF3BUSDT không có trong fw139 — tra tên đúng, kiểm delist/drift. Chạy SAU C4 (15/08). | QUEUED — sau C4 |
