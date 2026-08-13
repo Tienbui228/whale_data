@@ -5,6 +5,7 @@ Format cột Status: `QUEUED` / `DOING` / `DONE <commit>` / `BLOCKED <lý do>`
 
 | ID | Ngày giao | Tóm tắt | Status |
 |----|-----------|---------|--------|
+| CASE-CYS | 13/08 | CASE_CYS.xlsx COLD_START: C-0→C-8 collect CYSUSDT. 224 rows Jan-Aug12. GOM-C Aug07 PROVISIONAL (gate 15/08). Bốn vân: pos_r−63.5%(giảm), hedge Jul02-18, squeeze Aug05, on-chain missing. Verdict: C/D ô staged-pump — DỪNG CHỜ ĐỌC. | DOING — _collect_cys_20260813.md sẵn sàng |
 | ACU-CYS-GOM | 13/08 | GOM-A/B/C on ACUUSDT + CYSUSDT (store Jun01→Aug07): 0/0/0 fires cả 2 token. ACU: churn/wrong-side (gLSR=3-4, div_ratio=0.44<1.5). CYS: distribution Jun-Jul + short squeeze Aug04-07 (funding=-1.3e-3). Kết luận: KHÔNG có lực gom RÒNG. | DONE — DỪNG CHỜ ĐỌC _collect_acu_cys_20260813.md |
 | APR-REFRESH | 13/08 | APR (aPriori) post-ignition audit P-0→P-6: multi-chain confirmed, DAILY Aug10-12 appended (294 rows), Aug12 SHORT SQUEEZE +192.3% $903M, GOM-D 4/4 PASS draft. Verdict tầng HUMAN. | DONE 75bd388 — DỪNG CHỜ ĐỌC |
 | VPS-SCP-P1 | 13/08 | SCP batch audit P1 fixes lên VPS: (B) taker_pct→taker_buy_pct (đã fix local 75bd388); (C) fundingInfo fail-open (đã fix local). Rebuild 5 CASE packs sau SCP. CẦN OPERATOR SSH vào VPS để pull/scp. | QUEUED — post-gate 15/08 |
