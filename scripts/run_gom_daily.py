@@ -356,7 +356,7 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str, run_date: str 
                 bk_s    = f" bk={bk}" if bk > 0 else ""
                 if not math.isnan(net_raw):
                     _abs = abs(net_raw)
-                    _sgn = "+" if net_raw >= 0 else "-"
+                    _sgn = "+" if net_raw > 0 else ("-" if net_raw < 0 else "")
                     net_s = f"{_sgn}${_abs/1_000:.0f}k" if _abs >= 1_000 else f"{_sgn}${_abs:.0f}"
                 else:
                     net_s = "N/A"
