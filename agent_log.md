@@ -2,6 +2,43 @@
 
 ---
 
+## SESSION 2026-08-13 — WATCHLIST TELEGRAM + THRESHOLD
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6
+
+### Việc đã làm
+
+| Hạng mục | Kết quả |
+|---|---|
+| Kiểm trạng thái watchlist | (f) chạy OK nhưng operator không thấy — Telegram là stub, --no-telegram default=True |
+| watchlist_daily.py — Telegram real | Load .env (cùng credentials GOM Daily), send_telegram() thật, chunked 4000 ký tự |
+| watchlist_daily.py — format_output_tg() | TOP 20 List A (div thấp nhất) + full List B, slim columns cho Telegram |
+| --no-telegram fix | default=False (opt-out, không phải default-on) |
+| Threshold sweep | 0.02→avg25.7 / 0.03→avg23.5 / 0.04→avg21.0 (30d, 525 tokens) |
+| pos_trend_threshold | 0.02 → **0.04** (closest to target ~10-20; max vẫn 35-36 ngày hot) |
+| yaml cập nhật | watchlist_thresholds.yaml: pos_trend_threshold=0.04, có ghi lý do sweep |
+| Telegram test | python3 watchlist_daily.py --date 2026-08-11 → INFO: Telegram OK ✓ |
+| Kênh gửi | Cùng kênh GOM Daily (TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID từ .env) |
+| CSV log 08-11 | 127 rows (89 A + 38 B) tại threshold 0.02 — đã có trên VPS |
+
+### Số key
+
+| | |
+|---|---|
+| List A 08-11 | 89 tokens (tracker thụ động, ghi CSV đủ) |
+| List B 08-11 (0.04) | 35 tokens |
+| List B avg 30d (0.04) | 21.0 (max=36) |
+| Telegram | OK, cùng kênh GOM |
+
+### Note
+
+- List B avg=21 tại 0.04 — vẫn hơi cao so target 10-20. Max ngày hot (thị trường quay) 35-36.
+  Nếu operator muốn giảm hơn: cân nhắc thêm điều kiện `oi_trend=="GIẢM"` vào List B filter
+  (thay vì chỉ tăng pos_thr, vì pos_thr tăng thêm ít tác dụng — bước 0.01 chỉ giảm ~2 avg)
+- Full List B vẫn gửi Telegram (chưa cap — operator pending xem có cần cap không)
+
+---
+
 ## SESSION 2026-08-12 (cont.4) — FORMAT MỚI + GUARD RAISE
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
