@@ -1,10 +1,12 @@
 # TASKS — FreshWatch Task Ledger
 
-Cập nhật: 11/08/2026. **Mỗi session mở đầu bằng diff file này.**
+Cập nhật: 13/08/2026. **Mỗi session mở đầu bằng diff file này.**
 Format cột Status: `QUEUED` / `DOING` / `DONE <commit>` / `BLOCKED <lý do>`
 
 | ID | Ngày giao | Tóm tắt | Status |
 |----|-----------|---------|--------|
+| APR-REFRESH | 13/08 | APR (aPriori) post-ignition audit P-0→P-6: multi-chain confirmed, DAILY Aug10-12 appended (294 rows), Aug12 SHORT SQUEEZE +192.3% $903M, GOM-D 4/4 PASS draft. Verdict tầng HUMAN. | DONE 75bd388 — DỪNG CHỜ ĐỌC |
+| VPS-SCP-P1 | 13/08 | SCP batch audit P1 fixes lên VPS: (B) taker_pct→taker_buy_pct (đã fix local 75bd388); (C) fundingInfo fail-open (đã fix local). Rebuild 5 CASE packs sau SCP. CẦN OPERATOR SSH vào VPS để pull/scp. | QUEUED — post-gate 15/08 |
 | PARK-BROCCOLIF3B | 12/08 | BROCCOLIF3BUSDT không có trong fw139 — tra tên đúng, kiểm delist/drift. Chạy SAU C4 (15/08). | QUEUED — sau C4 |
 | PARK-H1-HIDDEN | 12/08 | DOODUSDT(avg_div=0.42)/TOSHIUSDT(avg_div=0.53) div thấp nhưng không vào registry — đọc code eval_hedge_farm entry, có điều kiện ẩn ngoài div_avg3 không (H2 funding? LSR gap?). Chạy SAU C4. | QUEUED — sau C4 |
 | MARGINAL-V4 | 11/08 | Marginal logger chạy từ 11/08. Đồng hồ V4: nếu đến 25/08 — **≤3 chuỗi/2 tuần mở-đóng-lặp vì A2/A3 marginal → đóng án (logger-only)**; **>3 HOẶC giết-mở-giết ≥2 vòng → mở proposals/persist2d_contingency_PENDING.md + re-gate + operator ký**. data/logs/marginal_hits.csv; mốc nộp 25/08. | DOING — đồng hồ bắt đầu 11/08 |
