@@ -54,25 +54,44 @@ DATA  = REPO / "data"
 FUNDING_INTERVALS_PATH = DATA / "config" / "funding_intervals.json"
 GOM_STATE_PATH         = DATA / "gom_state.json"
 GOM_E_STATE_PATH       = DATA / "gom_e_state.json"
-LEDGER                 = DATA / "gom_h_daily.csv"
+LEDGER                 = DATA / "gom_h_daily.csv"           # archived Aug13 data; not written
+# Active forward-experiment ledger (carve-out A, H-tier archived 14/08/2026)
+H2PRIME_LEDGER         = DATA / "gom_h2prime_daily.csv"
 
 # ── Config constants ─────────────────────────────────────────────────────────────
-# Δ7 book-thin guard — 0.25 is spec default; change here + log, not in YAML
+# Δ7 book-thin guard — kept for compute_h_day_archived(); not used in active path
 BOOK_THIN_FRAC: float = 0.25
-# 3-tick floor requires exchange market_info; set 0.0 until tick_size map is built
 TICK_3_FLOOR: float = 0.0
 
-H1_MIN_HOURS: int = 5            # minimum distinct hours per side for h1
-WATCHLIST_LOOKBACK_DAYS: int = 30  # T3 lookback window
+H1_MIN_HOURS: int = 5
+WATCHLIST_LOOKBACK_DAYS: int = 30
 
-# ── Ledger header ────────────────────────────────────────────────────────────────
+# ── Ledger headers ───────────────────────────────────────────────────────────────
+# ARCHIVED header (Aug13 data in gom_h_daily.csv — schema frozen, not appended to)
 LEDGER_HEADER = [
     "date", "symbol",
     "h1_skew", "h2_oiw", "h3_conc", "h4_cloc",
-    "flag_h_drip", "flag_h_wick", "flag_h_oiw",   # θ EMPTY → blank until gate §H5
+    "flag_h_drip", "flag_h_wick", "flag_h_oiw",
     "guard_dup_klines", "guard_dup_oi",
     "guard_settle_excl", "guard_settle_1h_unfilt",
     "guard_book_thin_nan",
+    "in_watchlist", "source",
+]
+
+# Active header — h2r watchlist forward experiment (carve-out A, operator ký 14/08/2026)
+# h2r = rate_neg/rate_pos (ratio, scale-free, comparison column CHÍNH)
+# h2r_log = ln(h2r) — symmetric, sign-readable (>0 = absorb nghiêng giờ đỏ)
+# rate_neg_usd_hr — context-only, scale-dependent, KHÔNG dùng để so
+# h2_old_share — chạy song song 30 ngày đối chiếu, rồi drop (log 1 dòng khi drop)
+# flag_h_drip/wick/oiw: KHÔNG có — H không còn detection-tier (archived 14/08/2026)
+H2PRIME_HEADER = [
+    "date", "symbol",
+    "h2r",              # rate_neg/rate_pos — ratio, scale-free
+    "h2r_log",          # ln(h2r)
+    "rate_neg_usd_hr",  # Σ ΔOI⁺(ret≤0)/n_neg_hrs [context-only]
+    "h2_old_share",     # Σ ΔOI⁺(ret≤0)/Σ ΔOI⁺(all) — legacy, parallel 30d then drop
+    "n_neg_hrs", "n_pos_hrs",
+    "guard_dup_oi",
     "in_watchlist", "source",
 ]
 
@@ -282,9 +301,11 @@ def compute_symbol(
 
 # ── Main day compute ──────────────────────────────────────────────────────────────
 
-def compute_h_day(target_dt: str, verbose: bool = False) -> list[dict]:
-    """Compute h1-h4 for all klines symbols on target_dt. Returns rows for ledger."""
-    print(f"  [h-compute] date={target_dt}  BOOK_THIN_FRAC={BOOK_THIN_FRAC}")
+def compute_h_day_archived(target_dt: str, verbose: bool = False) -> list[dict]:
+    """ARCHIVED 14/08/2026 — full-universe h1-h4 compute (gate §H5 FAIL, gomh_gate_closure_20260814.md).
+    Kept for reference. Active path: compute_h2prime_day(). NOT called from main().
+    """
+    print(f"  [h-compute ARCHIVED] date={target_dt}  BOOK_THIN_FRAC={BOOK_THIN_FRAC}")
 
     funding  = load_funding_intervals()
     watchlist = build_watchlist(target_dt)
@@ -349,6 +370,7 @@ def compute_h_day(target_dt: str, verbose: bool = False) -> list[dict]:
 
 
 def append_to_ledger(rows: list[dict]) -> None:
+    """ARCHIVED write path — gom_h_daily.csv schema frozen at Aug13 data. Not called in active path."""
     write_header = not LEDGER.exists()
     with open(LEDGER, "a", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=LEDGER_HEADER)
@@ -356,35 +378,157 @@ def append_to_ledger(rows: list[dict]) -> None:
             w.writeheader()
         w.writerows(rows)
         f.flush()
-    # Guard: zero rows = RAISE (bài TST persist-fail-câm)
     if len(rows) == 0:
         print("RAISE: zero rows written to ledger — guard triggered", file=sys.stderr)
         sys.exit(1)
 
 
+# ── h2′ rate-normalized (carve-out A, active) ────────────────────────────────────
+
+def compute_h2_prime(
+    sym: str,
+    sk: pd.DataFrame,   # klines for this symbol (deduped, sorted)
+    so: pd.DataFrame,   # OI for this symbol (deduped, sorted)
+    interval_h: int,
+) -> dict:
+    """h2r = rate_neg / rate_pos (ratio, scale-free, comparison column CHINH).
+    rate_neg = sum(DOI+(ret<=0)) / n_neg_hrs  [USD-OI per red hour]
+    rate_pos = sum(DOI+(ret>0))  / n_pos_hrs  [USD-OI per green hour]
+    h2r_log  = ln(h2r)  -- symmetric, sign-readable (>0 = absorb nghieng gio do)
+
+    Guard (operator ky 14/08/2026):
+      >=5 hrs each side AND rate_pos>0 AND rate_neg>0 -> else NaN, KHONG cap.
+      (ngay cuc doan dang thay rieng; cap lam hong phan phoi forward-read)
+
+    h2_old_share = sum(DOI+(ret<=0))/sum(DOI+(all)) -- song song 30 ngay roi drop.
+    Carve-out A -- gom_detect_spec SH archived 14/08/2026; gomh_gate_closure_20260814.md.
+    """
+    NaN = float("nan")
+    empty = {"h2r": NaN, "h2r_log": NaN, "rate_neg": NaN, "h2_share": NaN, "n_neg": 0, "n_pos": 0}
+    if so.empty:
+        return empty
+
+    sk2 = sk.copy()
+    sk2["hour_utc"] = (sk2["as_of_ts_ms"] // MS_PER_HOUR) % 24
+    sk2["ret"]      = (sk2["close"] - sk2["open"]) / sk2["open"].clip(lower=1e-12)
+
+    so2 = so.copy().sort_values("as_of_ts_ms").reset_index(drop=True)
+    so2["hour_utc"] = (so2["as_of_ts_ms"] // MS_PER_HOUR) % 24
+    so2["delta_oi"] = so2["sum_open_interest"].diff()
+    so2["doi_pos"]  = so2["delta_oi"].clip(lower=0.0)
+
+    sk_hr  = sk2[["hour_utc", "ret"]].set_index("hour_utc")
+    so_hr  = so2.dropna(subset=["delta_oi"])[["hour_utc", "doi_pos"]].set_index("hour_utc")
+    merged = so_hr.join(sk_hr, how="inner")
+
+    neg_mask = merged["ret"] <= 0
+    pos_mask = merged["ret"] > 0
+    n_neg    = int(neg_mask.sum())
+    n_pos    = int(pos_mask.sum())
+    sum_neg  = float(merged.loc[neg_mask, "doi_pos"].sum())
+    sum_pos  = float(merged.loc[pos_mask, "doi_pos"].sum())
+    sum_all  = float(merged["doi_pos"].sum())
+    h2_share = sum_neg / sum_all if sum_all > 0 else NaN
+
+    # Guard: >=5 hrs each side AND both rates > 0 -> else NaN, no cap
+    if n_neg < 5 or n_pos < 5 or sum_neg <= 0 or sum_pos <= 0:
+        return {"h2r": NaN, "h2r_log": NaN, "rate_neg": NaN,
+                "h2_share": h2_share, "n_neg": n_neg, "n_pos": n_pos}
+
+    rate_neg = sum_neg / n_neg
+    rate_pos = sum_pos / n_pos
+    h2r      = rate_neg / rate_pos
+    h2r_log  = math.log(h2r)
+    return {"h2r": h2r, "h2r_log": h2r_log, "rate_neg": rate_neg,
+            "h2_share": h2_share, "n_neg": n_neg, "n_pos": n_pos}
+
+
+def compute_h2prime_day(target_dt: str, verbose: bool = False) -> list[dict]:
+    """Active daily compute: watchlist-only h2' forward experiment (carve-out A).
+    Scope: watchlist symbols with both klines + OI 1h data.
+    h1/h3/h4 full-universe DISABLED — H-tier archived 14/08/2026 (FAIL gate §H5).
+    """
+    print(f"  [h2-prime] date={target_dt}  scope=watchlist-only  [h1/h3/h4 DISABLED 14/08/2026]")
+
+    funding   = load_funding_intervals()
+    watchlist = build_watchlist(target_dt)
+    print(f"  [watchlist] T3+T1={len(watchlist)} symbols")
+
+    if not watchlist:
+        print("  [h2-prime] watchlist empty — 0 rows", file=sys.stderr)
+        return []
+
+    df_k, dup_k  = load_klines_day(target_dt)
+    df_oi, dup_oi = load_oi_day(target_dt, watchlist)
+    print(f"  [klines] {len(df_k)} rows (dup_dropped={dup_k})")
+    print(f"  [oi]     {len(df_oi)} rows (dup_dropped={dup_oi})")
+
+    rows: list[dict] = []
+    for sym in sorted(watchlist):
+        sk = df_k[df_k["symbol"] == sym] if not df_k.empty else pd.DataFrame()
+        so = df_oi[df_oi["symbol"] == sym] if not df_oi.empty else pd.DataFrame()
+        if sk.empty or so.empty:
+            continue
+
+        iv_h = funding.get(sym, 8)
+        res  = compute_h2_prime(sym, sk, so, iv_h)
+
+        row = {
+            "date":            target_dt,
+            "symbol":          sym,
+            "h2r":             fmt(res["h2r"], 6),
+            "h2r_log":         fmt(res["h2r_log"], 6),
+            "rate_neg_usd_hr": fmt(res["rate_neg"], 2),
+            "h2_old_share":    fmt(res["h2_share"], 6),
+            "n_neg_hrs":       res["n_neg"],
+            "n_pos_hrs":       res["n_pos"],
+            "guard_dup_oi":    dup_oi,
+            "in_watchlist":    1,
+            "source":          "oi-1h+klines-1h-watchlist-dedup",
+        }
+        rows.append(row)
+
+        if verbose:
+            h2r_s  = f"{res['h2r']:+.4f}"     if not _nan(res["h2r"])     else " NaN "
+            h2rl_s = f"{res['h2r_log']:+.4f}" if not _nan(res["h2r_log"]) else " NaN "
+            print(f"    {sym:>16}  h2r={h2r_s}  h2r_log={h2rl_s}  n_neg={res['n_neg']}  n_pos={res['n_pos']}")
+
+    return rows
+
+
+def append_to_h2prime_ledger(rows: list[dict]) -> None:
+    write_header = not H2PRIME_LEDGER.exists()
+    with open(H2PRIME_LEDGER, "a", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=H2PRIME_HEADER)
+        if write_header:
+            w.writeheader()
+        w.writerows(rows)
+        f.flush()
+    if len(rows) == 0:
+        print("RAISE: zero rows written — guard triggered", file=sys.stderr)
+        sys.exit(1)
+
+
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Compute §H1 h1-h4 metrics for one date")
+    ap = argparse.ArgumentParser(description="§H1 h2' watchlist forward (h1/h3/h4 archived 14/08)")
     ap.add_argument("--date",    default=date.today().isoformat(), help="YYYY-MM-DD")
-    ap.add_argument("--verbose", action="store_true", help="Print per-symbol detail")
+    ap.add_argument("--verbose", action="store_true")
     ap.add_argument("--dry-run", action="store_true", help="Compute but do not write ledger")
     args = ap.parse_args()
 
-    rows = compute_h_day(args.date, verbose=args.verbose)
+    rows = compute_h2prime_day(args.date, verbose=args.verbose)
     if not rows:
         sys.exit(1)
 
-    n_h1   = sum(1 for r in rows if r["h1_skew"] != "")
-    n_h2   = sum(1 for r in rows if r["h2_oiw"]  != "")
-    n_wl   = sum(1 for r in rows if r["in_watchlist"])
-    n_nan  = sum(1 for r in rows if all(r[k] == "" for k in ["h1_skew","h2_oiw","h3_conc","h4_cloc"]))
-    print(f"\n  symbols={len(rows)}  h1_valid={n_h1}  h2_valid={n_h2}  in_wl={n_wl}  all_NaN={n_nan}")
+    n_h2r = sum(1 for r in rows if r["h2r"] != "")
+    print(f"\n  watchlist={len(rows)}  h2r_valid={n_h2r}")
 
     if args.dry_run:
         print("  [dry-run] ledger NOT written")
         return
 
-    append_to_ledger(rows)
-    print(f"  → ledger appended: {len(rows)} rows → {LEDGER}")
+    append_to_h2prime_ledger(rows)
+    print(f"  → ledger appended: {len(rows)} rows → {H2PRIME_LEDGER}")
 
 
 if __name__ == "__main__":
