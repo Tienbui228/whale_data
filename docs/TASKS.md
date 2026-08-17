@@ -27,7 +27,7 @@ Format cột Status: `QUEUED` / `DOING` / `DONE <commit>` / `BLOCKED <lý do>`
 | TUT-OUTCOME | 08/08 | TUT T+30 outcome chính thức + write CASE_TUT OUTCOME sheet | QUEUED — sau 08/08 |
 | COOLDOWN | - | Cooldown review AKE/CLO/TUT resolved verdict | BLOCKED — chờ operator phán |
 | CASE-CLO | - | CASE_CLO hồ sơ chiến dịch đầy đủ (C1-C6 analysis + verdict) | QUEUED |
-| CASE-AIN | 13/08 | CASE_AIN.xlsx COLD_START AI-0→AI-8 (224 rows). Intel: 30M token nạp từ 04/08. GOM-D 4/4, GOM-E 29d. Taxonomy BLEED. Chain UNKNOWN. CẦN OPERATOR on-chain. | DOING — _collect_ain_20260813.md sẵn sàng |
+| CASE-AIN | 13/08 | CASE_AIN.xlsx COLD_START AI-0→AI-8 (224 rows). Intel: 30M token nạp từ 04/08. GOM-D 4/4, GOM-E 29d. Taxonomy BLEED. Chain UNKNOWN. CẦN OPERATOR on-chain. | DONE 3279c86 — DỪNG CHỜ ĐỌC _collect_ain_20260813.md |
 | CASE-AKE | - | CASE_AKE tạo + cold start pack (AKE chưa có file) | QUEUED |
 | XPIN-ONCHAIN | - | XPIN on-chain: kho wallet + vesting + BitMart verify (BscScan) | BLOCKED — Nansen LOCKED + PENDING OPERATOR |
 | MM-ECON-SIG | - | mm_econ_v0.2 operator ký → dùng vào live signal | BLOCKED — ANALYSIS ONLY, chờ operator ký |
