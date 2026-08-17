@@ -7942,3 +7942,45 @@ Bằng chứng thiên về STAGED-PUMP (ô D): pos_r giảm, short squeeze cơ c
 On-chain Solana MISSING → chờ operator xác nhận.
 
 **DỪNG CHỜ OPERATOR ĐỌC _collect_cys_20260813.md.**
+
+---
+
+## AIN COLLECT — CASE_AIN.xlsx COLD_START — 2026-08-17 01:42 UTC
+
+**Scope:** Full collect AINUSDT: AI-0→AI-8, tạo CASE_AIN.xlsx (224 rows, 7 sheets).
+**Intel operator:** 30M token ≈ $2.4M nạp từ 04/08.
+**Output:** _collect_ain_20260813.md | CASE_AIN.xlsx
+
+### Data collected
+- fapi klines 1d: 224 rows (Jan01-Aug12 2026)
+- fapi funding: 1344 entries full history
+- fapi LSR 4 endpoints: 30 rows Jul19-Aug17
+- freshwatch merge: 49 dates total LSR
+- OI hist 30d: 25 rows Jul19-Aug17
+- OI snapshot: 59,692,669 tokens ≈ $4.51M
+- BAPI alpha list: AIN NOT FOUND (perp only, no alpha token)
+- Gate.io: vol24h=$78,181 (thin primary spot)
+- GeckoTerminal: ~$44K fragmented multi-pool
+
+### Key findings
+- AI-0: AINUSDT perp onboard 2025-07-10. Binance spot ABSENT. Chain UNKNOWN.
+- AI-2: ATH=$0.13472 May13. ATL=$0.02877 Feb08. PROVEN_PUMP=NO.
+- AI-2 Events: 18 events vol≥8×med14. 4 major cụm: Mar10-18, Apr11-13, May13-14, Jun11-14.
+- AI-3: Deposit window Aug04-12: BLEED taxonomy. 6/9 đỏ. Net +11%. OI +$621K.
+- AI-3: gLSR đỉnh 3.819 Aug07, hạ về 2.271 Aug12 — retail rút sau spike.
+- AI-4 Vân1: pos_r 1.45-1.68, RETAIL-FOLLOW, KHÔNG inverso.
+- AI-4 Vân2: 29d hedge ongoing (Jul15-Aug12, div_avg3=0.658 avg). GOM-E PASS.
+- AI-4 Vân3: 14/47=30% dip recovery (low). 3d=81%.
+- AI-4 Vân4: blockchain UNKNOWN. Gate $78K/d = 29 ngày exit. Depth $591/$421 CRITICAL.
+- AI-5 GOM-D: 4/4 PASS (D1/D3/D4/D5). Nhưng mỗi cluster có dump ngay sau.
+- AI-5 GOM-E: PASS (29d). Funding positive → retail long trả phí cho short side.
+- AI-6: gLSR mean 2.705, ≥2.0 trong 40 ngày — retail long dominant.
+- AI-7: Depth/OI=0.0225% EXTREME THIN. Không exit được 30M via perp.
+- AI-8: 5/5 SANITY PASS.
+
+### Verdict thu thập (không phán)
+Tín hiệu MIXED: GOM-E PASS (hedge-farm có cấu trúc) nhưng pos_r không inverso.
+Deposit BLEED + depth cực mỏng + chain UNKNOWN → CẦN OPERATOR.
+
+**CẦN OPERATOR: (1) blockchain AIN + vesting schedule; (2) wallet 30M token; (3) verdict ô A/B/C/D.**
+**DỪNG CHỜ OPERATOR ĐỌC _collect_ain_20260813.md.**
