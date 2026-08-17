@@ -352,6 +352,7 @@ def main(
 
     results: list[dict] = []
     n_missing_xlsx = 0
+    n_stale_gap    = 0
 
     for case in cases:
         token  = case["token"]
@@ -376,6 +377,26 @@ def main(
         ws = wb["DAILY"]
 
         existing_dates, last_row = _existing_dates_and_max_row(ws)
+
+        # Staleness guard: gap > 2d → RAISE, không build câm.
+        if existing_dates and date_str not in existing_dates:
+            from datetime import date as _dobj, timedelta as _td
+            _last_d   = _dobj.fromisoformat(max(existing_dates))
+            _target_d = _dobj.fromisoformat(date_str)
+            _gap      = (_target_d - _last_d).days
+            if _gap > 2:
+                _msg = (
+                    f"CASE_{token} data tới {max(existing_dates)}, "
+                    f"thiếu tới {date_str} ({_gap}d gap) — "
+                    f"backfill trước khi phân tích."
+                )
+                log.error("staleness_guard_fail", token=token,
+                          last_date=max(existing_dates), target_date=date_str, gap_days=_gap)
+                telegram_error(f"staleness_guard_fail: {_msg}")
+                results.append({"token": token, "status": "STALE_GAP",
+                                 "date": date_str, "note": _msg})
+                n_stale_gap += 1
+                continue
 
         if date_str in existing_dates:
             if force_overwrite:
@@ -443,26 +464,34 @@ def main(
             _append_daily_row(ws, row_n, csv_row, fn_suspect, fn_n, src_ratio)
             try:
                 wb.save(str(xlsx_path))
-                validate_written_pack(xlsx_path)
-                if _overwrite_mode:
-                    log.info("case_daily_overwrite_saved", token=token, row=row_n, date=date_str)
-                    status = "OVERWRITE_OK"
-                    # Build diff log for agent_log
-                    _diff_lines: list[str] = []
-                    for c, old_v in _old_vals_for_log.items():
-                        new_v = ws.cell(row_n, c).value
-                        if str(old_v) != str(new_v):
-                            _diff_lines.append(f"col{c}: {old_v!r} → {new_v!r}")
-                    if _diff_lines:
-                        log.info("case_daily_overwrite_diff", token=token, date=date_str, diffs=_diff_lines[:10])
-                else:
-                    log.info("case_daily_saved", token=token, row=row_n, date=date_str)
-                    status = "OK"
             except PermissionError:
                 # L-34: cấm silent-save sang tên khác — close xlsx rồi retry
                 raise RuntimeError(
                     f"[L-34] File locked — close xlsx then retry: {xlsx_path}"
                 ) from None
+            try:
+                validate_written_pack(xlsx_path)
+            except RuntimeError as _vpe:
+                # Schema mismatch (e.g. COOKIE col-offset) → log ERROR per-case, continue run
+                log.error("case_daily_validate_fail", token=token, date=date_str, error=str(_vpe))
+                telegram_error(f"case_daily_validate_fail [{token}]: {_vpe}")
+                results.append({"token": token, "status": "VALIDATE_FAIL",
+                                 "date": date_str, "note": str(_vpe)})
+                continue
+            if _overwrite_mode:
+                log.info("case_daily_overwrite_saved", token=token, row=row_n, date=date_str)
+                status = "OVERWRITE_OK"
+                # Build diff log for agent_log
+                _diff_lines: list[str] = []
+                for c, old_v in _old_vals_for_log.items():
+                    new_v = ws.cell(row_n, c).value
+                    if str(old_v) != str(new_v):
+                        _diff_lines.append(f"col{c}: {old_v!r} → {new_v!r}")
+                if _diff_lines:
+                    log.info("case_daily_overwrite_diff", token=token, date=date_str, diffs=_diff_lines[:10])
+            else:
+                log.info("case_daily_saved", token=token, row=row_n, date=date_str)
+                status = "OK"
         else:
             if _overwrite_mode:
                 status = "DRY_OVERWRITE"
@@ -552,7 +581,10 @@ def main(
     )
     log.info("session_state_written", path=str(session_state_path))
 
-    raise typer.Exit(1 if n_missing_xlsx > 0 else 0)
+    if n_stale_gap > 0:
+        log.error("case_daily_stale_gaps", n=n_stale_gap,
+                  hint="Backfill missing dates trước khi phân tích")
+    raise typer.Exit(1 if (n_missing_xlsx > 0 or n_stale_gap > 0) else 0)
 
 
 if __name__ == "__main__":
