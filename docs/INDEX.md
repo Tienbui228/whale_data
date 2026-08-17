@@ -19,7 +19,8 @@
 
 | File | Mô tả | Phủ lớp |
 |------|-------|---------|
-| `docs/analysis_playbook.md` | **Playbook chính** — 7 lớp phân tích I→VII + lessons cross-ref | I–VII |
+| `docs/analysis_playbook.md` | **Playbook chính** — 8 lớp phân tích I→VII + §VIII học thuyết + lessons cross-ref | I–VIII |
+| `docs/handover/analysis_handover_20260817.md` | **Đọc thứ nhì** — bảng trạng thái 17 case (17/08) · §2 học thuyết phiên · spec/infra pending | Boot seq |
 | `docs/lessons_learned.md` | View sinh từ CASE_INDEX.xlsx sheet LESSONS (không edit trực tiếp) · L-01→L-48 | All |
 | `docs/lessons_rev2_source.md` | Source draft lessons (sửa vào CASE_INDEX sheet LESSONS) | All |
 
