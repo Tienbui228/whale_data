@@ -1,0 +1,12 @@
+{
+  "symbol": "AINUSDT",
+  "onboardDate": 1752144300000,
+  "onboardDate_str": "2025-07-10",
+  "status": "TRADING",
+  "contractType": "PERPETUAL",
+  "marginAsset": "USDT",
+  "underlyingType": "COIN",
+  "underlyingSubType": [
+    "AI"
+  ]
+}

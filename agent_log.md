@@ -7984,3 +7984,33 @@ Deposit BLEED + depth cực mỏng + chain UNKNOWN → CẦN OPERATOR.
 
 **CẦN OPERATOR: (1) blockchain AIN + vesting schedule; (2) wallet 30M token; (3) verdict ô A/B/C/D.**
 **DỪNG CHỜ OPERATOR ĐỌC _collect_ain_20260813.md.**
+
+---
+
+## AIN DATA GAP FIX — 2026-08-17 02:09 UTC
+
+**Bug:** CASE_AIN.xlsx built 17/08 trên scratch CSV fetch từ 13/08 → thiếu 5 ngày (Aug13-16+17).
+
+**Root cause [1-4]:**
+- [1] Store: không có perp klines daily store — build_case đọc trực tiếp scratch CSV (`ain_perp_20260813.csv`). Scratch không auto-refresh.
+- [2] freshwatch_symbols.txt: ABSENT local. collect_daily cover all TRADING USDT-PERP nhưng chỉ lưu 1h store — không có klines_1d perp.
+- [3] Staleness guard: KHÔNG CÓ. `MAX_DATE = sorted(perp_by_d.keys())[-1]` chỉ set, không compare với today.
+- [4] case_daily.py: không cover AIN (status COLD_START, chỉ cover OPEN/TRACKING).
+
+**Fix:**
+- Re-fetch fapi klines Aug13-16 + append → ain_perp_20260817.csv (228 rows, Jan01-Aug16)
+- Funding merge: old 1343 + 25 new Aug13-17 entries = 1368 entries
+- OI: rename sumOpenInterestValue→oi_usd, sumOpenInterest→oi_token
+- Rebuild: CASE_AIN.xlsx 228 rows, validate_written_pack PASS
+- Added STALENESS GUARD to build_case.py: gap > 2d → RuntimeError
+
+**Schema bugs phát hiện (minor, ghi để tránh):**
+- New perp CSV schema `o/h/l/c` + no ret_1d → build_case computes ret_1d as FRACTION → scale mismatch vs percent filter
+- OI CSV: phải có `oi_usd/oi_token` fields (không phải `sumOpenInterestValue/sumOpenInterest`)
+- Perp CSV: phải có `ret_1d` pre-computed as percent OR dùng short names và guard phải scale check
+
+**Lesson (L-BUG-STALE-CASE):** Thêm vào CASE_INDEX LESSONS.
+
+**Lesson bổ sung về lệnh build_case:**
+CẦN re-fetch scratch CSVs (date_tag=today) MỖI LẦN build_case chạy không cùng ngày với fetch.
+Không có pipeline tự động → khi build muộn > 0 ngày phải chạy fetch probe trước.

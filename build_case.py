@@ -192,6 +192,17 @@ MAX_DATE = sorted(perp_by_d.keys())[-1]
 all_dates = sorted(perp_by_d.keys())
 log(f"  Date range: {all_dates[0]} → {all_dates[-1]} ({len(all_dates)} dates)")
 
+# Staleness guard: perp CSV must reach within 2 days of yesterday UTC.
+# Gap > 2d means the scratch CSV was not refreshed before calling build_case.
+from datetime import date as _date
+_yesterday = (_date.today() - __import__("datetime").timedelta(days=1)).isoformat()
+_gap_days  = (datetime.strptime(_yesterday, "%Y-%m-%d") - datetime.strptime(MAX_DATE, "%Y-%m-%d")).days
+if _gap_days > 2:
+    raise RuntimeError(
+        f"STALENESS GUARD: perp CSV last date={MAX_DATE}, yesterday={_yesterday}, "
+        f"gap={_gap_days}d > 2. Re-fetch scratch CSVs before build_case."
+    )
+
 # ── 5. Rolling arrays ──────────────────────────────────────────────────────────
 N = len(all_dates)
 vol_vals  = [safe_float(perp_by_d.get(d,{}).get("vol_quote_usd")) for d in all_dates]
