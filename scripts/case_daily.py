@@ -72,9 +72,33 @@ EXPORT_COL_MAP: dict[int, tuple[str, str]] = {
 
 FORMULA_COLS = {3, 18, 19, 20, 21, 22, 36}
 
+# ── New schema: o/h/l/c inserted at cols 3-6, all perp/LSR cols shift +4 ─────
+# Files built with new build_case schema (COOKIE, BROCCOLIF3B, KOMA, …).
+# o/h/l/c (cols 3-6) are NOT in freshwatch_daily export → left blank.
+NEW_SCHEMA_COL_MAP: dict[int, tuple[str, str]] = {
+    1:  ("date",          "str"),
+    2:  ("px_avg",        "float"),
+    7:  ("vol_quote",     "float"),      # vol_perp_usd
+    8:  ("taker_buy_pct", "float"),      # stored as %; CSV is fraction → ×100
+    9:  ("funding_avg",   "float"),
+    10: ("funding_min",   "float"),
+    11: ("funding_max",   "float"),
+    12: ("funding_n",     "int"),
+    13: ("oi_usd",        "float"),
+    15: ("data_ok",       "invert_bool"),
+    27: ("lsr_pos_r",     "float"),
+    28: ("lsr_acc_r",     "float"),
+    29: ("lsr_global_r",  "float"),
+}
+
+# Formula cols in new schema (ret_1d, div_raw, div_avg3, glsr_slope, d_pos, d_acc, taker_lsr)
+NEW_FORMULA_COLS = {17, 22, 23, 24, 25, 26, 30}
+
 # Ratio cols that get "SUSPECT fn<6" comment when fn_suspect=True.
 # Taker (col 5) is intentionally excluded — always write native value.
 _RATIO_COLS = {15, 16, 17}
+
+_NEW_RATIO_COLS = {27, 28, 29}
 
 # Bảo vệ mapping: mỗi col ratio chỉ được map đúng metric tương ứng.
 _ASSERT_COL_METRIC: dict[int, str] = {
@@ -121,6 +145,19 @@ def _formulas_for_row(n: int) -> dict[int, str]:
         21: f'=IFERROR(O{n}/O{n-3}-1,"")',
         22: f'=IFERROR(P{n}/P{n-3}-1,"")',
         36: f'=IF(OR(AB{n}="",D{n}="",D{n}=0),"",AB{n}/D{n})',
+    }
+
+
+def _new_formulas_for_row(n: int) -> dict[int, str]:
+    """Formula col map for new schema (o/h/l/c at cols 3-6, LSR shifted to 27-29)."""
+    return {
+        17: f'=IFERROR(F{n}/F{n-1}-1,"")',           # ret_1d: close(F6)/prev_close - 1
+        22: f'=IFERROR(AA{n}/AB{n},"")',               # div_raw: pos_r/acc_r
+        23: f'=IFERROR(AVERAGE(V{n-2}:V{n}),"")',      # div_avg3: rolling avg div_raw
+        24: f'=IFERROR(AC{n}/AC{n-5},"")',             # glsr_slope_5d: gLSR t/t-5
+        25: f'=IFERROR(AA{n}/AA{n-3}-1,"")',           # d_pos_3d: pos_r 3d chg
+        26: f'=IFERROR(AB{n}/AB{n-3}-1,"")',           # d_acc_3d: acc_r 3d chg
+        30: f'=IF(OR(AC{n}="",H{n}="",H{n}=0),"",AC{n}/H{n})',  # taker_lsr: gLSR/taker
     }
 
 
@@ -200,8 +237,22 @@ def _append_daily_row(
     fn_suspect: bool,
     fn_n_str: str,
     src_ratio: str,
+    *,
+    col_map=None,
+    formula_cols=None,
+    ratio_cols=None,
+    taker_col: int = 5,
+    get_formulas=None,
 ) -> None:
-    formulas = _formulas_for_row(row_n)
+    if col_map is None:
+        col_map = EXPORT_COL_MAP
+    if formula_cols is None:
+        formula_cols = FORMULA_COLS
+    if ratio_cols is None:
+        ratio_cols = _RATIO_COLS
+    if get_formulas is None:
+        get_formulas = _formulas_for_row
+    formulas = get_formulas(row_n)
     max_col = ws.max_column or 41
 
     for c in range(1, max_col + 1):
@@ -210,23 +261,23 @@ def _append_daily_row(
         if isinstance(cell, MergedCell):
             continue
 
-        if c in FORMULA_COLS:
+        if c in formula_cols:
             cell.value = formulas.get(c)
             continue
 
-        if c not in EXPORT_COL_MAP:
+        if c not in col_map:
             continue
 
-        field, parse_type = EXPORT_COL_MAP[c]
+        field, parse_type = col_map[c]
         raw = csv_row.get(field, "")
         cell.value = _parse_val(raw, parse_type)
 
-        # 2.5(a): taker_buy_pct (col 5) stored as percent; CSV is fraction r/(1+r)
-        if c == 5 and isinstance(cell.value, (int, float)):
+        # taker_buy_pct stored as percent; CSV is fraction → ×100
+        if c == taker_col and isinstance(cell.value, (int, float)):
             cell.value = round(cell.value * 100, 6)
 
         # fn<6: ratio cols get SUSPECT comment; taker/px/vol/OI write native unchanged
-        if fn_suspect and c in _RATIO_COLS:
+        if fn_suspect and c in ratio_cols:
             cell.comment = Comment(
                 f"SUSPECT fn<6 (fn={fn_n_str}, src={src_ratio})",
                 "case_daily.py",
@@ -280,6 +331,14 @@ def _row_data_bad(ws, row_n: int) -> bool:
     """Return True if col 26 (data_ok → invert_bool) = 1 — row written with bad data."""
     val = ws.cell(row_n, 26).value
     return val == 1 or val is True
+
+
+def _detect_schema(ws) -> str:
+    """Return 'new' if col 3 header is 'o' (o/h/l/c schema), else 'old'."""
+    h = ws.cell(2, 3).value
+    if h and str(h).strip().lower().startswith("o"):
+        return "new"
+    return "old"
 
 
 def _read_row_values(ws, row_n: int) -> dict[int, object]:
@@ -376,6 +435,21 @@ def main(
             continue
         ws = wb["DAILY"]
 
+        schema = _detect_schema(ws)
+        if schema == "new":
+            _cm = NEW_SCHEMA_COL_MAP
+            _fc = NEW_FORMULA_COLS
+            _rc = _NEW_RATIO_COLS
+            _tc = 8
+            _gf = _new_formulas_for_row
+        else:
+            _cm = EXPORT_COL_MAP
+            _fc = FORMULA_COLS
+            _rc = _RATIO_COLS
+            _tc = 5
+            _gf = _formulas_for_row
+        log.debug("case_daily_schema_detected", token=token, schema=schema)
+
         existing_dates, last_row = _existing_dates_and_max_row(ws)
 
         # Staleness guard: gap > 2d → RAISE, không build câm.
@@ -431,6 +505,18 @@ def main(
                     log.warning("stale_row_detected",
                                 token=token, date=date_str, row=existing_row_n,
                                 hint="data_bad=1; re-run with --force-overwrite to refresh")
+                # BUG A guard: validate on SKIP_EXISTS to catch schema-corrupt rows
+                try:
+                    validate_written_pack(xlsx_path)
+                except RuntimeError as _vpe:
+                    log.error("case_daily_schema_fail_exists", token=token,
+                              date=date_str, error=str(_vpe))
+                    telegram_error(
+                        f"case_daily_schema_fail_exists [{token}]: rebuild needed — {_vpe}"
+                    )
+                    results.append({"token": token, "status": "SCHEMA_FAIL_EXISTS",
+                                    "date": date_str, "note": str(_vpe)})
+                    continue
                 log.info("case_daily_skip_existing", token=token, date=date_str)
                 results.append({"token": token, "status": "SKIP_EXISTS", "date": date_str})
                 continue
@@ -461,23 +547,31 @@ def main(
             row_n = last_row + 1
 
         if not dry_run:
-            _append_daily_row(ws, row_n, csv_row, fn_suspect, fn_n, src_ratio)
+            _append_daily_row(
+                ws, row_n, csv_row, fn_suspect, fn_n, src_ratio,
+                col_map=_cm, formula_cols=_fc, ratio_cols=_rc,
+                taker_col=_tc, get_formulas=_gf,
+            )
+            # BUG A fix: validate BEFORE committing to disk (temp-file pattern).
+            # Original never lands on disk if validation fails.
+            tmp_path = xlsx_path.with_suffix(".tmp_validate.xlsx")
             try:
-                wb.save(str(xlsx_path))
+                wb.save(str(tmp_path))
             except PermissionError:
-                # L-34: cấm silent-save sang tên khác — close xlsx rồi retry
+                tmp_path.unlink(missing_ok=True)
                 raise RuntimeError(
                     f"[L-34] File locked — close xlsx then retry: {xlsx_path}"
                 ) from None
             try:
-                validate_written_pack(xlsx_path)
+                validate_written_pack(tmp_path)
             except RuntimeError as _vpe:
-                # Schema mismatch (e.g. COOKIE col-offset) → log ERROR per-case, continue run
+                tmp_path.unlink(missing_ok=True)
                 log.error("case_daily_validate_fail", token=token, date=date_str, error=str(_vpe))
                 telegram_error(f"case_daily_validate_fail [{token}]: {_vpe}")
                 results.append({"token": token, "status": "VALIDATE_FAIL",
                                  "date": date_str, "note": str(_vpe)})
                 continue
+            tmp_path.replace(xlsx_path)  # atomic: replaces original only after validate PASS
             if _overwrite_mode:
                 log.info("case_daily_overwrite_saved", token=token, row=row_n, date=date_str)
                 status = "OVERWRITE_OK"
