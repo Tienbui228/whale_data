@@ -346,20 +346,27 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str, run_date: str 
                        if c.get("chain_open") and t in _fw_base}
 
             # ── Build per-token info dict ─────────────────────────────────────
+            # verdict 17/08 net-semantics (operator signed):
+            #   net_oi_window_usd = ungated window [reality-check, KHÔNG lực gom]
+            #   net_gated_usd     = gom-doctrine net (Σ ΔOI on counts_q1 days). n_q1=0 → NaN.
+            # Legacy alias net_oi_delta_usd mirrors net_oi_window_usd (drop 2026-09-17).
             def _build_entry(tok, ch):
                 q1      = ch.get("Q1_cum_usd", 0.0)
-                net_raw = ch.get("net_oi_delta_usd", math.nan)
-                nd      = ch.get("n_days", 0)
+                net_win = ch.get("net_oi_window_usd", ch.get("net_oi_delta_usd", math.nan))
+                net_gat = ch.get("net_gated_usd", math.nan)
+                nd      = ch.get("n_days", 0)   # n_q1: qualifying-day count
                 bk      = ch.get("break_streak", 0)
                 chp     = ch.get("chapter", 1)
                 q1s     = f"${q1/1_000:.0f}k" if q1 >= 1_000 else "$0"
                 bk_s    = f" bk={bk}" if bk > 0 else ""
-                if not math.isnan(net_raw):
-                    _abs = abs(net_raw)
-                    _sgn = "+" if net_raw > 0 else ("-" if net_raw < 0 else "")
-                    net_s = f"{_sgn}${_abs/1_000:.0f}k" if _abs >= 1_000 else f"{_sgn}${_abs:.0f}"
-                else:
-                    net_s = "N/A"
+
+                def _fmt_money(v):
+                    if math.isnan(v): return "N/A"
+                    a = abs(v); s = "+" if v > 0 else ("-" if v < 0 else "")
+                    return f"{s}${a/1_000:.0f}k" if a >= 1_000 else f"{s}${a:.0f}"
+
+                net_win_s = _fmt_money(net_win)
+                net_gat_s = "NaN" if math.isnan(net_gat) else _fmt_money(net_gat)
                 _vn    = ch.get("vwap_num", 0.0)
                 _vd    = ch.get("vwap_den", 0.0)
                 _oi_st = ch.get("oi_start_usd", 0.0) or 0.0
@@ -378,59 +385,84 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str, run_date: str 
                 else:
                     dpct_s = "Δ=N/A"
                 return dict(tok=tok, chp=chp, nd=nd, bk_s=bk_s,
-                            q1=q1, q1s=q1s, net_raw=net_raw, net_s=net_s,
+                            q1=q1, q1s=q1s,
+                            net_win=net_win, net_win_s=net_win_s,
+                            net_gat=net_gat, net_gat_s=net_gat_s,
                             px_s=px_s, dpct_s=dpct_s)
 
-            ron_entries   = []   # net > 0
-            churn_entries = []   # net ≤ 0
+            # verdict 17/08: classify by net_gated (n_q1≥1 required for "gom" wording).
+            # n_q1=0 → NO-QUALIFIED bucket, CẤM chữ "gom" per template rule.
+            ron_entries    = []   # n_q1≥1 AND net_gated>0
+            churn_entries  = []   # n_q1≥1 AND net_gated≤0
+            noqual_entries = []   # n_q1=0 (net_gated=NaN, chưa evaluable)
 
             for tok, ch in open_st.items():
                 e = _build_entry(tok, ch)
-                if not math.isnan(e["net_raw"]) and e["net_raw"] > 0:
+                if e["nd"] == 0 or math.isnan(e["net_gat"]):
+                    noqual_entries.append(e)
+                elif e["net_gat"] > 0:
                     ron_entries.append(e)
                 else:
                     churn_entries.append(e)
 
-            ron_entries.sort(key=lambda x: -(x["net_raw"] if not math.isnan(x["net_raw"]) else 0))
-            churn_entries.sort(key=lambda x: -(x["net_raw"] if not math.isnan(x["net_raw"]) else float("-inf")))
+            ron_entries.sort(key=lambda x: -x["net_gat"])
+            churn_entries.sort(key=lambda x: -x["net_gat"])
+            noqual_entries.sort(key=lambda x: -(x["net_win"] if not math.isnan(x["net_win"]) else float("-inf")))
 
             def _ron_line(e):
                 flags = " [Q1=0]" if e["q1"] == 0 else ""
                 return (f"  {e['tok']}  ch{e['chp']} n={e['nd']}{e['bk_s']}"
-                        f"  Q1={e['q1s']}  net={e['net_s']}"
+                        f"  Q1={e['q1s']}  net_gated={e['net_gat_s']}"
+                        f"  net_window={e['net_win_s']}"
                         f"  px={e['px_s']}  {e['dpct_s']}{flags}")
 
             def _churn_line(e):
                 flags = "[Q1=0][churn]" if e["q1"] == 0 else "[churn]"
                 star  = f"  ★Q1={e['q1s']}" if e["q1"] >= 2_000_000 else ""
                 return (f"  {e['tok']}  ch{e['chp']} n={e['nd']}{e['bk_s']}"
-                        f"  net={e['net_s']}"
+                        f"  net_gated={e['net_gat_s']}  net_window={e['net_win_s']}"
                         f"  px={e['px_s']}  {e['dpct_s']}  {flags}{star}")
 
-            ron_lines   = [_ron_line(e)   for e in ron_entries]
-            churn_lines = [_churn_line(e) for e in churn_entries]
-            chain_details = ron_lines + churn_lines
+            def _noqual_line(e):
+                # CẤM chữ "gom" — chain chưa ngày qualifying, chưa xét doctrine.
+                return (f"  {e['tok']}  ch{e['chp']} n_q1=0{e['bk_s']}"
+                        f"  net_window={e['net_win_s']} [reality-check, ungated]"
+                        f"  net_gated=NaN"
+                        f"  px={e['px_s']}  {e['dpct_s']}"
+                        f"  [NO-QUALIFIED-DAYS]")
+
+            ron_lines    = [_ron_line(e)    for e in ron_entries]
+            churn_lines  = [_churn_line(e)  for e in churn_entries]
+            noqual_lines = [_noqual_line(e) for e in noqual_entries]
+            chain_details = ron_lines + churn_lines + noqual_lines
         except Exception as exc:
             ron_lines     = [f"(state parse error: {exc})"]
             churn_lines   = []
+            noqual_lines  = []
             chain_details = ron_lines
 
-    n_ron   = len(ron_lines)
-    n_churn = len(churn_lines)
-    n_open  = n_ron + n_churn
+    n_ron    = len(ron_lines)
+    n_churn  = len(churn_lines)
+    n_noqual = len(noqual_lines)
+    n_open   = n_ron + n_churn + n_noqual
 
     msg_lines = [
         f"📊 GOM Daily — data={target_date}  run={run_date}T{run_utc}Z",
         f"Universe: fw139@139 | A1∧A2∧A3∧(A4∨A5) | B1∧(B2∨B3)∧B4 | C β-PROV",
         f"",
-        f"OPEN GOM RÒNG (net>0) — {n_ron}/{n_open}  ← soi trước",
+        f"OPEN GOM RÒNG (net_gated>0, n_q1≥1) — {n_ron}/{n_open}  ← soi trước",
     ]
     msg_lines += ron_lines if ron_lines else ["  (none)"]
     msg_lines += [
         f"",
-        f"OPEN CHURN/ROTATION (net≤0) — {n_churn}/{n_open}  ← tin cậy thấp",
+        f"OPEN CHURN/ROTATION (net_gated≤0, n_q1≥1) — {n_churn}/{n_open}  ← tin cậy thấp",
     ]
     msg_lines += churn_lines if churn_lines else ["  (none)"]
+    msg_lines += [
+        f"",
+        f"OPEN NO-QUALIFIED (n_q1=0) — {n_noqual}/{n_open}  ← chưa evaluable, KHÔNG xét doctrine",
+    ]
+    msg_lines += noqual_lines if noqual_lines else ["  (none)"]
 
     if closed_today:
         closed_str = ", ".join(closed_today[:10])
@@ -584,21 +616,28 @@ def _write_closed_chapters_csv(target_date: str) -> int:
         close_d = (ch.get("close_date") or "")[:10]
         if not close_d or close_d[:7] != month:
             continue
+        _nw = ch.get("net_oi_window_usd", ch.get("net_oi_delta_usd", float("nan")))
+        _ng = ch.get("net_gated_usd", float("nan"))
         rows.append({
-            "token":        tok,
-            "chapter":      ch.get("chapter", 1),
-            "start_date":   ch.get("start_date", ""),
-            "close_date":   close_d,
-            "close_reason": ch.get("close_reason", ""),
-            "n_days":       ch.get("n_days", 0),
-            "Q1_cum_usd":   round(ch.get("Q1_cum_usd", 0.0), 2),
-            "net_oi_delta": round(ch.get("net_oi_delta_usd", float("nan")), 2),
-            "peak_pos_r":   round(ch.get("peak_pos_r", float("nan")), 3),
+            "token":            tok,
+            "chapter":          ch.get("chapter", 1),
+            "start_date":       ch.get("start_date", ""),
+            "close_date":       close_d,
+            "close_reason":     ch.get("close_reason", ""),
+            "n_days":           ch.get("n_days", 0),   # n_q1
+            "Q1_cum_usd":       round(ch.get("Q1_cum_usd", 0.0), 2),
+            # verdict 17/08 net-semantics: net_oi_window = ungated reality-check;
+            # net_gated = gom doctrine (Σ ΔOI on counts_q1 days, NaN nếu n_q1=0).
+            "net_oi_window_usd": round(_nw, 2),
+            "net_gated_usd":     round(_ng, 2),   # 'nan' string preserved when n_q1=0
+            "net_oi_delta":      round(_nw, 2),   # ALIAS (drop 2026-09-17)
+            "peak_pos_r":       round(ch.get("peak_pos_r", float("nan")), 3),
         })
     rows.sort(key=lambda r: r["close_date"])
     if rows:
         fieldnames = ["token","chapter","start_date","close_date","close_reason",
-                      "n_days","Q1_cum_usd","net_oi_delta","peak_pos_r"]
+                      "n_days","Q1_cum_usd","net_oi_window_usd","net_gated_usd",
+                      "net_oi_delta","peak_pos_r"]
         with open(out_path, "w", newline="", encoding="utf-8") as f:
             w = _csv_w.DictWriter(f, fieldnames=fieldnames)
             w.writeheader()

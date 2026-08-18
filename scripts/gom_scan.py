@@ -437,11 +437,27 @@ def _empty_chain(date_str: str) -> dict:
         "start_date":      date_str,
         "chapter":         1,
         # Q1 / accumulation (M4: gross_adds_usd mirrors Q1_cum_usd)
+        # ─ ĐO GÌ: Σ max(ΔOI,0) trên ngày qua-gate counts_q1 (ret≤1% + not-partial).
+        # ─ KHÔNG ĐO GÌ: KHÔNG cộng ngày ΔOI<0. KHÔNG đo lực rút. Đây là "lực gom cộng dồn".
         "Q1_cum_usd":      0.0,
         "gross_adds_usd":  0.0,   # M4 alias — kept in sync with Q1_cum_usd
         "oi_start_usd":    float("nan"),  # M4: OI snapshot at chain open (first GOM fire)
         "oi_last_usd":     float("nan"),  # M4: OI snapshot at last GOM fire
-        "net_oi_delta_usd": float("nan"), # M4: oi_last_usd - oi_start_usd (per-chapter)
+        # net_oi_window_usd — [window, ungated — reality-check, KHÔNG phải lực gom]
+        # ─ ĐO GÌ: oi_last_usd - oi_start_usd (delta 2 điểm mở/chốt CHAIN, ungated).
+        # ─ KHÔNG ĐO GÌ: KHÔNG lọc ret_1d. KHÔNG lọc partial_day. Nhiễm chase-pump.
+        #   KHÔNG dùng làm signal "gom ròng" — dùng làm reality-check thôi.
+        # (verdict 17/08 net-semantics: rename từ net_oi_delta_usd)
+        "net_oi_window_usd": float("nan"),
+        "net_oi_delta_usd":  float("nan"),  # ALIAS 30d (đến 2026-09-17), sau đó drop
+        # net_gated_usd — [gom ròng doctrine — biến DUY NHẤT mang nghĩa net thực]
+        # ─ ĐO GÌ: Σ ΔOI (CẢ +/−, KHÔNG max) trên ngày counts_q1 (ret≤1% + not-partial).
+        #   Trích nguyên văn gate (L-31 counts_q1):
+        #     counts_q1 = not math.isnan(ret) and ret <= ret_max     # ret_max=0.01
+        #     if d.get("_partial_day"): counts_q1 = False
+        # ─ KHÔNG ĐO GÌ: KHÔNG cộng ngày chase (ret>1%). KHÔNG cộng partial_day.
+        #   n_q1=0 → giá trị NaN (KHÔNG 0) — CHƯA ngày nào evaluable.
+        "net_gated_usd":     float("nan"),
         # VWAP Tier 1: ΔOI⁺-weighted (primary)
         "vwap_num":        0.0,   # Σ ΔOI⁺ × avg_px
         "vwap_den":        0.0,   # Σ ΔOI⁺
@@ -483,7 +499,9 @@ def _new_chapter(st: dict, date_str: str) -> dict:
     st["gross_adds_usd"]   = 0.0
     st["oi_start_usd"]     = float("nan")  # reset per new chapter
     st["oi_last_usd"]      = float("nan")
-    st["net_oi_delta_usd"] = float("nan")
+    st["net_oi_window_usd"] = float("nan")  # verdict 17/08: reality-check window
+    st["net_oi_delta_usd"]  = float("nan")  # ALIAS 30d — drop 2026-09-17
+    st["net_gated_usd"]     = float("nan")  # gom-doctrine net (n_q1=0 → NaN)
     st["vwap_num"]         = 0.0
     st["vwap_den"]         = 0.0
     st["vwap_vol_num"]     = 0.0
@@ -658,13 +676,18 @@ def update_chain(
     # (rule iv already handled above for all open days, before this GOM section)
 
     # ── M4: OI tracking (oi_start on first fire; oi_last every GOM fire) ────
+    # net_oi_window_usd = oi_last - oi_start  [window, ungated — reality-check]
+    # KHÔNG phải lực gom — nhiễm chase-pump. Xem gom_scan._empty_chain header.
+    # net_oi_delta_usd = ALIAS 30d cho net_oi_window_usd (drop 2026-09-17).
     _oi_now = d.get("oi_usd", float("nan"))
     if not math.isnan(_oi_now):
         if math.isnan(chain.get("oi_start_usd", float("nan"))):
             chain["oi_start_usd"] = _oi_now   # first GOM fire in this chapter
         chain["oi_last_usd"] = _oi_now
         _oi_start = chain.get("oi_start_usd", float("nan"))
-        chain["net_oi_delta_usd"] = _oi_now - _oi_start if not math.isnan(_oi_start) else float("nan")
+        _net_window = _oi_now - _oi_start if not math.isnan(_oi_start) else float("nan")
+        chain["net_oi_window_usd"] = _net_window
+        chain["net_oi_delta_usd"]  = _net_window   # alias mirror
 
     # ── Q1 counting ──────────────────────────────────────────────────────────
     ret = _ret_1d(days, i)
@@ -678,13 +701,25 @@ def update_chain(
         # ΔOI⁺ = max(OI_today - OI_prev, 0)
         oi_prev = days[i-1].get("oi_usd", float("nan")) if i > 0 else float("nan")
         if not math.isnan(_oi_now) and not math.isnan(oi_prev):
-            delta_oi = max(_oi_now - oi_prev, 0.0)
+            delta_oi_raw = _oi_now - oi_prev             # both signs, no clip
+            delta_oi     = max(delta_oi_raw, 0.0)        # Q1 flavor: ΔOI⁺
         else:
-            delta_oi = 0.0
+            delta_oi_raw = float("nan")
+            delta_oi     = 0.0
 
         chain["Q1_cum_usd"]     = chain.get("Q1_cum_usd", 0.0) + delta_oi
         chain["gross_adds_usd"] = chain["Q1_cum_usd"]   # M4: alias in sync
         chain["n_days"]         = chain.get("n_days", 0) + 1
+
+        # net_gated_usd — Σ ΔOI (cả +/−) trên counts_q1 days.
+        # n_q1=0 → NaN (không init 0). Ngày đầu counts_q1 → chuyển NaN→0 rồi cộng.
+        # ΔOI không đo được (NaN) trên ngày qualifying → skip cộng nhưng giữ 0.0 (đã đánh dấu có ngày qualifying).
+        _cur_ng = chain.get("net_gated_usd", float("nan"))
+        if math.isnan(_cur_ng):
+            _cur_ng = 0.0
+        if not math.isnan(delta_oi_raw):
+            _cur_ng += delta_oi_raw
+        chain["net_gated_usd"] = _cur_ng
 
         # VWAP Tier 1: ΔOI⁺-weighted (M2 primary)
         px = d.get("avg_px", float("nan"))

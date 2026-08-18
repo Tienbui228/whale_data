@@ -2,6 +2,79 @@
 
 ---
 
+## SESSION 2026-08-18 — NET-SEMANTICS SPLIT (verdict 17/08, operator signed)
+
+**Operator:** Tien | **Model:** claude-sonnet-4-6 | **Relay:** ANALYSIS ký 17-18/08
+
+### Verdict & thi hành
+
+**Root:** `net_oi_delta_usd` (window ungated OI_end−OI_start) BỊ NHIỄM chase-pump —
+đo hiện tượng OI-theo-giá, không phải "gom ròng". Dùng biến này để filter chain hoặc
+làm signal → sai định nghĩa. AKE ch1 nettả chứng: net_window=+$14.67M nhưng trên 2
+ngày clean (counts_q1 PASS) OI drop −$5.16M → chase-pump chứ không phải gom.
+
+### N-0. Trạng thái day-k=3
+
+**(c) ĐÃ CHẠY.** `/tmp/dayk3.txt` VPS, 2026-08-15 08:13 UTC, 13407 bytes.
+Verdict cũ: "→ FAIL: delta %mg>15% = -11.3pp, delta median = -4.0pp — 'net' khong tradeable tren K=3."
+→ Dán nhãn **[INVALID — wrong-variable: net_k3 raw window nhiễm chase]**, KHÔNG đọc.
+→ Kết luận "net-signal đóng" **VÔ HIỆU**. net-signal MỞ LẠI, chờ re-run trên `net_gated_usd`.
+
+### N-1. Split 3 vars (gom_scan.py)
+
+- `gross_adds_usd` — GIỮ. Σ max(ΔOI,0) trên counts_q1 days.
+- `net_oi_delta_usd` → RENAME `net_oi_window_usd`. Alias 30d (drop 2026-09-17), log khi drop.
+  Nhãn cứng mọi output: "[window, ungated — reality-check, KHÔNG phải lực gom]".
+- `net_gated_usd` MỚI — Σ ΔOI (cả +/−, KHÔNG max) chỉ counts_q1 days.
+  n_q1=0 → NaN (KHÔNG 0). Biến DUY NHẤT mang nghĩa "gom ròng doctrine".
+
+Unit-check `_probe_net_split_unitcheck_20260818.py`:
+```
+AKE ch1  : gross=$0  net_window=+$14,670,516  net_gated=-$5,161,244 (n_q1=2, 2 ngày ΔOI âm)
+GIGGLE ch2: gross=$0  net_window=+$1,199,291  net_gated=NaN         (n_q1=0)
+```
+
+### N-2. Luật n_q1=0 (formatter run_gom_daily.py)
+
+- `n_q1=0` → `net_gated=NaN`, print flag `[NO-QUALIFIED-DAYS]`.
+- Bucket mới: **OPEN NO-QUALIFIED (n_q1=0)** — chain n_q1=0 KHÔNG vào GOM RÒNG / CHURN.
+- CẤM chữ "gom" trong text chain n_q1=0.
+- Classify 3 bucket: RÒNG (n_q1≥1 && net_gated>0), CHURN (n_q1≥1 && net_gated≤0), NO-QUALIFIED.
+
+### N-3. Hồi tố có mục tiêu
+
+**(a) DORMANT-register re-register 17/08:**
+  net_raw → net_gated, threshold **UNCHANGED $634K**, semantic-drift verdict, operator signed.
+  Đổi-biến-đúng-nghĩa ≠ refit. Ngưỡng giữ vì phân bố net_gated chưa đo lại — sau day-k=3
+  re-run trên net_gated (planned) mới đánh giá lại threshold.
+
+**(b) Closure net cũ:** KHÔNG tính lại. Kết luận cũ "net-signal đóng vì Group B beat A trên day-k=3"
+  → **VÔ HIỆU (đo biến sai nghĩa)**. net-dose MỞ LẠI trên net_gated, phân xử bởi day-k re-run N-0.
+
+**(c) net_k3 GIỮ định nghĩa** = oi(fire+3) − oi(fire). Thêm nhãn **[OI-3d-đầu window]** vào probe.
+  Finding "âm-đậm=cờ xấu" GIỮ (SKYAI −11.3M → hold 0.157).
+
+**(d) File 70-fire:** KHÔNG sửa (đã nhãn ref-only).
+
+### N-4. Chống tái phát — header 5 vars ĐO GÌ / KHÔNG ĐO GÌ
+
+Thêm vào comment `_empty_chain()` gom_scan.py cho 3 vars sống: Q1_cum_usd, net_oi_window_usd,
+net_gated_usd. Thêm nhãn vào _probe_dayk3 cho net_k3. gross_adds_usd = alias Q1 (cùng comment).
+
+### File thay đổi
+
+- `scripts/gom_scan.py` — _empty_chain, _new_chapter, update_chain
+- `scripts/run_gom_daily.py` — _build_entry, split 3 buckets, closed_chapters CSV +2 cột
+- `_probe_dayk3_20260815.py` — nhãn [OI-3d-đầu window]
+- `_probe_net_split_unitcheck_20260818.py` — mới (unit-check)
+- `_probe_dayk3_20260815.py` — nhãn hồi tố
+
+### SAU commit
+
+Re-run day-k=3 trên `net_gated_usd`. Về ANALYSIS đọc (phép net-dose thật, lần đầu trên biến đúng nghĩa).
+
+---
+
 ## SESSION 2026-08-13 — WATCHLIST TELEGRAM + THRESHOLD
 
 **Operator:** Tien | **Model:** claude-sonnet-4-6
@@ -8057,3 +8130,209 @@ Không có pipeline tự động → khi build muộn > 0 ngày phải chạy fe
 **CẦN OPERATOR:**
 1. Đóng CASE_AIN.xlsx → copy scratch/CASE_AIN_spot_patch_20260817.xlsx → docs/case_files/CASE_AIN.xlsx
 2. CASE_GUA + CASE_APR DAILY cần rebuild để fill Aug10-16 / Aug13-16 spot cols
+
+## SESSION 2026-08-17 — case_daily digest
+
+**Target date:** 2026-08-10  **Run:** 2026-08-17 07:45 UTC  **dry_run:** False
+
+### §1 Handover digest
+
+| Token | Status | row | lsr_pos_r | lsr_acc_r | div_raw | taker_buy_pct | f_avg | f_n | OI_USD | SUSPECT |
+|-------|--------|-----|-----------|-----------|---------|---------------|-------|-----|--------|---------|
+| BANK | OK | 46 | 1.4526 | 1.9412 | 0.7483 | 0.4925 | -0.000097 | 6 | 13,196,124 | no |
+| TAG | OK | 39 | 1.3768 | 1.2753 | 1.0796 | 0.4897 | 0.000289 | 6 | 10,079,046 | no |
+| BR | OK | 72 | 1.8020 | 1.4143 | 1.2741 | 0.5002 | 0.000119 | 6 | 3,195,085 | no |
+| IDOL | OK | 37 | 1.9641 | 1.5549 | 1.2632 | 0.4915 | 0.000202 | 6 | 9,228,931 | no |
+| COOKIE | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| BROCCOLIF3B | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| KOMA | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| APR | SKIP_EXISTS | — | — | — | — | — | — | — | — | — |
+
+**Tổng:** 4 OK, 1 skip, 0 dry_run
+
+---
+
+## SESSION 2026-08-17 — case_daily digest
+
+**Target date:** 2026-08-11  **Run:** 2026-08-17 07:46 UTC  **dry_run:** False
+
+### §1 Handover digest
+
+| Token | Status | row | lsr_pos_r | lsr_acc_r | div_raw | taker_buy_pct | f_avg | f_n | OI_USD | SUSPECT |
+|-------|--------|-----|-----------|-----------|---------|---------------|-------|-----|--------|---------|
+| BANK | OK | 47 | 1.5683 | 2.0469 | 0.7662 | 0.4601 | -0.000087 | 6 | 13,337,815 | no |
+| TAG | OK | 40 | 1.3566 | 1.4907 | 0.9100 | 0.4552 | 0.000164 | 6 | 9,775,639 | no |
+| BR | OK | 73 | 1.8062 | 1.3878 | 1.3015 | 0.4473 | 0.000050 | 6 | 3,492,938 | no |
+| IDOL | OK | 38 | 1.9798 | 1.5628 | 1.2668 | 0.4630 | 0.000112 | 6 | 9,062,056 | no |
+| COOKIE | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| BROCCOLIF3B | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| KOMA | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| APR | SKIP_EXISTS | — | — | — | — | — | — | — | — | — |
+
+**Tổng:** 4 OK, 1 skip, 0 dry_run
+
+---
+
+## SESSION 2026-08-17 — case_daily digest
+
+**Target date:** 2026-08-12  **Run:** 2026-08-17 07:46 UTC  **dry_run:** False
+
+### §1 Handover digest
+
+| Token | Status | row | lsr_pos_r | lsr_acc_r | div_raw | taker_buy_pct | f_avg | f_n | OI_USD | SUSPECT |
+|-------|--------|-----|-----------|-----------|---------|---------------|-------|-----|--------|---------|
+| BANK | OK | 48 | 1.5795 | 1.9070 | 0.8283 | 0.4841 | -0.000389 | 6 | 11,832,076 | no |
+| TAG | OK | 41 | 1.3537 | 1.4851 | 0.9115 | 0.4827 | 0.000152 | 6 | 9,918,213 | no |
+| BR | OK | 74 | 1.8154 | 1.5575 | 1.1656 | 0.5097 | 0.000437 | 6 | 3,256,177 | no |
+| IDOL | OK | 39 | 1.9535 | 1.7345 | 1.1263 | 0.5197 | 0.000142 | 6 | 8,846,186 | no |
+| COOKIE | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| BROCCOLIF3B | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| KOMA | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| APR | SKIP_EXISTS | — | — | — | — | — | — | — | — | — |
+
+**Tổng:** 4 OK, 1 skip, 0 dry_run
+
+---
+
+## SESSION 2026-08-17 — case_daily digest
+
+**Target date:** 2026-08-13  **Run:** 2026-08-17 07:46 UTC  **dry_run:** False
+
+### §1 Handover digest
+
+| Token | Status | row | lsr_pos_r | lsr_acc_r | div_raw | taker_buy_pct | f_avg | f_n | OI_USD | SUSPECT |
+|-------|--------|-----|-----------|-----------|---------|---------------|-------|-----|--------|---------|
+| BANK | SKIP_EXISTS | — | — | — | — | — | — | — | — | — |
+| TAG | SKIP_EXISTS | — | — | — | — | — | — | — | — | — |
+| BR | SKIP_EXISTS | — | — | — | — | — | — | — | — | — |
+| IDOL | SKIP_EXISTS | — | — | — | — | — | — | — | — | — |
+| COOKIE | SKIP_EXISTS | — | — | — | — | — | — | — | — | — |
+| BROCCOLIF3B | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| KOMA | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| APR | SKIP_EXISTS | — | — | — | — | — | — | — | — | — |
+
+**Tổng:** 0 OK, 6 skip, 0 dry_run
+
+---
+
+## SESSION 2026-08-17 — case_daily digest
+
+**Target date:** 2026-08-14  **Run:** 2026-08-17 07:46 UTC  **dry_run:** False
+
+### §1 Handover digest
+
+| Token | Status | row | lsr_pos_r | lsr_acc_r | div_raw | taker_buy_pct | f_avg | f_n | OI_USD | SUSPECT |
+|-------|--------|-----|-----------|-----------|---------|---------------|-------|-----|--------|---------|
+| BANK | OK | 49 | 1.5590 | 1.8662 | 0.8354 | 0.4825 | 0.000019 | 6 | 11,813,031 | no |
+| TAG | OK | 42 | 1.3916 | 1.3883 | 1.0024 | 0.4653 | 0.000123 | 6 | 10,033,418 | no |
+| BR | OK | 75 | 1.3096 | 0.4554 | 2.8757 | 0.5032 | 0.000073 | 6 | 14,089,555 | no |
+| IDOL | OK | 40 | 1.9889 | 1.8736 | 1.0615 | 0.5110 | 0.000200 | 6 | 8,875,114 | no |
+| COOKIE | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| BROCCOLIF3B | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| KOMA | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| APR | SKIP_EXISTS | — | — | — | — | — | — | — | — | — |
+
+**Tổng:** 4 OK, 1 skip, 0 dry_run
+
+---
+
+## SESSION 2026-08-17 — case_daily digest
+
+**Target date:** 2026-08-15  **Run:** 2026-08-17 07:46 UTC  **dry_run:** False
+
+### §1 Handover digest
+
+| Token | Status | row | lsr_pos_r | lsr_acc_r | div_raw | taker_buy_pct | f_avg | f_n | OI_USD | SUSPECT |
+|-------|--------|-----|-----------|-----------|---------|---------------|-------|-----|--------|---------|
+| BANK | OK | 50 | 1.5930 | 1.7824 | 0.8937 | 0.4721 | 0.000043 | 6 | 11,699,706 | no |
+| TAG | OK | 43 | 1.3990 | 1.4685 | 0.9527 | 0.4694 | 0.000100 | 6 | 10,185,627 | no |
+| BR | OK | 76 | 1.4482 | 0.4712 | 3.0734 | 0.5232 | 0.000104 | 6 | 9,209,227 | no |
+| IDOL | OK | 41 | 1.9694 | 2.1980 | 0.8960 | 0.4923 | 0.000244 | 6 | 8,828,943 | no |
+| COOKIE | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| BROCCOLIF3B | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| KOMA | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| APR | SKIP_EXISTS | — | — | — | — | — | — | — | — | — |
+
+**Tổng:** 4 OK, 1 skip, 0 dry_run
+
+---
+
+## SESSION 2026-08-17 — case_daily digest
+
+**Target date:** 2026-08-16  **Run:** 2026-08-17 07:46 UTC  **dry_run:** False
+
+### §1 Handover digest
+
+| Token | Status | row | lsr_pos_r | lsr_acc_r | div_raw | taker_buy_pct | f_avg | f_n | OI_USD | SUSPECT |
+|-------|--------|-----|-----------|-----------|---------|---------------|-------|-----|--------|---------|
+| BANK | OK | 51 | 1.6943 | 1.8466 | 0.9175 | 0.4614 | 0.000024 | 6 | 11,251,300 | no |
+| TAG | OK | 44 | 1.4061 | 1.4498 | 0.9699 | 0.4934 | 0.000093 | 6 | 7,813,929 | no |
+| BR | OK | 77 | 1.2518 | 0.5701 | 2.1958 | 0.5163 | 0.000088 | 6 | 9,081,237 | no |
+| IDOL | OK | 42 | 1.8469 | 2.1104 | 0.8751 | 0.4966 | 0.000321 | 6 | 8,812,072 | no |
+| COOKIE | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| BROCCOLIF3B | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| KOMA | VALIDATE_FAIL | — | — | — | — | — | — | — | — | — |
+| APR | SKIP_EXISTS | — | — | — | — | — | — | — | — | — |
+
+**Tổng:** 4 OK, 1 skip, 0 dry_run
+
+---
+
+## SESSION 2026-08-17 — BUG A+B fix + rebuild COOKIE/BROCCOLIF3B/KOMA
+
+**Commit:** f5b0f3a
+
+### Việc đã làm
+
+**BUG A — save-before-validate (fix):**
+- Thay thế `wb.save(original)` → `validate()` bằng temp-file pattern: save → `.tmp_validate.xlsx`, validate trên tmp, nếu PASS thì `tmp.replace(original)`, nếu FAIL thì `unlink(tmp)` → original không bao giờ bị ghi bad data.
+
+**BUG A guard — SKIP_EXISTS silent:**
+- Thêm `validate_written_pack(xlsx_path)` trong nhánh SKIP_EXISTS: nếu file có row cho ngày đó nhưng schema bị corrupt → `SCHEMA_FAIL_EXISTS` thay vì `SKIP_EXISTS`.
+- Phát hiện mới: **CASE_APR.xlsx** cũng có SCHEMA_FAIL_EXISTS — pos_r/acc_r/gLSR = 0/30 non-null trong last 30d. Cần điều tra riêng.
+
+**BUG B — NEW_SCHEMA_COL_MAP (fix):**
+- Thêm `NEW_SCHEMA_COL_MAP` (cols 7/8/9-12/13/15/27-29), `NEW_FORMULA_COLS`, `_NEW_RATIO_COLS`, `_detect_schema()`.
+- `_detect_schema(ws)` kiểm tra `ws.cell(2,3).value` — "o" → `schema=new`.
+- `_append_daily_row` nhận keyword params `col_map/formula_cols/ratio_cols/taker_col/get_formulas`.
+- Dry-run xác nhận: BANK/TAG/BR/IDOL = `schema=old`, COOKIE/BROCCOLIF3B/KOMA = `schema=new`. ✓
+
+**Rebuild COOKIE/BROCCOLIF3B/KOMA:**
+- `_probe_rebuild_schema_20260817.py`: phát hiện 7 bad rows mỗi file (vol_col7 < 1000 USD), xóa, ghi lại từ freshwatch_daily_2026-08.csv dùng NEW_COL_MAP.
+- Kết quả validate PASS cả 3 file.
+- Taker col8 sau rebuild: COOKIE 46-49%, BROCCOLIF3B 46-52%, KOMA 46-50% — đúng percent scale. ✓
+
+### CẦN OPERATOR (phát hiện mới)
+
+| Token | Vấn đề | Ưu tiên |
+|-------|--------|---------|
+| APR | SCHEMA_FAIL_EXISTS — pos_r/acc_r/gLSR = 0/30 non-null. Có thể case_daily cũng đã ghi vào cột sai (new schema file). | Trung bình |
+
+### Số liệu
+- `_probe_taker_scale_20260817.py`: xác nhận good rows (07-27 → 08-08/08-09) có taker=fraction (0.44-0.53), bad rows (08-10→08-16) có taker=garbage (5e-05).
+- Sau rebuild: taker ở col8 = percent scale (46-52%), consistent với validate_written_pack expectation.
+- Lưu ý: historical rows (trước backfill) vẫn là fraction scale ở col8 — inconsistency của build_case.py (vấn đề riêng, không fix trong session này).
+
+
+## SESSION 2026-08-17 (cont.) — APR schema fix (12362f5)
+
+**APR root cause (KHÁC với COOKIE/BROCCOLIF3B/KOMA):**
+- `_detect_schema` → `new` ✓ (col3="o", cùng schema)
+- vol col7 = real vol (1.9M-903M USD) → `vol<1000` detector tìm 0 bad rows
+- Col map KHÔNG sai — build_case.py đã ghi o/h/l/c/vol/data_ok đúng cột
+- Taker col8: TRỐNG cho 08-10→08-16 (7 rows) — build_case ghi nhưng thiếu taker cho những ngày này
+- LSR cols 27-29: TRỐNG cho TOÀN BỘ 300 rows — build_case không ghi LSR từ ban đầu
+
+**Fix:**
+- APRUSDT CÓ trong freshwatch_daily export (74 rows Jun-Aug 2026 có lsr_pos_r/acc_r/gLSR)
+- Backfill 74 rows vào col27/28/29; 7 rows 08-10→08-16 thêm taker (×100 fraction→percent)
+- validate PASS ✓; guard scan 8/8 OK, 0 FAIL
+
+**Contamination [3] — SẠCH:**
+- `_probe_chain_clean_20260815.py` và `_probe_export_fire_csv_20260815.py` KHÔNG reference CASE_*.xlsx
+- APR rank-15 net+482K trong hậu kiểm đọc từ freshwatch_daily CSV → số ĐÚNG, không nhiễm
+
+**Lưu ý cho future:**
+- build_case.py cần ghi LSR khi tạo CASE mới (hiện tại bỏ sót) — case sau APR nên check
+- freshwatch_symbols.txt không có ở local path (chỉ trên VPS) — probe [C] bị FileNotFoundError (không ảnh hưởng fix)
+
