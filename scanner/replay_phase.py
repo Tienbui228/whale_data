@@ -39,8 +39,9 @@ from phase_tag import tag, event_tag
 import csv, math
 
 # [F1] Canonical scale detector (avoid hard-code ×100, avoid fork scale-logic)
+# [B0-v0.3.3] Also import enrich_token_days for canonical d_pos_3d + oi_cycle_pos
 sys.path.insert(0, str(REPO / "scripts"))
-from fw_loader_utils import taker_scale_check   # returns scale factor 1.0 or 100.0
+from fw_loader_utils import taker_scale_check, enrich_token_days
 
 FRESHWATCH_DIR = REPO / "data" / "export"
 
@@ -102,6 +103,11 @@ def load_freshwatch_days(sym_usdt: str, lookback_days: int = 90) -> list:
                 f"Loader path bị bypass hoặc canonical detector broken. Nổ mặt tại loader "
                 f"để không đi xuống cây với data sai scale."
             )
+
+    # [B0-v0.3.3] Enrich canonical derived fields (d_pos_3d + oi_cycle_pos per spec A4/A5).
+    # Called AFTER taker_scale_check so enrichment sees percent-scale data.
+    enrich_token_days(rows)
+
     return rows
 
 

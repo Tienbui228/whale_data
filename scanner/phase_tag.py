@@ -317,10 +317,14 @@ def event_tag(days: list, i: int) -> Optional[str]:
         if not math.isnan(glsr_drop_3d) and glsr_drop_3d >= 0.30:
             return "WASH-RALLY"
 
-    # CROWD-CHASE: giá +8%+ ∧ (slope5 >1.15 ∨ gLSR +≥30%/3d)
+    # CROWD-CHASE — go-live [7e] điều kiện #5: TẠM chỉ chạy vế 1 (slope5 > 1.15)
+    # Vế 2 (gLSR +≥30%/3d) CHỜ p90 conditional calib (data 30d chase-candidates
+    # cho thấy median rise NEGATIVE — vế 2 số cần calib trên phân phối thật,
+    # không hard-code). Chạy vế 1 mình → giảm recall ca hiếm, KHÔNG sai nhãn.
+    # TODO-p90: sau operator ký ngưỡng vế 2 → thêm `or (rise_3d >= v2_thr)`.
     if not math.isnan(px_1d) and px_1d >= 0.08:
-        chase_cond = (not math.isnan(slope5) and slope5 > 1.15) or \
-                     (not math.isnan(glsr_growth_3d) and glsr_growth_3d >= 0.30)
+        chase_cond = (not math.isnan(slope5) and slope5 > 1.15)
+        # TODO-p90 vế 2: chờ p90 conditional calib
         if chase_cond:
             return "CROWD-CHASE"
 
@@ -493,13 +497,28 @@ def tag(days: list, i: int, cfg: dict, case_state: Optional[dict] = None) -> dic
                 stage = "S2-MID"
                 evidence.append(f"div_avg3={div:.2f} ∈ (0.5,1.5) + (pinned|absorption)")
                 conf = "MED"
-                # Sub S2-MID↑
+                # Sub S2-MID↑ (khi S2-MID đã hit, thêm cường độ)
                 d_pos = _d_pos_3d(days, i)
                 d_raw = _div_raw(days, i)
                 if not math.isnan(d_pos) and d_pos > 0 and \
                    not math.isnan(d_raw) and d_raw >= 1.5:
                     stage = "S2-MID↑"
                     evidence.append(f"[sub-up] d_pos_3d={d_pos:+.2f}>0 div_raw={d_raw:.2f}≥1.5 [raw=cảnh-báo-sớm]")
+
+            # S2-MID↑ INDEPENDENT (v0.3.3 batch 5 [B1] — ký nguyên văn):
+            # div_raw ≥1.5 ∧ d_pos_3d >0 ∧ [điều kiện chung B3: không markup ∧
+            # oi_cycle_pos ≤0.5]  → S2-MID↑
+            # · KHÔNG cần pinned/absorption
+            # · stage_conf = LOW bắt buộc
+            # · flags = OWNERSHIP-UNVERIFIED (tự nhiên add ở block cuối cho S2*)
+            elif True:  # oi_cp_ok đã check ở nhánh cha
+                d_pos = _d_pos_3d(days, i)
+                d_raw = _div_raw(days, i)
+                if not math.isnan(d_raw) and d_raw >= 1.5 and \
+                   not math.isnan(d_pos) and d_pos > 0:
+                    stage = "S2-MID↑"
+                    evidence.append(f"[v0.3.3-B1 standalone] d_pos_3d={d_pos:+.2f}>0 div_raw={d_raw:.2f}≥1.5 (không cần pin/abs)")
+                    conf = "LOW"
 
     # B4. S1 — SKIP sạch (§9.1 D3 chưa sống)
     # KHÔNG proxy per spec §4 B4
