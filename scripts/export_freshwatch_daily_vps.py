@@ -39,6 +39,7 @@ import typer
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from whale_collector.config import RAW_DIR, DATA_DIR, MASTER_PATH, EXCLUDED_SYMBOLS
+from whale_collector.storage.dedup import DEDUP_KEY   # OI-DUP-20260818 defense
 from whale_collector.timeutil import (
     now_ms, ms_to_date_str, ms_to_month_str, DAY_MS, HOUR_MS,
 )
@@ -308,6 +309,10 @@ def _build_klines_agg(date_str: str, symbols: list[str]) -> pd.DataFrame:
     df = df[df["symbol"].isin(sym_set)]
     if df.empty:
         return pd.DataFrame(columns=["symbol", "px_avg", "vol_quote"])
+
+    # OI-DUP-20260818 defense: SUM không-idempotent — dup rows identical vẫn inflate ×N.
+    # Bảo hiểm độc lập với _sync_append (dù writer dedup-on-write đã chặn nguồn).
+    df = df.drop_duplicates(subset=DEDUP_KEY, keep="last")
 
     grp = df.groupby("symbol").agg(
         quote_vol_sum=("quote_volume", "sum"),
