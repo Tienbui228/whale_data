@@ -14,12 +14,48 @@ exit ≠ 0 → cron log ERROR (như L-44 pattern).
 from __future__ import annotations
 import os
 import sys
+import json
+import urllib.parse
+import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 REPO = Path(__file__).parent.parent
 sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(REPO / "scanner"))
+
+# ── Load .env (same pattern as run_gom_daily.py) ────────────────────────────
+_env_path = REPO / ".env"
+if _env_path.exists():
+    for line in _env_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, _, v = line.partition("=")
+            os.environ.setdefault(k.strip(), v.strip())
+
+TG_TOKEN   = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TG_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+
+
+def tg_send(text: str, parse_mode: str = "") -> bool:
+    """Send Telegram message (same pattern as run_gom_daily.py::tg_send)."""
+    if not TG_TOKEN or not TG_CHAT_ID:
+        print("WARN: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set — skip send",
+              file=sys.stderr)
+        return False
+    url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
+    payload: dict = {"chat_id": TG_CHAT_ID, "text": text}
+    if parse_mode:
+        payload["parse_mode"] = parse_mode
+    data = urllib.parse.urlencode(payload).encode("utf-8")
+    try:
+        req = urllib.request.Request(url, data=data, method="POST")
+        with urllib.request.urlopen(req, timeout=15) as r:
+            resp = json.loads(r.read().decode())
+            return bool(resp.get("ok"))
+    except Exception as exc:
+        print(f"TG send failed: {exc}", file=sys.stderr)
+        return False
 
 
 def main() -> int:
@@ -228,9 +264,16 @@ def main() -> int:
     msg = render_5_blocks(rows, target_date, days_map=days_map)
     print(msg)
 
-    # TODO (chờ operator ký #6 điều kiện): send_telegram(msg)
-    # Hiện tại: chỉ print (dry-run), chưa wire Telegram
-
+    # [L1] Push Telegram thật (skip khi --dry-run)
+    if dry_run:
+        print("\n[dry-run] KHÔNG push Telegram — stdout only", file=sys.stderr)
+        return 0
+    # Plain text (no parse_mode) — 5-block emoji render tốt hơn Markdown escape
+    ok = tg_send(msg, parse_mode="")
+    if not ok:
+        print("ERROR: Telegram send failed", file=sys.stderr)
+        return 1
+    print(f"\n[telegram] sent to chat_id={TG_CHAT_ID} ({len(msg)} chars)")
     return 0
 
 
