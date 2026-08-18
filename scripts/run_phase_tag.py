@@ -29,6 +29,13 @@ def main() -> int:
     # ── ASSERT §8.2-mirror: cron KHÔNG có quyền viết lại lịch sử ───────────
     # Same pattern as run_gom_daily.py:672 — sys.argv guard for full-rebuild
     argv = sys.argv[1:]
+
+    # --date <YYYY-MM-DD> override + --dry-run (KHÔNG push Telegram)
+    dry_run = "--dry-run" in argv
+    if "--date" in argv:
+        _idx = argv.index("--date")
+        if _idx + 1 < len(argv):
+            target_date = argv[_idx + 1]
     if "--full-rebuild" in argv:
         # Must have env-var to allow
         if os.environ.get("PHASE_TAG_ALLOW_FULL_REBUILD") != "1":
@@ -43,6 +50,33 @@ def main() -> int:
         "và manual invocation."
     )
 
+    # ── [D2] MAP-STALENESS guard — đóng nợ S3 (chống stale-silent) ─────────
+    # CASE_INDEX.xlsx sống ở local Windows; case_state_map.md SCP tay lên VPS.
+    # Nếu operator quên regen+SCP sau khi edit CASE_INDEX → map stale → verdict
+    # ⚠/🔻 route theo state CŨ. Guard HÉT sau 3d nhưng KHÔNG block scan.
+    _csm_path = REPO / "docs" / "case_files" / "case_state_map.md"
+    STALE_THRESHOLD_DAYS = 3
+    if _csm_path.exists():
+        import time
+        mtime = _csm_path.stat().st_mtime
+        age_days = (time.time() - mtime) / 86400.0
+        if age_days > STALE_THRESHOLD_DAYS:
+            msg = (f"⚠ case_state_map stale {age_days:.1f}d — regen+SCP "
+                   f"(state có thể lệch verdict ký). Sau MỖI edit "
+                   f"CASE_INDEX sheet INDEX: local python "
+                   f"_task_gen_case_state_map_20260818.py + SCP .md → VPS.")
+            print(f"WARNING {msg}", file=sys.stderr)
+            # Telegram alert (không block scan)
+            try:
+                from whale_collector.alert import telegram_error
+                telegram_error(msg)
+            except Exception as _exc:
+                print(f"  (telegram_error not wired: {_exc})", file=sys.stderr)
+    else:
+        # Map missing entirely — HÉT ngay, không đợi 3d
+        print(f"WARNING ⚠ case_state_map.md MISSING at {_csm_path} — "
+              f"⚠/🔻 blocks sẽ không route đúng. SCP required.", file=sys.stderr)
+
     # ── Load state (case_state_map + freshwatch) ───────────────────────────
     # INCREMENTAL: chỉ chạy tag() cho target_date, KHÔNG rebuild history.
     # Import freshwatch loader trực tiếp (không qua replay_phase để tránh
@@ -54,7 +88,18 @@ def main() -> int:
     sys.path.insert(0, str(REPO / "scripts"))
     from fw_loader_utils import taker_scale_check, enrich_token_days
 
-    BOT_REPO = Path(r"D:\Data back test\binance-bot-signals")   # for CFG
+    # Locate bot-signals thresholds.yaml — try common paths (local Win / VPS Linux)
+    _bot_candidates = [
+        Path(r"D:\Data back test\binance-bot-signals"),
+        Path("/root/Data_back_test/binance-bot-signals"),
+        Path.home() / "Data_back_test" / "binance-bot-signals",
+    ]
+    BOT_REPO = next((p for p in _bot_candidates
+                     if (p / "scanner" / "screener" / "thresholds.yaml").exists()), None)
+    if BOT_REPO is None:
+        print(f"ERROR: bot-signals thresholds.yaml not found in candidates: "
+              f"{[str(p) for p in _bot_candidates]}", file=sys.stderr)
+        return 1
     CFG = yaml.safe_load(open(BOT_REPO / "scanner" / "screener" / "thresholds.yaml",
                               encoding="utf-8"))
 

@@ -119,6 +119,21 @@ Quy ước vòng đời artifact:
 \- **PROBE STORE TRƯỚC** khi fetch external API: ssh VPS → kiểm tra partition tồn tại + log collector → chỉ fetch ngoài khi (b) cần lịch sử trước ngày store bắt đầu (one-off backfill, có nhãn) hoặc (c) data type không có trong store (ghi DEV task). KHÔNG lập đường collect song song ad-hoc.
 \- **tape one-shot vào cron → cùng luật fail-behavior**: missing-dependency → ERROR + exit≠0 + alert (cấm no-op êm). (L-44)
 
+## PHASE-TAG CASE_INDEX → case_state_map workflow (ký 18/08, án PHASE-TAG-v0.3.3)
+
+Sau MỖI edit `CASE_INDEX.xlsx` sheet INDEX (đổi state token, thêm/xóa case, đổi ngày ký):
+
+1. **local Windows:** `python _task_gen_case_state_map_20260818.py`
+   → regen `docs/case_files/case_state_map.md` (VIEW SINH từ CASE_INDEX).
+2. **SCP lên VPS:** `scp docs/case_files/case_state_map.md root@5.223.67.21:/root/Data_back_test/whale_data/docs/case_files/`
+3. **Verify md5:** `md5sum` local vs VPS phải KHỚP.
+
+**Quên bước 1-3:** cron phase_tag đọc map cũ → khối ⚠/🔻 route theo state CŨ (verdict ký mới không phản ánh trong Telegram scan). Ví dụ: operator downgrade BTW từ DISTRIBUTION-WATCH → CLOSED nhưng quên regen+SCP → BTW vẫn xuất hiện ⚠ STATE-CONFLICT trong report.
+
+**Staleness guard:** `scripts/run_phase_tag.py` check mtime — sau **3 ngày** cũ → HÉT WARNING + Telegram alert (khi wire). KHÔNG block scan (chạy state cũ vẫn có giá trị, chỉ nhắc operator). Guard KHÔNG auto-regen vì CASE_INDEX.xlsx sống local Windows, VPS không có quyền đọc/pull.
+
+**Lý do không auto-cron regen VPS:** CASE_INDEX.xlsx canonical ở local — VPS chỉ nhận `.md` qua SCP. Auto-cron trên VPS = đọc CASE_INDEX stale (nếu SCP xlsx theo cách khác, sync 2 chiều rắc rối). Guard-3d + operator workflow SCP tay = giải pháp tối giản hiện tại.
+
 ## FACTS ĐÃ CHỐT — ALPHA COLLECTOR V2 (04/08/2026)
 
 \- **Alpha daily store:** `data/raw/spot_klines_1d` venue=`binance_alpha`, collector `scripts/collect_alpha_daily.py`, cron 02:00 UTC. **Price/vol only, taker=ABSTAIN** (klines[9]==klines[5] trên bapi/alpha). Forward-only từ 04/08.
