@@ -1,8 +1,9 @@
 # docs/ INDEX — FreshWatch Knowledge Base
-**Version:** 1.0 · **Ngày:** 06/08/2026 · **Cập nhật:** 09/08/2026 (L-46/47/48 + Phụ lục A.5)
+**Version:** 1.1 · **Ngày:** 06/08/2026 · **Cập nhật:** 18/08/2026 (M6-20260818 + mục "Tài liệu ngoài repo")
 
 > **Luật mồ côi:** File `.md` trong `docs/` không được tham chiếu từ tầng Playbook/Lessons/Model-spec/INDEX này → liệt kê vào mục "Orphan" → operator quyết archive hoặc link.
 > Cron review: mỗi khi K-series consolidation.
+> **Cross-repo rule (M6-20260818):** INDEX chỉ TRỎ (không mirror nội dung file ngoài repo). Path tuyệt đối bắt buộc.
 
 ---
 
@@ -19,10 +20,28 @@
 
 | File | Mô tả | Phủ lớp |
 |------|-------|---------|
-| `docs/analysis_playbook.md` | **Playbook chính** — 8 lớp phân tích I→VII + §VIII học thuyết + lessons cross-ref | I–VIII |
+| `docs/analysis_playbook.md` | **Playbook chính** — 8 lớp phân tích I→VII + §VIII học thuyết (VIII.1-VIII.15) + lessons cross-ref | I–VIII |
 | `docs/handover/analysis_handover_20260817.md` | **Đọc thứ nhì** — bảng trạng thái 17 case (17/08) · §2 học thuyết phiên · spec/infra pending | Boot seq |
+| `docs/handover/analysis_handover_addendum_20260818.md` | **Đọc sau handover chính** — Sử ký M6 net-semantics (§A M6 amendment · §B TASKS net-dose · §C lessons + playbook line · §D commit checklist) | Boot seq / phụ đề |
 | `docs/lessons_learned.md` | View sinh từ CASE_INDEX.xlsx sheet LESSONS (không edit trực tiếp) · L-01→L-48 | All |
 | `docs/lessons_rev2_source.md` | Source draft lessons (sửa vào CASE_INDEX sheet LESSONS) | All |
+| `proposals/lessons_pending_batch_20260818.md` | Batch pending 3 lessons §C net-semantics (chờ nhập LESSONS sheet, immutable sau ký) | All |
+
+---
+
+## Tầng 1b — TÀI LIỆU NGOÀI REPO (INDEX chỉ TRỎ, không mirror nội dung)
+
+Spec canonical thuộc repo khác. Sửa nội dung = sửa tại nguồn (không ở INDEX).
+
+| Đường dẫn tuyệt đối | Mô tả | Version |
+|--------------------|-------|---------|
+| `D:\Data back test\binance-bot-signals\docs\gom_detect_spec.md` | **GOM detector spec canonical** — §1-§9 v2.0 D-tier + §M1-M5 amendment (v1.8, 09/08) + **§M6 net-semantics (v3.1, 18/08 — mã án `M6-20260818`)** + §H0-H7 (ARCHIVED-BY-NUMBER 14/08) | **v3.1** (v3.0 + M6) |
+| `D:\Data back test\binance-bot-signals\docs\STRATEGY_SPEC_long_accumulation_continuation_V1_3.md` | Long-accumulation-continuation strategy spec | V1.3 |
+| `D:\Data back test\binance-bot-signals\docs\freshwatch_m45_master_plan.md` | Master plan §1 gốc (FreshWatch M4.5) — playbook §I-§VII trỏ về đây bằng "master plan §1 #X" | — |
+| `D:\Data back test\binance-bot-signals\docs\ARCHITECTURE_AND_ADR_V2.md` | Architecture + ADR bot-signals | V2 |
+| `D:\Data back test\binance-bot-signals\docs\CODE_MAP_V2.md` | Code map | V2 |
+
+> **Repo canonical binance-bot-signals** (CLAUDE.md L-42, chốt 31/07): `D:\Data back test\binance-bot-signals\`. OneDrive copy đã RETIRED. replay.py + 12 calib files ở đây.
 
 ---
 

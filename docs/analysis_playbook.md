@@ -1,5 +1,5 @@
 # Analysis Playbook — FreshWatch
-**Version:** 0.3 (17/08/2026) · **Chủ sổ:** operator (Tien)
+**Version:** 0.3.1 (18/08/2026 — +VIII.15 net-semantics · mã án `M6-20260818`) · **Chủ sổ:** operator (Tien)
 **Nguồn:** tổng hợp từ master plan §1, case_tracker.md, lessons L-01→L-42, mm_econ_v0.2
 **Layer coverage:** I (Perp) · II (Crowd) · III (On-chain/M2) · IV (Funding) · V (External venue) · VI (Pre-ARM) · VII (MM-ECON model) · Spot/DEX — CASE_*.xlsx DAILY vol_spot_usd
 
@@ -584,6 +584,18 @@ Team chưa từng đẩy +100%/≤7d → **mọi staging mang mùi xả**.
 Trước verdict nhắc một hồ/spec → **check sống/chết trong sổ TRƯỚC**.
 
 > Án AIH 13/08: ANALYSIS viết trên H-tier đã archive vì đọc context nén — verdict sai loài.
+
+---
+
+### VIII.15 Một-tên-hai-nghĩa: `net_oi_delta` đọc ngược 180°
+
+Cùng nhãn "net" nhưng **ba số ba nghĩa**: `gross_adds_usd` (Σ ΔOI⁺ trên FIRE ∧ counts_q1) · `net_oi_window` (OI_end − OI_start ungated) · `net_gated_usd` (Σ ΔOI cả ± trên FIRE ∧ counts_q1 — **CANONICAL**).
+
+**Exhibit AKE ch1:** `{net_window +$14.67M · gross $0 · net_gated −$5.16M}` — cùng chain ba câu trả lời trái dấu. Đọc `net_oi_delta` cũ (window ungated) sẽ tưởng AKE "gom mạnh"; đọc `net_gated` (canonical) thấy 2 ngày qualifying RÚT ròng — chase-pump.
+
+Trước khi ném biến vào giả thuyết/verdict: đọc 2 dòng **"ĐO GÌ / KHÔNG ĐO GÌ"** của biến; thiếu 2 dòng = biến chưa đủ tư cách vào doctrine. (Governance rule M6 — mã án `M6-20260818`; sử ký: `docs/handover/analysis_handover_addendum_20260818.md §A`.)
+
+> **Lỗ trapping cơ bản của họ án:** cùng-tên-viết-tắt ≠ cùng-nghĩa. Verdict nhắc "net" viết tắt → hỏi lại định nghĩa TRƯỚC khi đọc số.
 
 ---
 

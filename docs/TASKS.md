@@ -1,7 +1,29 @@
 # TASKS — FreshWatch Task Ledger
 
-Cập nhật: 13/08/2026. **Mỗi session mở đầu bằng diff file này.**
+Cập nhật: 18/08/2026. **Mỗi session mở đầu bằng diff file này.**
 Format cột Status: `QUEUED` / `DOING` / `DONE <commit>` / `BLOCKED <lý do>`
+
+## Khối NET-DOSE (mã án `M6-20260818`, án semantic-drift, operator signed via relay 17-18/08)
+
+Chi tiết đầy đủ: `docs/handover/analysis_handover_addendum_20260818.md §B`.
+
+| ID | Ngày giao | Tóm tắt | Status |
+|----|-----------|---------|--------|
+| M6-R0 | 17/08 | Verdict semantic-drift ký relay: `net_oi_delta` cũ nhiễm chase-pump, split 3 vars (gross_adds · net_oi_window · net_gated CANONICAL). LUẬT NHÃN "ĐO GÌ / KHÔNG ĐO GÌ". | DONE — signed 17/08 |
+| M6-N0..N4 | 17/08 | Code split gom_scan.py + formatter run_gom_daily.py + label L-31 addendum. Unit-check AKE `{window +$14.67M · gross $0 · gated −$5.16M}`. | DONE `da81774` |
+| M6-R1a | 18/08 | Backfill net_gated Option 2 (chain window, ret-gate only) — 56 chapters, freshwatch_daily dedup-safe. | DONE `scratch/r1_backfill_net_gated_20260818.csv` |
+| M6-R1b | 18/08 | Backfill Option 1 canonical (FIRE ∧ counts_q1) — 32/56 MATCH · 24 MISMATCH loại · ROBO/AKE verify khớp. Persist `scratch/r1b_fireday_flags_20260818.json`. | DONE |
+| M6-R2 | 18/08 | Day-k=3 re-run trên `net_gated_usd` (biến canonical, lần đầu). Đăng-ký-trước hai phía đã ghi: PASS Δ%mg>15% ≥+15pp ∧ Δmedian ≥+5pp CÙNG DẤU; n(A)<8 → UNDERPOWERED không verdict. n(C)=62.5% tại fire+3 → thêm K=5 secondary (primary VẪN K=3). | QUEUED — chờ operator/ANALYSIS trigger |
+| M6-DORMANT | 18/08 | DORMANT-register: net_raw → net_gated, threshold `$634K` **ĐÓNG BĂNG** (đổi biến ≠ refit). Đánh giá lại threshold SAU R-2 kết luận. | BLOCKED — chờ M6-R2 |
+| M6-U0..U6 | 18/08 | Distribute addendum sang canonical homes: gom_detect_spec §M6 · playbook §VIII.15 · lessons_pending_batch · TASKS khối này · INDEX cross-ref. Hai commit prefix `[M6-20260818]`. | DOING |
+
+**Trình tự đọc net-dose (đã đăng ký):** R-0 → N0..N4 → R-1a → R-1b → R-2 (chờ) → operator đọc → verdict thứ 4 (biến đúng nghĩa + tập ngày đúng doctrine + tiêu chí đăng-ký-trước — VÒNG ĐẦU TIÊN đủ tư cách verdict cuối câu net-dose).
+
+**Câu hỏi cũ "net-signal đóng":** VÔ HIỆU (đo biến sai). MỞ LẠI trên `net_gated`, phân xử bởi M6-R2.
+
+---
+
+## Khối cũ (tài sản trước 18/08)
 
 | ID | Ngày giao | Tóm tắt | Status |
 |----|-----------|---------|--------|
