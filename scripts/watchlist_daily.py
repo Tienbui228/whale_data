@@ -206,6 +206,7 @@ def snapshot(sym, arr, ep_data, i, cfg):
     px_dist = (px - spx) / spx * 100 if (ok(px) and spx and ok(spx)) else NaN
     return {
         "sym": sym, "date": arr[i]["date"],
+        "as_of": arr[i]["date"],   # [W-B 19/08] per-symbol latest processed date
         "div_ratio": dr, "div_5d_ago": d5, "div_delta": dd,
         "struct_n": ep["struct_n"], "episode_id": ep["episode_id"],
         "in_hedge": ep["in_hedge"],
@@ -240,7 +241,12 @@ def run_date(target_date, token_data, cfg, ep_cache=None):
     for sym, arr in token_data.items():
         ep = ep_cache[sym] if ep_cache else detect_episodes(arr, cfg)
         idx = next((i for i, r in enumerate(arr) if r["date"] == target_date), None)
-        if idx is None: continue
+        if idx is None:
+            # [W-B 19/08] skip-stale per-symbol WARN — không auto-fill, log rõ
+            max_dt = arr[-1]["date"] if arr else "?"
+            print(f"WARN skip {sym}: no row for target={target_date} "
+                  f"(latest_this_sym={max_dt})", file=sys.stderr)
+            continue
         s = snapshot(sym, arr, ep, idx, cfg)
         if in_list_a(s, cfg):       snaps_a.append(s)
         if in_list_b(s, ep, idx, cfg): snaps_b.append(s)
@@ -509,7 +515,8 @@ def format_output_tg(snaps_a, snaps_b, date_str, td=None, prev_snap=None, top_a=
 
 # ── CSV log ───────────────────────────────────────────────────────────────────
 _CSV_FIELDS = [
-    "run_date", "symbol", "list", "div_ratio", "div_5d_ago", "div_delta",
+    "run_date", "symbol", "list", "as_of",   # [W-B 19/08] as_of per-symbol
+    "div_ratio", "div_5d_ago", "div_delta",
     "struct_n", "episode_id", "hedge_start_date", "hedge_start_px",
     "px_now", "px_dist_pct", "pos_trend", "oi_trend", "oi_note", "funding_pct",
 ]
@@ -527,6 +534,7 @@ def append_csv(snaps_a, snaps_b, run_date_str, cfg):
             fd  = s["fund"] * 100 if ok(s["fund"]) else NaN
             return {
                 "run_date": run_date_str, "symbol": s["sym"], "list": lst,
+                "as_of":    s.get("as_of", run_date_str),   # [W-B 19/08]
                 "div_ratio":  _s(s["div_ratio"],  ".4f"),
                 "div_5d_ago": _s(s["div_5d_ago"], ".4f"),
                 "div_delta":  _s(s["div_delta"],  "+.4f"),
@@ -567,16 +575,46 @@ def send_telegram(text: str) -> bool:
     return ok_all
 
 # ── Main ──────────────────────────────────────────────────────────────────────
+def _guard_freshness(td):
+    """[W-B 19/08] §5.11 block-nếu-thiếu.
+
+    Return (ok:bool, max_date:str, stale_days:int, expected:str).
+    Rule: freshwatch max_date phải ≥ D-1 (yesterday close). Nếu thiếu → BLOCK.
+    """
+    from datetime import date as _date, timedelta as _td
+    expected = (_date.today() - _td(days=1)).isoformat()
+    actual = max(r["date"] for arr in td.values() for r in arr)
+    stale = (_date.fromisoformat(expected) - _date.fromisoformat(actual)).days
+    return (stale <= 0, actual, max(0, stale), expected)
+
+
 def main():
-    ap = argparse.ArgumentParser(description="Watchlist daily v1.3")
+    ap = argparse.ArgumentParser(description="Watchlist daily v1.4 [W-B/C 19/08]")
     ap.add_argument("--date", help="YYYY-MM-DD (default: latest in store)")
     ap.add_argument("--no-telegram", action="store_true", default=False)
+    ap.add_argument("--skip-guard", action="store_true", default=False,
+                    help="[W-B 19/08] Skip §5.11 freshness guard (backfill/test only)")
     args = ap.parse_args()
 
     cfg = load_config()
     td  = load_token_data(EXPORT_DIR, cfg["data"]["min_history_rows"])
     if not td:
         print("ERROR: no token data.", file=sys.stderr); sys.exit(1)
+
+    # [W-B 19/08] §5.11 GUARD FRESHNESS — block-nếu-thiếu
+    if not args.skip_guard and not args.date:   # skip guard nếu operator override --date
+        _ok, _actual, _stale, _expected = _guard_freshness(td)
+        if not _ok:
+            _msg = (f"⚠ WATCHLIST STALE-BLOCK: freshwatch latest={_actual} vs "
+                    f"expected D-1={_expected} (stale {_stale}d). "
+                    f"Bỏ chuyến — chờ freshwatch export xong.")
+            print(f"ERROR {_msg}", file=sys.stderr)
+            # Telegram alert BẮT BUỘC
+            try:
+                send_telegram(_msg)
+            except Exception as _exc:
+                print(f"WARN: telegram alert failed: {_exc}", file=sys.stderr)
+            sys.exit(1)   # exit ≠ 0 → cron log ERROR (L-44)
 
     target = args.date or max(r["date"] for arr in td.values() for r in arr)
     print(f"INFO: target_date={target}  tokens={len(td)}", file=sys.stderr)
@@ -599,7 +637,21 @@ def main():
         print(f"INFO: Telegram {'OK' if ok_tg else 'FAIL'}", file=sys.stderr)
 
     # v1.4: save today's snapshot for tomorrow's diff (always, không phụ thuộc telegram)
-    save_snapshot(snaps_a, snaps_b, target)
+    # [W-C 19/08] fix silent-fail — wrap try/except + telegram alert nếu fail
+    try:
+        save_snapshot(snaps_a, snaps_b, target)
+        _snap_path = STATE_DIR / f"hedge_watchlist_{target}.json"
+        print(f"INFO: snapshot SAVED to {_snap_path}", file=sys.stderr)
+    except Exception as _sn_exc:
+        _msg = (f"⚠ WATCHLIST snapshot SAVE FAIL for {target}: "
+                f"{type(_sn_exc).__name__}: {_sn_exc}. "
+                f"🎓 graduation classifier ngày mai KHÔNG có prev-snap.")
+        print(f"ERROR {_msg}", file=sys.stderr)
+        try:
+            send_telegram(_msg)
+        except Exception:
+            pass
+        # KHÔNG raise — auto-commit block dưới vẫn chạy (dù không có snap mới thêm)
 
     # v1.4: auto-commit snapshot (audit trail cho classifier 🎓 — không gitignore)
     import subprocess

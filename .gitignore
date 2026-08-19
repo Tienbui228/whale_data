@@ -5,6 +5,8 @@ data/*
 !data/logs/*.csv
 !data/state/
 !data/state/hedge_watchlist_*.json
+!data/export/
+!data/export/watchlist_corrections_*.csv
 *.parquet
 *.log
 
