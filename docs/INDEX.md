@@ -79,6 +79,7 @@ Spec canonical thuộc repo khác. Sửa nội dung = sửa tại nguồn (khôn
 | `docs/case_files/CASE_TAG.xlsx` | TAG | TRACKING |
 | `docs/case_files/CASE_TUT.xlsx` | TUT | LIVE (T+30=08/08) |
 | `docs/case_files/CASE_XPIN.xlsx` | XPIN | WATCH |
+| `docs/case_files/CASE_TRIA.xlsx` | TRIA | TRACKING (cold-start 19/08 — hedge episode #1 start Aug04, un-hedge readout Aug18/19) |
 
 ### Evidence Files (frozen — không sửa sau commit)
 
