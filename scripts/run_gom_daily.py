@@ -602,10 +602,22 @@ def _write_closed_chapters_csv(target_date: str) -> int:
     from datetime import datetime as _dt, timedelta as _td
     month = target_date[:7]
     out_path = STORE / f"closed_chapters_{month}.csv"
+    # [F3.3 19/08] File missing = legit no-state case, trả 0 im lặng.
+    # File tồn tại nhưng corrupt = BUG → WARN + telegram, NHƯNG return 0
+    # để KHÔNG cascade cron gom_daily (Telegram push + chapter csv khác vẫn phải chạy).
+    if not STATE_PATH.exists():
+        return 0
     try:
         with open(STATE_PATH, encoding="utf-8") as f:
             state = json.load(f)
-    except Exception:
+    except json.JSONDecodeError as _st_exc:
+        _msg = (f"⚠ gom_state.json CORRUPT: {_st_exc}. "
+                f"closed_chapters CSV KHÔNG ghi ngày này. Repair state hoặc restore backup.")
+        print(f"WARNING {_msg}", file=sys.stderr)
+        try:
+            tg_send(_msg, parse_mode="")
+        except Exception:
+            pass
         return 0
     fw_list = [l.strip() for l in FW_SYM_PATH.read_text(encoding="utf-8").splitlines() if l.strip()]
     fw_base = {s[:-4] if s.endswith("USDT") else s for s in fw_list}

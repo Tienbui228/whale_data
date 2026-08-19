@@ -163,15 +163,19 @@ def load_fw_csvs(store: Path, up_to_date: str, lookback_days: int = 60) -> pd.Da
 # ---------------------------------------------------------------------------
 
 def load_funding_intervals(config_dir: Path) -> dict[str, int]:
-    """Load data/config/funding_intervals.json. Returns {} if not found (callers default 8h)."""
+    """Load data/config/funding_intervals.json. Returns {} if not found (callers default 8h).
+
+    [F3.1 19/08] File EXISTS but corrupt → RAISE (nhất quán L-44 fail-loud
+    cutover đã deploy: export_freshwatch_daily_vps.py:377-381 RAISE nếu
+    fundingInfo fetch fail). Silent-fallback ở đây MÂU THUẪN cutover.
+    Missing file (không tồn tại) giữ default {} — legit no-config case.
+    """
     path = config_dir / "funding_intervals.json"
     if not path.exists():
         return {}
-    try:
-        with open(path, encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
+    # File tồn tại nhưng corrupt → JSONDecodeError propagate → callers see it
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 def expected_funding_n(interval_h: int) -> int:

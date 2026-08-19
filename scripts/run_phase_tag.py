@@ -183,8 +183,21 @@ def main() -> int:
     if _csm.exists():
         m = re.search(r"```json\s*(\{.*?\})\s*```", _csm.read_text(encoding="utf-8"), re.DOTALL)
         if m:
-            try: _CS = _json.loads(m.group(1))
-            except: pass
+            try:
+                _CS = _json.loads(m.group(1))
+            except _json.JSONDecodeError as _cse_exc:
+                # [F3.2 19/08] WARN + telegram + tiếp — KHÔNG nuốt câm.
+                # JSON corrupt → _CS rỗng → STATE-CONFLICT block TRỐNG âm thầm.
+                # KHÔNG raise: scan phải chạy tiếp (S2/S3 tags vẫn có ích).
+                _msg = (f"⚠ case_state_map.md JSON parse FAIL: {_cse_exc}. "
+                        f"STATE-CONFLICT block sẽ TRỐNG. Ký lại json trong "
+                        f"case_state_map.md.")
+                print(f"WARNING {_msg}", file=sys.stderr)
+                try:
+                    from whale_collector.alert import telegram_error
+                    telegram_error(_msg)
+                except Exception as _tg_exc:
+                    print(f"  (telegram_error not wired: {_tg_exc})", file=sys.stderr)
     def _case_state_for(tok): return _CS.get(tok)
 
     # Universe: freshwatch fw-139 (per spec §2)
@@ -260,13 +273,44 @@ def main() -> int:
         except Exception as exc:
             print(f"  [warn] {tok}: {exc}")
 
+    # ── [F1-20260819] WRITE phase_tag_daily.csv (append-only, forward-only) ────
+    # Spec canonical: docs/proposals/phase_tag_spec_v0.3.md:142
+    # Cột: date · token · stage · stage_conf · stage_evidence · stage_flags
+    #     · event_tag · wash_count_30d · herd_return · case_state · state_conflict
+    # (operator_stage_hint = None per spec — máy KHÔNG đọc)
+    # Chạy CẢ dry-run (verify được) — chỉ Telegram push mới skip. Dry-run ghi
+    # vào file suffix _DRYRUN.csv để KHÔNG ô nhiễm sổ canonical.
+    _csv_name = "phase_tag_daily_DRYRUN.csv" if dry_run else "phase_tag_daily.csv"
+    csv_out = REPO / "data" / "screener" / _csv_name
+    csv_out.parent.mkdir(parents=True, exist_ok=True)
+    _fields = ["date", "token", "stage", "stage_conf", "stage_evidence",
+               "stage_flags", "event_tag", "wash_count_30d", "herd_return",
+               "case_state", "state_conflict"]
+    _is_new = not csv_out.exists()
+    with open(csv_out, "a", newline="", encoding="utf-8") as _fp:
+        _w = csv.DictWriter(_fp, fieldnames=_fields)
+        if _is_new:
+            _w.writeheader()
+        for _r in rows:
+            _row = {}
+            for _k in _fields:
+                _v = _r.get(_k)
+                if isinstance(_v, list):
+                    _v = "|".join(str(x) for x in _v)
+                _row[_k] = _v if _v is not None else ""
+            _w.writerow(_row)
+    print(f"[csv] appended {len(rows)} rows → {csv_out}"
+          + (" (created)" if _is_new else ""),
+          file=sys.stderr)
+
     # Render Telegram 5-blocks
     msg = render_5_blocks(rows, target_date, days_map=days_map)
     print(msg)
 
     # [L1] Push Telegram thật (skip khi --dry-run)
     if dry_run:
-        print("\n[dry-run] KHÔNG push Telegram — stdout only", file=sys.stderr)
+        print("\n[dry-run] KHÔNG push Telegram — stdout only "
+              "(CSV ghi vào _DRYRUN.csv để verify)", file=sys.stderr)
         return 0
     # Plain text (no parse_mode) — 5-block emoji render tốt hơn Markdown escape
     ok = tg_send(msg, parse_mode="")

@@ -465,8 +465,14 @@ def tag(days: list, i: int, cfg: dict, case_state: Optional[dict] = None) -> dic
                     stage = "S3-GRIND"
                     evidence.append("C1 stealth_grind fires")
                     conf = "MED"
-        except Exception:
-            pass
+        except Exception as _gr_exc:
+            # [F3.4 19/08] WARN + flag + tiếp — KHÔNG nuốt câm C1 exception.
+            # Nếu stealth_grind (bot-signals) bug → token skip S3-GRIND silently
+            # = S2.5 fire/không-fire SAI CÂM. WARN stderr + flag lên CSV.
+            # KHÔNG raise: loop token trong caller phải chạy tiếp cho 137 token khác.
+            print(f"WARN phase_tag stealth_grind fail date={date_str} i={i} "
+                  f"{type(_gr_exc).__name__}: {_gr_exc}", file=sys.stderr)
+            flags.append(f"GRIND-ERROR:{type(_gr_exc).__name__}")
 
     # B3. TEXTURE S2 (không markup ∧ oi_cycle_pos ≤ 0.5)
     if stage is None:
