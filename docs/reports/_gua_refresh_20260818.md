@@ -74,7 +74,7 @@
 
 **Endpoint `bapi/defi/v1/public/alpha-trade/klines` (Aug15-17):**
 ```
-Aug15: o=0.04145 h=0.04450 l=0.04145 c=0.04216  vol_usd=234,378  (khớp $234K trong sổ)
+Aug15: o=0.04145 h=0.04450 l=0.04145 c=0.04216  vol_usd=234,378  [RETRACTED-L28 19/08: nhãn "khớp $234K trong sổ" GỠ — vòng tròn A khớp A (bapi ALPHA_483 tự-confirm, không phải sanity độc lập); ref forensics F3 _gua_identity_forensics_20260819.md]
 Aug16: o=0.04204 h=0.04301 l=0.04064 c=0.04273  vol_usd=107,060
 Aug17: o=0.04282 h=0.04451 l=0.04166 c=0.04385  vol_usd=96,714
 ```
@@ -82,7 +82,7 @@ Aug17: o=0.04282 h=0.04451 l=0.04166 c=0.04385  vol_usd=96,714
 **Kết luận:**
 - Alpha GUA **CÒN SỐNG** — `fullyDelisted=False`, `offline=False`, endpoint trả klines đầy đủ
 - Header note "fullyDelisted-ABSTAIN" trong file **SAI** (hoặc note cũ áp dụng cho taker_alpha ABSTAIN theo L-48, không phải cho token bị delisted)
-- Sổ có vol Aug16 = $234,378 (khớp handover 17/08). Alpha alive → nguồn số vẫn tin cậy được cho vol_alpha, TAKER vẫn ABSTAIN (L-48 alpha klines[9]==klines[5])
+- Sổ có vol Aug16 = $234,378 [RETRACTED-L28 19/08: "khớp handover 17/08" = self-confirm bapi ALPHA_483, KHÔNG phải sanity độc lập; "nguồn số vẫn tin cậy được cho vol_alpha" GỠ — chờ nguồn ngoài bapi verify. Alpha vẫn alive về mặt kỹ thuật, contract SEAL 3/3 bit-equal (A0 19/08) nên chuỗi vol_alpha KHÔNG quarantine; nhưng label "tin cậy" phải rút. Ref: forensics F3 _gua_identity_forensics_20260819.md]. TAKER vẫn ABSTAIN (L-48 alpha klines[9]==klines[5])
 
 ### Spot store check (data/raw/spot_klines_1d/)
 - Latest 10 partitions (Jul25→Aug03) — **KHÔNG có GUA rows** trong store
