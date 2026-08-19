@@ -80,6 +80,7 @@ Spec canonical thuộc repo khác. Sửa nội dung = sửa tại nguồn (khôn
 | `docs/case_files/CASE_TUT.xlsx` | TUT | LIVE (T+30=08/08) |
 | `docs/case_files/CASE_XPIN.xlsx` | XPIN | WATCH |
 | `docs/case_files/CASE_TRIA.xlsx` | TRIA | TRACKING (cold-start 19/08 — hedge episode #1 start Aug04, un-hedge readout Aug18/19) |
+| `docs/case_files/CASE_STBL.xlsx` | STBL | TRACKING (cold-start 19/08 — hedge episode start Jun27 struct_n=49, un-hedge sơ khai Aug17-18, contract UNVERIFIED §S4) |
 
 ### Evidence Files (frozen — không sửa sau commit)
 
