@@ -1,0 +1,324 @@
+{
+  "date": "2026-08-16",
+  "list_a_tokens": [
+    "ANIMEUSDT",
+    "ANKRUSDT",
+    "ASTRUSDT",
+    "BARDUSDT",
+    "BIRBUSDT",
+    "BNTUSDT",
+    "BRETTUSDT",
+    "COAIUSDT",
+    "COWUSDT",
+    "CTKUSDT",
+    "CVCUSDT",
+    "DEEPUSDT",
+    "ESPORTSUSDT",
+    "ETHWUSDT",
+    "FLOCKUSDT",
+    "FLUIDUSDT",
+    "FLUXUSDT",
+    "GUAUSDT",
+    "ICNTUSDT",
+    "ILVUSDT",
+    "INUSDT",
+    "KNCUSDT",
+    "KSMUSDT",
+    "LABUSDT",
+    "MELANIAUSDT",
+    "MERLUSDT",
+    "MTLUSDT",
+    "MYXUSDT",
+    "ONGUSDT",
+    "PLAYUSDT",
+    "POLYXUSDT",
+    "PUNDIXUSDT",
+    "RAVEUSDT",
+    "RIVERUSDT",
+    "RPLUSDT",
+    "SFPUSDT",
+    "SIGNUSDT",
+    "SIRENUSDT",
+    "SOPHUSDT",
+    "SPELLUSDT",
+    "STARUSDT",
+    "STEEMUSDT",
+    "TACUSDT",
+    "TOSHIUSDT",
+    "TRIAUSDT",
+    "TRUTHUSDT",
+    "USUALUSDT",
+    "VTHOUSDT",
+    "XVSUSDT",
+    "YFIUSDT",
+    "ZETAUSDT",
+    "ZRXUSDT",
+    "DRIFTUSDT",
+    "FOLKSUSDT",
+    "PIPPINUSDT",
+    "CHRUSDT",
+    "FUSDT",
+    "CLOUSDT",
+    "POWERUSDT",
+    "CLANKERUSDT",
+    "1000000BOBUSDT",
+    "1000000MOGUSDT",
+    "AIAUSDT",
+    "ALLUSDT",
+    "ARIAUSDT",
+    "BCHUSDT",
+    "BROCCOLIF3BUSDT",
+    "CELRUSDT",
+    "CHILLGUYUSDT",
+    "DOODUSDT",
+    "FIGHTUSDT",
+    "GOATUSDT",
+    "GTCUSDT",
+    "HAEDALUSDT",
+    "INITUSDT",
+    "JOEUSDT",
+    "KERNELUSDT",
+    "LIGHTUSDT",
+    "LYNUSDT",
+    "MAVIAUSDT",
+    "NEWTUSDT",
+    "ORDERUSDT",
+    "POLUSDT",
+    "PROMPTUSDT",
+    "PUMPBTCUSDT",
+    "RECALLUSDT",
+    "RONINUSDT",
+    "SCRUSDT",
+    "SHELLUSDT",
+    "SOLVUSDT",
+    "SONICUSDT",
+    "SPORTFUNUSDT",
+    "STBLUSDT",
+    "SWARMSUSDT",
+    "TAIKOUSDT",
+    "TRADOORUSDT",
+    "TREEUSDT",
+    "TRUSTUSDT",
+    "XMRUSDT",
+    "我踏马来了USDT"
+  ],
+  "list_b_tokens": {
+    "2ZUSDT": {
+      "oi_trend": "TĂNG",
+      "div_ratio": 0.9601493573009945,
+      "hedge_start_date": "",
+      "hedge_start_px": null,
+      "px_now": 0.0485591629955979
+    },
+    "ACUUSDT": {
+      "oi_trend": "TĂNG",
+      "div_ratio": 0.65125031213213,
+      "hedge_start_date": "",
+      "hedge_start_px": null,
+      "px_now": 0.1247419899495454
+    },
+    "CKBUSDT": {
+      "oi_trend": "LOW_CONF",
+      "div_ratio": 0.5095542184981483,
+      "hedge_start_date": "",
+      "hedge_start_px": null,
+      "px_now": 0.00082696577023
+    },
+    "COMPUSDT": {
+      "oi_trend": "TĂNG",
+      "div_ratio": 0.5078091605563411,
+      "hedge_start_date": "2026-08-11",
+      "hedge_start_px": 16.33584422967474,
+      "px_now": 16.20461852712232
+    },
+    "FLOCKUSDT": {
+      "oi_trend": "PHẲNG",
+      "div_ratio": 0.4814834078851555,
+      "hedge_start_date": "2026-08-08",
+      "hedge_start_px": 0.029304145690448,
+      "px_now": 0.0297096656151322
+    },
+    "FLUIDUSDT": {
+      "oi_trend": "GIẢM",
+      "div_ratio": 0.3500687270614576,
+      "hedge_start_date": "2026-08-01",
+      "hedge_start_px": 1.1861076967663662,
+      "px_now": 1.1877781813396877
+    },
+    "ILVUSDT": {
+      "oi_trend": "TĂNG",
+      "div_ratio": 0.4901572391259955,
+      "hedge_start_date": "2026-08-05",
+      "hedge_start_px": 2.903940245121694,
+      "px_now": 3.0770464980629675
+    },
+    "INUSDT": {
+      "oi_trend": "TĂNG",
+      "div_ratio": 0.4753095643684688,
+      "hedge_start_date": "2026-07-31",
+      "hedge_start_px": 0.0344484192354412,
+      "px_now": 0.032691650205116
+    },
+    "KAIAUSDT": {
+      "oi_trend": "PHẲNG",
+      "div_ratio": 0.5516334107968053,
+      "hedge_start_date": "2026-08-04",
+      "hedge_start_px": 0.0265350013281441,
+      "px_now": 0.0240374767430358
+    },
+    "LSKUSDT": {
+      "oi_trend": "TĂNG",
+      "div_ratio": 0.6098936356388667,
+      "hedge_start_date": "",
+      "hedge_start_px": null,
+      "px_now": 0.0770068370743254
+    },
+    "ONEUSDT": {
+      "oi_trend": "TĂNG",
+      "div_ratio": 1.259529435939587,
+      "hedge_start_date": "",
+      "hedge_start_px": null,
+      "px_now": 0.0007217195805326
+    },
+    "RLCUSDT": {
+      "oi_trend": "PHẲNG",
+      "div_ratio": 0.5229154195441736,
+      "hedge_start_date": "2026-08-10",
+      "hedge_start_px": 0.2753932240018855,
+      "px_now": 0.2826791436122989
+    },
+    "SFPUSDT": {
+      "oi_trend": "PHẲNG",
+      "div_ratio": 0.4346803210628288,
+      "hedge_start_date": "2026-06-23",
+      "hedge_start_px": 0.2250348464226083,
+      "px_now": 0.2354552358959283
+    },
+    "SPELLUSDT": {
+      "oi_trend": "GIẢM",
+      "div_ratio": 0.4575434712421014,
+      "hedge_start_date": "2026-08-05",
+      "hedge_start_px": 7.818079372671985e-05,
+      "px_now": 7.763968126512178e-05
+    },
+    "TRIAUSDT": {
+      "oi_trend": "GIẢM",
+      "div_ratio": 0.31764958898872114,
+      "hedge_start_date": "2026-08-04",
+      "hedge_start_px": 0.0083979205120562,
+      "px_now": 0.0085345572893415
+    },
+    "YFIUSDT": {
+      "oi_trend": "GIẢM",
+      "div_ratio": 0.48797024143739476,
+      "hedge_start_date": "2026-08-03",
+      "hedge_start_px": 2109.215478614455,
+      "px_now": 1945.480861547351
+    },
+    "CLOUSDT": {
+      "oi_trend": "GIẢM",
+      "div_ratio": 0.38683227589029884,
+      "hedge_start_date": "2026-08-01",
+      "hedge_start_px": 0.124947487268411,
+      "px_now": 0.1161396161318472
+    },
+    "SPACEUSDT": {
+      "oi_trend": "TĂNG",
+      "div_ratio": 0.5843188461709673,
+      "hedge_start_date": "",
+      "hedge_start_px": null,
+      "px_now": 0.004980587077467
+    },
+    "INXUSDT": {
+      "oi_trend": "TĂNG",
+      "div_ratio": 0.653086478511256,
+      "hedge_start_date": "",
+      "hedge_start_px": null,
+      "px_now": 0.0081411153558782
+    },
+    "AGTUSDT": {
+      "oi_trend": "TĂNG",
+      "div_ratio": 0.6012813782571347,
+      "hedge_start_date": "",
+      "hedge_start_px": null,
+      "px_now": 0.0154897872552281
+    },
+    "ARIAUSDT": {
+      "oi_trend": "PHẲNG",
+      "div_ratio": 0.45343625498007967,
+      "hedge_start_date": "2026-06-27",
+      "hedge_start_px": 0.0260788991327047,
+      "px_now": 0.0345675058562973
+    },
+    "BANANAUSDT": {
+      "oi_trend": "TĂNG",
+      "div_ratio": 0.6649550155192883,
+      "hedge_start_date": "",
+      "hedge_start_px": null,
+      "px_now": 3.8221393239809434
+    },
+    "CELRUSDT": {
+      "oi_trend": "PHẲNG",
+      "div_ratio": 0.4400197130888482,
+      "hedge_start_date": "2026-06-27",
+      "hedge_start_px": 0.0018915623239553,
+      "px_now": 0.0020776999014452
+    },
+    "GTCUSDT": {
+      "oi_trend": "GIẢM",
+      "div_ratio": 0.3272544817076948,
+      "hedge_start_date": "2026-06-27",
+      "hedge_start_px": 0.0692914008919683,
+      "px_now": 0.0861023222080687
+    },
+    "MAVIAUSDT": {
+      "oi_trend": "TĂNG",
+      "div_ratio": 0.40954625098181374,
+      "hedge_start_date": "2026-06-27",
+      "hedge_start_px": 0.0288193465656398,
+      "px_now": 0.0318986506345385
+    },
+    "ORDERUSDT": {
+      "oi_trend": "PHẲNG",
+      "div_ratio": 0.44329021046534073,
+      "hedge_start_date": "2026-08-02",
+      "hedge_start_px": 0.0279997972281917,
+      "px_now": 0.0292956255898814
+    },
+    "PROMPTUSDT": {
+      "oi_trend": "GIẢM",
+      "div_ratio": 0.2724011821492346,
+      "hedge_start_date": "2026-06-27",
+      "hedge_start_px": 0.0221575895015036,
+      "px_now": 0.022701189559904
+    },
+    "RECALLUSDT": {
+      "oi_trend": "TĂNG",
+      "div_ratio": 0.4621103718892446,
+      "hedge_start_date": "2026-06-27",
+      "hedge_start_px": 0.0295080468715159,
+      "px_now": 0.0494849846258404
+    },
+    "SHELLUSDT": {
+      "oi_trend": "GIẢM",
+      "div_ratio": 0.44741456096760585,
+      "hedge_start_date": "2026-06-27",
+      "hedge_start_px": 0.0214478926188021,
+      "px_now": 0.0208640795470985
+    },
+    "STBLUSDT": {
+      "oi_trend": "GIẢM",
+      "div_ratio": 0.24456927851183727,
+      "hedge_start_date": "2026-06-27",
+      "hedge_start_px": 0.0249788857940242,
+      "px_now": 0.0255552360278949
+    },
+    "XMRUSDT": {
+      "oi_trend": "TĂNG",
+      "div_ratio": 0.40592389077675756,
+      "hedge_start_date": "2026-06-27",
+      "hedge_start_px": 316.6545941419309,
+      "px_now": 412.699058356261
+    }
+  }
+}

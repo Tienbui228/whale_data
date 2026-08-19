@@ -1,7 +1,10 @@
-# Data — never commit
-data/
+# Data — never commit contents by default
+# Use data/* (not data/) so exceptions below can un-ignore specific paths
+data/*
 !data/logs/
 !data/logs/*.csv
+!data/state/
+!data/state/hedge_watchlist_*.json
 *.parquet
 *.log
 
