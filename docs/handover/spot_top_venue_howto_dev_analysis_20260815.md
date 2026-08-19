@@ -208,6 +208,74 @@ wash_suspect_flag: {True/False} (ratio={vol_depth_suspect:.1f})
 
 ---
 
+## D4-ext — SPOT-EXT amendment (v2.1, ký 2026-08-19, án V1-20260819)
+
+**Nguồn:** L-52 draft `proposals/lessons_pending_batch_20260818.md` §D.1 · exhibit TRIA 19/08 (Bybit turnover Aug18 $2.3M = 3× Alpha).
+
+**Vấn đề:** Cột 31 `vol_spot_usd` canonical = Binance api/v3 (một-thứ-hai-tên L-51/GUA). Khi token KHÔNG có Binance spot pair NHƯNG CÓ spot venue lớn khác (Bybit/OKX/Gate/...), không có nơi ghi vol chân spot đó → mù dữ liệu, doctrine #10 (kho ÷ băng-thông) sai hệ số.
+
+**Amendment — 2 cột canonical mới (v2.1):**
+
+| Col | Tên | Ghi chú |
+|-----|-----|---------|
+| 51 | `vol_spot_ext_usd` | Vol 24h USD từ **spot venue-ext** (venue spot khác Binance). Trong 1 case chỉ được có 1 venue-ext ưu tiên; nếu >1 venue-ext lớn tương đương, chọn theo thứ tự Bybit > OKX > Gate > KuCoin > MEXC > Bitget (khớp `spot_top_venue_howto` §S-1). |
+| 52 | `spot_ext_venue` | Tên venue-ext (chuỗi: `bybit` / `okx` / `gate` / `kucoin` / `mexc` / `bitget`). Phải khai kể cả những ngày `vol_spot_ext_usd` null (nếu venue đã confirm existence — ngày null = missing data trong window). |
+
+**Quy tắc L-51 tuyệt đối:**
+- **CẤM** ghi số Bybit/OKX/... vào `vol_spot_usd` (col 31). Cột đó CANONICAL = Binance api/v3 spot klines quote_vol duy nhất.
+- Alpha vol → col 35 `vol_alpha` (không phải col 31).
+- Bybit/OKX/Gate/... vol → col 51 `vol_spot_ext_usd`.
+- Nếu token có CẢ Binance spot + Bybit spot: col 31 = Binance canonical, col 51 = Bybit ext. Cả hai điền song song, KHÔNG cộng dồn.
+
+**Taker Bybit/OKX/Gate:**
+- Bybit v5 klines không có taker breakdown (7 fields: [startTime, open, high, low, close, volume, turnover]).
+- Bybit v5 `market/recent-trade` có `side` field ('Buy'/'Sell') nhưng per-tick → cần aggregate daily riêng (endpoint đắt, cần collector riêng nếu cần).
+- OKX v5 klines không có taker breakdown.
+- Gate v4 klines không có taker breakdown.
+- **Quy ước tạm:** cột taker cho spot-ext = ABSTAIN-STRUCTURAL (L-51/L-52 amendment) đến khi có collector taker-per-side riêng.
+
+**Identity-check anti-mirror (bắt buộc trước dùng field từ venue mới):**
+
+Trước khi ghi số từ venue mới lần đầu tiên: bit-level compare ≥3 mẫu giữa `base_vol` và `turnover_usd` (hoặc `quote_vol` tương đương). Nếu bit-equal ở ≥1 mẫu → nghi mirror (bug kiểu Alpha k[9]≡k[5], k[10]≡k[7]) → ABSTAIN, ghi vào án E clone.
+
+TRIA-Bybit sample 3 ngày (Jul20/21/22): bit-equal=**False** cả 3 · implied_avg (turnover/base_vol) ≈ close ± spread → PASS identity check.
+
+**LAYER COVERAGE header bắt buộc từ 19/08:**
+
+Mỗi report case phải khai:
+```
+spot-ext: <venue1[,venue2]> / N/A / CHƯA-TRA
+```
+
+Quy ước:
+- `bybit`, `okx`, `gate`, ... = tên venue tìm thấy có pair
+- `N/A` = ĐÃ TRA cả ≥3 venue lớn (Bybit + OKX + Gate) và xác nhận không có pair
+- `CHƯA-TRA` = **chưa** tra venue nào → PHẢI đổi thành N/A hoặc venue trước khi commit report
+
+**CHƯA-TRA ≠ N/A.** Ghi N/A khi chưa tra là bug mù.
+
+**Case-open probe từ 19/08 checklist:**
+- [ ] Binance api/v3 exchangeInfo (base=SYM exact)
+- [ ] Bybit v5 instruments-info (category=spot, symbol={SYM}USDT)
+- [ ] OKX v5 public/instruments (instType=SPOT, instId={SYM}-USDT)
+- [ ] Gate v4 spot/currency_pairs/{SYM}_USDT
+- Nếu ≥1 venue có pair → tra klines full window, ghi vol_spot_ext_usd + spot_ext_venue
+- Nếu tất cả ∅ → spot-ext = N/A (chân perp+alpha only)
+
+**Áp dụng ngay 4 case đang mở (recon 19/08, chỉ instruments-info):**
+
+| Token | Bybit | OKX | Gate | Kết quả |
+|-------|-------|-----|------|---------|
+| BTW | ∅ | ∅ | ∅ | spot-ext = N/A (perp-only chain) |
+| GUA | ∅ | ∅ | **TRADABLE GUA_USDT** | spot-ext = gate (án 17-18/08 bỏ sót — báo cáo lại) |
+| APR | ∅ | ∅ | ∅ | spot-ext = N/A |
+| CLO | ∅ | ∅ | ∅ | spot-ext = N/A (Alpha-only + perp confirmed) |
+| TRIA | **Trading TRIAUSDT** | ∅ | ∅ | spot-ext = bybit (backfilled Jul20-Aug18) |
+
+Kéo klines chi tiết cho từng case sẽ theo lệnh riêng (task này chỉ reconnaissance).
+
+---
+
 ## D5 — DEX handling
 
 **Tình trạng hiện tại (2026-08-15):**

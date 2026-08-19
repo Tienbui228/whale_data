@@ -72,9 +72,38 @@ Ba lesson §C trên **KHÔNG bao trùm** các verdict này. Batch pending §5 = 
 
 ---
 
+## Nhóm §D venue-coverage (1 lesson) — thêm 19/08 (mã án V1-20260819)
+
+## §D.1 — L-52: Venue coverage — "không có spot Binance" ≠ "không có spot"
+
+**Title:** L-52 Venue coverage — xác định venue trước, kết luận chân hàng sau
+
+**Body:**
+"Không có spot Binance" chỉ là phát biểu về Binance, không phải về thị trường. Băng thông xả và chân hàng phải tính trên venue spot **lớn nhất thực tế** (không phải venue mặc định đầu tiên tra). Trước khi kết luận "Alpha-only" hay "perp-only chain": tra spot venues lớn (Bybit · OKX · Gate · KuCoin · MEXC · Bitget) trước, kết luận sau. LAYER COVERAGE của mọi report case từ nay PHẢI khai `spot-ext: <venue>/N/A/CHƯA-TRA` — quy ước: **CHƯA-TRA ≠ N/A**; N/A chỉ được ghi sau khi đã tra và xác nhận không có.
+
+**Exhibit TRIA (2026-08-19):** Probe 19/08 kết luận TRIA "Alpha-only + Perp" dựa trên Binance api/v3 (0 pair) — báo cáo `taker_spot_pct = ABSTAIN-STRUCTURAL`. Backfill 19/08 phát hiện **Bybit có TRIAUSDT spot Trading** (`/v5/market/instruments-info retCode=0 status=Trading`). Bybit turnover Aug18 = **$2,304,652** (**3× Alpha $770K**), Aug17 = $133K. Nếu không tra Bybit → mù nguyên một van xả 3× Alpha. Cú pump +18% Aug18 chạy trên 3 chân: perp $25M · Bybit $2.3M · Alpha $770K. Doctrine #10 (kho ÷ băng-thông) nếu chỉ tính Alpha sẽ đọc SAI hệ số 4×.
+
+**Reconnaissance đi kèm (chưa kéo klines, chỉ instruments-info):**
+- BTW: Bybit=∅ · OKX=∅ · Gate=∅ (perp-only)
+- GUA: Bybit=∅ · OKX=∅ · **Gate=TRADABLE GUA_USDT** ← án 17/08 và 18/08 bỏ sót
+- APR: Bybit=∅ · OKX=∅ · Gate=∅ (perp-only)
+- CLO: Bybit=∅ · OKX=∅ · Gate=∅ (perp-only)
+- TRIA: Bybit=Trading · OKX=∅ · Gate=∅
+
+**Rule:** 
+1. Case-open probe: tra ≥3 venue spot (Bybit + OKX + Gate) tối thiểu trước khi ghi verdict Alpha/perp-only.
+2. LAYER COVERAGE header line bắt buộc: `spot-ext: <venue1,venue2>/N/A/CHƯA-TRA`.
+3. Cột canonical CASE schema v2.1: `vol_spot_ext_usd` (col 51) · `spot_ext_venue` (col 52) — CẤM ghi vào `vol_spot_usd` (col 31 = Binance api/v3 canonical, một-thứ-hai-tên L-51/GUA án 17/08).
+4. Trước khi dùng field mới nào từ venue mới: identity-check bit-level ≥3 mẫu so với field nguồn nghi vấn (chống mirror).
+
+**Ref:** commit sau paste; probe `_probe_tria_venue_20260819.py`; report `docs/reports/_tria_venue_backfill_20260819.md`; schema amendment `docs/handover/spot_top_venue_howto_dev_analysis_20260815.md` §D4-ext.
+
+---
+
 ## Trình tự nhập (operator)
 
 1. Đọc §C.1 → §C.3 (batch net-semantics — có exhibit AKE cứng, chèn LESSONS sheet ngay).
-2. Sau khi 3 dòng LESSONS nhập → `_task_regen_lessons.py` chạy → `lessons_learned.md` refresh view.
-3. Nhóm handover §5 pending: hỏi operator queue thứ tự (batch riêng, ngoài M6 scope).
-4. **KHÔNG xóa file này** sau khi nhập — giữ sử ký batch (immutable_after_sign).
+2. **Đọc §D.1 L-52 (batch venue-coverage — exhibit TRIA + recon 4 token cứng, chèn LESSONS sheet ngay).**
+3. Sau khi các dòng LESSONS nhập → `_task_regen_lessons.py` chạy → `lessons_learned.md` refresh view.
+4. Nhóm handover §5 pending: hỏi operator queue thứ tự (batch riêng, ngoài M6/V1 scope).
+5. **KHÔNG xóa file này** sau khi nhập — giữ sử ký batch (immutable_after_sign).
