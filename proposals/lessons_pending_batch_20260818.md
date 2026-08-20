@@ -100,10 +100,83 @@ Ba lesson §C trên **KHÔNG bao trùm** các verdict này. Batch pending §5 = 
 
 ---
 
+## Nhóm §E captive-static-seat + intel-vs-entry (2 lessons) — thêm 20/08 (mã án H1-20260820)
+
+## §E.1 — L-53: Loài captive-kho vùng-giữa — máy perp mù theo CẤU TRÚC, không phải theo ngưỡng
+
+**Title:** L-53 Captive-kho vùng-giữa — không p-hack ngưỡng để "bắt được" HEMI
+
+**Body:**
+**Evidence:** HEMI 07-08/2026 (autopsy 20/08). Nền 44 ngày:
+- div_avg3 vùng giữa **0.9-1.1** (pos cao 3.5 bị acc cao 3.9 che — mọi rule so-tương-đối mù)
+- un-hedge làm **5 tuần trước ignite** (episode B1 chết 09/07, ignite 15/08 — ngoài mọi cửa sổ T−2 khuôn ON và ngoài `recent_hedge_days=2` của watchlist)
+- vị thế long ngồi **TĨNH** từ trước window (không delta → mọi máy đo chuyển động câm)
+- đòn chính = **kho 490M nằm sẵn trên sàn**
+
+**Bốn điểm mù cùng lúc, không điểm nào là lỗi ngưỡng.** CẤM chỉnh A1/B1/GOM-E theo HEMI (p-hack — hạ div để "bắt được" là bắt bằng cách mù đi).
+
+**Đây là evidence #2 của G-committed-long** (BTW-July = #1). Hai biến thể:
+- BTW: div 1.3-1.5
+- HEMI: div 0.9-1.1 + ghế tĩnh
+
+**Separator + sensor duy trì duy nhất của loài này = on-chain kho (operator sensor).** Máy đúng tầng của nó: PHASE-TAG bắt S3-HARVEST + TEST-BAIT real-time 18/08 — hệ nhiều tầng hoạt động đúng thiết kế: **tầng nền chịu mù, tầng campaign kêu**.
+
+**Watch-item kèm (KHÔNG phải kết luận):** candidate **STATIC-SEAT** — bắt bằng **MỨC** thay vì DELTA:
+- pos_r ≥ 2.5-3 bền ≥14d
+- ∧ OI ≤ $5M
+- ∧ funding pin
+- ∧ kho lớn nằm sàn
+
+**n=1 (HEMI), chờ chạy đối chiếu BTW-July + screen fw-139 lấy hit-rate trước khi trình ký STATIC-SEAT rule.**
+
+**Ref:** commit sau paste · probe `_probe_hemi_h0_h1_20260820.py` + `_probe_hemi_h2_h4_20260820.py` · report `docs/reports/_hemi_build_20260820.md` · §E-R Un-hedge Registry v1.0 (`proposals/unhedge_registry_spec_v1.0.md`) — vá điểm mù này.
+
+---
+
+## §E.2 — L-54: Phát hiện được ≠ giữ được lệnh — tín hiệu mồ côi = intel, không phải entry
+
+**Title:** L-54 Value of early signal = signal × confirmation-chain-length-to-ignite
+
+**Body:**
+**Evidence: HEMI.** Giả sử hệ HOÀN HẢO — bắt đúng cú un-hedge 05-09/07: lệnh mở tại đó phải ngồi qua **5 tuần giá đè phẳng**, không một tín hiệu trung gian nào (không pos_rerate, không unpin, không vol, không on-chain rút) trước khi ignite 15/08.
+
+**Không cấu trúc xác nhận = không cấu trúc giữ = thoát trước màn hoặc gồng mù — cả hai đều thua dù "đoán đúng".**
+
+**Nguyên tắc:** giá trị một tín hiệu sớm = tín hiệu × chuỗi xác nhận nối được tới ignite. Tín hiệu sớm mồ côi có giá trị **INTEL** (ghi sổ, xếp watch) chứ KHÔNG có giá trị **ENTRY**.
+
+**Hệ quả nghịch mà đúng:** luật hiện hành "entry duy nhất loài staged = S1-CONFIRMED churn ≥8×" được HEMI **củng cố** chứ không bác — nó tồn tại chính vì lý do: mọi entry sớm hơn của loài này đều không giữ nổi.
+
+**Kết trung thực nhất của case HEMI:** không có điểm vào hợp lệ nào cho hệ ở mọi thời điểm (deposit đến cùng pump — muộn hơn khuôn S1; D2/D3 = FOMO cấm đuổi). Và **"con này không phải của mình" là một kết luận đúng, có lời (tiền-không-mất), không phải thất bại của hệ**.
+
+**Rule:**
+1. Tín hiệu sớm không kèm chuỗi xác nhận → xếp INTEL (registry/watchlist), KHÔNG mở entry.
+2. Entry chỉ được mở khi chuỗi xác nhận nối được tới ignite proximate (định nghĩa "proximate" thuộc từng doctrine, mặc định ≤3d).
+3. Verdict "không phải của mình" = kết luận hợp lệ, cần thời gian ANALYSIS như bất kỳ verdict positive nào.
+
+**Ref:** commit sau paste · CASE_HEMI EVENTS Aug15-19 · L-53 (mối liên hệ: captive vùng giữa = loài không giữ được entry sớm).
+
+---
+
 ## Trình tự nhập (operator)
 
 1. Đọc §C.1 → §C.3 (batch net-semantics — có exhibit AKE cứng, chèn LESSONS sheet ngay).
 2. **Đọc §D.1 L-52 (batch venue-coverage — exhibit TRIA + recon 4 token cứng, chèn LESSONS sheet ngay).**
-3. Sau khi các dòng LESSONS nhập → `_task_regen_lessons.py` chạy → `lessons_learned.md` refresh view.
-4. Nhóm handover §5 pending: hỏi operator queue thứ tự (batch riêng, ngoài M6/V1 scope).
-5. **KHÔNG xóa file này** sau khi nhập — giữ sử ký batch (immutable_after_sign).
+3. **Đọc §E.1 L-53 + §E.2 L-54 (batch captive-kho + intel-vs-entry — exhibit HEMI cứng + rule cứng, chèn LESSONS sheet ngay).**
+4. Sau khi các dòng LESSONS nhập → `_task_regen_lessons.py` chạy → `lessons_learned.md` refresh view.
+5. Nhóm handover §5 pending: hỏi operator queue thứ tự (batch riêng, ngoài M6/V1/H1 scope).
+6. **KHÔNG xóa file này** sau khi nhập — giữ sử ký batch (immutable_after_sign).
+
+---
+
+## §E-R — UN-HEDGE REGISTRY v1.0 (spec, operator ký 20/08)
+
+**Nội dung canonical spec:** `proposals/unhedge_registry_spec_v1.0.md`.
+
+**Trạng thái:**
+- Framework v1.0 ký ✓
+- Thresholds PROVISIONAL (§E-R6) — chờ backfill acceptance (§E-R7)
+- Deployment cron PENDING sau khi ANALYSIS ký kết quả backfill
+
+**Không phải lesson — là spec đi kèm L-53/L-54.** L-53 chỉ ra điểm mù; §E-R vá điểm mù bằng tầng SCREEN/INTEL (không đụng luật entry L-54).
+
+**Ref:** L-53 (nguyên nhân) · L-54 (hệ quả entry) · `proposals/unhedge_registry_spec_v1.0.md` (spec) · backfill task `_task_unhedge_registry_backfill_20260820.py` (kết quả sẽ paste sau).
