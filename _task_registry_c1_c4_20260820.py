@@ -32,7 +32,7 @@ WINDOW_END = "2026-08-19"
 
 # RE-ARM thresholds (operator-provided §E-R4b v1.1 — spec text NOT found, interpretation PROVISIONAL)
 REARM_COOLDOWN_DAYS = 14
-REARM_PX_MULT = 1.10
+REARM_PX_MULT = 1.15  # updated per spec file §E-R4b v1.1 operator ký 20/08 (was 1.10 draft)
 REARM_OI_MULT = 1.30
 
 # Base thresholds

@@ -88,6 +88,30 @@ token trong registry ∧ [
 
 ---
 
+## §E-R4b — RE-ARM (v1.1, operator ký 20/08/2026)
+
+**Bối cảnh:** L-53 case HEMI cho thấy 1 event có thể có NHIỀU wave ignite (wave-1 pump nhỏ 07-20, wave-2 pump lớn 15/08 = campaign-defining). §E-R4 v1.0 return outcome ở FIRST-ignite → miss wave-2 canonical. Amendment: sau IGNITE, cửa reset để bắt wave tiếp.
+
+**Điều kiện RE-ARM (đủ CẢ 3 vế):**
+
+| # | Vế | Ngưỡng | Semantics |
+|---|---|---|---|
+| **r1** | days_since_ignite | **≥ 14** | Cooldown 14d chống re-ignite noise ngay |
+| **r2** | px_now / local_low_since_ignite | **≥ 1.15** (≥, không < strict — anchor-trên-vạch cũ) | Giá vượt vùng bidwalk sau wave-1 · operator ký 20/08 |
+| **r3** | oi_now / oi_local_low_since_ignite | **≥ 1.30** | OI tăng trở lại |
+
+`local_low_since_ignite` = min(px, oi) rolling từ ignite_day → today (anchor low sau wave-1).
+
+**Behavior:** khi RE-ARM=TRUE → registry entry mở lại: tiếp tục scan IGNITE trigger mới (§E-R3), reset ignite_day nếu hit wave-2. Outcome cuối có thể là **IGNITED-WAVE2** (multi-ignite).
+
+**Row schema mở rộng:** thêm `wave_n` (số wave ignited, 1 hoặc 2), `ignite_days_list` (danh sách ignite dates).
+
+**Backtest impact:** HEMI 07-12 event → wave-1 07-20 IGNITED → r1/r2/r3 gate → nếu re-arm trước 08-15 → wave-2 15/08 catch. GATE(i) §E-R7 pass 3-vế: wave-1 07-20 ∧ re-arm ≤08-15 ∧ wave-2 15/08.
+
+**Ref:** ANALYSIS relay 20/08 (r2=1.15 sau debate 1.20 vs 1.15 — chốt ≥ không < strict).
+
+---
+
 ## E-R5 — GUARDS
 
 - **L-21:** nến đóng D-1 (không dùng nến đang chạy)
