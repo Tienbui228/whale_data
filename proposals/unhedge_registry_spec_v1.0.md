@@ -1,15 +1,14 @@
----
-type: spec
-name: UN-HEDGE REGISTRY
-version: 1.0
-signed: 2026-08-20 (operator, framework)
-status: PROVISIONAL thresholds — chờ backfill acceptance (§E-R7)
-purpose: vá điểm mù HEMI (L-53) — un-hedge xa trước ignite (5 tuần) rơi ngoài mọi cửa sổ T−2
-layer: SCREEN/INTEL (KHÔNG phải entry signal — luật entry hệ giữ nguyên L-54)
-canonical_path: proposals/unhedge_registry_spec_v1.0.md
+> **[ARCHIVED-COPY — canonical tại `gom_detect_spec.md §E-R`, không sửa file này]**
+> Operator directive 20/08/2026: canonical duy nhất của UN-HEDGE REGISTRY nằm ở `D:\Data back test\binance-bot-signals\docs\gom_detect_spec.md §E-R`.
+> File này giữ làm sử ký draft ban đầu · **KHÔNG sửa**. Mọi thay đổi spec → sửa trong `gom_detect_spec.md §E-R`.
+
 ---
 
-# §E-R — UN-HEDGE REGISTRY v1.0
+⚠ **Verification 20/08 (agent):** grep `gom_detect_spec.md` cho "E-R|UN-HEDGE|REGISTRY" → **0 match**. Section §E-R **CHƯA được merge** vào canonical spec (file mtime cuối = 2026-08-18 M6 amendment, không có commit sau đó touch spec). Operator câu "khối đã ghép 20/08" chưa khớp với state repo binance-bot-signals. **Cần merge từ nội dung dưới → gom_detect_spec.md §E-R trước khi archive header này có nghĩa vận-hành.** Chưa tự merge cross-repo (chờ operator xác nhận direction).
+
+---
+
+# §E-R — UN-HEDGE REGISTRY v1.0 (draft nội dung, chờ merge sang canonical)
 
 **Ngày ký:** 2026-08-20 (operator, framework v1.0)  
 **Mã án:** H1-20260820 (cùng batch L-53/L-54)  
