@@ -9,7 +9,7 @@
 - bapi/defi/v1 (Alpha ALPHA_131 — MIRROR L-48 ❌)
 - api.gateio.ws + api.mexc.com + api.bitget.com
 
-**LAYER COVERAGE:** I (Perp) · II (Crowd-LSR fw+fapi) · IV (Funding) · V (Alpha broken + Gate ETH-only + MEXC + Bitget) · **spot-ext: mexc** (venue lớn nhất, không N/A không CHƯA-TRA) · III/VI/VII: [OWNERSHIP-UNVERIFIED] chờ operator §P4
+**LAYER COVERAGE:** I (Perp) · II (Crowd-LSR fw+fapi) · IV (Funding) · V (Alpha broken + Gate ETH-only + MEXC + Bitget) · **spot-ext: mexc** (venue lớn nhất, không N/A không CHƯA-TRA) · III/VI/VII: [OWNERSHIP-VERIFIED-CONTRACT] contract ký 20/08 ✓ · on-chain kho/whale/unlock: [PENDING §P4]
 
 ---
 
@@ -25,9 +25,16 @@ PUMPUSDT     · KHÁC  · base=PUMP    · quote=USDT · onboard 2025-07-10  ← 
 
 **Đang đọc:** `PUMPBTCUSDT` (14 tháng history). **Loại:** `PUMPUSDT` (đây là Pump.fun Solana, không cùng token).
 
-### P0.② CONTRACT
+### P0.② CONTRACT — **VERIFIED ✓ (operator relay 20/08)**
 
-**Contract 0x + chain: UNVERIFIED** — chờ operator relay. Mọi map [UNVERIFIED].
+| Source | Contract | Chain |
+|--------|----------|-------|
+| Operator (canonical) | `0xB7C0007ab75350c582d5eAb1862b872B5cF53F0C` | BSC |
+| bapi (ALPHA_131) | `0xb7c0007ab75350c582d5eab1862b872b5cf53f0c` | BSC |
+| **Bit-level compare (lowercase)** | **IDENTICAL** ✓ | ✓ |
+
+→ Alpha map ALPHA_131 = "pumpBTC Governance Token" confirmed identity thật.
+→ Lift `[UNVERIFIED]` tag khỏi toàn report. F1 GUA pass.
 
 ### P0.③ Alpha bapi (symbol-match, ⚠ F1)
 
@@ -239,13 +246,13 @@ Kho: PENDING §P4 (operator feed).
 
 ## P4 — CẦN OPERATOR
 
-1. **Contract 0x + chain** — Alpha bapi symbol-match trả `0xb7c0007ab75350c582d5eab1862b872b5cf53f0c` on BSC — cần operator confirm (bài F1 GUA)
-2. **Exchange balance trend 30d** (khuôn GUA/TRIA/AIN/HEMI)
-3. **Whale movements + top100 concentration**
-4. **Unlock/circ supply + FDV vs MC tracker**
-5. **Ảnh tracker on-chain** (visual verify)
+1. ~~**Contract 0x + chain**~~ ✓ **DONE 20/08** — verified `0xb7c0007ab75350c582d5eab1862b872b5cf53f0c` on BSC = bapi ALPHA_131 (bit-eq identical, lift F1 tag)
+2. **Exchange balance trend 30d** (khuôn GUA/TRIA/AIN/HEMI) — PENDING
+3. **Whale movements + top100 concentration** — PENDING
+4. **Unlock/circ supply + FDV vs MC tracker** — PENDING
+5. **Ảnh tracker on-chain** (visual verify) — PENDING
 
-Mọi nhãn S3/S4 sẽ treo `[OWNERSHIP-UNVERIFIED]` cho tới khi có §P4.
+Nhãn `[OWNERSHIP-VERIFIED-CONTRACT]` lifted cho identity level; on-chain level (kho/whale/unlock) vẫn treo `[PENDING §P4.2-5]`.
 
 ---
 
