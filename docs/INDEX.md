@@ -81,6 +81,7 @@ Spec canonical thuộc repo khác. Sửa nội dung = sửa tại nguồn (khôn
 | `docs/case_files/CASE_XPIN.xlsx` | XPIN | WATCH |
 | `docs/case_files/CASE_TRIA.xlsx` | TRIA | TRACKING (cold-start 19/08 — hedge episode #1 start Aug04, un-hedge readout Aug18/19) |
 | `docs/case_files/CASE_STBL.xlsx` | STBL | TRACKING (cold-start 19/08 — hedge episode start Jun27 struct_n=49, un-hedge sơ khai Aug17-18, contract UNVERIFIED §S4) |
+| `docs/case_files/CASE_HEMI.xlsx` | HEMI | TRACKING (cold-start 20/08 — active 3-pump campaign Jul20/Aug15/Aug19, S3-HARVEST Aug18, deposit-in-pump +100M, contract UNVERIFIED §H6) |
 
 ### Evidence Files (frozen — không sửa sau commit)
 
