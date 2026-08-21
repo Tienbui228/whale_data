@@ -236,11 +236,15 @@ def snapshot(sym, arr, ep_data, i, cfg):
 # ── Filters ───────────────────────────────────────────────────────────────────
 def in_list_a(s, cfg):
     # Gate switch conformance-pack 21/08 (§E-R1): dùng sn_count_le050 = count(div_avg3 ≤ 0.5),
-    # KHÔNG dùng struct_n (= ep_len legacy incl gap-days). Config key `struct_n_min` GIỮ
-    # tên cũ backward-compat, semantics áp lên sn_count_le050.
+    # KHÔNG dùng struct_n (= ep_len legacy incl gap-days).
+    # A4(1) 21/08: prefer config key `sn_count_min` (canonical scope name), fallback
+    # `struct_n_min` để backward-compat khi yaml chưa rename (chờ operator apply
+    # proposals/yaml_change_20260821.md).
     dr = s["div_ratio"]
     sn_gate = s.get("sn_count_le050", s["struct_n"])   # fallback nếu ep chưa có field mới
-    return ok(dr) and dr <= cfg["hedge"]["div_ratio_max"] and sn_gate >= cfg["hedge"]["struct_n_min"]
+    hedge_cfg = cfg["hedge"]
+    sn_min = hedge_cfg.get("sn_count_min", hedge_cfg.get("struct_n_min"))
+    return ok(dr) and dr <= hedge_cfg["div_ratio_max"] and sn_gate >= sn_min
 
 def in_list_b(s, ep_data, i, cfg):
     recent = cfg["list_b"]["recent_hedge_days"]          # 2

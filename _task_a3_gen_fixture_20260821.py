@@ -79,8 +79,12 @@ for s in td:
 
 # ── Config ───────────────────────────────────────────────────────────────
 CFG = {"hedge": {"div_ratio_max": 0.5, "episode_break_days": 3}}
+# A4(1) 21/08: config keys canonical scope-named. Registry sn_min=3 hardcoded arg
+# to _detect_ev (per operator chuỗi ký E-R7d — sn≥3 áp trigger 'a' only). Watchlist
+# gate hiện đọc yaml key `struct_n_min` (fallback) hoặc `sn_count_min` (canonical
+# sau yaml_change_20260821.md apply). Fixture pin `sn_count_min` để chuẩn scope.
 CFG_WL = {
-    "hedge": {"div_ratio_max": 0.5, "struct_n_min": 5, "episode_break_days": 3},
+    "hedge": {"div_ratio_max": 0.5, "sn_count_min": 5, "episode_break_days": 3},
     "list_b": {"recent_hedge_days": 2, "div_delta_min": 0.0},
     "trends": {"pos_trend_threshold": 0.15, "oi_trend_threshold": 0.10},
     "oi_guard": {"low_conf_usd": 1_000_000},
@@ -114,7 +118,14 @@ fixture = {
     "window_end": WINDOW_END,
     "data_snapshot_md5": csv_files,
     "config": {
-        "registry": CFG,
+        "_semantic_note": (
+            "sn_min semantics split by consumer (A4(1) 21/08 clarification): "
+            "registry.sn_min=3 hardcoded arg to _detect_ev (áp trigger 'a' only per E-R7d chuỗi ký). "
+            "watchlist.sn_count_min=5 (yaml canonical name post yaml_change_20260821.md apply; "
+            "code fallback đọc struct_n_min pre-yaml-apply). "
+            "sn field in both scopes = sn_count_le050 = count(div_avg3 ≤ 0.5) in episode."
+        ),
+        "registry": {**CFG, "sn_min": 3},
         "watchlist": CFG_WL,
         "drift_thr": 0.15, "drift_win": 7,
         "pos_hold": 0.90, "px_hold": 0.85,
