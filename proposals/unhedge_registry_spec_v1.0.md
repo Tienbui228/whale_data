@@ -1,10 +1,16 @@
-> **[ARCHIVED-COPY — canonical tại `gom_detect_spec.md §E-R`, không sửa file này]**
-> Operator directive 20/08/2026: canonical duy nhất của UN-HEDGE REGISTRY nằm ở `D:\Data back test\binance-bot-signals\docs\gom_detect_spec.md §E-R`.
-> File này giữ làm sử ký draft ban đầu · **KHÔNG sửa**. Mọi thay đổi spec → sửa trong `gom_detect_spec.md §E-R`.
+> **[ACTIVE CANONICAL — merge target per operator directive 21/08/2026]**
+> Header "ARCHIVED-COPY canonical dịch chuyển gom_detect_spec.md §E-R" (20/08) **RÚT** — gom_detect_spec.md không có §E-R body (chỉ changelog v3.2 entry pointing here). File này = canonical đích cho §E-R. Sửa spec → tại đây.
+> `FRESHWATCH_SYSTEM.md §3.4/§6` (nếu có) trỏ `gom_detect_spec.md` cần cập nhật trỏ path này.
 
 ---
 
-⚠ **Verification 20/08 (agent):** grep `gom_detect_spec.md` cho "E-R|UN-HEDGE|REGISTRY" → **0 match**. Section §E-R **CHƯA được merge** vào canonical spec (file mtime cuối = 2026-08-18 M6 amendment, không có commit sau đó touch spec). Operator câu "khối đã ghép 20/08" chưa khớp với state repo binance-bot-signals. **Cần merge từ nội dung dưới → gom_detect_spec.md §E-R trước khi archive header này có nghĩa vận-hành.** Chưa tự merge cross-repo (chờ operator xác nhận direction).
+## Changelog
+
+| Version | Date | Changes |
+|---------|------|---------|
+| v1.0 | 20/08/2026 | Khởi tạo §E-R1..§E-R7 (operator ký framework) |
+| v1.1 | 20/08/2026 | §E-R4b RE-ARM initial (r1=14d cooldown, r2=1.15, r3=1.30). Ref commit `ae5f2a0` / `794499a`. |
+| **v1.2-FINAL** | **21/08/2026** | **§E-R4b Version A hợp thức hóa (r2 1.15 / r3 1.30 / cooldown 3d) · BỎ close-condition MARKUP-GIỮ · thêm RE-ARM-MISS log · thêm §E-R8 falsifier forward.** Operator ký chat 21/08. Thay v1.1 (ae5f2a0). Wave-end v1.2 (đề xuất 20/08) **KHÔNG merge — rejected** (`er4b_wave_end_REJECTED_20260821.md`). |
 
 ---
 
@@ -88,27 +94,35 @@ token trong registry ∧ [
 
 ---
 
-## §E-R4b — RE-ARM (v1.1, operator ký 20/08/2026)
+E-R4b — RE-ARM (v1.2-FINAL · 21/08/2026 · operator ký chat — hợp thức hóa Version A hậu kiểm)
 
-**Bối cảnh:** L-53 case HEMI cho thấy 1 event có thể có NHIỀU wave ignite (wave-1 pump nhỏ 07-20, wave-2 pump lớn 15/08 = campaign-defining). §E-R4 v1.0 return outcome ở FIRST-ignite → miss wave-2 canonical. Amendment: sau IGNITE, cửa reset để bắt wave tiếp.
+Row status IGNITED được theo dõi tiếp sau ignite-date:
+  local_low_px  = min(px_close) từ ignite-date đến ngày chấm
+  local_low_oi  = min(oi_usd)  từ ignite-date đến ngày chấm
+Row TÁI MỞ (status=RE-ARMED, wave_n += 1, đủ điều kiện E-R3 alert lần nữa) tại ngày
+nến đóng đầu tiên (sau cooldown tối thiểu 3d kể từ ignite-date) thỏa ĐỒNG THỜI:
+  (r2) px_close / local_low_px ≥ 1.15   [hồi ≥15% từ đáy cục bộ hậu-wave]
+  (r3) oi_usd  / local_low_oi  ≥ 1.30   [OI rebuild ≥30% từ đáy cục bộ]
+Ghi chú cơ chế: nến ignite của wave kế tự thỏa (r2)(r3) → row không thể "ngủ quên"
+đúng lúc wave mới nổ — mọi wave đều có alert ngày-1 (mục đích chống-miss-×2).
+Sau RE-ARM, E-R3 chỉ bắn khi có trigger MỚI (vol ≥5×med14 ∨ breakout ∨ OI +30%/≤2d).
 
-**Điều kiện RE-ARM (đủ CẢ 3 vế):**
+Row đóng HẲN chỉ khi MỘT trong:
+  RE-HEDGED  (episode mới div ≤0.5 bền ≥5d)
+  EXPIRED    (90d không ignite thêm)
+  KHO-RÚT    [cờ operator on-chain feed, nhập tay]
+KHÔNG có điều kiện đóng MARKUP-GIỮ — đã BỎ (bài HEMI: loài captive-kho dàn trận
+NGAY TRONG markup, deposit +100M đến giữa lúc giá giữ 1.15-1.48× rồi mới nổ mega-wave).
 
-| # | Vế | Ngưỡng | Semantics |
-|---|---|---|---|
-| **r1** | days_since_ignite | **≥ 14** | Cooldown 14d chống re-ignite noise ngay |
-| **r2** | px_now / local_low_since_ignite | **≥ 1.15** (≥, không < strict — anchor-trên-vạch cũ) | Giá vượt vùng bidwalk sau wave-1 · operator ký 20/08 |
-| **r3** | oi_now / oi_local_low_since_ignite | **≥ 1.30** | OI tăng trở lại |
+Ngưỡng r2=1.15 / r3=1.30 / cooldown 3d: PROVISIONAL, calibrate-to-anchor HEMI n=1.
+RE-ARM-MISS log (máy calib tự tích lũy): row IGNITED đã đóng-không-re-arm, nếu ≤21d
+sau xuất hiện vol ≥5×med14 trên chính token → auto-log MISSED-WAVE + min(px_ratio)
+trong cửa sổ. 2 MISSED-WAVE có ratio ∈ vùng biên → recalib r2/r3 từ phân bố.
+Chiều ngược: re-arm rate >50% số row IGNITED → ngưỡng quá lỏng, siết từ cùng phân bố.
 
-`local_low_since_ignite` = min(px, oi) rolling từ ignite_day → today (anchor low sau wave-1).
-
-**Behavior:** khi RE-ARM=TRUE → registry entry mở lại: tiếp tục scan IGNITE trigger mới (§E-R3), reset ignite_day nếu hit wave-2. Outcome cuối có thể là **IGNITED-WAVE2** (multi-ignite).
-
-**Row schema mở rộng:** thêm `wave_n` (số wave ignited, 1 hoặc 2), `ignite_days_list` (danh sách ignite dates).
-
-**Backtest impact:** HEMI 07-12 event → wave-1 07-20 IGNITED → r1/r2/r3 gate → nếu re-arm trước 08-15 → wave-2 15/08 catch. GATE(i) §E-R7 pass 3-vế: wave-1 07-20 ∧ re-arm ≤08-15 ∧ wave-2 15/08.
-
-**Ref:** ANALYSIS relay 20/08 (r2=1.15 sau debate 1.20 vs 1.15 — chốt ≥ không < strict).
+Outcome chấm PER-WAVE (ret k3/7/14 từng wave_n).
+Ghi chú doctrine: edge của registry = SỚM (wave-1 ngay sau un-hedge, crowd chưa vào);
+chống-miss = CHUỖI wave — không đóng sổ giữa hai cái.
 
 ---
 
@@ -153,6 +167,16 @@ token trong registry ∧ [
 1. Backfill table (per-token · unhedge_date · trigger · outcome nếu có)
 2. Gate check pass/fail table
 3. Paste bảng backfill + outcome → ANALYSIS verdict → operator ký → cron
+
+---
+
+E-R8 — FALSIFIER FORWARD (điều kiện sống của phase-2, chấm 30d từ go-live):
+  ① Hit: REGISTRY-IGNITE alerts có ret_k7 > 0 cho <40% số alert/30d
+     → registry xuống ANALYSIS-ONLY, mở án calib.
+  ② Noise: registry >25% fw-139 tại bất kỳ tuần nào ∨ alert E-R3 >40% tổng alert
+     Telegram → dừng in, calib lại.
+  ③ Miss-audit: pump ≥30%/2d trên token TỪNG CÓ row (kể cả đã đóng) mà không có
+     alert ngày-1 → autopsy bắt buộc ≤48h.
 
 ---
 
