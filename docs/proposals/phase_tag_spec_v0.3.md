@@ -132,7 +132,7 @@ B6. else → UNKNOWN
 
 ## §5. Guards
 
-Nến đóng L-21 · anti-look-ahead §VIII.9 · fn<6 → SUSPECT nhánh ratio · symbol <14d → skip · vol <$200k ∨ OI <$1M → `low_conf` · **LSR null → `UNKNOWN(DATA)` nổ ra mặt** (L-49-draft) · Alpha fullyDelisted → L-48 ABSTAIN · universe verify fw-139.
+Nến đóng L-21 · anti-look-ahead §VIII.9 · fn<6 → SUSPECT nhánh ratio · symbol <14d → skip · vol <$200k ∨ OI <$1M → `low_conf` · **LSR null → `UNKNOWN(DATA)` nổ ra mặt** (L-60 (renumbered from L-49-draft 21/08)) · Alpha fullyDelisted → L-48 ABSTAIN · universe verify fw-139.
 
 ---
 

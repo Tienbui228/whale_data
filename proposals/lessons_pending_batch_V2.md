@@ -1,12 +1,53 @@
 ---
 type: lessons-pending-batch
 version: V2 (21/08/2026)
-predecessor: proposals/lessons_pending_batch_20260818.md (V1 — L-52/L-53/L-54)
-status: PENDING sync to CASE_INDEX.xlsx LESSONS sheet (operator apply cuối per CLAUDE.md workflow)
-signed: L-58 operator ký chat 21/08/2026
+predecessor: proposals/lessons_pending_batch_20260818.md (V1 — L-52/L-53/L-54 + L-60/L-61 renumbered)
+status: **[MERGED → sheet 21/08]** — L-55/L-56/L-57/L-58/L-59 đã insert vào LESSONS sheet CASE_INDEX.xlsx (rows 62-66) và regen lessons_learned.md
+signed: L-55/L-56/L-57/L-58/L-59 operator ký chat 21/08/2026
+merged_commit: sẽ commit sau paste evidence
 ---
 
-# LESSONS PENDING BATCH V2 — 21/08/2026
+# LESSONS PENDING BATCH V2 — 21/08/2026 [MERGED → sheet 21/08]
+
+## §L-55 — Go-live ≠ verify
+
+**Nguyên văn ANALYSIS (operator ký chat 21/08):**
+
+> Deploy xong chưa phải xong — go-live chỉ đóng khi verify OUTPUT THẬT trên production (file sinh, đúng schema, đúng giờ cron).
+>
+> Evidence: phase_tag CSV F1 code-đúng-file-không-sinh 3 ngày · save_snapshot fail-câm · 🎓 sống lần đầu chỉ sau verify 20/08.
+
+## §L-56 — Merge-before-gate
+
+**Nguyên văn ANALYSIS (operator ký chat 21/08):**
+
+> Amendment ký chat phải merge canonical + paste diff TRƯỚC gate/backfill; mọi run gate in `spec_version` + `amendments_applied`; dòng "ĐÃ KÝ" trong sổ phải trỏ được về chat-ký, không trỏ được = CHỜ-KÝ.
+>
+> Evidence: 6 relay-loss/tuần — L-48 số hiệu · GUA contract · E-R4b ≥-drift · handover ký-không-tồn-tại · lib đổi-nghĩa · va số 49/50.
+
+## §L-57 — Schema-change-append
+
+**Nguyên văn ANALYSIS (operator ký chat 21/08):**
+
+> Thay đổi schema = append-only + changelog + không đè cột cũ; cột đổi nghĩa phải ĐỔI TÊN.
+>
+> Evidence: cols 51-52 v2.1 · ep_len/struct_n · vol_spot/vol_alpha.
+
+## §L-59 — Ký-không-bằng-chứng = chưa-xong
+
+**Nguyên văn bản P0-audit (operator ký chat 21/08):**
+
+> Lệnh ghi-sổ đã ký đóng bằng paste bằng-chứng-sau-ghi CÙNG chuyến; không bằng chứng = việc chưa tồn tại, CHẶN bước phụ thuộc; sổ hai nhà khai nguồn/view, view chết >3d khi nguồn sống = alert.
+>
+> Evidence #1: batch V1 ký 20/08, 3 lần đòi không bằng chứng, operator tự phát hiện md chết từ 07/08.
+>
+> Evidence #2: root-cause "hiểu-nhầm-nhà" 21/08.
+
+## Ghi chú ánh xạ
+
+- spot-collect + watchlist-timing (đề xuất DEV 20/08) — **nuốt bởi L-52 và §5.11+L-59, không cấp ID riêng**.
+
+---
 
 ## §A.1 — L-58: Conformance fixture — pin output MỌI consumer, không-pass-không-merge
 

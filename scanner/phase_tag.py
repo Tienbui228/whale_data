@@ -11,7 +11,7 @@ Rules:
   · B2h harvest_drop() = LOCAL helper (§9.1.3, §7 #7) — window 14d stateless,
     KHÔNG gọi chain helper
   · B4 S1 SKIP sạch (D3 feed chưa sống)
-  · LSR null → UNKNOWN(DATA) nổ mặt (spec §5, L-49-draft)
+  · LSR null → UNKNOWN(DATA) nổ mặt (spec §5, L-60 (renumbered from L-49-draft 21/08))
   · Display-only, KHÔNG sửa state machine, KHÔNG suppress
 """
 from __future__ import annotations
@@ -377,7 +377,7 @@ def tag(days: list, i: int, cfg: dict, case_state: Optional[dict] = None) -> dic
 
     if math.isnan(lsr_pos) or math.isnan(lsr_acc) or math.isnan(lsr_glo):
         return {"date": date_str, "stage": "UNKNOWN(DATA)", "stage_conf": "LOW",
-                "stage_evidence": "LSR null — L-49-draft nổ mặt",
+                "stage_evidence": "LSR null — L-60 (renumbered from L-49-draft 21/08) nổ mặt",
                 "stage_flags": ["LSR-NULL"], "event_tag": None,
                 "wash_count_30d": None, "herd_return": None,
                 "case_state": case_state["state"] if case_state else None,

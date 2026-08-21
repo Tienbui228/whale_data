@@ -167,7 +167,7 @@ chống-miss = CHUỖI wave — không đóng sổ giữa hai cái.
 ## E-R5 — GUARDS
 
 - **L-21:** nến đóng D-1 (không dùng nến đang chạy)
-- **Staleness:** nến D-1 thiếu ≥10% universe → **BLOCK run** (họ §5.11 watchlist, L-49)
+- **Staleness:** nến D-1 thiếu ≥10% universe → **BLOCK run** (họ §5.11 watchlist, L-60/L-61)
 - **as_of=<nến cuối>** trên mọi dòng output
 - **Store:** `data/registry/unhedge_registry.csv` **append-only**
 - **G1 rule:** KHÔNG suy kéo/xả từ LSR — registry nói "**có chuẩn bị**", KHÔNG nói "sẽ lên"
@@ -235,7 +235,7 @@ E-R8 — FALSIFIER FORWARD (điều kiện sống của phase-2, chấm 30d từ
 
 - **L-53** (nguyên nhân điểm mù)
 - **L-54** (giới hạn entry — spec này KHÔNG override entry rules)
-- **§5.11 watchlist / L-49** (staleness guard nguồn)
+- **§5.11 watchlist / L-60/L-61** (staleness guard nguồn)
 - **Doctrine #10** (kho ÷ băng-thông — flag KHO-SÀN kết hợp)
 - **PHASE-TAG** (tầng khác — tầng nền chịu mù, tầng campaign kêu)
 

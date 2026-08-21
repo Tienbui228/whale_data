@@ -70,7 +70,7 @@ Total: 50 candles fetched (07-01 → 08-19). Filter 07-01 → 08-18 = 48 rows đ
 - **Filled:** 48 rows (07-01 → 08-17) với col 51 = Gate quote_vol_USDT, col 52 = "gate"
 - **KHÔNG ĐỘNG** col 31 (vol_spot_usd Binance canonical) per operator instruction
 
-Guard L-50 PASS: max_col=52 sau write (≥52).
+Guard L-61 PASS (write-after-guard, renumbered from L-50-draft 21/08): max_col=52 sau write (≥52).
 
 ---
 

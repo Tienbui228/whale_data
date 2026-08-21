@@ -2,7 +2,7 @@
 **Target:** `docs/case_files/CASE_TRIA.xlsx` (v2 → v2.1 schema after amendment)
 **Window:** 2026-07-20 → 2026-08-18 (nến đóng D-1, L-21)
 **Backup L-37:** `scratch/CASE_TRIA_bak_pre_venue_20260819.xlsx` (18,904 B) ✓
-**Write-after-guard L-50:** identity-check + coverage guard PASS trước save ✓
+**Write-after-guard L-61 (renumbered from L-50-draft):** identity-check + coverage guard PASS trước save ✓
 
 **Data provenance (L-48):**
 - `data-source`: bapi/defi/v1/public/alpha-trade/klines (Alpha ALPHA_669), api.bybit.com/v5/market/{instruments-info,kline,recent-trade} (Bybit TRIAUSDT), fapi.binance.com (perp comparison), api.okx.com + api.gateio.ws (recon)
