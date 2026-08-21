@@ -1,9 +1,10 @@
-# PHASE-TAG v0.3 — Stage Classifier + Daily Scan Report (SCREEN display layer)
+# PHASE-TAG v0.3.3 — Stage Classifier + Daily Scan Report (SCREEN display layer)
 
-**Version:** 0.3 · **Ngày:** 18/08/2026 · **Soạn:** ANALYSIS (boot 17/08) · **Review:** FB-1, FB-2 (17/08) + DEV escalation (17-18/08)
-**Trạng thái:** TRÌNH KÝ — khi operator ký: file này vào `docs/proposals/phase_tag_v0.3.md`, là GATE CỨNG cho DEV bắt đầu code (§9)
+**Version:** 0.3.3 (consolidated 21/08/2026 — ER-HOME SYNC-PACK E1) · **Base body:** v0.3 (18/08) nguyên văn · **Soạn:** ANALYSIS (boot 17/08) · **Review:** FB-1, FB-2 (17/08) + DEV escalation (17-18/08)
+**Trạng thái:** GO-LIVE — commit `43e0e29` [PHASE-TAG-v0.3.3-GOLIVE] 18/08/2026; cron `run_phase_tag.py` 01:00 UTC active. GATE CỨNG cho DEV code (§9) đã pass.
+**Ô ký (consolidation E1 21/08):** v0.3 → 0.3.3 ký theo chuỗi chat 18-20/08 (batch5 + S2-MID↑ B1 + falsifier hooks; nguyên văn amendments code-encoded trong `scanner/phase_tag.py` commit `43e0e29`).
 **Trả nợ:** L-19 · nuốt F1-tagger · **Deliverable:** bot scan daily → report 5 khối
-**Cross-ref:** master plan §1+§5 · playbook §VIII · gom_detect_spec v3.1 (C1 §1.3, rule-iv §8) · CASE_INDEX.xlsx (state canonical) · 12-case + 70-fire · Doctrine G1
+**Cross-ref:** master plan §1+§5 · playbook §VIII · gom_detect_spec v3.2 (§E-R POINTER 21/08 · C1 §1.3, rule-iv §8) · CASE_INDEX.xlsx (state canonical) · 12-case + 70-fire · Doctrine G1 · `D:/Data back test/whale_data/proposals/unhedge_registry_spec.md` §E-R (ER-HOME 21/08)
 
 ---
 
