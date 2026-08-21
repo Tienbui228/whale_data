@@ -168,14 +168,15 @@ def _try_ignite(arr, j):
     if brk_h: reasons.append(f"brk+{(pn-r14)/r14*100:.0f}%/rg14")
     return " · ".join(reasons)
 
-# ─── RE-ARM check — variant D0 (inclusive) vs D-1 (exclusive) ────────────
-def _try_rearm(arr, i_ig, j, variant="D-1"):
+# ─── RE-ARM check — v1.2-FINAL+doctrine-pack DEFAULT inclusive-D (range j+1)
+# variant param GIỮ để E2b diff regression (D0 canonical, D-1 legacy)
+def _try_rearm(arr, i_ig, j, variant="D0"):
     ds = j - i_ig
     if ds < COOLDOWN: return False, f"cd<{COOLDOWN}"
-    # local_low window
-    if variant == "D0":  # inclusive today
+    # local_low window per spec v1.2-FINAL+doctrine-pack: BAO GỒM D (inclusive)
+    if variant == "D0":  # inclusive today per spec canonical
         end = j + 1
-    else:                # D-1 exclusive (code before spec text)
+    else:                # D-1 exclusive (legacy code pre-doctrine-pack)
         end = j
     pw = [arr[k]["px"] for k in range(i_ig, end) if ok(arr[k]["px"])]
     ow = [arr[k]["oi"] for k in range(i_ig, end) if ok(arr[k]["oi"])]

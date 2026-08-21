@@ -3,6 +3,8 @@
 Cập nhật: 18/08/2026. **Mỗi session mở đầu bằng diff file này.**
 Format cột Status: `QUEUED` / `DOING` / `DONE <commit>` / `BLOCKED <lý do>`
 
+**GOM-D (21/08):** m1=19 pump-khi-hedged/60d = evidence định lượng đầu tiên — án kế tiếp sau phase-2, draft chờ ký từ 17/08.
+
 ## Khối NET-DOSE (mã án `M6-20260818`, án semantic-drift, operator signed via relay 17-18/08)
 
 Chi tiết đầy đủ: `docs/handover/analysis_handover_addendum_20260818.md §B`.

@@ -11,6 +11,7 @@
 | v1.0 | 20/08/2026 | Khởi tạo §E-R1..§E-R7 (operator ký framework) |
 | v1.1 | 20/08/2026 | §E-R4b RE-ARM initial (r1=14d cooldown, r2=1.15, r3=1.30). Ref commit `ae5f2a0` / `794499a`. |
 | **v1.2-FINAL** | **21/08/2026** | **§E-R4b Version A hợp thức hóa (r2 1.15 / r3 1.30 / cooldown 3d) · BỎ close-condition MARKUP-GIỮ · thêm RE-ARM-MISS log · thêm §E-R8 falsifier forward.** Operator ký chat 21/08. Thay v1.1 (ae5f2a0). Wave-end v1.2 (đề xuất 20/08) **KHÔNG merge — rejected** (`er4b_wave_end_REJECTED_20260821.md`). |
+| **v1.2-FINAL+doctrine-pack** | **21/08/2026** | **§E-R8② metric weekpeak (thay reg%_cum) · §E-R8① MFE_k7 ≥+10% cho ≥50% alerts wave-2+ (thay ret_k7 close-basis) + wave-1 INTEL-grade report-only · §E-R4b MISSED-WAVE definitions (m1/m2/m3/HAND-OFF, m3≥3/60d → calib) · §E-R4b RE-ARM report-only productive-share nhóm gap≥2d (n≥10 ∧ share<40% mới falsifier, XÓA trần 50% cũ) · §E-R4b local_low inclusive-D (range j+1). Code `_try_rearm` đổi cùng commit — re-verify HEMI re-arm 08-06 / ⚡ 15/08 giữ nguyên.** Operator ký chat 21/08. |
 
 ---
 
@@ -94,15 +95,15 @@ token trong registry ∧ [
 
 ---
 
-E-R4b — RE-ARM (v1.2-FINAL · 21/08/2026 · operator ký chat — hợp thức hóa Version A hậu kiểm)
+E-R4b — RE-ARM (v1.2-FINAL+doctrine-pack · 21/08/2026 · operator ký chat)
 
 Row status IGNITED được theo dõi tiếp sau ignite-date:
-  local_low_px  = min(px_close) từ ignite-date đến ngày chấm
-  local_low_oi  = min(oi_usd)  từ ignite-date đến ngày chấm
+  local_low_px  = min(px_close[k]) k ∈ [ignite_idx, D] BAO GỒM D (inclusive-D)
+  local_low_oi  = min(oi_usd[k])   k ∈ [ignite_idx, D] BAO GỒM D (inclusive-D)
 Row TÁI MỞ (status=RE-ARMED, wave_n += 1, đủ điều kiện E-R3 alert lần nữa) tại ngày
 nến đóng đầu tiên (sau cooldown tối thiểu 3d kể từ ignite-date) thỏa ĐỒNG THỜI:
-  (r2) px_close / local_low_px ≥ 1.15   [hồi ≥15% từ đáy cục bộ hậu-wave]
-  (r3) oi_usd  / local_low_oi  ≥ 1.30   [OI rebuild ≥30% từ đáy cục bộ]
+  (r2) px_close(D) / local_low_px ≥ 1.15   [hồi ≥15% từ đáy cục bộ hậu-wave]
+  (r3) oi_usd(D)  / local_low_oi  ≥ 1.30   [OI rebuild ≥30% từ đáy cục bộ]
 Ghi chú cơ chế: nến ignite của wave kế tự thỏa (r2)(r3) → row không thể "ngủ quên"
 đúng lúc wave mới nổ — mọi wave đều có alert ngày-1 (mục đích chống-miss-×2).
 Sau RE-ARM, E-R3 chỉ bắn khi có trigger MỚI (vol ≥5×med14 ∨ breakout ∨ OI +30%/≤2d).
@@ -115,10 +116,27 @@ KHÔNG có điều kiện đóng MARKUP-GIỮ — đã BỎ (bài HEMI: loài ca
 NGAY TRONG markup, deposit +100M đến giữa lúc giá giữ 1.15-1.48× rồi mới nổ mega-wave).
 
 Ngưỡng r2=1.15 / r3=1.30 / cooldown 3d: PROVISIONAL, calibrate-to-anchor HEMI n=1.
-RE-ARM-MISS log (máy calib tự tích lũy): row IGNITED đã đóng-không-re-arm, nếu ≤21d
-sau xuất hiện vol ≥5×med14 trên chính token → auto-log MISSED-WAVE + min(px_ratio)
-trong cửa sổ. 2 MISSED-WAVE có ratio ∈ vùng biên → recalib r2/r3 từ phân bố.
-Chiều ngược: re-arm rate >50% số row IGNITED → ngưỡng quá lỏng, siết từ cùng phân bố.
+
+MISSED-WAVE definitions (scope = CLOSED-ROWS-ONLY):
+  m1 = pump-khi-hedged: div_avg3(pump_day) ≤ 0.5 tại ngày vol ≥5×med14 → OUT-OF-SCOPE
+       registry, đếm làm evidence GOM-D (án riêng, xem TASKS).
+  m2 = expired-rồi-pump: row EXPIRED (90d không ignite), sau close xuất hiện vol ≥5×med14
+       trong ≤21d → calib cửa sổ 90d.
+  m3 = un-hedge-lại-event-trượt: row RE-HEDGED, token un-hedge lại nhưng event mới KHÔNG
+       vào (struct_n chặn / drift hụt / pos-px filter fail). ĐÂY là miss THẬT của registry.
+  HAND-OFF = không miss: row đã đóng (RE-HEDGED/EXPIRED), event mới VÀO registry sạch
+             với alert ngày-1 → registry chuyển sang chain mới, không đếm miss.
+  Pump trên ROW-MỞ có trigger MỚI (E-R3 fires) = không miss (registry đang tracking sạch).
+
+MISSED-WAVE calib rule:
+  m3 ≥ 3 trong 60d forward → mở án calib r2/r3 hoặc drift từ phân bố.
+
+RE-ARM report-only metric (KHÔNG kill-switch, thay trần 50% cũ):
+  productive-share nhóm gap≥2d = (rearms gap≥2 → ignite ≤21d) / (tổng rearms gap≥2)
+  Report-only 30d forward. Trở thành FALSIFIER chỉ khi:
+    n(rearms gap≥2) ≥ 10 ∧ productive-share < 40%.
+  Trần re-arm rate 50% (v1.2 trước) → XÓA. Multi-wave doctrine cần re-arm dày; siết trần
+  = giảm chống-miss vô cớ.
 
 Outcome chấm PER-WAVE (ret k3/7/14 từng wave_n).
 Ghi chú doctrine: edge của registry = SỚM (wave-1 ngay sau un-hedge, crowd chưa vào);
@@ -171,10 +189,23 @@ chống-miss = CHUỖI wave — không đóng sổ giữa hai cái.
 ---
 
 E-R8 — FALSIFIER FORWARD (điều kiện sống của phase-2, chấm 30d từ go-live):
-  ① Hit: REGISTRY-IGNITE alerts có ret_k7 > 0 cho <40% số alert/30d
-     → registry xuống ANALYSIS-ONLY, mở án calib.
-  ② Noise: registry >25% fw-139 tại bất kỳ tuần nào ∨ alert E-R3 >40% tổng alert
-     Telegram → dừng in, calib lại.
+
+  ① Hit (v1.2-FINAL+doctrine-pack — BỎ ret_k7 close-basis):
+     MFE_k7 = max(close[D+1..D+7]) / close_D − 1  (close-basis, cận dưới của MFE thật)
+     Ngưỡng: MFE_k7 ≥ +10% cho ≥ 50% alerts wave-2+ (wave_n ≥ 2), chấm 30d forward.
+     Vi phạm (share < 50%) → registry xuống ANALYSIS-ONLY, mở án calib.
+     Wave-1 = INTEL-grade, report-only (MFE + tỷ lệ ≥+10%), KHÔNG kill-switch (L-54).
+     Lý do: wave-1 = SỚM, crowd chưa xác nhận, MFE nhỏ ok; wave-2+ = campaign-defining,
+     MFE ≥+10% là ngưỡng "kèo có tiền" tối thiểu.
+
+  ② Noise (v1.2-FINAL+doctrine-pack — thước thống nhất WEEKPEAK):
+     reg%_weekpeak = max over ISO-weeks của (unique tokens active trong tuần / fw-139)
+                     — "active trong tuần" = row STILL-OPEN hoặc RE-ARMED trong tuần đó.
+     Ngưỡng: reg%_weekpeak ≤ 25% (cả gate (iv) backtest §E-R7 lẫn falsifier forward §E-R8).
+     Vi phạm (>25% bất kỳ tuần nào) → dừng in Telegram, calib lại.
+     Phụ trợ: alert E-R3 >40% tổng alert Telegram tuần → cùng dừng in, calib lại.
+     [thay reg%_cum (unique tokens toàn window / fw-139) — CẤM dùng, số thô hơn.]
+
   ③ Miss-audit: pump ≥30%/2d trên token TỪNG CÓ row (kể cả đã đóng) mà không có
      alert ngày-1 → autopsy bắt buộc ≤48h.
 
