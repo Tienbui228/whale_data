@@ -12,6 +12,7 @@
 | v1.1 | 20/08/2026 | §E-R4b RE-ARM initial (r1=14d cooldown, r2=1.15, r3=1.30). Ref commit `ae5f2a0` / `794499a`. |
 | **v1.2-FINAL** | **21/08/2026** | **§E-R4b Version A hợp thức hóa (r2 1.15 / r3 1.30 / cooldown 3d) · BỎ close-condition MARKUP-GIỮ · thêm RE-ARM-MISS log · thêm §E-R8 falsifier forward.** Operator ký chat 21/08. Thay v1.1 (ae5f2a0). Wave-end v1.2 (đề xuất 20/08) **KHÔNG merge — rejected** (`er4b_wave_end_REJECTED_20260821.md`). |
 | **v1.2-FINAL+doctrine-pack** | **21/08/2026** | **§E-R8② metric weekpeak (thay reg%_cum) · §E-R8① MFE_k7 ≥+10% cho ≥50% alerts wave-2+ (thay ret_k7 close-basis) + wave-1 INTEL-grade report-only · §E-R4b MISSED-WAVE definitions (m1/m2/m3/HAND-OFF, m3≥3/60d → calib) · §E-R4b RE-ARM report-only productive-share nhóm gap≥2d (n≥10 ∧ share<40% mới falsifier, XÓA trần 50% cũ) · §E-R4b local_low inclusive-D (range j+1). Code `_try_rearm` đổi cùng commit — re-verify HEMI re-arm 08-06 / ⚡ 15/08 giữ nguyên.** Operator ký chat 21/08. |
+| **v1.2-FINAL+doctrine-pack+conformance-pack** | **21/08/2026** | **§E-R1 canonical `struct_n = count(div_avg3 ≤ 0.5)` trong episode (EXCLUDE gap-days); biến đếm cả gap-days đổi tên `ep_len`, cấm đội tên struct_n — hết IM-LẶNG ca E · §E-R1(b) eligibility spelled: "episode vừa break làm anchor trong ≤30d hậu-break" — hết IM-LẶNG ca F · Registry probe dùng `sn_count_le050` mới (không edit lib.detect_episodes để tránh chạm watchlist inline P0 SAFE) · consumer split canonical: watchlist=lib(ep_len semantics dưới nhãn struct_n giữ), registry=sn_count_le050 mới.** Operator ký chat 21/08. Ref L-58 (conformance fixture doctrine). |
 
 ---
 
@@ -37,6 +38,12 @@
 
 **(b) UNHEDGE-DRIFT:** `div nới ≥ +0.15 từ đáy episode` trong ≤7d (tháo dần chưa break)
 
+  **Eligibility (b) — conformance-pack 21/08 hết IM-LẶNG ca F:**
+  Episode vừa break được dùng làm anchor cho (b) drift trong ≤30d hậu-break.
+  Nghĩa: sau khi episode kết thúc (in_hedge flip False), event (b) vẫn có thể fire
+  trong 30 ngày kế nếu drift vs ep_min của episode ĐÃ BROKEN thỏa ≥0.15/7d. Sau 30d
+  không còn eligible với episode đó.
+
 **∧ (c)** `pos_r tại event ≥ 90% avg5 tiền-event` — tháo HEDGE, không phải tháo CHẠY. pos sập cùng lúc = harvest/exit, **KHÔNG vào registry**.
 
 **∧ (d)** `px tại event ≥ 85% hedge_start_px` — giá không gãy — gãy = hedge thắng, khác loài.
@@ -46,6 +53,19 @@
 token · unhedge_date · unhedge_px · episode_ref(start/end/div_min/struct_n) ·
 pos_r_event · flags
 ```
+
+**§E-R1 conformance canonical (21/08, operator ký chat — hết IM-LẶNG ca E):**
+- **`struct_n = count(div_avg3 ≤ 0.5)` trong episode** (đếm ngày ≤0.5, EXCLUDE gap-tolerated days).
+- Định nghĩa episode giữ nguyên watchlist v1.3 §1: gap-tolerance 2d · episode_break 3d.
+- Biến đếm CẢ gap-days (i − ep_start_i + 1 while in_hedge=True) đổi tên **`ep_len`**.
+- **CẤM** đội tên `struct_n` cho `ep_len` (hai đại lượng khác nhau khi episode có gap).
+- List B struct_n≥5 (hedge_watchlist_spec) hiểu theo `count(div≤0.5)`.
+- Consumer split:
+  - watchlist inline `detect_episodes` GIỮ struct_n hiện tại (= ep_len semantics) vì bit-equal
+    với lib (P0 SAFE 0 diffs 139 tokens). Watchlist consumer TIẾP TỤC dùng số này với NHÃN
+    `ep_len`. **Text `struct_n_min` = 5 trong watchlist config phải hiểu theo count(≤0.5)**
+    khi apply gate — thực tế watchlist v1.4 dùng struct_n cho display, không gate — GIỮ nguyên.
+  - registry probe `_detect_ev` dùng `sn_count_le050` = canonical struct_n (mới compute từ episode).
 
 ---
 
