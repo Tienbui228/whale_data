@@ -23,7 +23,10 @@ sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(REPO / "scripts"))
 
 from lib.hedge_episode import detect_episodes, calc_div, NaN, ok
-from lib.registry_events import _detect_ev, _pos_ok, _px_ok, window_prefilter_and_detect
+from lib.registry_events import (
+    _detect_ev, _pos_ok, _px_ok,
+    window_prefilter_and_detect, dedup_b_events,
+)
 
 import importlib.util as _iu
 _spec = _iu.spec_from_file_location("watchlist_daily", REPO / "scripts" / "watchlist_daily.py")
@@ -98,19 +101,24 @@ def test_registry_events():
     for sym, exp in fix["tokens"].items():
         arr = td[sym]
         arr_reg, ep_reg = window_prefilter_and_detect(arr, ws)
-        got_events = []
+        _raw = []
         for i in range(len(arr_reg)):
             ev = _detect_ev(arr_reg, ep_reg, i, sn_min=3,
                             window_start=ws, window_end=we)
             if ev:
-                got_events.append({
-                    "date": ev["date"], "trig": ev["trig"], "sn": ev["sn"],
-                    "rel_ep_id": ev["rel_ep_id"], "rel_ep_kind": ev["rel_ep_kind"],
-                    "ep_min": round(ev["ep_min"], 4) if ok(ev["ep_min"]) else None,
-                    "hspx": round(ev["hspx"], 6) if ev["hspx"] and ok(ev["hspx"]) else None,
-                    "pass_c": _pos_ok(arr_reg, ev["i"]),
-                    "pass_d": _px_ok(arr_reg, ev["i"], ev["hspx"]),
-                })
+                _raw.append(ev)
+        # Case L: dedup (b) per rel_ep_id (per operator A4(2) spec)
+        _dedup = dedup_b_events(_raw, sym=sym)
+        got_events = []
+        for ev in _dedup:
+            got_events.append({
+                "date": ev["date"], "trig": ev["trig"], "sn": ev["sn"],
+                "rel_ep_id": ev["rel_ep_id"], "rel_ep_kind": ev["rel_ep_kind"],
+                "ep_min": round(ev["ep_min"], 4) if ok(ev["ep_min"]) else None,
+                "hspx": round(ev["hspx"], 6) if ev["hspx"] and ok(ev["hspx"]) else None,
+                "pass_c": _pos_ok(arr_reg, ev["i"]),
+                "pass_d": _px_ok(arr_reg, ev["i"], ev["hspx"]),
+            })
         if got_events != exp["registry_events"]:
             fails.append(f"{sym}: events mismatch\n    expected: {exp['registry_events']}\n    got:      {got_events}")
     assert not fails, "REGISTRY EVENTS DRIFT:\n" + "\n".join(fails)

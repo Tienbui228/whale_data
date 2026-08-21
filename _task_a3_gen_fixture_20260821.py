@@ -26,7 +26,7 @@ sys.path.insert(0, str(REPO / "scripts"))
 from lib.hedge_episode import detect_episodes, calc_div, NaN, ok
 from lib.registry_events import (
     _detect_ev, _pos_ok, _px_ok,
-    window_prefilter_and_detect, CFG_DEFAULT,
+    window_prefilter_and_detect, dedup_b_events, CFG_DEFAULT,
 )
 
 # Import watchlist inline detect_episodes (bit-equal lib but separate impl for fixture pin)
@@ -36,8 +36,10 @@ wd = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(wd)
 
 TMP = Path(r"C:\Users\Hello\AppData\Local\Temp\e_r7_20260819")
-TARGETS = ["HEMIUSDT", "ONUSDT", "GUAUSDT", "CARVUSDT", "ARIAUSDT"]
-WINDOW_START = "2026-06-21"
+# A4(4) 21/08: 7 tokens (add SHELL, SIGN per operator A4(2) instr)
+TARGETS = ["HEMIUSDT", "ONUSDT", "GUAUSDT", "CARVUSDT", "ARIAUSDT", "SHELLUSDT", "SIGNUSDT"]
+# A4(2) canonical WINDOW_START aligned with ae5f2a0 baseline
+WINDOW_START = "2026-06-20"   # was 2026-06-21 in A3-provisional; canonical per ae5f2a0
 WINDOW_END = "2026-08-19"
 SNAPSHOT_DATE = "2026-08-19"
 
@@ -106,7 +108,7 @@ spec_commit = _git_short("proposals/unhedge_registry_spec_v1.0.md")
 # ── Build fixture ────────────────────────────────────────────────────────
 fixture = {
     "type": "conformance-fixture",
-    "version": "L-58-draft-v1",
+    "version": "L-58-golden-v1",   # A4(4) 21/08: PROVISIONAL v1 → GOLDEN after 7/7 MATCH + case H falsified
     "generated_at": "2026-08-21",
     "spec_source": "proposals/unhedge_registry_spec_v1.0.md",
     "spec_version": "v1.2-FINAL+doctrine-pack+conformance-pack",
@@ -137,21 +139,26 @@ fixture = {
 for sym in sorted(td):
     arr_full = td[sym]
 
-    # Registry consumer: window-prefiltered detect + events
+    # Registry consumer: window-prefiltered detect + events (case A-L applied)
     arr_reg, ep_reg = window_prefilter_and_detect(arr_full, WINDOW_START)
-    reg_events = []
+    _raw_evs = []
     for i in range(len(arr_reg)):
         ev = _detect_ev(arr_reg, ep_reg, i, sn_min=3,
                         window_start=WINDOW_START, window_end=WINDOW_END)
         if ev:
-            reg_events.append({
-                "date": ev["date"], "trig": ev["trig"], "sn": ev["sn"],
-                "rel_ep_id": ev["rel_ep_id"], "rel_ep_kind": ev["rel_ep_kind"],
-                "ep_min": round(ev["ep_min"], 4) if ok(ev["ep_min"]) else None,
-                "hspx": round(ev["hspx"], 6) if ev["hspx"] and ok(ev["hspx"]) else None,
-                "pass_c": _pos_ok(arr_reg, ev["i"]),
-                "pass_d": _px_ok(arr_reg, ev["i"], ev["hspx"]),
-            })
+            _raw_evs.append(ev)
+    # Case L: dedup (b) per rel_ep_id
+    _dedup_evs = dedup_b_events(_raw_evs, sym=sym)
+    reg_events = []
+    for ev in _dedup_evs:
+        reg_events.append({
+            "date": ev["date"], "trig": ev["trig"], "sn": ev["sn"],
+            "rel_ep_id": ev["rel_ep_id"], "rel_ep_kind": ev["rel_ep_kind"],
+            "ep_min": round(ev["ep_min"], 4) if ok(ev["ep_min"]) else None,
+            "hspx": round(ev["hspx"], 6) if ev["hspx"] and ok(ev["hspx"]) else None,
+            "pass_c": _pos_ok(arr_reg, ev["i"]),
+            "pass_d": _px_ok(arr_reg, ev["i"], ev["hspx"]),
+        })
 
     # Registry episodes (via window_prefilter_and_detect, on registry arr scope)
     episodes = []
