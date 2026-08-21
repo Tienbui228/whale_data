@@ -253,8 +253,87 @@ Minimal edit — commit riêng `[VOL-SUSPECT-FLAG-20260821]`.
 - Fix proposal: F5 (5 items), CHỜ KÝ operator
 - Header/flag: F6 (3 items), commit riêng khi ký
 
+## F0 addendum (gỡ mâu thuẫn F1, ký chat 21/08)
+
+**md5 export_freshwatch_daily_vps.py**:
+- LOCAL: `688ecb48ff399bdd382460f029a27776`
+- VPS:   `b2c13390952d5f96d82739b579245d51` (LỆCH)
+
+**grep drop_duplicates trong VPS `export_freshwatch_daily_vps.py`**: 5 hits ở path funding L259 / native_1d L422 / snap L695-697 / taker L728. **`_build_klines_agg` L295-322 VẪN THIẾU** guard. F1 conclusion HOLDS.
+
+**ratio store DEDUP vs k[7] fresh 5 sym × 3 date 19-21/08**:
+- **19/08 + 20/08**: store = fresh = CSV **100% match** (5/5 symbols, ratio 1.0000)
+- **21/08**: store < fresh (0.82-0.97) vì today incomplete cron (còn 6-8h)
+- CSV 21/08 chưa có (cron 01:20 UTC 22/08 sẽ ghi)
+
+F1 HOLDS: bug frozen CSV historical trước backfill 07-25 + bf15886 fix. Store CURRENT clean.
+
+Raw provenance: `/tmp/vol_fresh_20260821/f0_probe_19-21_08.csv` md5 `9f2441ed5c661fa37a9029e23e819ce6`
+
+## F4 EXECUTED — re-run khô 4 consumer 06-21→08-20 (ký chat 21/08)
+
+**F4-1 Fetch fresh k[7]**: 139 symbols × 61 dates = 8,456 rows, 0 errors, 12.1s.
+
+Raw dump (F5(a) provenance):
+- `/root/Data_back_test/whale_data/scratch/vol_k7_fresh_2026-06.csv` md5 `c30cd2ca657043129ec269affc242cd5` (1,369 rows)
+- `/root/Data_back_test/whale_data/scratch/vol_k7_fresh_2026-07.csv` md5 `60d045843fcd90a69c3c2f2771f64393` (4,307 rows)
+- `/root/Data_back_test/whale_data/scratch/vol_k7_fresh_2026-08.csv` md5 `e29f60ea1a642a39e5bcc7a060260964` (2,780 rows)
+- combined md5 `40c3bf98665cd634ca0e0b9ac3925578`
+
+**F4-2 Re-run 4 consumers with patched vol = fresh k[7]**
+
+### [A.1] HEMI/ON GATE(i) vé-vol (5×med14) — CŨ vs MỚI
+
+Scan 91d forward từ event day:
+- **HEMI 07-12/a**: 0 flips. 9 days có vol_h=T cả CSV và FRESH. Values identical (HEMI store CLEAN post 07-12).
+- **ON 07-05/a**: 0 flips. 10 days có vol_h=T cả 2. ON có vài ngày CSV > FRESH (07-20 CSV 45.6M vs FRESH 22.9M = ×2, 07-21 143M vs 71M = ×2, 07-23 225M vs 112M = ×2) nhưng vol_h decision KHÔNG lật (đều đã T).
+
+**GATE(i) HEMI/ON stable** — inflation KHÔNG ảnh hưởng ignite gate cho 2 anchor events.
+
+### [A.2] 7-target ignite vol_h flips (26/06→20/08)
+
+| symbol | date | cv_CSV | cv_FRESH | med14_CSV | med14_FRESH | CSV | FRESH | LẬT |
+|--------|------|--------|----------|-----------|-------------|-----|-------|-----|
+| CARV | 06-28 | 6,599,062 | 3,299,531 | 1,290,605 | 1,290,605 | T | F | **CSV false-positive** |
+| SIGN | 08-05 | 6,123,746 | 6,123,746 | 1,374,982 | 1,047,898 | F | T | **CSV false-negative** |
+
+- **CARV 06-28**: CSV inflated ×2 (event day) → false-positive ignite candidate
+- **SIGN 08-05**: cv same, nhưng med14 CSV bao gồm ngày inflated → false-negative miss ignite
+
+### [B] phase_tag TEST-BAIT (vol≥8×med14) flips
+
+| symbol | date | cur | med14_CSV | med14_FRESH | ratio_CSV | ratio_FRESH | CSV | FRESH |
+|--------|------|-----|-----------|-------------|-----------|-------------|-----|-------|
+| ON | 07-19 | 13,153,588 | 1,698,795 | 1,334,921 | 7.74 | 9.85 | F | T |
+| ON | 07-30 | 160,895,097 | 29,367,697 | 18,051,349 | 5.48 | 8.91 | F | T |
+
+CSV `med14` inflated → ratio thấp giả → miss TEST-BAIT. FRESH med14 correct → BAIT trigger.
+
+### [C] gom_scan low_conf DQ (vol<200K)
+
+**0 flips** (7 targets × 61 dates). Reason: token bị inflate là những token high-vol (BANK/TUT/AKE/BTW = tens of millions), ×3 inflation không đẩy sang low_conf zone. Low-vol tokens vốn <200K không bị dup inflate ở scale relevant.
+
+### [D] watchlist — control
+
+**0 flips** by construction (`grep vol scripts/watchlist_daily.py = 0`).
+
+## F4 SUMMARY BẢNG LẬT
+
+| Consumer | Rule | Flips 06-21→08-20 | Detail |
+|----------|------|--------------------|--------|
+| [A.1] HEMI/ON GATE(i) vé-vol | `vol ≥ 5×med14` scan 91d | **0** | Stable |
+| [A.2] 7-target ignite | `vol ≥ 5×med14` per day | **2** | CARV 06-28 (false-pos), SIGN 08-05 (false-neg) |
+| [B] phase_tag TEST-BAIT | `vol ≥ 8×med14` | **2** | ON 07-19, ON 07-30 (CSV miss BAIT) |
+| [C] gom_scan low_conf | `vol < 200K` | **0** | Low-vol tokens unaffected |
+| [D] watchlist | (no vol read) | **0** | Control |
+
+**TOTAL 4 flips** — blast radius nhỏ. HEMI/ON GATE(i) STABLE, không ảnh hưởng L-53 anchor.
+
+**Note baseline 25.9% ae5f2a0 (T0-T3)**: dùng vol_h ignite trong scoring. Với 2 flips (CARV false-pos + SIGN false-neg), baseline potentially ±1-2%. Cần regen T0-T3 sau F5(a) rebuild để verify chính xác.
+
 ## Verdict
 
-**KHÔNG SỬA STORE trước khi F4 về + operator ký F5.**
-**Số vol trong Telegram + T0-T3 + HEMI GATE + fixture = [VOL-SUSPECT] cho đến rebuild + verify.**
+**F1-F4 xong. F5(a)(d)(e) chờ operator ký (cần rebuild CSV + fixture repin). F5(b)(c) ký immediate → apply ngay.**
+**Số vol trong Telegram + T0-T3 + HEMI GATE + fixture = [VOL-SUSPECT] cho đến F5(a) rebuild + verify.**
 **L-58 fixture md5 mismatch sau rebuild = ĐÚNG THIẾT KẾ, KHÔNG tắt check.**
+**HEMI/ON GATE(i) anchor SAFE (0 flip); scoring T0-T3 nhẹ ảnh hưởng bởi 2 flips CARV/SIGN.**
