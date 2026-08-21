@@ -34,10 +34,106 @@ Consumer split (§E-R1 conformance):
   watchlist: struct_n via `lib.hedge_episode.detect_episodes` (bit-equal inline)
 """
 from __future__ import annotations
+import hashlib
+import os
+import subprocess
+from pathlib import Path
 from statistics import mean
 from datetime import date as _date, timedelta as _td
 
 from lib.hedge_episode import detect_episodes, calc_div, NaN, ok
+
+
+# ── D4 header (ER-HOME 21/08 luật): mọi probe/gate BẮT BUỘC gọi _run_header() đầu run ──
+SPEC_PATH_CANONICAL = "D:/Data back test/whale_data/proposals/unhedge_registry_spec.md"
+SPEC_VERSION_CANONICAL = "v1.2-FINAL+doctrine-pack+conformance-pack"
+AMENDMENTS_APPLIED = ["46db911", "fe4e38c"]   # E-R4b v1.2-FINAL + conformance-pack
+
+
+def _md5(path):
+    """MD5 of a file (utf-8 or binary), return None if not exist."""
+    p = Path(path)
+    if not p.exists():
+        return None
+    h = hashlib.md5()
+    with open(p, "rb") as f:
+        for c in iter(lambda: f.read(1 << 16), b""):
+            h.update(c)
+    return h.hexdigest()
+
+
+def _git_short(repo_root, *paths):
+    """Short SHA of last commit touching paths in repo_root."""
+    try:
+        args = ["git", "-C", str(repo_root), "log", "-1", "--format=%h", "--"] + list(paths)
+        return subprocess.check_output(args, text=True, stderr=subprocess.DEVNULL).strip()
+    except Exception:
+        return "?"
+
+
+def _run_header(consumer, snapshot_date, fixture_path=None, extra=None,
+                spec_path=SPEC_PATH_CANONICAL,
+                spec_version=SPEC_VERSION_CANONICAL,
+                amendments=None, repo_root=None):
+    """Return dict + printable header for gate/probe run (D4-header canonical).
+
+    Fields (per operator D4 21/08):
+      spec_path         — path tuyệt đối tới spec canonical §E-R
+      spec_version      — canonical version string
+      amendments_applied — list of commit SHAs ký amendment (default [46db911, fe4e38c])
+      lib_commit        — last commit touching lib/registry_events.py + hedge_episode.py
+      fixture_md5       — md5 of tests/fixtures/<consumer>_conformance_*.json (nếu có)
+      snapshot_date     — YYYY-MM-DD of data snapshot pin
+      consumer          — 'registry' | 'watchlist' | 'phase_tag' | probe name
+
+    Every consumer gate run MUST call:
+        from lib.registry_events import _run_header, print_header
+        hdr = _run_header(consumer='registry', snapshot_date='2026-08-19',
+                          fixture_path='tests/fixtures/registry_conformance_20260821.json')
+        print_header(hdr)
+
+    Header printed at STDOUT top, dict returned for JSON provenance.
+    """
+    if repo_root is None:
+        repo_root = Path(__file__).resolve().parents[1]
+    if amendments is None:
+        amendments = list(AMENDMENTS_APPLIED)
+    lib_commit = _git_short(repo_root, "lib/registry_events.py", "lib/hedge_episode.py")
+    fixture_md5 = _md5(fixture_path) if fixture_path else None
+    hdr = {
+        "consumer":            consumer,
+        "spec_path":           spec_path,
+        "spec_version":        spec_version,
+        "amendments_applied":  amendments,
+        "lib_commit":          lib_commit,
+        "fixture_path":        str(fixture_path) if fixture_path else None,
+        "fixture_md5":         fixture_md5,
+        "snapshot_date":       snapshot_date,
+    }
+    if extra:
+        hdr.update(extra)
+    return hdr
+
+
+def print_header(hdr):
+    """Print run header to STDOUT (D4 canonical format)."""
+    div = "═" * 96
+    print(div)
+    print(f"[D4 HEADER — {hdr.get('consumer','?')} gate run]")
+    print(div)
+    print(f"  spec_path           : {hdr.get('spec_path')}")
+    print(f"  spec_version        : {hdr.get('spec_version')}")
+    print(f"  amendments_applied  : {hdr.get('amendments_applied')}")
+    print(f"  lib_commit          : {hdr.get('lib_commit')}")
+    print(f"  fixture_path        : {hdr.get('fixture_path')}")
+    print(f"  fixture_md5         : {hdr.get('fixture_md5')}")
+    print(f"  snapshot_date       : {hdr.get('snapshot_date')}")
+    for k, v in hdr.items():
+        if k in ("consumer", "spec_path", "spec_version", "amendments_applied",
+                 "lib_commit", "fixture_path", "fixture_md5", "snapshot_date"):
+            continue
+        print(f"  {k:<20}: {v}")
+    print(div)
 
 
 # ── Defaults (per spec v1.2-FINAL+doctrine-pack+conformance-pack) ───────────

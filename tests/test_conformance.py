@@ -26,6 +26,7 @@ from lib.hedge_episode import detect_episodes, calc_div, NaN, ok
 from lib.registry_events import (
     _detect_ev, _pos_ok, _px_ok,
     window_prefilter_and_detect, dedup_b_events,
+    _run_header, print_header,
 )
 
 import importlib.util as _iu
@@ -215,6 +216,16 @@ def test_case_gap_gua():
 
 
 if __name__ == "__main__":
+    # D4 canonical header (ER-HOME 21/08 luật): print at run start
+    _fix = load_fixture()
+    _hdr = _run_header(
+        consumer='registry+watchlist',
+        snapshot_date=_fix.get('snapshot_date', '?'),
+        fixture_path=FIXTURE_PATH,
+        extra={"runner": "tests/test_conformance.py"},
+    )
+    print_header(_hdr)
+
     tests = [
         ("data_snapshot_md5", test_data_snapshot_md5),
         ("registry_events", test_registry_events),
