@@ -50,7 +50,14 @@ def render_5_blocks(rows: list[dict], date_str: str,
     Ẩn: S0/S0-POSTFLUSH/UNKNOWN (spec §0).
     Ẩn: CLO cửa-xác (S4/S5 mạn tính không-case) — §6.2 cửa xác.
     """
-    lines = [f"━ PHASE-MAP {date_str} ━"]
+    # P0-VOL-DUP-20260821 (F6.2 minimal flag, operator ký chat 21/08):
+    # phase_tag reads vol_quote via _vol_vs_med14 / v7/v30 (F3 inventory) — historical
+    # CSV vol_quote may be ×1-×4 inflated pre backfill 07-25 + bf15886. Flag until F5(a)
+    # rebuild + fixture repin verify. Reference: docs/reports/_p0_store_vol_dup_forensics_20260821.md
+    lines = [
+        "⚠️ [VOL-SUSPECT] Historical vol may be ×1-×4 inflated (P0-STORE-VOL-DUP-20260821 · F5(a) rebuild pending)",
+        f"━ PHASE-MAP {date_str} ━",
+    ]
 
     # Partition rows into blocks
     gom_ron    = []   # 🟢

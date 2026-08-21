@@ -437,8 +437,11 @@ def _empty_chain(date_str: str) -> dict:
         "start_date":      date_str,
         "chapter":         1,
         # Q1 / accumulation (M4: gross_adds_usd mirrors Q1_cum_usd)
-        # ─ ĐO GÌ: Σ max(ΔOI,0) trên ngày qua-gate counts_q1 (ret≤1% + not-partial).
-        # ─ KHÔNG ĐO GÌ: KHÔNG cộng ngày ΔOI<0. KHÔNG đo lực rút. Đây là "lực gom cộng dồn".
+        # ─ ĐO GÌ: Σ max(ΔOI,0) trên ngày **FIRE-day ∧ counts_q1** (ret≤1% + not-partial).
+        # ─ KHÔNG ĐO GÌ: KHÔNG cộng ngày ΔOI<0. KHÔNG cộng ngày không-fire. KHÔNG đo lực rút.
+        # ─ Addendum L-31: counts_q1 sống TRONG nhánh `if gom_day:` (update_chain gọi sau
+        #   eval_gom.gom_day=True). Trích gate PHẢI kèm enclosing condition — chỉ dán
+        #   `counts_q1 = ret ≤ 1% ∧ not partial_day` là THIẾU chữ FIRE-day.
         "Q1_cum_usd":      0.0,
         "gross_adds_usd":  0.0,   # M4 alias — kept in sync with Q1_cum_usd
         "oi_start_usd":    float("nan"),  # M4: OI snapshot at chain open (first GOM fire)
@@ -451,12 +454,17 @@ def _empty_chain(date_str: str) -> dict:
         "net_oi_window_usd": float("nan"),
         "net_oi_delta_usd":  float("nan"),  # ALIAS 30d (đến 2026-09-17), sau đó drop
         # net_gated_usd — [gom ròng doctrine — biến DUY NHẤT mang nghĩa net thực]
-        # ─ ĐO GÌ: Σ ΔOI (CẢ +/−, KHÔNG max) trên ngày counts_q1 (ret≤1% + not-partial).
-        #   Trích nguyên văn gate (L-31 counts_q1):
-        #     counts_q1 = not math.isnan(ret) and ret <= ret_max     # ret_max=0.01
-        #     if d.get("_partial_day"): counts_q1 = False
+        # ─ ĐO GÌ: Σ ΔOI (CẢ +/−, KHÔNG max) trên ngày **FIRE-day ∧ counts_q1**
+        #   (fire = eval_gom.gom_day=True; counts_q1 = ret≤1% + not-partial).
+        #   Trích nguyên văn gate (L-31 counts_q1) — LƯU Ý enclosing condition:
+        #     if gom_day:                                          # ← FIRE-day nhánh
+        #         counts_q1 = (not math.isnan(ret)) and ret <= ret_max     # ret_max=0.01
+        #         if d.get("_partial_day"): counts_q1 = False
+        #         if counts_q1: chain["net_gated_usd"] += (OI - OI_prev)
+        # ─ Addendum L-31: gate SỐNG trong nhánh fire. Trích gate PHẢI kèm enclosing
+        #   `if gom_day:`; bỏ đi = mất doctrine (thu ngày non-fire vào doctrine sai).
         # ─ KHÔNG ĐO GÌ: KHÔNG cộng ngày chase (ret>1%). KHÔNG cộng partial_day.
-        #   n_q1=0 → giá trị NaN (KHÔNG 0) — CHƯA ngày nào evaluable.
+        #   KHÔNG cộng ngày non-fire (dù có counts_q1). n_q1=0 → NaN (KHÔNG 0).
         "net_gated_usd":     float("nan"),
         # VWAP Tier 1: ΔOI⁺-weighted (primary)
         "vwap_num":        0.0,   # Σ ΔOI⁺ × avg_px
@@ -1448,6 +1456,11 @@ def run_daily(
     closed_today = [t for t in closed_today if t in prev_open_tokens]
 
     # ── Output ────────────────────────────────────────────────────────────────
+    # P0-VOL-DUP-20260821 F6.2 minimal flag (operator ký chat 21/08):
+    # gom_scan reads vol_quote for low_conf DQ + VWAP Tier 2 (F3 inventory). Historical
+    # CSV vol may be ×1-×4 inflated pre backfill 07-25 + bf15886. Ref forensics report.
+    print(f"⚠️ [VOL-SUSPECT] Historical vol may be ×1-×4 inflated (P0-STORE-VOL-DUP-20260821 · F5(a) rebuild pending)")
+
     if open_chains:
         print(f"━━ OPEN CHAINS ({len(open_chains)}) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         for token, chain, result in open_chains:
