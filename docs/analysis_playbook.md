@@ -599,6 +599,59 @@ Trước khi ném biến vào giả thuyết/verdict: đọc 2 dòng **"ĐO GÌ 
 
 ---
 
+## §IX. Doctrine #10 + SQUEEZE-FUEL — 20/08/2026 (signed, evidence pending)
+
+*Ký cùng đợt batch V1 (L-49→54). Chưa có evidence file riêng — nội dung tổng hợp từ pending_batch §D.1 (L-52), §E-R spec `proposals/unhedge_registry_spec_v1.0.md`, và án V1-20260819. **Trạng thái: DOCTRINE ONLY — chưa có exhibit case đóng.***
+
+### IX.1 Doctrine #10 — Kho ÷ Băng-thông
+
+**Phát biểu:** Số ngày MM có thể xả kho on-chain = `kho_usd ÷ (MM% × băng_thông_spot_tổng_van_thông)`.
+
+**Điều kiện dùng:**
+- Băng-thông TỔNG chỉ đếm venue có deposit + withdraw **OPEN** (van thông). Venue có chain LOCKED (van giấy) = ISOLATED, KHÔNG đếm.
+- Perp KHÔNG đếm (derivative, không giao token thật).
+- Alpha vol usable NHƯNG khi mirror-taker broken → chỉ dùng vol tuyệt đối, KHÔNG dùng taker %.
+
+**Ví dụ áp dụng:**
+- TRIA 19/08 (L-52 exhibit): kho $3.5M ÷ (10% × $190K/day spot 3-chân) = ~94d.  Nếu chỉ tính Alpha ($13K/d) → ~2,591d = SAI hệ số 27×.
+- HEMI 20/08: kho $5.15M ÷ (10% × $140K/d MEXC+Gate) = ~368d.
+- PUMPBTC 20/08: kho chờ operator ÷ (10% × $107K/d MEXC+Bitget+Gate-ETH).
+
+**Bẫy:** venue mặc định đầu tiên tra (thường Binance) trả ∅ → nếu KHÔNG tra ≥3 venue khác, doctrine đọc SAI hệ số 3-30×.
+
+**Ref:** L-52 (venue coverage) · pending_batch V1 §D.1 · schema amendment v2.1 spot_top_venue_howto §D4-ext.
+
+---
+
+### IX.2 SQUEEZE-FUEL-CHECK — dấu chiều crowd trong cú kéo
+
+**Phát biểu:** Khi REGISTRY-IGNITE hoặc pump được xác nhận, đọc chiều gLSR trong 1-3d cú kéo để phân biệt **loại củi**:
+
+| Chiều gLSR | Loại củi | Khuôn ví dụ | Ý nghĩa |
+|-----------|----------|-------------|---------|
+| **gLSR ↓ mạnh** (crowd flip bear→neutral) | **Short = củi** | CLO 15-19/08 (gLSR 4.9→2.4) | Short cover fuel — pump đốt short-side, có thể tiếp tục nếu tank short còn |
+| **gLSR ↑ mạnh** (crowd chase bull) | **Long = thanh khoản thoát** | TRIA 18-19/08 (gLSR 4.75→3.99 rồi rebuild) | Long build fuel — crowd chase; MM có thanh khoản để thoát; cẩn thận distribution top |
+| **gLSR flat** | Không định danh được | — | Cần data khác để phán |
+
+**Rule alert (áp trong §E-R3 REGISTRY-IGNITE):** Mỗi alert IGNITE bắt buộc kèm dòng:
+```
+SQUEEZE-FUEL-CHECK: gLSR <chiều> trong <N>d = <loại củi>
+```
+
+**Bẫy:**
+- Đọc "gLSR rơi trong rally" = **KHÔNG PHẢI** mất đà. Đó là short-cover fuel đang bơm.
+- Đọc "gLSR leo trong rally" ≠ bullish — có thể là distribution phase (crowd chase MM thoát).
+
+**Ref:** §E-R3 alert format · analysis_playbook §VIII.4 (thước rũ-đàn 4 màn) · L-53 (species split).
+
+---
+
+**Trạng thái:** doctrine ghi vào playbook 20/08 (signed batch V1). **Evidence case-closed CHƯA có** — chờ:
+1. Kết case tính đúng/sai Doctrine #10 (TRIA/HEMI/PUMPBTC — cần operator feed kho on-chain hoàn chỉnh)
+2. Kết case SQUEEZE-FUEL-CHECK 2 khuôn (CLO short-fuel · TRIA long-fuel) cần measured outcome ret_k=3/7/14
+
+Khi có evidence → nâng cấp thành lesson L-55/L-56 trong batch tiếp theo.
+
 ---
 
 ## Phụ lục: Cross-reference Lessons theo Lớp

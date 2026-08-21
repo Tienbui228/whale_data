@@ -1,7 +1,7 @@
 # Lessons Learned — FreshWatch
 
 > Auto-generated tu CASE_INDEX.xlsx sheet LESSONS. Khong edit file nay truc tiep.
-> Lan sinh: 2026-08-07 · Tong: 47 bai hoc (L-01 → L-48)
+> Lan sinh: 2026-08-21 · Tong: 54 bai hoc (L-01 → L-54)
 
 ## L-01 [2026-07-30] BR (+BAS,TUT,BANK) — `dinh luat` · DA VAO master plan §1 #9
 OI-floor = so vi the MM: ratio doc tai day OI trong so cao (retail da roi); pos_r nhich tai nen chet = tin hieu som dam; ratio tai OI-peak phai chiet khau
@@ -188,3 +188,30 @@ Video vs Photo: hai hồ sơ pos_r cao nhưng ý nghĩa khác nhau. "Video" (CAS
 ## L-48 [2026-08-09] CASE_BANANAS31 + CASE_IDOL — `DATA` · ACTIVE
 fullyDelisted Alpha → ABSTAIN taker_alpha. Klines[9]==klines[5] trên BAPI khi fullyDelisted=True (taker column = close price, không phải real taker). Đã confirm: IDOL (ALPHA_223, L-43 context) + BANANAS31 (ALPHA_21). Rule chốt: IF offline=True OR offsell=True OR fullyDelisted=True → taker_alpha=NaN, flag=ABSTAIN. Áp dụng ngược cho mọi case đang mở có Alpha token. Nguồn: CASE_BANANAS31 + CASE_IDOL · ký 09/08
 *Hanh dong tiep: Khi collect Alpha mới: check fullyDelisted trước khi parse klines[9]. Script build_case.py đã implement ABSTAIN block. Audit retrospective: CASE_TUT/BR/CLO — check Alpha status.*
+
+## L-49 [2026-08-11] GUARD-CÂM / ALL tokens — `GUARD` · DA VAO gom_scan.py c3d49e1
+save_state() fail-open: ghi state.json không kiểm tra invariants → state corrupt không bị bắt. Sửa: validate_gom_state() wired vào save_state() pre-write (4 invariants: open chain ≤3d gap, không open+cooldown đồng thời, vwap_type hợp lệ, cooldown_end ≥ episode_start). Violation → RuntimeError → exit≠0 → Telegram alert (L-44). Commit c3d49e1.
+*Hanh dong tiep: Verify sau SCP: validator không thay đổi write behavior (md5 re-check post manual run)*
+
+## L-50 [2026-08-11] P0 / FFUSDT 2026-08-01 — `P0` · DONG — md5 PASS 11/08
+P0 root cause: floating-point boundary tại A3 slope_5d = 1.15. FFUSDT 08-01: slope=1.14902 (dist=0.00098 từ ngưỡng). State corrupt xảy ra vì backfill chạy lại trên đoạn đã có chapter, không phải cron viết lại. Incremental mode §8.2 đã xác nhận đúng: md5 closed-chapters IDENTICAL sau cron 01:25 UTC 08-11 (a5a929dcc4ba17f71eb3243146be2314). Vùng-rung probe: A3 có 32 changed-outcome events / 60d / 525 tokens tại ε=0.005. Mốc V4 monitor: MARGINAL-V4 đến 25/08.
+*Hanh dong tiep: V4 monitor: đếm chain oscillation do A2/A3 marginal qua marginal_hits.csv đến 25/08*
+
+## L-51 [2026-08-11] GOM-C C1 spec / TỔNG HỢP — `SPEC-DRIFT` · DA SUA — comment fix 4606b86b + runtime-confirmed 11/08
+Comment signals.py lệch yaml — comment sai (lying comments = bug), đã sửa commit 4606b86b. Running values từ thresholds.yaml: breakout_pct=0.09 / oi_mult=1.3 (calibrated TUT P0-close). Runtime-confirmed bằng _probe_c1_runtime_20260811.py STEP 1+2. Spec v1.5 '+9%/1.3×' KHỚP thresholds.yaml = ĐÚNG về số. Còn 3 điều kiện cấu trúc thiếu trong spec: (1) range_end=i-5 (14d range kết thúc TRƯỚC 5d build window); (2) OR-check: giá đạt target bất kỳ ngày nào trong 5d; (3) taker check là max(window)<55%, không phải per-day. Bài học: khi spec changelog nói 'X thay Y' → luôn trace thresholds.yaml, không đọc code comments.
+*Hanh dong tiep: ANALYSIS xác nhận số canonical (0.09/1.3× hay 0.15/1.5×) + ký C1 text → operator ký ≤14/08*
+
+## L-BUG-STALE-CASE [2026-08-17] CASE — `AINUSDT 20260813 fetch, build chạy 20260817 → thiếu Aug13-16` · 
+build_case.py dùng scratch CSV theo DATE_TAG baked vào lệnh. Khi build chạy muộn (5 ngày sau fetch), data gap âm thầm — không có guard. Fix: thêm STALENESS GUARD: gap > 2d → RAISE. Lesson: scratch CSV là nguồn duy nhất cho build_case; không có pipeline auto-refresh → PHẢI re-fetch trước khi build muộn.
+
+## L-52 [2026-08-19] TRIA + recon 4 case (BTW/GUA/APR/CLO) — `VENUE` · DA VAO — spec §D4-ext + amendment 19/08
+Venue coverage — 'không có spot Binance' ≠ 'không có spot'. Băng thông xả và chân hàng phải tính trên venue spot LỚN NHẤT THỰC TẾ (không phải venue mặc định đầu tiên tra). Trước khi kết luận 'Alpha-only' hay 'perp-only chain': tra spot venues lớn (Bybit · OKX · Gate · KuCoin · MEXC · Bitget) trước, kết luận sau. LAYER COVERAGE mọi report case phải khai `spot-ext: <venue>/N/A/CHƯA-TRA` — quy ước CHƯA-TRA ≠ N/A. Cột canonical CASE schema v2.1: vol_spot_ext_usd (col 51) · spot_ext_venue (col 52) — CẤM ghi Bybit/OKX vào vol_spot_usd (col 31 = Binance api/v3 canonical). Exhibit TRIA 19/08: Bybit turnover Aug18 = $2,304,652 (3× Alpha $770K) — nếu không tra Bybit → mù nguyên một van xả 3×. Recon: GUA có Gate spot đã bỏ sót.
+*Hanh dong tiep: Case-open probe: tra ≥3 venue spot (Bybit + OKX + Gate) tối thiểu trước khi ghi verdict Alpha/perp-only. Identity-check bit-level ≥3 mẫu chống mirror trước khi dùng field mới.*
+
+## L-53 [2026-08-20] CASE_HEMI (autopsy 20/08) — evidence #2 G-committed-long (BTW-July = #1) — `SPECIES` · ACTIVE — vá bằng §E-R Un-hedge Registry v1.0
+Loài captive-kho vùng-giữa — máy perp mù theo CẤU TRÚC, không phải theo ngưỡng. Evidence HEMI 07-08/2026: 4 điểm mù cùng lúc — (1) div_avg3 vùng giữa 0.9-1.1 (pos cao 3.5 bị acc cao 3.9 che → mọi rule so-tương-đối mù) · (2) un-hedge làm 5 tuần trước ignite (episode B1 chết 09/07, ignite 15/08 — ngoài mọi cửa sổ T−2 khuôn ON và ngoài recent_hedge_days=2) · (3) vị thế long ngồi TĨNH từ trước window (không delta → mọi máy đo chuyển động câm) · (4) đòn chính = kho 490M nằm sẵn trên sàn. CẤM chỉnh A1/B1/GOM-E theo HEMI (p-hack). Hai biến thể G-committed-long: BTW div 1.3-1.5, HEMI div 0.9-1.1 + ghế tĩnh. Sensor duy trì duy nhất của loài này = on-chain kho (operator). Máy đúng tầng: PHASE-TAG bắt S3-HARVEST + TEST-BAIT real-time 18/08 — hệ nhiều tầng đúng thiết kế: tầng nền chịu mù, tầng campaign kêu.
+*Hanh dong tiep: Watch-item candidate STATIC-SEAT (PENDING n=1 HEMI, chờ đối chiếu BTW-July + fw-139 screen). Bắt bằng MỨC thay vì DELTA: pos_r ≥2.5-3 bền ≥14d ∧ OI ≤$5M ∧ funding pin ∧ kho lớn.*
+
+## L-54 [2026-08-20] CASE_HEMI — luật entry L-54 củng cố — `ENTRY` · ACTIVE — reinforces existing entry rule
+Phát hiện được ≠ giữ được lệnh. Tín hiệu sớm không có chuỗi xác nhận kế tiếp = tín hiệu không giao dịch được. Evidence HEMI: giả sử hệ HOÀN HẢO bắt cú un-hedge 05-09/07, lệnh mở tại đó phải ngồi qua 5 tuần giá đè phẳng, không tín hiệu trung gian nào (không pos_rerate, không unpin, không vol, không on-chain rút) trước ignite 15/08. Không cấu trúc xác nhận = không cấu trúc giữ = thoát trước màn hoặc gồng mù. Nguyên tắc: giá trị tín hiệu sớm = tín hiệu × chuỗi xác nhận nối được tới ignite. Tín hiệu sớm mồ côi có giá trị INTEL (registry/watchlist) chứ KHÔNG có giá trị ENTRY. Hệ quả: luật hiện hành 'entry duy nhất loài staged = S1-CONFIRMED churn ≥8×' được HEMI CỦNG CỐ chứ không bác. 'Con này không phải của mình' = kết luận đúng, có lời (tiền-không-mất), không phải thất bại hệ.
+*Hanh dong tiep: (1) Tín hiệu sớm không kèm chuỗi xác nhận → xếp INTEL (registry/watchlist), KHÔNG mở entry. (2) Entry chỉ mở khi chuỗi xác nhận nối tới ignite proximate (≤3d default). (3) Verdict 'không phải của mình' = kết luận hợp lệ, cần thời gian ANALYSIS như positive verdict.*
