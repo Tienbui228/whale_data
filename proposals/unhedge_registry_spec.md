@@ -13,6 +13,7 @@
 | **v1.2-FINAL** | **21/08/2026** | **§E-R4b Version A hợp thức hóa (r2 1.15 / r3 1.30 / cooldown 3d) · BỎ close-condition MARKUP-GIỮ · thêm RE-ARM-MISS log · thêm §E-R8 falsifier forward.** Operator ký chat 21/08. Thay v1.1 (ae5f2a0). Wave-end v1.2 (đề xuất 20/08) **KHÔNG merge — rejected** (`er4b_wave_end_REJECTED_20260821.md`). |
 | **v1.2-FINAL+doctrine-pack** | **21/08/2026** | **§E-R8② metric weekpeak (thay reg%_cum) · §E-R8① MFE_k7 ≥+10% cho ≥50% alerts wave-2+ (thay ret_k7 close-basis) + wave-1 INTEL-grade report-only · §E-R4b MISSED-WAVE definitions (m1/m2/m3/HAND-OFF, m3≥3/60d → calib) · §E-R4b RE-ARM report-only productive-share nhóm gap≥2d (n≥10 ∧ share<40% mới falsifier, XÓA trần 50% cũ) · §E-R4b local_low inclusive-D (range j+1). Code `_try_rearm` đổi cùng commit — re-verify HEMI re-arm 08-06 / ⚡ 15/08 giữ nguyên.** Operator ký chat 21/08. |
 | **v1.2-FINAL+doctrine-pack+conformance-pack** | **21/08/2026** | **§E-R1 canonical `struct_n = count(div_avg3 ≤ 0.5)` trong episode (EXCLUDE gap-days); biến đếm cả gap-days đổi tên `ep_len`, cấm đội tên struct_n — hết IM-LẶNG ca E · §E-R1(b) eligibility spelled: "episode vừa break làm anchor trong ≤30d hậu-break" — hết IM-LẶNG ca F · Registry probe dùng `sn_count_le050` mới (không edit lib.detect_episodes để tránh chạm watchlist inline P0 SAFE) · consumer split canonical: watchlist=lib(ep_len semantics dưới nhãn struct_n giữ), registry=sn_count_le050 mới.** Operator ký chat 21/08. Ref L-58 (conformance fixture doctrine). |
+| **+conformance-text ①②③** | **21/08/2026** | **Chép nguyên văn chữ ký 21/08 (khối "[OPERATOR KÝ 21/08 → DEV] Chuỗi cơ học" mục 1-2 + bảng A-L đã có sha) vào section "Conformance-pack (fe4e38c) — text bổ sung ①②③": ① struct_n canonical = count(div≤0.5) [= sn_count_le050], ep_len đổi tên, **CẢ HAI consumer**. ② Luật mỗi-consumer-giữ-tiền-extract-của-nó (registry=ae5f2a0, watchlist=lib); lib/hedge_episode.py generic, lib/registry_events.py adapter registry. ③ Revert B/C/G thành văn + cases I/J/K/L bảng A-L với sha impl (d20bd8a, b6a44b7). Chữ ký 21/08, code d20bd8a/b6a44b7. Không viết thêm cơ chế ngoài text đã ký.** |
 
 ---
 
@@ -79,6 +80,58 @@ pos_r_event · flags
 Nghĩa: doctrine text vẫn dùng chữ "struct_n" là legitimate (semantic ≡ sn_count_le050). Field code sau Phase 3 = `ep_len` + `sn_count_le050` only.
 
 Migration path 3-phase: `proposals/d1_migration_struct_n_deprecate_20260821.md` (SIGNED).
+
+---
+
+## Conformance-pack (fe4e38c) — text bổ sung ①②③ (chữ ký 21/08, code d20bd8a/b6a44b7)
+
+**Operator ký chat 21/08 (nguyên văn "[OPERATOR KÝ 21/08 → DEV] Chuỗi cơ học" mục 1-2 + bảng A-L đã có sha):**
+
+### ① struct_n canonical (cả hai consumer)
+
+**`struct_n` canonical = `count(div_avg3 ≤ 0.5)` trong episode** [= field code `sn_count_le050`]. Biến đếm cả gap-tolerated days đổi tên **`ep_len`**. Ngữ nghĩa canonical áp dụng cho **CẢ HAI consumer** (registry + watchlist):
+- Registry consumer (`lib/registry_events.py::_detect_ev`): đọc `ep["sn_count_le050"]`.
+- Watchlist consumer (`scripts/watchlist_daily.py::in_list_a`): List A gate = `sn_count_le050 ≥ sn_count_min` (thay `struct_n ≥ struct_n_min` cũ). Impl A2 commit `72e36b1`.
+
+### ② Luật mỗi-consumer-giữ-tiền-extract-của-nó (lib generic + adapter registry)
+
+**Mỗi consumer giữ nguyên tiền-extract semantics của nó**:
+- **Registry** = semantics ae5f2a0 (`_task_registry_c1_c4_20260820.py`): 3-sample div (skip first 2), local drift_win-day recent min, full-ep sn count, dedup (b) per episode. Impl: `lib/registry_events.py::_detect_episodes_registry` + `_detect_ev` + `dedup_b_events` (b6a44b7 A4(2) cases K/I/J/L).
+- **Watchlist** = semantics `lib/hedge_episode.py::detect_episodes` (avg3 partial-sample OK, bit-equal watchlist inline P0 SAFE 139/139).
+
+**Architecture:**
+- `lib/hedge_episode.py` = **GENERIC** shared library (detect_episodes, avg3, calc_div, NaN, ok). Watchlist import direct.
+- `lib/registry_events.py` = **ADAPTER cho registry** (case K wraps `_detect_episodes_registry` với 3-sample div requirement + case I/J/L). Registry import qua adapter.
+- Consumer KHÔNG chia sẻ tiền-extract — mỗi bên có adapter riêng. Bit-equal 139/139 verified trên watchlist path; ae5f2a0 7/7 MATCH verified trên registry path.
+
+### ③ Revert B/C/G thành văn + cases I/J/K/L (b6a44b7)
+
+**Revert trên registry consumer, KHÔNG chạm watchlist (bit-equal preserved):**
+
+- **B** — trigger (b) yêu cầu `cur_div ≤ 0.5` tại ngày event. Tránh flip false-positive khi drift đo qua ngày gap-tolerated ep_break < 3d. Impl: `_detect_ev` (b) additional check `cur ≤ div_ratio_max`.
+- **C** — `pos_hold` guard dùng **avg5 CALENDAR d−k, k=1..5** (skip missing days), KHÔNG dùng index i-5..i-1. Tránh lệch khi có date-gap trong arr. Impl: `_pos_ok` calendar-based.
+- **G** — Episode window pre-filter: registry cắt arr về `arr >= WINDOW_START − 5d` TRƯỚC khi detect_episodes. Impl: `window_prefilter_and_detect(arr, WINDOW_START, lb_days=5)`.
+
+### Bảng A-L (ca / hành vi / sha)
+
+| Case | Hành vi | Sha impl | Verify sha |
+|------|---------|----------|-----------|
+| A | (base A1) A-H cases regress-3 mapping | 591b1cb (regress-3 probe) | — |
+| **B** | (b) drift trigger REQUIRE cur_div ≤ 0.5 | d20bd8a (A1) | b6a44b7 (retained) |
+| **C** | `_pos_ok` avg5 CALENDAR d-k (không index) | d20bd8a (A1) | b6a44b7 (retained) |
+| D | (base regress-3) px_ok D=0.85 hspx | d20bd8a (A1) | — |
+| E | (base regress-3) sn_min filter chỉ (a) | d20bd8a (A1) | — |
+| **F** | Eligibility ≤30d hậu-break, rel_ep_kind='post_break' anchor | d20bd8a (A1) | b6a44b7 (retained) |
+| **G** | `window_prefilter_and_detect` cắt arr ≥ WINDOW_START-5d | d20bd8a (A1) | b6a44b7 (retained) |
+| H | (falsified A4(3)) SIGN case H data-drift — FALSIFIED (VPS md5 match, event 06-22/a present both baselines) | 2193f9d (A4(3) probe) | — |
+| **I** | (b) drift baseline = LOCAL drift_win-day recent min (chỉ scan vv≤0.5 trong [i-drift_win, i)) | b6a44b7 (A4(2)) | 2193f9d (fixture golden) |
+| **J** | (b) sn = FULL ep count (backfill semantic, includes days AFTER event) | b6a44b7 (A4(2)) | 2193f9d |
+| **K** | Episode detection REGISTRY-SPECIFIC: skip first 2 rows + require 3-sample div (`_detect_episodes_registry`) | b6a44b7 (A4(2)) | 2193f9d |
+| **L** | Dedup (b) events per (sym, rel_ep_id, 'b') keep FIRST (`dedup_b_events`) | b6a44b7 (A4(2)) | 2193f9d |
+
+**7/7 MATCH ae5f2a0 verified**: HEMI 07-12/a · ON 07-05/a · GUA 08-10/b · CARV 06-27/b · ARIA 07-21/b · SHELL 08-12/b · SIGN 06-22/a (fixture md5 `2dd4b883aa25fd5961a42cbf9b3b959b`, test_conformance 5/5 PASS).
+
+**Không có cơ chế ngoài text đã ký — chỉ chép nguyên văn chữ ký 21/08 + bảng A-L.**
 
 ---
 
