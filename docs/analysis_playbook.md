@@ -646,11 +646,12 @@ SQUEEZE-FUEL-CHECK: gLSR <chiều> trong <N>d = <loại củi>
 
 ---
 
-**Trạng thái:** doctrine ghi vào playbook 20/08 (signed batch V1). **Evidence case-closed CHƯA có** — chờ:
-1. Kết case tính đúng/sai Doctrine #10 (TRIA/HEMI/PUMPBTC — cần operator feed kho on-chain hoàn chỉnh)
-2. Kết case SQUEEZE-FUEL-CHECK 2 khuôn (CLO short-fuel · TRIA long-fuel) cần measured outcome ret_k=3/7/14
+**Trạng thái:** doctrine ghi vào playbook 20/08 — **SIGNED batch V1**. Doctrine chính thức, KHÔNG chờ nâng lên lesson. Evidence ref:
 
-Khi có evidence → nâng cấp thành lesson L-55/L-56 trong batch tiếp theo.
+- **Doctrine #10:** case đóng-đọc GUA/TRIA/HEMI 17-20/08 — 3 ca xuyên khuôn (GUA 130M kho vs $107K/d thông, TRIA 337M vs $190K/d 3-chân, HEMI 590M vs $140K/d)
+- **SQUEEZE-FUEL:** 2 khuôn measured — CLO 15-19/08 short-fuel (gLSR 4.9→2.4 flip) · TRIA 18-19/08 long-fuel (gLSR rebuild post crowd-flip)
+
+**Lưu ý cross-allocation:** L-55→L-59 đã cấp phát cho **batch V2** (`proposals/lessons_pending_batch_V2.md`) — cấm giữ chỗ ID cho doctrine này ở batch tiếp theo. Doctrine sống ở playbook §IX là canonical.
 
 ---
 
