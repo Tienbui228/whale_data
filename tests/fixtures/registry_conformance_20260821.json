@@ -1,0 +1,2337 @@
+{
+  "type": "conformance-fixture",
+  "version": "L-58-draft-v1",
+  "generated_at": "2026-08-21",
+  "spec_source": "proposals/unhedge_registry_spec_v1.0.md",
+  "spec_version": "v1.2-FINAL+doctrine-pack+conformance-pack",
+  "spec_commit": "fe4e38c",
+  "lib_commit": "d20bd8a",
+  "watchlist_commit": "72e36b1",
+  "snapshot_date": "2026-08-19",
+  "window_start": "2026-06-21",
+  "window_end": "2026-08-19",
+  "data_snapshot_md5": {
+    "freshwatch_daily_2026-06.csv": "f717231a7b3385012459566a908952d2",
+    "freshwatch_daily_2026-07.csv": "c7143e37bf98cc11bf171068a2518857",
+    "freshwatch_daily_2026-08.csv": "6decfff1dffaedffd202287a209a7129"
+  },
+  "config": {
+    "registry": {
+      "hedge": {
+        "div_ratio_max": 0.5,
+        "episode_break_days": 3
+      }
+    },
+    "watchlist": {
+      "hedge": {
+        "div_ratio_max": 0.5,
+        "struct_n_min": 5,
+        "episode_break_days": 3
+      },
+      "list_b": {
+        "recent_hedge_days": 2,
+        "div_delta_min": 0.0
+      },
+      "trends": {
+        "pos_trend_threshold": 0.15,
+        "oi_trend_threshold": 0.1
+      },
+      "oi_guard": {
+        "low_conf_usd": 1000000
+      },
+      "output": {
+        "csv_path": "data/export/watchlist_log_{YYYY-MM}.csv"
+      }
+    },
+    "drift_thr": 0.15,
+    "drift_win": 7,
+    "pos_hold": 0.9,
+    "px_hold": 0.85,
+    "post_break_max_days": 30,
+    "window_prefilter_lb_days": 5
+  },
+  "tokens": {
+    "ARIAUSDT": {
+      "n_days_full": 51,
+      "n_days_window": 51,
+      "episodes": [
+        {
+          "episode_id": 1,
+          "start_date": "2026-06-27",
+          "end_date": "2026-08-19",
+          "gap_days": 0,
+          "count_le050": 51,
+          "ep_len": 51,
+          "hedge_start_px": 0.026079
+        }
+      ],
+      "registry_events": [],
+      "watchlist_daily": [
+        {
+          "date": "2026-06-27",
+          "div_ratio": 0.2455,
+          "struct_n": 1,
+          "sn_count_le050": 1,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-28",
+          "div_ratio": 0.2358,
+          "struct_n": 2,
+          "sn_count_le050": 2,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-29",
+          "div_ratio": 0.2401,
+          "struct_n": 3,
+          "sn_count_le050": 3,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-30",
+          "div_ratio": 0.2356,
+          "struct_n": 4,
+          "sn_count_le050": 4,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-01",
+          "div_ratio": 0.242,
+          "struct_n": 5,
+          "sn_count_le050": 5,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-02",
+          "div_ratio": 0.2398,
+          "struct_n": 6,
+          "sn_count_le050": 6,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-03",
+          "div_ratio": 0.241,
+          "struct_n": 7,
+          "sn_count_le050": 7,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-04",
+          "div_ratio": 0.2376,
+          "struct_n": 8,
+          "sn_count_le050": 8,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-05",
+          "div_ratio": 0.2353,
+          "struct_n": 9,
+          "sn_count_le050": 9,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-06",
+          "div_ratio": 0.2352,
+          "struct_n": 10,
+          "sn_count_le050": 10,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-07",
+          "div_ratio": 0.2318,
+          "struct_n": 11,
+          "sn_count_le050": 11,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-08",
+          "div_ratio": 0.2366,
+          "struct_n": 12,
+          "sn_count_le050": 12,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-09",
+          "div_ratio": 0.2525,
+          "struct_n": 13,
+          "sn_count_le050": 13,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-10",
+          "div_ratio": 0.2903,
+          "struct_n": 14,
+          "sn_count_le050": 14,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-11",
+          "div_ratio": 0.3368,
+          "struct_n": 15,
+          "sn_count_le050": 15,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-12",
+          "div_ratio": 0.363,
+          "struct_n": 16,
+          "sn_count_le050": 16,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-13",
+          "div_ratio": 0.3635,
+          "struct_n": 17,
+          "sn_count_le050": 17,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-14",
+          "div_ratio": 0.3496,
+          "struct_n": 18,
+          "sn_count_le050": 18,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-15",
+          "div_ratio": 0.347,
+          "struct_n": 19,
+          "sn_count_le050": 19,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-16",
+          "div_ratio": 0.3401,
+          "struct_n": 20,
+          "sn_count_le050": 20,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-17",
+          "div_ratio": 0.3006,
+          "struct_n": 21,
+          "sn_count_le050": 21,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-18",
+          "div_ratio": 0.2698,
+          "struct_n": 22,
+          "sn_count_le050": 22,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-19",
+          "div_ratio": 0.287,
+          "struct_n": 23,
+          "sn_count_le050": 23,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-20",
+          "div_ratio": 0.3547,
+          "struct_n": 24,
+          "sn_count_le050": 24,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-21",
+          "div_ratio": 0.4409,
+          "struct_n": 25,
+          "sn_count_le050": 25,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-22",
+          "div_ratio": 0.4054,
+          "struct_n": 26,
+          "sn_count_le050": 26,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-23",
+          "div_ratio": 0.3861,
+          "struct_n": 27,
+          "sn_count_le050": 27,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-27",
+          "div_ratio": 0.3509,
+          "struct_n": 28,
+          "sn_count_le050": 28,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-28",
+          "div_ratio": 0.3506,
+          "struct_n": 29,
+          "sn_count_le050": 29,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-29",
+          "div_ratio": 0.321,
+          "struct_n": 30,
+          "sn_count_le050": 30,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-30",
+          "div_ratio": 0.3155,
+          "struct_n": 31,
+          "sn_count_le050": 31,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-31",
+          "div_ratio": 0.3231,
+          "struct_n": 32,
+          "sn_count_le050": 32,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-01",
+          "div_ratio": 0.3443,
+          "struct_n": 33,
+          "sn_count_le050": 33,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-02",
+          "div_ratio": 0.3734,
+          "struct_n": 34,
+          "sn_count_le050": 34,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-03",
+          "div_ratio": 0.3908,
+          "struct_n": 35,
+          "sn_count_le050": 35,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-04",
+          "div_ratio": 0.3986,
+          "struct_n": 36,
+          "sn_count_le050": 36,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-05",
+          "div_ratio": 0.3946,
+          "struct_n": 37,
+          "sn_count_le050": 37,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-06",
+          "div_ratio": 0.3951,
+          "struct_n": 38,
+          "sn_count_le050": 38,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-07",
+          "div_ratio": 0.4168,
+          "struct_n": 39,
+          "sn_count_le050": 39,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-08",
+          "div_ratio": 0.4466,
+          "struct_n": 40,
+          "sn_count_le050": 40,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-09",
+          "div_ratio": 0.4566,
+          "struct_n": 41,
+          "sn_count_le050": 41,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-10",
+          "div_ratio": 0.426,
+          "struct_n": 42,
+          "sn_count_le050": 42,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-11",
+          "div_ratio": 0.4016,
+          "struct_n": 43,
+          "sn_count_le050": 43,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-12",
+          "div_ratio": 0.3968,
+          "struct_n": 44,
+          "sn_count_le050": 44,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-13",
+          "div_ratio": 0.409,
+          "struct_n": 45,
+          "sn_count_le050": 45,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-14",
+          "div_ratio": 0.4409,
+          "struct_n": 46,
+          "sn_count_le050": 46,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-15",
+          "div_ratio": 0.4615,
+          "struct_n": 47,
+          "sn_count_le050": 47,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-08-16",
+          "div_ratio": 0.4534,
+          "struct_n": 48,
+          "sn_count_le050": 48,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-08-17",
+          "div_ratio": 0.4328,
+          "struct_n": 49,
+          "sn_count_le050": 49,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-08-18",
+          "div_ratio": 0.4184,
+          "struct_n": 50,
+          "sn_count_le050": 50,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-08-19",
+          "div_ratio": 0.4234,
+          "struct_n": 51,
+          "sn_count_le050": 51,
+          "in_list_a": true,
+          "in_list_b": false
+        }
+      ]
+    },
+    "CARVUSDT": {
+      "n_days_full": 77,
+      "n_days_window": 62,
+      "episodes": [
+        {
+          "episode_id": 1,
+          "start_date": "2026-06-16",
+          "end_date": "2026-08-10",
+          "gap_days": 3,
+          "count_le050": 50,
+          "ep_len": 53,
+          "hedge_start_px": 0.043886
+        },
+        {
+          "episode_id": 2,
+          "start_date": "2026-08-13",
+          "end_date": "2026-08-19",
+          "gap_days": 0,
+          "count_le050": 7,
+          "ep_len": 7,
+          "hedge_start_px": 0.029917
+        }
+      ],
+      "registry_events": [
+        {
+          "date": "2026-06-27",
+          "trig": "b",
+          "sn": 12,
+          "rel_ep_id": 1,
+          "rel_ep_kind": "current",
+          "ep_min": 0.1111,
+          "hspx": 0.043886,
+          "pass_c": true,
+          "pass_d": true
+        }
+      ],
+      "watchlist_daily": [
+        {
+          "date": "2026-06-21",
+          "div_ratio": 0.1127,
+          "struct_n": 21,
+          "sn_count_le050": 21,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-22",
+          "div_ratio": 0.1165,
+          "struct_n": 22,
+          "sn_count_le050": 22,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-23",
+          "div_ratio": 0.1485,
+          "struct_n": 23,
+          "sn_count_le050": 23,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-06-24",
+          "div_ratio": 0.1803,
+          "struct_n": 24,
+          "sn_count_le050": 24,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-06-25",
+          "div_ratio": 0.2067,
+          "struct_n": 25,
+          "sn_count_le050": 25,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-06-26",
+          "div_ratio": 0.2375,
+          "struct_n": 26,
+          "sn_count_le050": 26,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-06-27",
+          "div_ratio": 0.3128,
+          "struct_n": 27,
+          "sn_count_le050": 27,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-06-28",
+          "div_ratio": 0.4276,
+          "struct_n": 28,
+          "sn_count_le050": 28,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-06-29",
+          "div_ratio": 0.5028,
+          "struct_n": 29,
+          "sn_count_le050": 28,
+          "in_list_a": false,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-06-30",
+          "div_ratio": 0.4548,
+          "struct_n": 30,
+          "sn_count_le050": 29,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-07-01",
+          "div_ratio": 0.3998,
+          "struct_n": 31,
+          "sn_count_le050": 30,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-07-02",
+          "div_ratio": 0.3453,
+          "struct_n": 32,
+          "sn_count_le050": 31,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-03",
+          "div_ratio": 0.3199,
+          "struct_n": 33,
+          "sn_count_le050": 32,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-04",
+          "div_ratio": 0.2936,
+          "struct_n": 34,
+          "sn_count_le050": 33,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-05",
+          "div_ratio": 0.2748,
+          "struct_n": 35,
+          "sn_count_le050": 34,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-06",
+          "div_ratio": 0.2523,
+          "struct_n": 36,
+          "sn_count_le050": 35,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-07",
+          "div_ratio": 0.2431,
+          "struct_n": 37,
+          "sn_count_le050": 36,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-08",
+          "div_ratio": 0.2395,
+          "struct_n": 38,
+          "sn_count_le050": 37,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-09",
+          "div_ratio": 0.2445,
+          "struct_n": 39,
+          "sn_count_le050": 38,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-10",
+          "div_ratio": 0.2483,
+          "struct_n": 40,
+          "sn_count_le050": 39,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-11",
+          "div_ratio": 0.249,
+          "struct_n": 41,
+          "sn_count_le050": 40,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-12",
+          "div_ratio": 0.248,
+          "struct_n": 42,
+          "sn_count_le050": 41,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-13",
+          "div_ratio": 0.2412,
+          "struct_n": 43,
+          "sn_count_le050": 42,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-14",
+          "div_ratio": 0.2262,
+          "struct_n": 44,
+          "sn_count_le050": 43,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-15",
+          "div_ratio": 0.2184,
+          "struct_n": 45,
+          "sn_count_le050": 44,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-16",
+          "div_ratio": 0.2158,
+          "struct_n": 46,
+          "sn_count_le050": 45,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-17",
+          "div_ratio": 0.2197,
+          "struct_n": 47,
+          "sn_count_le050": 46,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-18",
+          "div_ratio": 0.2218,
+          "struct_n": 48,
+          "sn_count_le050": 47,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-19",
+          "div_ratio": 0.2307,
+          "struct_n": 49,
+          "sn_count_le050": 48,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-20",
+          "div_ratio": 0.2377,
+          "struct_n": 50,
+          "sn_count_le050": 49,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-07-21",
+          "div_ratio": 0.2405,
+          "struct_n": 51,
+          "sn_count_le050": 50,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-07-22",
+          "div_ratio": 0.253,
+          "struct_n": 52,
+          "sn_count_le050": 51,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-07-23",
+          "div_ratio": 0.2677,
+          "struct_n": 53,
+          "sn_count_le050": 52,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-07-27",
+          "div_ratio": 0.2936,
+          "struct_n": 54,
+          "sn_count_le050": 53,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-07-28",
+          "div_ratio": 0.2871,
+          "struct_n": 55,
+          "sn_count_le050": 54,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-29",
+          "div_ratio": 0.298,
+          "struct_n": 56,
+          "sn_count_le050": 55,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-30",
+          "div_ratio": 0.3014,
+          "struct_n": 57,
+          "sn_count_le050": 56,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-31",
+          "div_ratio": 0.3146,
+          "struct_n": 58,
+          "sn_count_le050": 57,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-01",
+          "div_ratio": 0.3131,
+          "struct_n": 59,
+          "sn_count_le050": 58,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-02",
+          "div_ratio": 0.3074,
+          "struct_n": 60,
+          "sn_count_le050": 59,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-03",
+          "div_ratio": 0.3005,
+          "struct_n": 61,
+          "sn_count_le050": 60,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-04",
+          "div_ratio": 0.2939,
+          "struct_n": 62,
+          "sn_count_le050": 61,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-05",
+          "div_ratio": 0.2822,
+          "struct_n": 63,
+          "sn_count_le050": 62,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-06",
+          "div_ratio": 0.2938,
+          "struct_n": 64,
+          "sn_count_le050": 63,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-07",
+          "div_ratio": 0.359,
+          "struct_n": 65,
+          "sn_count_le050": 64,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-08",
+          "div_ratio": 0.4546,
+          "struct_n": 66,
+          "sn_count_le050": 65,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-08-09",
+          "div_ratio": 0.5555,
+          "struct_n": 67,
+          "sn_count_le050": 65,
+          "in_list_a": false,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-08-10",
+          "div_ratio": 0.5776,
+          "struct_n": 68,
+          "sn_count_le050": 65,
+          "in_list_a": false,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-08-11",
+          "div_ratio": 0.5398,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-08-12",
+          "div_ratio": 0.5144,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-08-13",
+          "div_ratio": 0.4871,
+          "struct_n": 1,
+          "sn_count_le050": 1,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-14",
+          "div_ratio": 0.4938,
+          "struct_n": 2,
+          "sn_count_le050": 2,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-15",
+          "div_ratio": 0.4827,
+          "struct_n": 3,
+          "sn_count_le050": 3,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-16",
+          "div_ratio": 0.4881,
+          "struct_n": 4,
+          "sn_count_le050": 4,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-17",
+          "div_ratio": 0.4837,
+          "struct_n": 5,
+          "sn_count_le050": 5,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-18",
+          "div_ratio": 0.4875,
+          "struct_n": 6,
+          "sn_count_le050": 6,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-19",
+          "div_ratio": 0.499,
+          "struct_n": 7,
+          "sn_count_le050": 7,
+          "in_list_a": true,
+          "in_list_b": false
+        }
+      ]
+    },
+    "GUAUSDT": {
+      "n_days_full": 76,
+      "n_days_window": 61,
+      "episodes": [
+        {
+          "episode_id": 1,
+          "start_date": "2026-07-05",
+          "end_date": "2026-07-09",
+          "gap_days": 2,
+          "count_le050": 3,
+          "ep_len": 5,
+          "hedge_start_px": 0.069815
+        },
+        {
+          "episode_id": 2,
+          "start_date": "2026-07-16",
+          "end_date": "2026-08-19",
+          "gap_days": 2,
+          "count_le050": 30,
+          "ep_len": 32,
+          "hedge_start_px": 0.052841
+        }
+      ],
+      "registry_events": [],
+      "watchlist_daily": [
+        {
+          "date": "2026-06-21",
+          "div_ratio": 0.7295,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-22",
+          "div_ratio": 0.7075,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-23",
+          "div_ratio": 0.7863,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-24",
+          "div_ratio": 0.888,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-25",
+          "div_ratio": 0.9489,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-27",
+          "div_ratio": 0.9514,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-28",
+          "div_ratio": 0.9589,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-29",
+          "div_ratio": 0.9444,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-30",
+          "div_ratio": 0.9336,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-01",
+          "div_ratio": 0.8915,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-02",
+          "div_ratio": 0.8181,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-03",
+          "div_ratio": 0.666,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-04",
+          "div_ratio": 0.5414,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-05",
+          "div_ratio": 0.4753,
+          "struct_n": 1,
+          "sn_count_le050": 1,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-06",
+          "div_ratio": 0.4729,
+          "struct_n": 2,
+          "sn_count_le050": 2,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-07",
+          "div_ratio": 0.4931,
+          "struct_n": 3,
+          "sn_count_le050": 3,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-08",
+          "div_ratio": 0.5056,
+          "struct_n": 4,
+          "sn_count_le050": 3,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-09",
+          "div_ratio": 0.5206,
+          "struct_n": 5,
+          "sn_count_le050": 3,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-10",
+          "div_ratio": 0.5337,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-11",
+          "div_ratio": 0.5389,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-12",
+          "div_ratio": 0.5499,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-13",
+          "div_ratio": 0.5355,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-14",
+          "div_ratio": 0.527,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-15",
+          "div_ratio": 0.502,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-16",
+          "div_ratio": 0.4335,
+          "struct_n": 1,
+          "sn_count_le050": 1,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-17",
+          "div_ratio": 0.3629,
+          "struct_n": 2,
+          "sn_count_le050": 2,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-18",
+          "div_ratio": 0.313,
+          "struct_n": 3,
+          "sn_count_le050": 3,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-19",
+          "div_ratio": 0.3007,
+          "struct_n": 4,
+          "sn_count_le050": 4,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-20",
+          "div_ratio": 0.3059,
+          "struct_n": 5,
+          "sn_count_le050": 5,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-21",
+          "div_ratio": 0.3009,
+          "struct_n": 6,
+          "sn_count_le050": 6,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-22",
+          "div_ratio": 0.2933,
+          "struct_n": 7,
+          "sn_count_le050": 7,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-23",
+          "div_ratio": 0.2848,
+          "struct_n": 8,
+          "sn_count_le050": 8,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-27",
+          "div_ratio": 0.2674,
+          "struct_n": 9,
+          "sn_count_le050": 9,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-28",
+          "div_ratio": 0.2652,
+          "struct_n": 10,
+          "sn_count_le050": 10,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-29",
+          "div_ratio": 0.2476,
+          "struct_n": 11,
+          "sn_count_le050": 11,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-30",
+          "div_ratio": 0.2471,
+          "struct_n": 12,
+          "sn_count_le050": 12,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-31",
+          "div_ratio": 0.2324,
+          "struct_n": 13,
+          "sn_count_le050": 13,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-01",
+          "div_ratio": 0.2307,
+          "struct_n": 14,
+          "sn_count_le050": 14,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-02",
+          "div_ratio": 0.2251,
+          "struct_n": 15,
+          "sn_count_le050": 15,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-03",
+          "div_ratio": 0.2325,
+          "struct_n": 16,
+          "sn_count_le050": 16,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-04",
+          "div_ratio": 0.2344,
+          "struct_n": 17,
+          "sn_count_le050": 17,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-05",
+          "div_ratio": 0.2429,
+          "struct_n": 18,
+          "sn_count_le050": 18,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-06",
+          "div_ratio": 0.2764,
+          "struct_n": 19,
+          "sn_count_le050": 19,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-07",
+          "div_ratio": 0.3361,
+          "struct_n": 20,
+          "sn_count_le050": 20,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-08",
+          "div_ratio": 0.3977,
+          "struct_n": 21,
+          "sn_count_le050": 21,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-09",
+          "div_ratio": 0.3874,
+          "struct_n": 22,
+          "sn_count_le050": 22,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-10",
+          "div_ratio": 0.3874,
+          "struct_n": 23,
+          "sn_count_le050": 23,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-11",
+          "div_ratio": 0.4699,
+          "struct_n": 24,
+          "sn_count_le050": 24,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-12",
+          "div_ratio": 0.5401,
+          "struct_n": 25,
+          "sn_count_le050": 24,
+          "in_list_a": false,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-08-13",
+          "div_ratio": 0.5414,
+          "struct_n": 26,
+          "sn_count_le050": 24,
+          "in_list_a": false,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-08-14",
+          "div_ratio": 0.4637,
+          "struct_n": 27,
+          "sn_count_le050": 25,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-08-15",
+          "div_ratio": 0.4282,
+          "struct_n": 28,
+          "sn_count_le050": 26,
+          "in_list_a": true,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-08-16",
+          "div_ratio": 0.4017,
+          "struct_n": 29,
+          "sn_count_le050": 27,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-17",
+          "div_ratio": 0.373,
+          "struct_n": 30,
+          "sn_count_le050": 28,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-18",
+          "div_ratio": 0.3309,
+          "struct_n": 31,
+          "sn_count_le050": 29,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-19",
+          "div_ratio": 0.2947,
+          "struct_n": 32,
+          "sn_count_le050": 30,
+          "in_list_a": true,
+          "in_list_b": false
+        }
+      ]
+    },
+    "HEMIUSDT": {
+      "n_days_full": 51,
+      "n_days_window": 51,
+      "episodes": [
+        {
+          "episode_id": 1,
+          "start_date": "2026-07-05",
+          "end_date": "2026-07-11",
+          "gap_days": 2,
+          "count_le050": 5,
+          "ep_len": 7,
+          "hedge_start_px": 0.004669
+        }
+      ],
+      "registry_events": [
+        {
+          "date": "2026-07-12",
+          "trig": "a",
+          "sn": 5,
+          "rel_ep_id": 1,
+          "rel_ep_kind": "flip",
+          "ep_min": 0.4659,
+          "hspx": 0.004669,
+          "pass_c": true,
+          "pass_d": true
+        }
+      ],
+      "watchlist_daily": [
+        {
+          "date": "2026-06-27",
+          "div_ratio": 0.5981,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-28",
+          "div_ratio": 0.6045,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-29",
+          "div_ratio": 0.6011,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-30",
+          "div_ratio": 0.594,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-01",
+          "div_ratio": 0.6075,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-02",
+          "div_ratio": 0.5888,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-03",
+          "div_ratio": 0.5833,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-04",
+          "div_ratio": 0.5262,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-05",
+          "div_ratio": 0.4982,
+          "struct_n": 1,
+          "sn_count_le050": 1,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-06",
+          "div_ratio": 0.4693,
+          "struct_n": 2,
+          "sn_count_le050": 2,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-07",
+          "div_ratio": 0.4659,
+          "struct_n": 3,
+          "sn_count_le050": 3,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-08",
+          "div_ratio": 0.4726,
+          "struct_n": 4,
+          "sn_count_le050": 4,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-09",
+          "div_ratio": 0.4862,
+          "struct_n": 5,
+          "sn_count_le050": 5,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-10",
+          "div_ratio": 0.5121,
+          "struct_n": 6,
+          "sn_count_le050": 5,
+          "in_list_a": false,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-07-11",
+          "div_ratio": 0.5536,
+          "struct_n": 7,
+          "sn_count_le050": 5,
+          "in_list_a": false,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-07-12",
+          "div_ratio": 0.567,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-07-13",
+          "div_ratio": 0.5719,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-07-14",
+          "div_ratio": 0.6055,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-15",
+          "div_ratio": 0.6708,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-16",
+          "div_ratio": 0.6802,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-17",
+          "div_ratio": 0.6265,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-18",
+          "div_ratio": 0.5821,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-19",
+          "div_ratio": 0.5602,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-20",
+          "div_ratio": 0.5458,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-21",
+          "div_ratio": 0.5585,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-22",
+          "div_ratio": 0.6709,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-23",
+          "div_ratio": 0.9318,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-27",
+          "div_ratio": 1.0367,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-28",
+          "div_ratio": 1.0337,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-29",
+          "div_ratio": 0.9705,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-30",
+          "div_ratio": 1.0113,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-31",
+          "div_ratio": 1.0571,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-01",
+          "div_ratio": 1.1149,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-02",
+          "div_ratio": 1.0764,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-03",
+          "div_ratio": 1.0244,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-04",
+          "div_ratio": 1.0822,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-05",
+          "div_ratio": 1.1205,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-06",
+          "div_ratio": 1.0915,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-07",
+          "div_ratio": 0.9443,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-08",
+          "div_ratio": 0.9033,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-09",
+          "div_ratio": 0.8976,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-10",
+          "div_ratio": 0.8865,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-11",
+          "div_ratio": 0.841,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-12",
+          "div_ratio": 0.8617,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-13",
+          "div_ratio": 0.9054,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-14",
+          "div_ratio": 0.9269,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-15",
+          "div_ratio": 0.9441,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-16",
+          "div_ratio": 1.0217,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-17",
+          "div_ratio": 1.1537,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-18",
+          "div_ratio": 1.3967,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-19",
+          "div_ratio": 1.4602,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        }
+      ]
+    },
+    "ONUSDT": {
+      "n_days_full": 51,
+      "n_days_window": 51,
+      "episodes": [
+        {
+          "episode_id": 1,
+          "start_date": "2026-06-29",
+          "end_date": "2026-07-04",
+          "gap_days": 2,
+          "count_le050": 4,
+          "ep_len": 6,
+          "hedge_start_px": 0.078488
+        }
+      ],
+      "registry_events": [
+        {
+          "date": "2026-07-05",
+          "trig": "a",
+          "sn": 4,
+          "rel_ep_id": 1,
+          "rel_ep_kind": "flip",
+          "ep_min": 0.4218,
+          "hspx": 0.078488,
+          "pass_c": true,
+          "pass_d": true
+        }
+      ],
+      "watchlist_daily": [
+        {
+          "date": "2026-06-27",
+          "div_ratio": 0.6301,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-28",
+          "div_ratio": 0.5364,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-29",
+          "div_ratio": 0.4947,
+          "struct_n": 1,
+          "sn_count_le050": 1,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-06-30",
+          "div_ratio": 0.4313,
+          "struct_n": 2,
+          "sn_count_le050": 2,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-01",
+          "div_ratio": 0.4218,
+          "struct_n": 3,
+          "sn_count_le050": 3,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-02",
+          "div_ratio": 0.4926,
+          "struct_n": 4,
+          "sn_count_le050": 4,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-03",
+          "div_ratio": 0.5503,
+          "struct_n": 5,
+          "sn_count_le050": 4,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-04",
+          "div_ratio": 0.6252,
+          "struct_n": 6,
+          "sn_count_le050": 4,
+          "in_list_a": false,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-07-05",
+          "div_ratio": 0.6236,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-07-06",
+          "div_ratio": 0.622,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": true
+        },
+        {
+          "date": "2026-07-07",
+          "div_ratio": 0.6069,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-08",
+          "div_ratio": 0.5981,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-09",
+          "div_ratio": 0.5874,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-10",
+          "div_ratio": 0.5908,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-11",
+          "div_ratio": 0.6182,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-12",
+          "div_ratio": 0.7307,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-13",
+          "div_ratio": 0.7393,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-14",
+          "div_ratio": 0.7655,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-15",
+          "div_ratio": 0.656,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-16",
+          "div_ratio": 0.6338,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-17",
+          "div_ratio": 0.6557,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-18",
+          "div_ratio": 0.7319,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-19",
+          "div_ratio": 0.8806,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-20",
+          "div_ratio": 1.0019,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-21",
+          "div_ratio": 1.1495,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-22",
+          "div_ratio": 1.2311,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-23",
+          "div_ratio": 1.2058,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-27",
+          "div_ratio": 1.1597,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-28",
+          "div_ratio": 1.203,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-29",
+          "div_ratio": 1.3729,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-30",
+          "div_ratio": 1.596,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-07-31",
+          "div_ratio": 1.4896,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-01",
+          "div_ratio": 1.4284,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-02",
+          "div_ratio": 1.367,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-03",
+          "div_ratio": 1.3966,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-04",
+          "div_ratio": 1.3755,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-05",
+          "div_ratio": 1.4896,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-06",
+          "div_ratio": 1.4679,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-07",
+          "div_ratio": 1.4938,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-08",
+          "div_ratio": 1.4136,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-09",
+          "div_ratio": 1.4693,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-10",
+          "div_ratio": 1.3953,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-11",
+          "div_ratio": 1.3941,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-12",
+          "div_ratio": 1.4114,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-13",
+          "div_ratio": 1.531,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-14",
+          "div_ratio": 1.6132,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-15",
+          "div_ratio": 1.6564,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-16",
+          "div_ratio": 1.6354,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-17",
+          "div_ratio": 1.6388,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-18",
+          "div_ratio": 1.6918,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-19",
+          "div_ratio": 1.8231,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        }
+      ]
+    }
+  },
+  "case_gap_probe": {
+    "check": "case-gap GUA ep 07-05→07-09",
+    "start_date": "2026-07-05",
+    "end_date": "2026-07-09",
+    "count_le050": 3,
+    "ep_len": 5,
+    "gap_days": 2,
+    "expect_count_le050": 3,
+    "expect_ep_len": 5
+  }
+}
