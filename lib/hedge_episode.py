@@ -15,6 +15,12 @@ Conformance-pack amendment 21/08 (fe4e38c): thêm field `sn_count_le050`
 để bit-equal watchlist inline (P0 SAFE 139-token 0 diffs) — cấm đổi/xóa.
 Registry consumer BẮT BUỘC dùng `sn_count_le050` (canonical §E-R1 conformance).
 
+D1-PHASE1-20260821 DEPRECATION NOTE (operator ký chat 21/08):
+  `struct_n` field DEPRECATED — target xóa Phase 3 cutover 2026-09-30.
+  Canonical field: `ep_len` (semantics struct_n legacy) + `sn_count_le050` (canonical count).
+  Doctrine/lessons text dùng chữ "struct_n" ≡ field code `sn_count_le050` sau Phase 3.
+  Ref: proposals/d1_migration_struct_n_deprecate_20260821.md (SIGNED (b)+3-sửa).
+
 Import example:
     from lib.hedge_episode import detect_episodes, avg3, calc_div, NaN, ok
 """
@@ -56,10 +62,15 @@ def detect_episodes(arr, cfg):
     hedge_start_px SET MỘT LẦN khi episode bắt đầu, không tính lại.
 
     Field semantics (conformance-pack 21/08):
-      struct_n        = i - ep_si + 1 while in_hedge (LEGACY, incl gap-days) — bit-equal watchlist inline
-      ep_len          = alias struct_n (tên canonical mới, cùng semantics)
+      struct_n        # DEPRECATED alias for ep_len — will be removed in Phase 3
+                      # (target 2026-09-30, per D1-SIGNED-20260821). Use ep_len canonical.
+                      # LEGACY tên field, ngữ nghĩa i-ep_si+1 while in_hedge (incl gap-days).
+                      # Bit-equal watchlist inline (P0 SAFE 139/139).
+      ep_len          = canonical field name (post D1-SIGNED). Semantics = struct_n legacy.
       sn_count_le050  = count(div_avg3 ≤ 0.5 in episode) — canonical §E-R1 conformance
                         EXCLUDE gap-tolerated days. Registry consumer BẮT BUỘC dùng field này.
+                        Doctrine/lessons text dùng chữ "struct_n" ≡ field code `sn_count_le050`
+                        (vd 'struct_n=3', baseline 25.9%, L-53 anchor).
 
     cfg["hedge"]["div_ratio_max"]      default 0.5
     cfg["hedge"]["episode_break_days"] default 3

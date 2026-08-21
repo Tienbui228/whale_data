@@ -32,6 +32,14 @@ Cases I-L (A4(2) 21/08 — match ae5f2a0 backfill semantics):
 Consumer split (§E-R1 conformance):
   registry: sn_count_le050 via `_detect_episodes_registry`
   watchlist: struct_n via `lib.hedge_episode.detect_episodes` (bit-equal inline)
+
+D1-PHASE1-20260821 DEPRECATION NOTE (operator ký chat 21/08):
+  Field `struct_n` DEPRECATED — target xóa Phase 3 cutover 2026-09-30.
+  Canonical field: `ep_len` (semantics struct_n legacy) + `sn_count_le050` (canonical count).
+  `_detect_ev` fallback `ep[i-1].get("sn_count_le050", ep[i-1]["struct_n"])` sẽ bị
+  đổi sang fail-loud (đọc thẳng `ep[i-1]["sn_count_le050"]`, KeyError = bài L-51)
+  trong Phase 2 (per D1-SIGNED-20260821 Sửa 2).
+  Ref: proposals/d1_migration_struct_n_deprecate_20260821.md.
 """
 from __future__ import annotations
 import hashlib
@@ -405,6 +413,9 @@ def _detect_episodes_registry(arr, cfg, skip_first=2):
 
     Otherwise same: gap-tolerance ep_break_days, hedge_start_px CỐ ĐỊNH per ep,
     sn_count_le050 count(div ≤ div_ratio_max in ep).
+
+    D1-PHASE1-20260821 DEPRECATION NOTE: `struct_n` field trong output dict
+    DEPRECATED — target xóa Phase 3 cutover 2026-09-30. Use `ep_len` canonical.
 
     Only used by registry consumer via `window_prefilter_and_detect`. Watchlist inline
     uses `lib.hedge_episode.detect_episodes` (bit-equal preserved).

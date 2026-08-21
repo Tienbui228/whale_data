@@ -67,6 +67,19 @@ pos_r_event · flags
     khi apply gate — thực tế watchlist v1.4 dùng struct_n cho display, không gate — GIỮ nguyên.
   - registry probe `_detect_ev` dùng `sn_count_le050` = canonical struct_n (mới compute từ episode).
 
+**DEPRECATION NOTE Phase 1 (D1-SIGNED-20260821, operator ký chat 21/08):**
+
+`struct_n` field trong code output (lib.hedge_episode.detect_episodes, lib.registry_events._detect_episodes_registry, scripts/watchlist_daily.py inline) đang bị **DEPRECATE** — target xóa Phase 3 cutover **2026-09-30**. Canonical field: `ep_len` (semantics struct_n legacy = i-ep_si+1 while in_hedge, incl gap-days) + `sn_count_le050` (canonical count).
+
+**Dòng ánh xạ tên (M1(b) 21/08):**
+
+> "struct_n" trong doctrine/lessons/pre-commit (vd 'struct_n=3', baseline 25.9%, L-53)
+> ≡ field code `sn_count_le050`. Không có field nào tên struct_n sau Phase 3.
+
+Nghĩa: doctrine text vẫn dùng chữ "struct_n" là legitimate (semantic ≡ sn_count_le050). Field code sau Phase 3 = `ep_len` + `sn_count_le050` only.
+
+Migration path 3-phase: `proposals/d1_migration_struct_n_deprecate_20260821.md` (SIGNED).
+
 ---
 
 ## E-R2 — CỜ TRONG REGISTRY

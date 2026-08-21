@@ -126,10 +126,14 @@ def detect_episodes(arr, cfg):
     hedge_start_px SET MỘT LẦN khi episode bắt đầu, không tính lại.
 
     Field semantics (conformance-pack 21/08):
-      struct_n        = i - ep_si + 1 while in_hedge (LEGACY, incl gap-days) — bit-equal lib/hedge_episode.py
-      ep_len          = alias struct_n (canonical tên mới)
-      sn_count_le050  = count(div_avg3 ≤ 0.5 in episode) — canonical §E-R1 conformance
-                        List A gate now uses sn_count_le050 (per operator A2 21/08).
+      struct_n        # DEPRECATED alias for ep_len — target xóa Phase 3 cutover 2026-09-30
+                      # (per D1-SIGNED-20260821). Use ep_len canonical.
+                      # LEGACY: i - ep_si + 1 while in_hedge (incl gap-days).
+                      # Bit-equal lib/hedge_episode.py (P0 SAFE 139/139).
+      ep_len          = canonical field name (post D1-SIGNED). Semantics = struct_n legacy.
+      sn_count_le050  = count(div_avg3 ≤ 0.5 in episode) — canonical §E-R1 conformance.
+                        List A gate uses sn_count_le050 (A2 gate switch 21/08).
+                        Doctrine/lessons text dùng chữ "struct_n" ≡ field code `sn_count_le050`.
     """
     div_max  = cfg["hedge"]["div_ratio_max"]
     ep_break = cfg["hedge"]["episode_break_days"]
