@@ -129,7 +129,7 @@ Ba lesson §C trên **KHÔNG bao trùm** các verdict này. Batch pending §5 = 
 
 **n=1 (HEMI), chờ chạy đối chiếu BTW-July + screen fw-139 lấy hit-rate trước khi trình ký STATIC-SEAT rule.**
 
-**Ref:** commit sau paste · probe `_probe_hemi_h0_h1_20260820.py` + `_probe_hemi_h2_h4_20260820.py` · report `docs/reports/_hemi_build_20260820.md` · §E-R Un-hedge Registry v1.0 (`proposals/unhedge_registry_spec_v1.0.md`) — vá điểm mù này.
+**Ref:** commit sau paste · probe `_probe_hemi_h0_h1_20260820.py` + `_probe_hemi_h2_h4_20260820.py` · report `docs/reports/_hemi_build_20260820.md` · §E-R Un-hedge Registry v1.0 (`proposals/unhedge_registry_spec.md`) — vá điểm mù này.
 
 ---
 
@@ -170,7 +170,7 @@ Ba lesson §C trên **KHÔNG bao trùm** các verdict này. Batch pending §5 = 
 
 ## §E-R — UN-HEDGE REGISTRY v1.0 (spec, operator ký 20/08)
 
-**Nội dung canonical spec:** `proposals/unhedge_registry_spec_v1.0.md`.
+**Nội dung canonical spec:** `proposals/unhedge_registry_spec.md`.
 
 **Trạng thái:**
 - Framework v1.0 ký ✓
@@ -179,4 +179,4 @@ Ba lesson §C trên **KHÔNG bao trùm** các verdict này. Batch pending §5 = 
 
 **Không phải lesson — là spec đi kèm L-53/L-54.** L-53 chỉ ra điểm mù; §E-R vá điểm mù bằng tầng SCREEN/INTEL (không đụng luật entry L-54).
 
-**Ref:** L-53 (nguyên nhân) · L-54 (hệ quả entry) · `proposals/unhedge_registry_spec_v1.0.md` (spec) · backfill task `_task_unhedge_registry_backfill_20260820.py` (kết quả sẽ paste sau).
+**Ref:** L-53 (nguyên nhân) · L-54 (hệ quả entry) · `proposals/unhedge_registry_spec.md` (spec) · backfill task `_task_unhedge_registry_backfill_20260820.py` (kết quả sẽ paste sau).

@@ -26,6 +26,7 @@
 | `docs/lessons_learned.md` | View sinh từ CASE_INDEX.xlsx sheet LESSONS (không edit trực tiếp) · L-01→L-48 | All |
 | `docs/lessons_rev2_source.md` | Source draft lessons (sửa vào CASE_INDEX sheet LESSONS) | All |
 | `proposals/lessons_pending_batch_20260818.md` | Batch pending 3 lessons §C net-semantics (chờ nhập LESSONS sheet, immutable sau ký) | All |
+| `D:/Data back test/whale_data/proposals/unhedge_registry_spec.md` | **CANONICAL §E-R — Un-hedge Registry** · v1.2-FINAL (46db911) + conformance-pack (fe4e38c) · ER-HOME Option 2 ký 21/08 · Path tuyệt đối, sửa spec §E-R = sửa tại đây | v1.2-FINAL+conformance-pack |
 
 ---
 
@@ -35,7 +36,7 @@ Spec canonical thuộc repo khác. Sửa nội dung = sửa tại nguồn (khôn
 
 | Đường dẫn tuyệt đối | Mô tả | Version |
 |--------------------|-------|---------|
-| `D:\Data back test\binance-bot-signals\docs\gom_detect_spec.md` | **GOM detector spec canonical** — §1-§9 v2.0 D-tier + §M1-M5 amendment (v1.8, 09/08) + **§M6 net-semantics (v3.1, 18/08 — mã án `M6-20260818`)** + §H0-H7 (ARCHIVED-BY-NUMBER 14/08) | **v3.1** (v3.0 + M6) |
+| `D:\Data back test\binance-bot-signals\docs\gom_detect_spec.md` | **GOM detector spec canonical** — §1-§9 v2.0 D-tier + §M1-M5 amendment (v1.8, 09/08) + **§M6 net-semantics (v3.1, 18/08 — mã án `M6-20260818`)** + §H0-H7 (ARCHIVED-BY-NUMBER 14/08). *§E-R Un-hedge Registry KHÔNG còn ở đây — canonical dời sang whale_data/proposals/unhedge_registry_spec.md (ER-HOME 21/08); gom_detect_spec chỉ giữ POINTER §E-R.* | **v3.1** (v3.0 + M6) |
 | `D:\Data back test\binance-bot-signals\docs\STRATEGY_SPEC_long_accumulation_continuation_V1_3.md` | Long-accumulation-continuation strategy spec | V1.3 |
 | `D:\Data back test\binance-bot-signals\docs\freshwatch_m45_master_plan.md` | Master plan §1 gốc (FreshWatch M4.5) — playbook §I-§VII trỏ về đây bằng "master plan §1 #X" | — |
 | `D:\Data back test\binance-bot-signals\docs\ARCHITECTURE_AND_ADR_V2.md` | Architecture + ADR bot-signals | V2 |

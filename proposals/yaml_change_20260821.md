@@ -51,7 +51,7 @@ scp data/config/watchlist_thresholds.yaml root@5.223.67.21:/root/Data_back_test/
 
 ## Cross-ref
 
-- `proposals/unhedge_registry_spec_v1.0.md` §E-R1 conformance-pack — canonical struct_n vs sn_count_le050
+- `proposals/unhedge_registry_spec.md` §E-R1 conformance-pack — canonical struct_n vs sn_count_le050
 - `proposals/hedge_watchlist_spec.md` §3 — consumer split
 - commit `72e36b1` A2 — code path gate switch
 - fixture `tests/fixtures/registry_conformance_20260821.json` — pin config keys canonical names

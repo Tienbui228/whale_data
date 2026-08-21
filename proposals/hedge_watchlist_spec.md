@@ -43,7 +43,7 @@ Split B1/B2/PHẲNG per §VIII.2 (pos_r ↑ ≥15%/2d + OI ↓ = SHORT-COVER B1 
 
 ## §3 — struct_n canonical (conformance-pack 21/08/2026)
 
-**canonical struct_n = `count(div_avg3 ≤ 0.5)` trong episode** (cùng §E-R1 conformance-pack canonical, `proposals/unhedge_registry_spec_v1.0.md`).
+**canonical struct_n = `count(div_avg3 ≤ 0.5)` trong episode** (cùng §E-R1 conformance-pack canonical, `proposals/unhedge_registry_spec.md`).
 
 - EXCLUDE gap-tolerated days (những ngày `div > 0.5` được tolerance ep_break=3d không tính).
 - Biến đếm CẢ gap-days (`i − ep_start_i + 1 while in_hedge=True`) đổi tên **`ep_len`**.
@@ -64,7 +64,7 @@ Split B1/B2/PHẲNG per §VIII.2 (pos_r ↑ ≥15%/2d + OI ↓ = SHORT-COVER B1 
 
 ## §4 — Cross-ref
 
-- `proposals/unhedge_registry_spec_v1.0.md` §E-R1 conformance-pack — canonical struct_n definition
+- `proposals/unhedge_registry_spec.md` §E-R1 conformance-pack — canonical struct_n definition
 - `proposals/lessons_pending_batch_V2.md` L-58 — conformance fixture doctrine
 - `lib/hedge_episode.py` — shared function (bit-equal watchlist inline)
 - `scripts/watchlist_daily.py::detect_episodes` (L107-158) — canonical INLINE (P0 SAFE)

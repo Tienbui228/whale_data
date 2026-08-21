@@ -1,6 +1,6 @@
-> **[ACTIVE CANONICAL — merge target per operator directive 21/08/2026]**
-> Header "ARCHIVED-COPY canonical dịch chuyển gom_detect_spec.md §E-R" (20/08) **RÚT** — gom_detect_spec.md không có §E-R body (chỉ changelog v3.2 entry pointing here). File này = canonical đích cho §E-R. Sửa spec → tại đây.
-> `FRESHWATCH_SYSTEM.md §3.4/§6` (nếu có) trỏ `gom_detect_spec.md` cần cập nhật trỏ path này.
+> **CANONICAL §E-R — Un-hedge Registry · v1.2-FINAL (46db911, chat-ký 21/08)
+> + conformance-pack (fe4e38c, chat-ký 21/08) · Option 2 ký 21/08.
+> Path tuyệt đối: D:/Data back test/whale_data/proposals/unhedge_registry_spec.md**
 
 ---
 

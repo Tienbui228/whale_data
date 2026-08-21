@@ -126,7 +126,7 @@ merged_commit: sẽ commit sau paste evidence
 - **Before phase-2 cron 08:25:** fixture PASS mandatory.
 
 **Ref:**
-- `proposals/unhedge_registry_spec_v1.0.md` v1.2-FINAL+doctrine-pack+conformance-pack (§E-R1 canonical struct_n)
+- `proposals/unhedge_registry_spec.md` v1.2-FINAL+doctrine-pack+conformance-pack (§E-R1 canonical struct_n)
 - `proposals/hedge_watchlist_spec.md` §3 (consumer split canonical)
 - `_probe_e_r7e_regress3_20260821.py` (evidence code-drift explains 4/5 tokens)
 - E-R7d/E-R7e turn series (17-21/08) — drift incidents that motivated L-58

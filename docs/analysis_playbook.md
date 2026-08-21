@@ -601,7 +601,7 @@ Trước khi ném biến vào giả thuyết/verdict: đọc 2 dòng **"ĐO GÌ 
 
 ## §IX. Doctrine #10 + SQUEEZE-FUEL — 20/08/2026 (signed, evidence pending)
 
-*Ký cùng đợt batch V1 (L-51 IDENTITY updated · L-52 VENUE · L-53 SPECIES · L-54 ENTRY · L-60 SCHEMA renumbered · L-61 WRITE-GUARD renumbered — L-49/L-50 giữ chủ cũ 11/08). Nội dung tổng hợp từ pending_batch §D.1 (L-52), §E-R spec `proposals/unhedge_registry_spec_v1.0.md`, và án V1-20260819. **Trạng thái: DOCTRINE ký chính thức 20/08 · batch sheet-merged 21/08.***
+*Ký cùng đợt batch V1 (L-51 IDENTITY updated · L-52 VENUE · L-53 SPECIES · L-54 ENTRY · L-60 SCHEMA renumbered · L-61 WRITE-GUARD renumbered — L-49/L-50 giữ chủ cũ 11/08). Nội dung tổng hợp từ pending_batch §D.1 (L-52), §E-R spec canonical `D:/Data back test/whale_data/proposals/unhedge_registry_spec.md` (ER-HOME Option 2 ký 21/08 — renamed từ unhedge_registry_spec_v1.0.md), và án V1-20260819. **Trạng thái: DOCTRINE ký chính thức 20/08 · batch sheet-merged 21/08.***
 
 ### IX.1 Doctrine #10 — Kho ÷ Băng-thông
 

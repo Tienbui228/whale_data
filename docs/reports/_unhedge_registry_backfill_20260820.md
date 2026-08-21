@@ -1,6 +1,6 @@
 # UN-HEDGE REGISTRY v1.0 — E-R7 Backfill Acceptance
 **Date:** 2026-08-20  
-**Spec:** `proposals/unhedge_registry_spec_v1.0.md` v1.0 (framework ký, thresholds provisional)  
+**Spec:** `proposals/unhedge_registry_spec.md` v1.0 (framework ký, thresholds provisional)  
 **Backfill task:** `_task_unhedge_registry_backfill_20260820.py` + `_task_unhedge_registry_calib_20260820.py`  
 **Data:** freshwatch_daily 2026-05/06/07/08 (35,218 rows, 527 unique tokens)  
 **Window:** 2026-06-20 → 2026-08-19 (60 days)  
@@ -185,7 +185,7 @@ E-R1 — SỰ KIỆN VÀO REGISTRY:
 
 | Artifact | Path |
 |----------|------|
-| Spec v1.0 canonical | `proposals/unhedge_registry_spec_v1.0.md` |
+| Spec v1.0 canonical | `proposals/unhedge_registry_spec.md` |
 | Lesson drafts L-53/L-54 | `proposals/lessons_pending_batch_20260818.md` §E.1/§E.2 |
 | Backfill task | `_task_unhedge_registry_backfill_20260820.py` |
 | Calibration task | `_task_unhedge_registry_calib_20260820.py` |

@@ -3,7 +3,7 @@ type: proposal-rejected
 name: §E-R4b RE-ARM v1.2 WAVE-END
 version: 1.2-DRAFT-REJECTED
 status: REJECTED (21/08/2026)
-canonical_replacement: proposals/unhedge_registry_spec_v1.0.md §E-R4b v1.2-FINAL
+canonical_replacement: proposals/unhedge_registry_spec.md §E-R4b v1.2-FINAL
 ---
 
 # [REJECTED 21/08 — falsified by HEMI anchor, thay bằng Version A]
@@ -32,6 +32,6 @@ Version A (r2 1.15 / r3 1.30 / cooldown 3d, BỎ close-condition MARKUP-GIỮ) c
 
 ## Ref
 
-- Canonical: `proposals/unhedge_registry_spec_v1.0.md` §E-R4b v1.2-FINAL
+- Canonical: `proposals/unhedge_registry_spec.md` §E-R4b v1.2-FINAL
 - Handover 20/08 (relay-loss #6): "wave-end đã ký" — SAI, chưa ký.
 - HEMI L-53 case study — anchor n=1 falsifier.
