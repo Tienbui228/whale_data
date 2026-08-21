@@ -118,11 +118,18 @@ def calc_div(arr, i):
 def detect_episodes(arr, cfg):
     """
     Returns list[dict] parallel to arr. Mỗi phần tử:
-      in_hedge, episode_id, hedge_start_date, hedge_start_px (CỐ ĐỊNH), struct_n
+      in_hedge, episode_id, hedge_start_date, hedge_start_px (CỐ ĐỊNH),
+      struct_n, ep_len, sn_count_le050
 
     Gap tolerance: div > div_max liên tục <= gap_tol ngày → noise, in_hedge stays True.
     Episode break: div > div_max liên tục >= ep_break ngày → in_hedge = False.
     hedge_start_px SET MỘT LẦN khi episode bắt đầu, không tính lại.
+
+    Field semantics (conformance-pack 21/08):
+      struct_n        = i - ep_si + 1 while in_hedge (LEGACY, incl gap-days) — bit-equal lib/hedge_episode.py
+      ep_len          = alias struct_n (canonical tên mới)
+      sn_count_le050  = count(div_avg3 ≤ 0.5 in episode) — canonical §E-R1 conformance
+                        List A gate now uses sn_count_le050 (per operator A2 21/08).
     """
     div_max  = cfg["hedge"]["div_ratio_max"]
     ep_break = cfg["hedge"]["episode_break_days"]
@@ -130,6 +137,7 @@ def detect_episodes(arr, cfg):
     out = []
     ep_id = 0; ep_si = None; ep_spx = None
     in_hedge = False; n_above = 0
+    sn_count = 0
 
     for i, row in enumerate(arr):
         dr = calc_div(arr, i)
@@ -139,14 +147,17 @@ def detect_episodes(arr, cfg):
                 ep_id += 1
                 ep_si  = i
                 ep_spx = row["px"] if ok(row["px"]) else None
+                sn_count = 0
             in_hedge = True
             n_above  = 0
+            sn_count += 1
         else:                           # div > max or NaN
             if in_hedge:
                 n_above += 1
                 if n_above >= ep_break: # gap too long → episode ends
                     in_hedge = False
                     n_above  = 0
+                    sn_count = 0
 
         sn = (i - ep_si + 1) if (in_hedge and ep_si is not None) else 0
         out.append({
@@ -155,6 +166,8 @@ def detect_episodes(arr, cfg):
             "hedge_start_date": arr[ep_si]["date"] if (in_hedge and ep_si is not None) else "",
             "hedge_start_px":  ep_spx if in_hedge else None,
             "struct_n":        sn,
+            "ep_len":          sn,
+            "sn_count_le050":  sn_count if in_hedge else 0,
         })
     return out
 
@@ -208,7 +221,8 @@ def snapshot(sym, arr, ep_data, i, cfg):
         "sym": sym, "date": arr[i]["date"],
         "as_of": arr[i]["date"],   # [W-B 19/08] per-symbol latest processed date
         "div_ratio": dr, "div_5d_ago": d5, "div_delta": dd,
-        "struct_n": ep["struct_n"], "episode_id": ep["episode_id"],
+        "struct_n": ep["struct_n"], "sn_count_le050": ep.get("sn_count_le050", 0),
+        "episode_id": ep["episode_id"],
         "in_hedge": ep["in_hedge"],
         "hedge_start_date": ep["hedge_start_date"],
         "hedge_start_px":  spx,
@@ -221,8 +235,12 @@ def snapshot(sym, arr, ep_data, i, cfg):
 
 # ── Filters ───────────────────────────────────────────────────────────────────
 def in_list_a(s, cfg):
+    # Gate switch conformance-pack 21/08 (§E-R1): dùng sn_count_le050 = count(div_avg3 ≤ 0.5),
+    # KHÔNG dùng struct_n (= ep_len legacy incl gap-days). Config key `struct_n_min` GIỮ
+    # tên cũ backward-compat, semantics áp lên sn_count_le050.
     dr = s["div_ratio"]
-    return ok(dr) and dr <= cfg["hedge"]["div_ratio_max"] and s["struct_n"] >= cfg["hedge"]["struct_n_min"]
+    sn_gate = s.get("sn_count_le050", s["struct_n"])   # fallback nếu ep chưa có field mới
+    return ok(dr) and dr <= cfg["hedge"]["div_ratio_max"] and sn_gate >= cfg["hedge"]["struct_n_min"]
 
 def in_list_b(s, ep_data, i, cfg):
     recent = cfg["list_b"]["recent_hedge_days"]          # 2
@@ -262,15 +280,16 @@ def format_output(snaps_a, snaps_b, date_str):
         f"WATCHLIST {date_str} — không phải tín hiệu, soi on-chain trước khi hành động",
         f"hedge_start_px = giá ngày đầu episode (CỐ ĐỊNH), không phải đỉnh/VWAP",
         "",
-        f"=== LIST A — Hedge Tracker ({len(snaps_a)} tokens, div≤0.5 + struct_n≥5) ===",
-        f"{'symbol':>18} {'div':>6} {'sn':>4} {'start':>12} {'start_px':>11} {'px_now':>11} {'dist%':>7} {'pos':>7} {'acc':>7} {'fund%':>8}",
+        f"=== LIST A — Hedge Tracker ({len(snaps_a)} tokens, div≤0.5 + sn_count_le050≥5) ===",
+        f"{'symbol':>18} {'div':>6} {'sn':>4} {'ep_l':>4} {'start':>12} {'start_px':>11} {'px_now':>11} {'dist%':>7} {'pos':>7} {'acc':>7} {'fund%':>8}",
         "─" * 98,
     ]
     for s in sorted(snaps_a, key=lambda x: x["div_ratio"] if ok(x["div_ratio"]) else 99):
         spx = f"{s['hedge_start_px']:.6f}" if s['hedge_start_px'] and ok(s['hedge_start_px']) else "?"
         fd  = f"{s['fund']*100:+.3f}%" if ok(s['fund']) else "?"
         lines.append(
-            f"{s['sym']:>18} {_s(s['div_ratio'],'.3f'):>6} {s['struct_n']:>4} "
+            f"{s['sym']:>18} {_s(s['div_ratio'],'.3f'):>6} "
+            f"{s.get('sn_count_le050',0):>4} {s['struct_n']:>4} "
             f"{s['hedge_start_date']:>12} {spx:>11} {_s(s['px_now'],'.6f'):>11} "
             f"{_s(s['px_dist'],'+.1f')+'%':>7} "
             f"{_s(s['lsr_pos'],'.4f'):>7} {_s(s['lsr_acc'],'.4f'):>7} {fd:>8}"
@@ -461,12 +480,13 @@ def format_output_tg(snaps_a, snaps_b, date_str, td=None, prev_snap=None, top_a=
 
     lines += ["",
               f"=== LIST A — TOP {len(tg_a)}/{len(snaps_a)} (div thấp nhất = hedge mạnh) ===",
-              f"{'sym':>16} {'div':>6} {'sn':>4} {'start':>12} {'dist%':>7} {'fund%':>8}",
-              "─" * 62]
+              f"{'sym':>16} {'div':>6} {'sn':>4} {'ep_l':>4} {'start':>12} {'dist%':>7} {'fund%':>8}",
+              "─" * 68]
     for s in tg_a:
         fd = f"{s['fund']*100:+.3f}%" if ok(s["fund"]) else "?"
         lines.append(
-            f"{s['sym']:>16} {_s(s['div_ratio'],'.3f'):>6} {s['struct_n']:>4} "
+            f"{s['sym']:>16} {_s(s['div_ratio'],'.3f'):>6} "
+            f"{s.get('sn_count_le050',0):>4} {s['struct_n']:>4} "
             f"{s['hedge_start_date']:>12} {_s(s['px_dist'],'+.1f')+'%':>7} {fd:>8}"
         )
 
@@ -517,7 +537,7 @@ def format_output_tg(snaps_a, snaps_b, date_str, td=None, prev_snap=None, top_a=
 _CSV_FIELDS = [
     "run_date", "symbol", "list", "as_of",   # [W-B 19/08] as_of per-symbol
     "div_ratio", "div_5d_ago", "div_delta",
-    "struct_n", "episode_id", "hedge_start_date", "hedge_start_px",
+    "struct_n", "sn_count_le050", "episode_id", "hedge_start_date", "hedge_start_px",
     "px_now", "px_dist_pct", "pos_trend", "oi_trend", "oi_note", "funding_pct",
 ]
 
@@ -538,7 +558,8 @@ def append_csv(snaps_a, snaps_b, run_date_str, cfg):
                 "div_ratio":  _s(s["div_ratio"],  ".4f"),
                 "div_5d_ago": _s(s["div_5d_ago"], ".4f"),
                 "div_delta":  _s(s["div_delta"],  "+.4f"),
-                "struct_n": s["struct_n"], "episode_id": s["episode_id"],
+                "struct_n": s["struct_n"], "sn_count_le050": s.get("sn_count_le050", 0),
+                "episode_id": s["episode_id"],
                 "hedge_start_date": s["hedge_start_date"],
                 "hedge_start_px":  f"{spx:.6f}" if spx and ok(spx) else "",
                 "px_now":      _s(s["px_now"], ".6f"),
