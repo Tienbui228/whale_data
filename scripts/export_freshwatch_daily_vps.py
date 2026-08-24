@@ -39,11 +39,11 @@ import typer
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from whale_collector.config import RAW_DIR, DATA_DIR, MASTER_PATH, EXCLUDED_SYMBOLS
-from whale_collector.storage.dedup import DEDUP_KEY   # OI-DUP-20260818 defense
 from whale_collector.timeutil import (
     now_ms, ms_to_date_str, ms_to_month_str, DAY_MS, HOUR_MS,
 )
 from whale_collector.universe_master import load_master, get_active_symbols
+from whale_collector.storage.dedup import DEDUP_KEY   # P0-VOL-DUP-20260821 F5(b): OI-DUP-20260818 defense port
 
 log = structlog.get_logger()
 app = typer.Typer(add_completion=False)
@@ -300,6 +300,13 @@ def _build_klines_agg(date_str: str, symbols: list[str]) -> pd.DataFrame:
 
     px_avg = Sigma(quote_vol) / Sigma(base_vol)  [VWAP]
     vol_quote = Sigma(quote_vol)
+
+    P0-VOL-DUP-20260821 F5(b) fix (operator ký chat 21/08):
+      - drop_duplicates(subset=DEDUP_KEY, keep="last") TRƯỚC groupby SUM.
+        SUM không-idempotent — dup rows identical vẫn inflate ×N.
+        Bảo hiểm độc lập với writer._sync_append (đường 2 tầng bảo vệ, L-28).
+      - Fail-loud: nếu excess (dup rows) > 0 → log.warning per symbol + count.
+        Đường raw store phải nhất quán — dup phát hiện phải trace back writer.
     """
     df = _read_1h_metric_for_day("klines_1h", date_str)
     if df.empty or "symbol" not in df.columns:
@@ -310,9 +317,15 @@ def _build_klines_agg(date_str: str, symbols: list[str]) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame(columns=["symbol", "px_avg", "vol_quote"])
 
-    # OI-DUP-20260818 defense: SUM không-idempotent — dup rows identical vẫn inflate ×N.
-    # Bảo hiểm độc lập với _sync_append (dù writer dedup-on-write đã chặn nguồn).
+    # P0-VOL-DUP-20260821 F5(b): dedup + fail-loud
+    n_before = len(df)
     df = df.drop_duplicates(subset=DEDUP_KEY, keep="last")
+    n_after = len(df)
+    if n_before != n_after:
+        excess = n_before - n_after
+        log.warning("klines_agg_dup_detected", date=date_str,
+                    excess_rows=excess, n_before=n_before, n_after=n_after,
+                    note="P0-VOL-DUP guard fired — trace writer")
 
     grp = df.groupby("symbol").agg(
         quote_vol_sum=("quote_volume", "sum"),
