@@ -1021,7 +1021,7 @@ BACKTEST_GATE = [
     ("TAG",    "not-open", "Fail A4+A5 (div 2.17 > 0.5, oi_cycle_pos > 0.5); TAG-trap negative. [Provenance: expected cũ 07/08/26 (4d0987c) tiền chat-ký TAG-trap ANALYSIS]"),
     ("BAS",    "SUPP",    "07-02→07-15: post_climax → disqualifier → GOM không fire"),
     ("BTW",    "SUPP",    "06-21→07-05: post_climax → disqualifier → GOM không fire"),
-    ("BULLA",  "hbs-two-legs", "TRIAGE ④ hai vế: (i) gom_day KHÔNG fire toàn window (compose post-C1b = gom_a_fire, gom_a=F all days); (ii) hedge_base_strict fire 07-05→07-09 (5d) + 07-11→07-14 (4d) = 9 days B-path, first-True 07-05. Provenance: K4 probe (4fd5ae4), fixture Row 9 B-truth pinned."),
+    ("BULLA",  "hbs-two-legs", "TRIAGE ④ hai vế: (i) gom_day KHÔNG fire toàn window (compose post-C1b = gom_a_fire, gom_a=F all days); (ii) hedge_base_strict fire 07-05→07-09 (5d) + 07-11→07-14 (4d) = 9 days B-path, first-True 07-05. Provenance: K4 probe (4fd5ae4), fixture Row 9 B-truth pinned. [PENDING-REGEN R4] — HBS 07-05/9-days tính trên _result pre-regen; taker+LSR slice sẽ đổi theo ⑩+⑥ (RESULTTXT-REGEN-20260824)."),
     ("TUT",    "ARCHIVED-chapter", "[ARCHIVED-expected 08/08/26: '07-11: stealth_grind + crowd_flush → chapter mới' — giữ lịch sử PASS pre-24/08; superseded by TUT a-negative row below per TRIAGE-20260824 ⑤]"),
     ("TUT",    "a-negative", "GOM-A KHÔNG fire toàn kỳ — A2 fail gLSR>1.1 (g5 min 1.64); điểm mù loài captive, văn bản hóa 24/08"),
     ("IDOL",   "not-open", "A2 ≤1.1 giữ; IDOL 07/06 avg5(gLSR)=1.106 = correct rejection (build tại OI-peak, định luật #9, verdict NEGATIVE ký 21/08). Nới ngưỡng để bắt case đã ký NEGATIVE = calib ngược chiều, cấm."),
