@@ -158,6 +158,9 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     # (0 alias, forward-only). GOM-B rời compose GOM-ngày, output flag feeder §E-R
     # tier-STRICT per unhedge_registry_spec §E-R1 (afbad16 whale_data).
     # [⑨-FIX-20260824] hedge_base_strict cùng warmup → "N/A-WARMUP" thay bool.
+    # TYPE-WARNING: value = True | False | "N/A-WARMUP" (string sentinel).
+    # CẤM truthy-check reader (`if r["hedge_base_strict"]:` sẽ ăn "N/A-WARMUP"=True
+    # vì non-empty string). Dùng explicit `v is True` / `v == "N/A-WARMUP"`.
     if _warmup_b1:
         hedge_base_strict = "N/A-WARMUP"
     else:

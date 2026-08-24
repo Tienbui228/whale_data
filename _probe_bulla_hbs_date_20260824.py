@@ -70,16 +70,20 @@ for i in range(len(days)):
     b3 = gom_b.get("B3", False)
     b4 = gom_b.get("B4", False)
     hbs = r.get("hedge_base_strict", False)
+    # [⑨-FIX-20260824 type-safe] hbs = True | False | "N/A-WARMUP" — cấm truthy-check.
+    _hbs_true = (hbs is True)
+    _hbs_warm = (hbs == "N/A-WARMUP")
     gom_a_fire = r.get("gom_a_fire", False)
     gom_day = r.get("gom_day", False)
     supp = r.get("supp_dq", {}) or {}
     pdq  = r.get("perday_dq", {}) or {}
     flags_on = [k for k, v in {**supp, **pdq}.items() if v]
     flags_str = "+".join(flags_on) if flags_on else "-"
-    tag = " *first-HBS*" if hbs and first_hbs_date is None else ""
-    if hbs and first_hbs_date is None:
+    tag = " *first-HBS*" if _hbs_true and first_hbs_date is None else ""
+    if _hbs_true and first_hbs_date is None:
         first_hbs_date = date_str
-    print(f"{date_str:>12} {i:>3}  {'T' if b1 else 'F':>3} {'T' if b2 else 'F':>3} {'T' if b3 else 'F':>3} {'T' if b4 else 'F':>3}  {'T' if hbs else 'F':>4}  {'T' if gom_a_fire else 'F':>6} {'T' if gom_day else 'F':>8}  {flags_str:<40}{tag}")
+    _hbs_disp = "T" if _hbs_true else ("W" if _hbs_warm else "F")
+    print(f"{date_str:>12} {i:>3}  {'T' if b1 else 'F':>3} {'T' if b2 else 'F':>3} {'T' if b3 else 'F':>3} {'T' if b4 else 'F':>3}  {_hbs_disp:>4}  {'T' if gom_a_fire else 'F':>6} {'T' if gom_day else 'F':>8}  {flags_str:<40}{tag}")
 
 print(f"\n[first-True hedge_base_strict date]: {first_hbs_date}")
 if first_hbs_date is None:

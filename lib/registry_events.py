@@ -515,9 +515,12 @@ def assign_episode_tiers(episodes, hbs_by_day):
 
     Args:
       episodes: list of dict {episode_id, start_date, end_date, count_le050, ...}
-      hbs_by_day: dict {date_str: bool | None} — HBS flag from GOM-B per day.
+      hbs_by_day: dict {date_str: bool | None | "N/A-WARMUP"} — HBS flag from GOM-B per day.
         Missing key = day not covered by GOM-B eval (e.g. token no _result.txt file
         or day outside eval window).
+        [⑨-FIX-20260824 TYPE-WARNING]: hedge_base_strict là string sentinel khi warmup —
+        CẤM truthy-check (`if hbs:` sẽ ăn "N/A-WARMUP" thành True vì non-empty string).
+        Dùng explicit `v is True` / `v == "N/A-WARMUP"`.
 
     Returns:
       list of episodes với 2 fields thêm: 'tier' và 'hbs_dates' (list of HBS=T dates

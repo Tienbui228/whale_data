@@ -45,12 +45,16 @@ for i in range(len(days)):
     except Exception:
         continue
     hbs = r.get("hedge_base_strict", False)
+    # [⑨-FIX-20260824 type-safe] hbs = True | False | "N/A-WARMUP" — cấm truthy-check.
     hbs_by_day[date_str] = hbs
 
 print(f"[FEEDER probe] BULLA hbs_by_day covers {len(hbs_by_day)} days "
       f"({min(hbs_by_day)} → {max(hbs_by_day)})")
-hbs_true_dates = sorted([d for d, v in hbs_by_day.items() if v])
+hbs_true_dates = sorted([d for d, v in hbs_by_day.items() if v is True])
+hbs_warmup_dates = sorted([d for d, v in hbs_by_day.items() if v == "N/A-WARMUP"])
 print(f"  HBS=True dates: {hbs_true_dates}")
+if hbs_warmup_dates:
+    print(f"  HBS=N/A-WARMUP dates: {hbs_warmup_dates}")
 
 # ─── Step 2: Compute BULLA registry episode from freshwatch ───
 frames = []

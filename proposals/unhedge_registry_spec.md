@@ -37,6 +37,8 @@
 
 **Episode hai tier (v4.0 gom-restruct 24/08):** tier-LOOSE = struct_n ≥ 3 (mặc định registry) · tier-STRICT = hedge_base_strict từ GOM-B (div≤0.5 bền 7d ∧ (pin ∨ absorption) ∧ B4). STRICT ⊂ LOOSE; báo cáo in tier cạnh episode. Bằng chứng calib: ON episode 4d, HEMI 5d = LOOSE-only — STRICT không được là điều kiện cần.
 
+**[⑨-FIX-20260824 TYPE-WARNING]:** `hedge_base_strict` value = `True | False | "N/A-WARMUP"` (string sentinel khi lookback < hedge_lookback_days-1, gom_scan.py:129-165). CẤM truthy-check reader (non-empty string ăn thành True). Dùng explicit `v is True` cho STRICT count · `v == "N/A-WARMUP"` cho warmup track · `v is False` cho không-HBS. Feeder `assign_episode_tiers` (lib/registry_events.py) đã handle 3 trạng thái.
+
   **HOẶC**
 
 **(b) UNHEDGE-DRIFT:** `div nới ≥ +0.15 từ đáy episode` trong ≤7d (tháo dần chưa break)
