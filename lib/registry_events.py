@@ -500,3 +500,86 @@ def window_prefilter_and_detect(arr, window_start, cfg=None, lb_days=WINDOW_PREF
     arr_win = [r for r in arr if r.get("date", "") >= cutoff]
     ep_win = _detect_episodes_registry(arr_win, cfg, skip_first=2)
     return arr_win, ep_win
+
+
+# ── FEEDER tier-STRICT (spec afbad16 whale_data + 8a96eacc bot-signals v4.0-draft) ──
+def assign_episode_tiers(episodes, hbs_by_day):
+    """Assign tier-STRICT | tier-LOOSE | N/A cho mỗi episode via hedge_base_strict feeder.
+
+    Per operator ký chat 24/08 (FEEDER tier-STRICT scope) + spec afbad16 §E-R1:
+      tier-LOOSE = struct_n ≥ 3 (registry mặc định, đã compute qua sn_count_le050)
+      tier-STRICT = ∃ ngày trong episode span có hedge_base_strict=True
+
+    Fail-loud: nếu ngày trong episode span thiếu khỏi hbs_by_day (không có flag) →
+      tier = "N/A" + note "MISSING-HBS-DAY(<date>)" (KHÔNG im).
+
+    Args:
+      episodes: list of dict {episode_id, start_date, end_date, count_le050, ...}
+      hbs_by_day: dict {date_str: bool | None} — HBS flag from GOM-B per day.
+        Missing key = day not covered by GOM-B eval (e.g. token no _result.txt file
+        or day outside eval window).
+
+    Returns:
+      list of episodes với 2 fields thêm: 'tier' và 'hbs_dates' (list of HBS=T dates
+      trong span; empty nếu tier-LOOSE hoặc N/A).
+    """
+    out = []
+    for ep in episodes:
+        start = ep.get("start_date")
+        end = ep.get("end_date")
+        count_le050 = ep.get("count_le050", 0)
+
+        if not start or not end:
+            ep_out = dict(ep)
+            ep_out["tier"] = "N/A"
+            ep_out["tier_note"] = "MISSING-EPISODE-DATES"
+            ep_out["hbs_dates"] = []
+            out.append(ep_out)
+            continue
+
+        # Iterate calendar days in [start, end]
+        try:
+            sd = _date.fromisoformat(start)
+            ed = _date.fromisoformat(end)
+        except Exception:
+            ep_out = dict(ep)
+            ep_out["tier"] = "N/A"
+            ep_out["tier_note"] = f"INVALID-DATE-FORMAT(start={start},end={end})"
+            ep_out["hbs_dates"] = []
+            out.append(ep_out)
+            continue
+
+        hbs_dates = []
+        missing_days = []
+        cur = sd
+        while cur <= ed:
+            d_str = cur.isoformat()
+            v = hbs_by_day.get(d_str, "MISSING")
+            if v == "MISSING":
+                missing_days.append(d_str)
+            elif v is True:
+                hbs_dates.append(d_str)
+            # v is False or None → not HBS on this day, no contribution
+            cur = cur + _td(days=1)
+
+        ep_out = dict(ep)
+        if missing_days:
+            # Fail-loud: report but still compute best-effort tier from known days
+            ep_out["tier"] = "N/A"
+            ep_out["tier_note"] = (f"MISSING-HBS-DAY({len(missing_days)}d): "
+                                    f"{missing_days[0]}..{missing_days[-1]}")
+            ep_out["hbs_dates"] = hbs_dates
+        elif hbs_dates:
+            ep_out["tier"] = "tier-STRICT"
+            ep_out["tier_note"] = f"HBS days: {len(hbs_dates)}"
+            ep_out["hbs_dates"] = hbs_dates
+        elif count_le050 >= 3:
+            ep_out["tier"] = "tier-LOOSE"
+            ep_out["tier_note"] = f"struct_n={count_le050} ≥ 3"
+            ep_out["hbs_dates"] = []
+        else:
+            ep_out["tier"] = "N/A"
+            ep_out["tier_note"] = f"struct_n={count_le050} < 3"
+            ep_out["hbs_dates"] = []
+        out.append(ep_out)
+    return out
