@@ -56,8 +56,34 @@ signed_by: PENDING (operator ký cùng gói 4 dòng ①②③④)
     // ── Case-level BULLA v4.0 (2 vế) — draft chờ ký ──
     {"row": 9,  "token": "BULLA", "episode": "hedge_base_strict",
      "expected_i":  "gom_day KHÔNG fire toàn window (post-C1b compose = gom_a_fire only, gom_a=F all days)",
-     "expected_ii": "hedge_base_strict fire 2026-07-05 first-True; window 07-05→07-09 (5d) + 07-11→07-14 (4d) = 9 days B-path. Registry episode BULLA 06-29→07-17 (freshwatch) nhận tier-STRICT via feeder (spec afbad16, code IMPL pending).",
-     "provenance": "T3 probe first-True HBS 07-05 + registry episode compute", "TODO": "chờ operator ký gói re-baseline"},
+     "expected_ii": "hedge_base_strict fire 2026-07-05 first-True; window 07-05→07-09 (5d) + 07-11→07-14 (4d) = 9 days B-path. Registry episode BULLA 06-29→07-17 (freshwatch) nhận tier-STRICT via feeder (spec afbad16, code IMPL 59a7a63, probe BULLA verified).",
+
+     "b_truth_table_04_to_15_july": [
+       {"date": "2026-07-04", "b1": false, "b2": false, "b3": false, "b4": true,  "HBS": false},
+       {"date": "2026-07-05", "b1": true,  "b2": false, "b3": true,  "b4": true,  "HBS": true,  "note": "*first-True HBS*"},
+       {"date": "2026-07-06", "b1": true,  "b2": false, "b3": true,  "b4": true,  "HBS": true},
+       {"date": "2026-07-07", "b1": true,  "b2": false, "b3": true,  "b4": true,  "HBS": true},
+       {"date": "2026-07-08", "b1": true,  "b2": false, "b3": true,  "b4": true,  "HBS": true},
+       {"date": "2026-07-09", "b1": true,  "b2": false, "b3": true,  "b4": true,  "HBS": true,  "note": "dq:slope_dq"},
+       {"date": "2026-07-10", "b1": true,  "b2": false, "b3": false, "b4": true,  "HBS": false, "note": "*B3 drop → HBS=F đứt*"},
+       {"date": "2026-07-11", "b1": true,  "b2": false, "b3": true,  "b4": true,  "HBS": true,  "note": "resume"},
+       {"date": "2026-07-12", "b1": true,  "b2": false, "b3": true,  "b4": true,  "HBS": true},
+       {"date": "2026-07-13", "b1": true,  "b2": false, "b3": true,  "b4": true,  "HBS": true},
+       {"date": "2026-07-14", "b1": true,  "b2": false, "b3": true,  "b4": true,  "HBS": true},
+       {"date": "2026-07-15", "b1": true,  "b2": false, "b3": false, "b4": true,  "HBS": false, "note": "*B3 drop → HBS=F*"}
+     ],
+     "b_truth_explain":
+       "Formula HBS = B1 ∧ (B2 ∨ B3) ∧ B4. B2=F suốt window (funding_pinned KHÔNG bật). "
+       "HBS phụ thuộc B3 (absorption). Đứt 07-10 và 07-15: B3 drop → HBS=F. "
+       "Window firing: 07-05→07-09 (5d) + 07-11→07-14 (4d) = 9 days total. "
+       "'07-05' tự vệ bằng bảng (không lời): B1 first-True + B3 first-True cùng day.",
+
+     "provenance_note":
+       "Expected cũ chain_open=2026-07-08 (spec §6 row 7, tiền-v4.0) = ước lượng draft; "
+       "K4 probe (4fd5ae4) first-True hedge_base_strict = 2026-07-05 trên snapshot pin; "
+       "M1 loại trừ là nguyên nhân (diff ≤0.004).",
+
+     "TODO": "chờ operator ký gói re-baseline ①-⑤"},
 
     // ── Case-level TUT v4.0 (a-negative) — draft chờ ký ──
     {"row": 10, "token": "TUT", "episode": "a-negative",
