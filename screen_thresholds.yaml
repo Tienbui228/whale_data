@@ -10,6 +10,12 @@
 # 2026-08-11 v1.3: thêm a3_marginal_eps (display-only, không đổi eval behavior)
 
 gom:
+  # [v4.0 GOM-RESTRUCT-20260824 C1 disable GOM-C — operator ký chat 24/08]
+  # GOM-C decommissioned per bot-signals gom_detect_spec v4.0-draft (8a96eacc):
+  # "chưa từng bắn trước ignition ở 8 case proven; vai 'tiếp diễn' chuyển cho
+  # crowd-flip/registry-wave". Set false → gom_scan bỏ qua GOM-C β check.
+  gomc_enabled: false
+
   # §8.3 — ngày đếm Q1: ret_1d (price return 1d) phải ≤ max này
   ret_1d_max: 0.01          # +1.0%
 
@@ -59,3 +65,73 @@ gom:
     glsr_rise_min:  0.15   # (A) gLSR tăng ≥ 15% trong lookback
     ret_1d_min:     0.05   # (B) ret_1d ≤ -5% (1d check)
     glsr_1d_min:    0.05   # (B) gLSR_1d_chg ≥ +5% (1d check)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHASE-TAG v0.3 §7 — SỔ NGƯỠNG TỰ CHẾ (7 con · display-layer, non-blocking)
+# Spec: docs/proposals/phase_tag_spec_v0.3.md §7
+# Trạng thái: PROVISIONAL — chờ calib phân bố §7 pass verdict + operator ký v0.4.
+# ─────────────────────────────────────────────────────────────────────────────
+phase_tag:
+  # #1 herd_return: gLSR quay lại ≥80% pre-flush peak trong rolling-14d
+  herd_return_ratio:     0.80    # PROVISIONAL — calib phân bố flush-event 70-fire+12-case
+  herd_return_window:    14
+
+  # #2 S0-POSTFLUSH: gLSR drop ≥40% từ peak 14d
+  s0_postflush_drop:     0.40    # PROVISIONAL (n=2 anchor BANK/AKE flush)
+  crowd_flush_lookback:  7       # cửa sổ "gần đây" cho crowd_flush
+
+  # #3 CROWD-CHASE vế 2: gLSR +≥30%/3d
+  crowd_chase_glsr_rise: 0.30    # soi-gương flush #2 (0 sáng tác)
+
+  # #4 FUEL-STANDING: avg30(gLSR) ≤ 0.90 (neo biên subtype)
+  fuel_standing_avg30:   0.90    # forward calib
+
+  # #5 Sanity UNKNOWN: floor ≤40% universe/ngày
+  sanity_unknown_max:    0.40    # floor thực dụng
+
+  # #6 Transition-window khối 🔻: token MỚI vào S4/S5 ≤5d thì in
+  transition_window_days: 5      # PROVISIONAL — calib dwell S3→S4 (BANK 19-21→24/07)
+
+  # #7 B2h rolling-window LOCAL (KHÔNG đụng rule-iv canonical chain-lifetime)
+  # Magnitude = pointer rule-iv (25%, đồng bộ khi rule-iv đổi) — spec §9.1.3
+  # Window = tham số LOCAL stateless cho scanner/phase_tag.py::harvest_drop()
+  b2h_window_days:       14      # PROVISIONAL — replay BANK 19-21/07 + TUT 02+05/08 phải bắn
+  b2h_drop_min:          0.25    # POINTER rule-iv GOM §8 — không sáng tác riêng
+
+# Ranh với thresholds.yaml LOCKED: 7 con trên KHÔNG đụng canonical signal params
+# (ret_1d_max, funding_pinned, decay, dist_wall, lsr_dist, post_climax, funding_neg_div,
+#  stealth_grind numbers, absorption). Display-layer only.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# §E-R UN-HEDGE REGISTRY (proposals/unhedge_registry_spec_v1.0.md)
+# Amendments applied: E-R4b v1.1 (operator ký 20/08/2026, r2=1.15)
+# ─────────────────────────────────────────────────────────────────────────────
+unhedge_registry:
+  spec_version: "v1.0+E-R4b-v1.1"
+  spec_source: "proposals/unhedge_registry_spec_v1.0.md"
+  amendments_applied:
+    - "E-R4b-v1.1-r2:1.15"   # operator ký 20/08/2026 (relay vá 3-lần-tuần)
+
+  # E-R1 triggers
+  drift_thr:       0.15    # (b) UNHEDGE-DRIFT: div drift ≥ +0.15 từ episode min
+  drift_window:    7       # trong ≤ 7d
+  pos_hold_ratio:  0.90    # (c) pos_r ≥ 90% × avg5(pre-event)
+  px_hold_ratio:   0.85    # (d) px ≥ 85% × hedge_start_px
+
+  # E-R3 IGNITE conditions
+  ignite_oi_pct:   0.30    # OI +30%/2d
+  ignite_oi_win:   2
+  ignite_vol_mult: 5.0     # vol ≥ 5× med14
+  ignite_brk_pct:  0.15    # breakout ≥ 15%/range14d
+
+  # §E-R4b RE-ARM (v1.1, operator ký 20/08/2026, r2=1.15 ≥ không strict)
+  rearm_r1_days:   14      # r1 days_since_ignite ≥ 14
+  rearm_r2_px:     1.15    # r2 px_now / local_low_since_ignite ≥ 1.15
+  rearm_r3_oi:    1.30    # r3 oi_now / oi_local_low_since_ignite ≥ 1.30
+
+  # E-R4 outcomes
+  rehedge_min_d:   5       # RE-HEDGED: new episode div_avg3 ≤0.5 ≥5d
+  expire_days:     90      # EXPIRED: 90d không ignite
+
+  # E-R7 acceptance
+  acceptance_max_pct: 0.25 # tổng events ≤ 25% universe (loãng if vượt)

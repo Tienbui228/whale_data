@@ -1344,7 +1344,10 @@ def run_daily(
                     or (chain.get("chain_open") and result.get("gom_day"))
                 )
                 # GOM-C β check — display only, no state change
-                if not skip:
+                # [v4.0 GOM-RESTRUCT-20260824 C1 disable GOM-C] guard via config.
+                # Ref: bot-signals gom_detect_spec v4.0-draft (8a96eacc) — GOM-C ARCHIVED.
+                _gomc_on = cfg.get("gom", {}).get("gomc_enabled", False)
+                if not skip and _gomc_on:
                     fires_today = _gomc_beta_check(days, i, cfg, sc, result,
                                                    check_cooldown=True)
                     if fires_today:

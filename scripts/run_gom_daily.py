@@ -481,7 +481,11 @@ def format_tg_report(stdout: str, target_date: str, run_utc: str, run_date: str 
     msg_lines.append(smiss_s)
 
     # GOM-C CAMPAIGN-TRACK section (D4: tách riêng, header, cột rõ ràng)
-    if (gomc_beta_line and "0 fires" not in gomc_beta_line) or gomc_beta_supp:
+    # [v4.0 GOM-RESTRUCT-20260824 C1 formatter bỏ CAMPAIGN-TRACK — operator ký chat 24/08]
+    # GOM-C decommissioned per bot-signals gom_detect_spec v4.0-draft (8a96eacc). Section
+    # tắt vĩnh viễn; giữ code inline làm log để rollback nếu cần.
+    _CAMPAIGN_TRACK_ENABLED = False   # Set True to restore CAMPAIGN-TRACK output
+    if _CAMPAIGN_TRACK_ENABLED and ((gomc_beta_line and "0 fires" not in gomc_beta_line) or gomc_beta_supp):
         import re as _re2
         m_ct = _re2.search(r"\((\d+) fires", gomc_beta_line) if gomc_beta_line else None
         ct = int(m_ct.group(1)) if m_ct else 0
