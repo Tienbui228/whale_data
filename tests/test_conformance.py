@@ -12,6 +12,14 @@ Semantics locked (§E-R1 conformance-pack fe4e38c):
 
 Hook: chạy đầu mọi gate run + pre-commit đụng lib/ hoặc registry_events.
 FAIL = block merge, đổi ngữ nghĩa = amendment ký riêng (per L-58 doctrine).
+
+[L-58 amendment RE-PIN-20260824, operator ký chat 24/08 (α)]
+  DATA_DIR PHẢI nằm trong git (tests/fixtures/data_snapshot_*/) — cấm pin path
+  ngoài git (Temp/, ổ ngoài, share network). Guard code-level: assert DATA_DIR
+  is_relative_to REPO. Pin cũ ngoài git chết do Windows Temp cleanup 24/08 —
+  snapshot vật lý mất, VALUE chưa từng fail 3 lần PASS cuối 24/08 sáng.
+  Amendment ký proposals/l58_amendment_re_pin_20260824.md — chờ sync CASE_INDEX
+  sheet LESSONS + regen lessons_learned.md.
 """
 from __future__ import annotations
 import csv, hashlib, json, sys
@@ -35,7 +43,16 @@ wd = _iu.module_from_spec(_spec)
 _spec.loader.exec_module(wd)
 
 FIXTURE_PATH = REPO / "tests" / "fixtures" / "registry_conformance_20260821.json"
-DATA_DIR = Path(r"C:\Users\Hello\AppData\Local\Temp\e_r7_20260819")
+# [RE-PIN-20260824] Snapshot in-tree — luật cứng L-58: KHÔNG pin path ngoài git.
+# Pin cũ ở C:\Users\...\Temp\e_r7_20260819\ chết do Windows Temp cleanup (24/08).
+DATA_DIR = REPO / "tests" / "fixtures" / "data_snapshot_20260824"
+
+# Hard-guard L-58 amendment: DATA_DIR must be inside REPO
+assert DATA_DIR.is_relative_to(REPO), (
+    f"L-58 amendment RE-PIN-20260824 vi phạm: DATA_DIR={DATA_DIR} ngoài git REPO={REPO}. "
+    "Fixture snapshot PHẢI trong git (tests/fixtures/data_snapshot_*/). "
+    "Ref: proposals/l58_amendment_re_pin_20260824.md"
+)
 
 
 def _md5(path: Path) -> str:

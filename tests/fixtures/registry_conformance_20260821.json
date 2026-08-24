@@ -7,13 +7,13 @@
   "spec_commit": "3cb7d92",
   "lib_commit": "a6aed9d",
   "watchlist_commit": "a6aed9d",
-  "snapshot_date": "2026-08-19",
+  "snapshot_date": "2026-08-23",
   "window_start": "2026-06-20",
-  "window_end": "2026-08-19",
+  "window_end": "2026-08-23",
   "data_snapshot_md5": {
     "freshwatch_daily_2026-06.csv": "5cb3761efb62ede28a7deb84b4958145",
-    "freshwatch_daily_2026-07.csv": "e7e9fc1fc86095a64e57ede3b0a02c9c",
-    "freshwatch_daily_2026-08.csv": "53bd9c1b05560bcb8457eb48080b9540"
+    "freshwatch_daily_2026-07.csv": "4179ddbf1486fd22b133096248571cea",
+    "freshwatch_daily_2026-08.csv": "1f3023e7239611f2ed1fb56b4c09494b"
   },
   "config": {
     "_semantic_note": "sn_min semantics split by consumer (A4(1) 21/08 clarification): registry.sn_min=3 hardcoded arg to _detect_ev (áp trigger 'a' only per E-R7d chuỗi ký). watchlist.sn_count_min=5 (yaml canonical name post yaml_change_20260821.md apply; code fallback đọc struct_n_min pre-yaml-apply). sn field in both scopes = sn_count_le050 = count(div_avg3 ≤ 0.5) in episode.",
@@ -60,10 +60,10 @@
         {
           "episode_id": 1,
           "start_date": "2026-06-29",
-          "end_date": "2026-08-19",
+          "end_date": "2026-08-23",
           "gap_days": 0,
-          "count_le050": 49,
-          "ep_len": 49,
+          "count_le050": 53,
+          "ep_len": 53,
           "hedge_start_px": 0.027049
         }
       ],
@@ -71,7 +71,7 @@
         {
           "date": "2026-07-21",
           "trig": "b",
-          "sn": 49,
+          "sn": 53,
           "rel_ep_id": 1,
           "rel_ep_kind": "current",
           "ep_min": 0.2698,
@@ -488,6 +488,38 @@
           "sn_count_le050": 51,
           "in_list_a": true,
           "in_list_b": false
+        },
+        {
+          "date": "2026-08-20",
+          "div_ratio": 0.4368,
+          "struct_n": 52,
+          "sn_count_le050": 52,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-21",
+          "div_ratio": 0.4372,
+          "struct_n": 53,
+          "sn_count_le050": 53,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-22",
+          "div_ratio": 0.4248,
+          "struct_n": 54,
+          "sn_count_le050": 54,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-23",
+          "div_ratio": 0.3771,
+          "struct_n": 55,
+          "sn_count_le050": 55,
+          "in_list_a": true,
+          "in_list_b": false
         }
       ]
     },
@@ -507,11 +539,20 @@
         {
           "episode_id": 2,
           "start_date": "2026-08-13",
-          "end_date": "2026-08-19",
-          "gap_days": 0,
+          "end_date": "2026-08-21",
+          "gap_days": 2,
           "count_le050": 7,
-          "ep_len": 7,
+          "ep_len": 9,
           "hedge_start_px": 0.029917
+        },
+        {
+          "episode_id": 3,
+          "start_date": "2026-08-23",
+          "end_date": "2026-08-23",
+          "gap_days": 0,
+          "count_le050": 1,
+          "ep_len": 1,
+          "hedge_start_px": 0.032464
         }
       ],
       "registry_events": [
@@ -523,6 +564,17 @@
           "rel_ep_kind": "current",
           "ep_min": 0.1111,
           "hspx": 0.042011,
+          "pass_c": true,
+          "pass_d": true
+        },
+        {
+          "date": "2026-08-22",
+          "trig": "a",
+          "sn": 7,
+          "rel_ep_id": 2,
+          "rel_ep_kind": "flip",
+          "ep_min": 0.4827,
+          "hspx": 0.029917,
           "pass_c": true,
           "pass_d": true
         }
@@ -991,6 +1043,38 @@
           "sn_count_le050": 7,
           "in_list_a": true,
           "in_list_b": false
+        },
+        {
+          "date": "2026-08-20",
+          "div_ratio": 0.5371,
+          "struct_n": 8,
+          "sn_count_le050": 7,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-21",
+          "div_ratio": 0.5575,
+          "struct_n": 9,
+          "sn_count_le050": 7,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-22",
+          "div_ratio": 0.5471,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-23",
+          "div_ratio": 0.4575,
+          "struct_n": 1,
+          "sn_count_le050": 1,
+          "in_list_a": false,
+          "in_list_b": false
         }
       ]
     },
@@ -1010,10 +1094,10 @@
         {
           "episode_id": 2,
           "start_date": "2026-07-16",
-          "end_date": "2026-08-19",
+          "end_date": "2026-08-23",
           "gap_days": 2,
-          "count_le050": 30,
-          "ep_len": 32,
+          "count_le050": 34,
+          "ep_len": 36,
           "hedge_start_px": 0.052841
         }
       ],
@@ -1021,7 +1105,7 @@
         {
           "date": "2026-08-10",
           "trig": "b",
-          "sn": 30,
+          "sn": 34,
           "rel_ep_id": 2,
           "rel_ep_kind": "current",
           "ep_min": 0.2325,
@@ -1486,6 +1570,38 @@
           "sn_count_le050": 30,
           "in_list_a": true,
           "in_list_b": false
+        },
+        {
+          "date": "2026-08-20",
+          "div_ratio": 0.261,
+          "struct_n": 33,
+          "sn_count_le050": 31,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-21",
+          "div_ratio": 0.2438,
+          "struct_n": 34,
+          "sn_count_le050": 32,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-22",
+          "div_ratio": 0.2472,
+          "struct_n": 35,
+          "sn_count_le050": 33,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-23",
+          "div_ratio": 0.2571,
+          "struct_n": 36,
+          "sn_count_le050": 34,
+          "in_list_a": true,
+          "in_list_b": false
         }
       ]
     },
@@ -1920,6 +2036,38 @@
         {
           "date": "2026-08-19",
           "div_ratio": 1.4602,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-20",
+          "div_ratio": 1.6374,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-21",
+          "div_ratio": 1.7895,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-22",
+          "div_ratio": 1.9528,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-23",
+          "div_ratio": 2.2053,
           "struct_n": 0,
           "sn_count_le050": 0,
           "in_list_a": false,
@@ -2362,6 +2510,38 @@
           "sn_count_le050": 0,
           "in_list_a": false,
           "in_list_b": false
+        },
+        {
+          "date": "2026-08-20",
+          "div_ratio": 1.8759,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-21",
+          "div_ratio": 1.9028,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-22",
+          "div_ratio": 1.8881,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-23",
+          "div_ratio": 1.9242,
+          "struct_n": 0,
+          "sn_count_le050": 0,
+          "in_list_a": false,
+          "in_list_b": false
         }
       ]
     },
@@ -2372,10 +2552,10 @@
         {
           "episode_id": 1,
           "start_date": "2026-06-29",
-          "end_date": "2026-08-19",
+          "end_date": "2026-08-23",
           "gap_days": 0,
-          "count_le050": 49,
-          "ep_len": 49,
+          "count_le050": 53,
+          "ep_len": 53,
           "hedge_start_px": 0.021476
         }
       ],
@@ -2383,7 +2563,7 @@
         {
           "date": "2026-08-12",
           "trig": "b",
-          "sn": 49,
+          "sn": 53,
           "rel_ep_id": 1,
           "rel_ep_kind": "current",
           "ep_min": 0.25,
@@ -2800,6 +2980,38 @@
           "sn_count_le050": 51,
           "in_list_a": true,
           "in_list_b": false
+        },
+        {
+          "date": "2026-08-20",
+          "div_ratio": 0.4884,
+          "struct_n": 52,
+          "sn_count_le050": 52,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-21",
+          "div_ratio": 0.4761,
+          "struct_n": 53,
+          "sn_count_le050": 53,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-22",
+          "div_ratio": 0.4808,
+          "struct_n": 54,
+          "sn_count_le050": 54,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-23",
+          "div_ratio": 0.4668,
+          "struct_n": 55,
+          "sn_count_le050": 55,
+          "in_list_a": true,
+          "in_list_b": false
         }
       ]
     },
@@ -2819,10 +3031,10 @@
         {
           "episode_id": 2,
           "start_date": "2026-08-01",
-          "end_date": "2026-08-19",
+          "end_date": "2026-08-23",
           "gap_days": 0,
-          "count_le050": 19,
-          "ep_len": 19,
+          "count_le050": 23,
+          "ep_len": 23,
           "hedge_start_px": 0.006888
         }
       ],
@@ -3301,6 +3513,38 @@
           "div_ratio": 0.2846,
           "struct_n": 19,
           "sn_count_le050": 19,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-20",
+          "div_ratio": 0.3088,
+          "struct_n": 20,
+          "sn_count_le050": 20,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-21",
+          "div_ratio": 0.3414,
+          "struct_n": 21,
+          "sn_count_le050": 21,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-22",
+          "div_ratio": 0.3726,
+          "struct_n": 22,
+          "sn_count_le050": 22,
+          "in_list_a": true,
+          "in_list_b": false
+        },
+        {
+          "date": "2026-08-23",
+          "div_ratio": 0.3631,
+          "struct_n": 23,
+          "sn_count_le050": 23,
           "in_list_a": true,
           "in_list_b": false
         }
