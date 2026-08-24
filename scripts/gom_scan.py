@@ -1492,7 +1492,9 @@ def run_daily(
             print(s)
 
     # GOM-C PROVISIONAL-β
-    if gomc_beta_fires or gomc_beta_suppressed:
+    # [v4.0 GOM-RESTRUCT-20260824 C1] skip print entirely when disabled
+    _gomc_on_print = cfg.get("gom", {}).get("gomc_enabled", False)
+    if _gomc_on_print and (gomc_beta_fires or gomc_beta_suppressed):
         n_f = len(gomc_beta_fires)
         n_s = len(gomc_beta_suppressed)
         toks      = " ".join(sorted(f["token"] for f in gomc_beta_fires))
@@ -1535,7 +1537,7 @@ def run_daily(
         for s in sorted(gomc_beta_suppressed, key=lambda x: x["token"]):
             print(f"━━ GOM-C β SUPP: {s['token']}|cooldown={s['days_remaining']}d"
                   f"|first={s['first_fire']}")
-    else:
+    elif _gomc_on_print:
         print(f"\n━━ GOM-C β: 0 fires")
 
     print(format_footer(all_state, sc))

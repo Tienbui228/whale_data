@@ -1,0 +1,2 @@
+token,date_open,date_close,fires_n,close_reason,ref_commit,ref_spec,timestamp
+PIEVERSE,2026-08-24,2026-08-24,1,GOM-C-ARCHIVED-20260824 (forced close per bot-signals gom_detect_spec v4.0-draft 8a96eacc + gomc_enabled=false 940b9ab). Chain state PROVISIONAL n=1 pre-restructure. Post-restructure: no new fires. Historical close forced-immediate.,940b9ab,bot-signals gom_detect_spec v4.0-draft #GOM-RESTRUCT-20260824,2026-08-24T00:00:00Z
