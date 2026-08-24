@@ -1074,10 +1074,18 @@ def run_backtest6(cfg: dict, sc: dict) -> None:
                 events[token].append((date, "hbs"))
             elif _hbs == "N/A-WARMUP":
                 events[token].append((date, "hbs_warmup"))
-            # pre_chain_crowd_flush event (K1 §8.4) — flagged when crowd_flush hits
-            # before chain_open (chronological-first rule)
-            if result.get("pre_chain_crowd_flush"):
+            # [③-IMPL-20260824 pre_chain emitter] K1 §8.4 chronological-first rule:
+            # crowd_flush (hoặc signal khác đủ điều kiện) hit TRƯỚC chain_open → flag
+            # `pre_chain_<signal>` per date (không FAIL gate, không đếm chapter).
+            # Wrapper tại whale_data eval_gom output — bot-signals spec §8.4 canonical,
+            # whale_data cần emit để backtest6 + fixture đọc được (row 4 pending impl).
+            if result.get("crowd_flush") and not was_open and not chain.get("chain_open"):
                 events[token].append((date, "pre_chain_crowd_flush"))
+            # Legacy: also check if eval_gom directly emits pre_chain_crowd_flush field
+            # (backward-compat with bot-signals side if wired later)
+            if result.get("pre_chain_crowd_flush"):
+                if not any(e == "pre_chain_crowd_flush" for _, e in events[token] if _ == date):
+                    events[token].append((date, "pre_chain_crowd_flush"))
 
     # Print §6 table
     print(f"\n{'='*90}")
