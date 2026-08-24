@@ -137,8 +137,11 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     b4 = (not math.isnan(_f_avg)) and not funding_neg_div(days, i, cfg)
     gom_b = {"B1": b1, "B2": b2, "B3": b3, "B4": b4}
 
-    # §1 structural formula: GOM-B = B1 AND (B2 OR B3) AND B4 (confirmed correct)
-    gom_b_fire = b1 and (b2 or b3) and b4
+    # §1 structural formula: HEDGE-BASE-STRICT = B1 AND (B2 OR B3) AND B4
+    # [v4.0 GOM-RESTRUCT-20260824 C1b rename] gom_b_fire → hedge_base_strict
+    # (0 alias, forward-only). GOM-B rời compose GOM-ngày, output flag feeder §E-R
+    # tier-STRICT per unhedge_registry_spec §E-R1 (afbad16 whale_data).
+    hedge_base_strict = b1 and (b2 or b3) and b4
 
     # Suppressor CỨNG (6 signals — trigger 14d cooldown)
     supp_dq = {
@@ -181,14 +184,15 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
 
     cf_today = crowd_flush(days, i, cfg)
 
-    gom_day = (gom_a_fire or gom_b_fire) and not any_supp_dq and not any_perday_dq
+    # [v4.0 GOM-RESTRUCT-20260824 C1b compose] GOM-B rời compose (feeder §E-R only)
+    gom_day = gom_a_fire and not any_supp_dq and not any_perday_dq
 
     return {
         "gom_day":       gom_day,
         "gom_a":         gom_a,
         "gom_a_fire":    gom_a_fire,
-        "gom_b":         gom_b,
-        "gom_b_fire":    gom_b_fire,
+        "gom_b":              gom_b,
+        "hedge_base_strict":  hedge_base_strict,   # [v4.0 rename gom_b_fire → hedge_base_strict, 0 alias]
         "supp_dq":       supp_dq,
         "perday_dq":     perday_dq,
         "any_supp_dq":   any_supp_dq,
@@ -973,7 +977,7 @@ def run_backfill(cfg: dict, sc: dict, token_filter: str | None = None) -> dict:
 BACKTEST_GATE = [
     # ── Compose-level conformance (§1 formula) — verified in code, not by case date ──
     ("_FORMULA", "gom_a_fire", "GOM-A = A1 AND A2 AND A3 AND (A4 OR A5) — tất cả 3 điều kiện đầu bắt buộc đồng thời + ≥1 trong A4/A5"),
-    ("_FORMULA", "gom_b_fire", "GOM-B = B1 AND (B2 OR B3) AND B4 — structural entry only"),
+    ("_FORMULA", "hedge_base_strict", "HEDGE-BASE-STRICT = B1 AND (B2 OR B3) AND B4 — feeder §E-R (v4.0 rename gom_b_fire, GOM-RESTRUCT-20260824)"),
     # ── Case-level conformance (verified by replay date match) ───────────────────────
     ("BANK",   "open",    "Chain mở 06-29 (lsr_accum onset)"),
     ("BANK",   "chapter", "crowd_flush 07-02 → chapter mới"),
@@ -1121,8 +1125,8 @@ def _false_result() -> dict:
         "gom_day":       False,
         "gom_a":         {k: False for k in ["A1", "A2", "A3", "A4", "A5"]},
         "gom_a_fire":    False,
-        "gom_b":         {k: False for k in ["B1", "B2", "B3", "B4"]},
-        "gom_b_fire":    False,
+        "gom_b":              {k: False for k in ["B1", "B2", "B3", "B4"]},
+        "hedge_base_strict":  False,   # [v4.0 rename gom_b_fire → hedge_base_strict, 0 alias]
         "supp_dq":       {k: False for k in dq_keys},
         "perday_dq":     {k: False for k in pd_keys},
         "any_supp_dq":   False,
