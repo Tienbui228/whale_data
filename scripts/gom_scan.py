@@ -126,10 +126,17 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
 
     # GOM-B signals
     # B1: hedge_structure bền ≥ hedge_lookback_days (all days in window must satisfy)
-    b1 = all(
-        hedge_structure(days, j, cfg)
-        for j in range(max(0, i - hedge_lb + 1), i + 1)
-    )
+    # [⑨-FIX-20260824 fail-closed warmup] Trước: all(...) trên range(max(0, i-hedge_lb+1), i+1)
+    # co cửa sổ lặng lẽ khi i < hedge_lb-1 → all([T,T,T])=True dù chỉ 3d/7d → fail-OPEN.
+    # Nay: nếu i < hedge_lb-1 → b1=False + warmup_b1=True (fail-closed + flag riêng).
+    _warmup_b1 = i < hedge_lb - 1
+    if _warmup_b1:
+        b1 = False
+    else:
+        b1 = all(
+            hedge_structure(days, j, cfg)
+            for j in range(i - hedge_lb + 1, i + 1)
+        )
     b2 = funding_pinned(days, i, cfg) or funding_pinned_strong(days, i, cfg)
     b3 = absorption(days, i, cfg)
     # B4: NOT funding_neg_div — clean environment. FAIL-CLOSED: funding NaN → B4=False
@@ -137,11 +144,24 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
     b4 = (not math.isnan(_f_avg)) and not funding_neg_div(days, i, cfg)
     gom_b = {"B1": b1, "B2": b2, "B3": b3, "B4": b4}
 
+    # [⑨-FIX-20260824] warmup flags dict — feeder N/A-WARMUP theo operator ký 24/08.
+    # Ngày warmup: HBS phát "N/A-WARMUP" (không False), assign_episode_tiers không tính
+    # STRICT cũng không tính "không hedge".
+    _warmup_flags = {
+        "warmup_b1": _warmup_b1,
+        # B3=absorption() nội bộ fail-closed đúng (i<hold_n-1→False, signals.py:517) —
+        # KHÔNG cần warmup layer ở gom_scan.
+    }
+
     # §1 structural formula: HEDGE-BASE-STRICT = B1 AND (B2 OR B3) AND B4
     # [v4.0 GOM-RESTRUCT-20260824 C1b rename] gom_b_fire → hedge_base_strict
     # (0 alias, forward-only). GOM-B rời compose GOM-ngày, output flag feeder §E-R
     # tier-STRICT per unhedge_registry_spec §E-R1 (afbad16 whale_data).
-    hedge_base_strict = b1 and (b2 or b3) and b4
+    # [⑨-FIX-20260824] hedge_base_strict cùng warmup → "N/A-WARMUP" thay bool.
+    if _warmup_b1:
+        hedge_base_strict = "N/A-WARMUP"
+    else:
+        hedge_base_strict = b1 and (b2 or b3) and b4
 
     # Suppressor CỨNG (6 signals — trigger 14d cooldown)
     supp_dq = {
@@ -193,6 +213,8 @@ def eval_gom(days: list[DayData], i: int, cfg: dict, sc: dict) -> dict:
         "gom_a_fire":    gom_a_fire,
         "gom_b":              gom_b,
         "hedge_base_strict":  hedge_base_strict,   # [v4.0 rename gom_b_fire → hedge_base_strict, 0 alias]
+                                                    # [⑨-FIX-20260824] value bool | "N/A-WARMUP"
+        "flags":         _warmup_flags,             # [⑨-FIX-20260824] warmup_b1, ... (feeder N/A-WARMUP)
         "supp_dq":       supp_dq,
         "perday_dq":     perday_dq,
         "any_supp_dq":   any_supp_dq,
@@ -375,16 +397,24 @@ def _gomc_beta_check(
     if math.isnan(p_now) or math.isnan(p_prv) or (p_now - p_prv) < 0:
         return False
     # C4 slope-close: suppress if gLSR slope > 1.15 sustained ≥3 consecutive days
+    # [⑨-FIX-20260824 audit] i<2 → range shrink lặng lẽ, max(sum)<3 → không return False
+    # → fail-OPEN cho C4 slope. Fix: fail-closed nếu i < 2 (không đủ 3d lookback).
+    if i < 2:
+        return False
     slope_bad = sum(
-        1 for j in range(max(0, i - 2), i + 1)
+        1 for j in range(i - 2, i + 1)
         if not _a3_slope_ok(days, j, sc)
     )
     if slope_bad >= 3:
         return False
     # 14d supp cooldown: GOM-C inherits same cooldown as GOM-B (§8.4 rule-i)
     # any supp_dq fire in prior 13 days → today still in cooldown window
+    # [⑨-FIX-20260824 audit] i<13 → range shrink lặng lẽ, cooldown check window nhỏ hơn
+    # → có thể bỏ sót suppressor cũ hơn → fail-OPEN. Fix: fail-closed nếu i < 13.
     if check_cooldown:
-        for j in range(max(0, i - 13), i):
+        if i < 13:
+            return False
+        for j in range(i - 13, i):
             dj = days[j]
             if dj.get("_skip_eval") or dj.get("_suspect"):
                 continue
@@ -1035,8 +1065,12 @@ def run_backtest6(cfg: dict, sc: dict) -> None:
                 dq_list = [k for k, v in result["disqualifier"].items() if v]
                 events[token].append((date, f"dq:{'+'.join(dq_list)}"))
             # HBS (hedge_base_strict) per-day tracking — feeder §E-R tier-STRICT (v4.0)
-            if result.get("hedge_base_strict"):
+            # [⑨-FIX-20260824] Skip "N/A-WARMUP" — không tính là T (fire) cũng không tính là F
+            _hbs = result.get("hedge_base_strict")
+            if _hbs is True:
                 events[token].append((date, "hbs"))
+            elif _hbs == "N/A-WARMUP":
+                events[token].append((date, "hbs_warmup"))
             # pre_chain_crowd_flush event (K1 §8.4) — flagged when crowd_flush hits
             # before chain_open (chronological-first rule)
             if result.get("pre_chain_crowd_flush"):
@@ -1203,6 +1237,7 @@ def _false_result() -> dict:
         "gom_a_fire":    False,
         "gom_b":              {k: False for k in ["B1", "B2", "B3", "B4"]},
         "hedge_base_strict":  False,   # [v4.0 rename gom_b_fire → hedge_base_strict, 0 alias]
+        "flags":         {"warmup_b1": False},   # [⑨-FIX-20260824]
         "supp_dq":       {k: False for k in dq_keys},
         "perday_dq":     {k: False for k in pd_keys},
         "any_supp_dq":   False,

@@ -551,18 +551,25 @@ def assign_episode_tiers(episodes, hbs_by_day):
 
         hbs_dates = []
         missing_days = []
+        warmup_days = []
         cur = sd
         while cur <= ed:
             d_str = cur.isoformat()
             v = hbs_by_day.get(d_str, "MISSING")
             if v == "MISSING":
                 missing_days.append(d_str)
+            elif v == "N/A-WARMUP":
+                # [⑨-FIX-20260824] warmup: không tính STRICT cũng không tính "không hedge"
+                warmup_days.append(d_str)
             elif v is True:
                 hbs_dates.append(d_str)
             # v is False or None → not HBS on this day, no contribution
             cur = cur + _td(days=1)
 
         ep_out = dict(ep)
+        # [⑨-FIX-20260824] warmup_days ghi vào ep_out (transparency), không đổi tier decision
+        if warmup_days:
+            ep_out["warmup_days"] = warmup_days
         if missing_days:
             # Fail-loud: report but still compute best-effort tier from known days
             ep_out["tier"] = "N/A"
