@@ -1,0 +1,2 @@
+symbol,date,consumer,rule,old_value,new_value,reason,ref_commit,timestamp
+CARVUSDT,2026-06-28,registry_ignite,vol_h_5x_med14,PASS,FAIL,VOL-DUP-STORE-20260821 F4 flip — cv CSV=6.6M (inflated ×2) FRESH=3.3M · med14=1.29M · ratio_CSV=5.11 → ratio_FRESH=2.56,68c824d,2026-08-24T00:00:00Z

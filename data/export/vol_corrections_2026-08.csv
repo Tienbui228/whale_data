@@ -1,0 +1,2 @@
+symbol,date,consumer,rule,old_value,new_value,reason,ref_commit,timestamp
+SIGNUSDT,2026-08-05,registry_ignite,vol_h_5x_med14,FAIL,PASS,VOL-DUP-STORE-20260821 F4 flip — cv=6.12M (same both) · med14 CSV=1.37M (inflated) FRESH=1.05M · ratio_CSV=4.45 (miss ignite) → ratio_FRESH=5.84 (ignite trigger),68c824d,2026-08-24T00:00:00Z
