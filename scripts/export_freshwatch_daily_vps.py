@@ -63,7 +63,9 @@ EXPORT_COLS = [
     "symbol",
     "px_avg",
     "vol_quote",
+    "vol_source",   # [F5a-VOL-REBUILD-20260824]
     "taker_buy_pct",
+    "taker_source", # [⑩-AMENDMENT-20260824 vế 3]
     "funding_avg",
     "funding_min",
     "funding_max",
@@ -327,10 +329,15 @@ def _build_klines_agg(date_str: str, symbols: list[str]) -> pd.DataFrame:
                     excess_rows=excess, n_before=n_before, n_after=n_after,
                     note="P0-VOL-DUP guard fired — trace writer")
 
-    grp = df.groupby("symbol").agg(
-        quote_vol_sum=("quote_volume", "sum"),
-        base_vol_sum=("base_volume", "sum"),
-    ).reset_index()
+    # [⑩-AMENDMENT-20260824 vế 3] Extend agg to include taker_buy_quote_vol_sum
+    # for canonical k[10]/k[7] taker_buy_pct derivation.
+    agg_dict = {
+        "quote_vol_sum": ("quote_volume", "sum"),
+        "base_vol_sum": ("base_volume", "sum"),
+    }
+    if "taker_buy_quote_vol" in df.columns:
+        agg_dict["taker_buy_quote_vol_sum"] = ("taker_buy_quote_vol", "sum")
+    grp = df.groupby("symbol").agg(**agg_dict).reset_index()
 
     grp["vol_quote"] = grp["quote_vol_sum"]
     grp["px_avg"] = np.where(
@@ -338,7 +345,16 @@ def _build_klines_agg(date_str: str, symbols: list[str]) -> pd.DataFrame:
         grp["quote_vol_sum"] / grp["base_vol_sum"],
         np.nan,
     )
-    return grp[["symbol", "px_avg", "vol_quote"]]
+    # [⑩-AMENDMENT-20260824] k[10]/k[7] canonical taker_buy_pct (fraction 0-1)
+    if "taker_buy_quote_vol_sum" in grp.columns:
+        grp["taker_buy_pct_k10k7"] = np.where(
+            grp["quote_vol_sum"] > 0,
+            grp["taker_buy_quote_vol_sum"] / grp["quote_vol_sum"],
+            np.nan,
+        )
+    else:
+        grp["taker_buy_pct_k10k7"] = np.nan
+    return grp[["symbol", "px_avg", "vol_quote", "taker_buy_pct_k10k7"]]
 
 
 # ---------------------------------------------------------------------------
@@ -500,13 +516,21 @@ def _assemble_date(
 
     # --- Derived columns ---
 
-    # taker_buy_pct = r / (1 + r) where r = taker_ratio
-    def _taker_buy_pct(r):
+    # [⑩-AMENDMENT-20260824 vế 3] taker_buy_pct canonical = k[10]/k[7] from klines_1h agg.
+    # Fallback LEGACY derive r/(1+r) chỉ khi k10k7 NaN (no klines data). Provenance in
+    # taker_source column. Fraction 0-1 output — consumer scale-detection giữ nguyên.
+    def _taker_buy_pct_row(row):
+        k10k7 = row.get("taker_buy_pct_k10k7")
+        if k10k7 is not None and not (isinstance(k10k7, float) and np.isnan(k10k7)):
+            return float(k10k7), "k10_over_k7_fresh"
+        r = row.get("taker_ratio")
         if r is None or (isinstance(r, float) and np.isnan(r)):
-            return None
-        return float(r) / (1.0 + float(r))
+            return None, "MISSING"
+        return float(r) / (1.0 + float(r)), "r_over_1p r_LEGACY"
 
-    df["taker_buy_pct"] = df["taker_ratio"].apply(_taker_buy_pct)
+    _taker_result = df.apply(_taker_buy_pct_row, axis=1)
+    df["taker_buy_pct"] = _taker_result.apply(lambda t: t[0])
+    df["taker_source"] = _taker_result.apply(lambda t: t[1])
 
     # low_conf: True if vol_quote < 200_000 OR oi_usd < 1_000_000
     def _low_conf(row):
