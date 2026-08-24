@@ -4,16 +4,16 @@
   "generated_at": "2026-08-21",
   "spec_source": "proposals/unhedge_registry_spec_v1.0.md",
   "spec_version": "v1.2-FINAL+doctrine-pack+conformance-pack",
-  "spec_commit": "fe4e38c",
-  "lib_commit": "b6a44b7",
-  "watchlist_commit": "b6a44b7",
+  "spec_commit": "3cb7d92",
+  "lib_commit": "a6aed9d",
+  "watchlist_commit": "a6aed9d",
   "snapshot_date": "2026-08-19",
   "window_start": "2026-06-20",
   "window_end": "2026-08-19",
   "data_snapshot_md5": {
-    "freshwatch_daily_2026-06.csv": "f717231a7b3385012459566a908952d2",
-    "freshwatch_daily_2026-07.csv": "c7143e37bf98cc11bf171068a2518857",
-    "freshwatch_daily_2026-08.csv": "6decfff1dffaedffd202287a209a7129"
+    "freshwatch_daily_2026-06.csv": "5cb3761efb62ede28a7deb84b4958145",
+    "freshwatch_daily_2026-07.csv": "e7e9fc1fc86095a64e57ede3b0a02c9c",
+    "freshwatch_daily_2026-08.csv": "53bd9c1b05560bcb8457eb48080b9540"
   },
   "config": {
     "_semantic_note": "sn_min semantics split by consumer (A4(1) 21/08 clarification): registry.sn_min=3 hardcoded arg to _detect_ev (áp trigger 'a' only per E-R7d chuỗi ký). watchlist.sn_count_min=5 (yaml canonical name post yaml_change_20260821.md apply; code fallback đọc struct_n_min pre-yaml-apply). sn field in both scopes = sn_count_le050 = count(div_avg3 ≤ 0.5) in episode.",
