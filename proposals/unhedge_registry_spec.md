@@ -35,6 +35,8 @@
 
 **(a) UNHEDGE-BREAK:** hedge episode (định nghĩa watchlist v1.3 §1 — POINTER, không copy) kết thúc: `div > 0.5 liên tục ≥3d` (episode_break)
 
+**Episode hai tier (v4.0 gom-restruct 24/08):** tier-LOOSE = struct_n ≥ 3 (mặc định registry) · tier-STRICT = hedge_base_strict từ GOM-B (div≤0.5 bền 7d ∧ (pin ∨ absorption) ∧ B4). STRICT ⊂ LOOSE; báo cáo in tier cạnh episode. Bằng chứng calib: ON episode 4d, HEMI 5d = LOOSE-only — STRICT không được là điều kiện cần.
+
   **HOẶC**
 
 **(b) UNHEDGE-DRIFT:** `div nới ≥ +0.15 từ đáy episode` trong ≤7d (tháo dần chưa break)
