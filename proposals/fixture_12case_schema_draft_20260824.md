@@ -88,7 +88,14 @@ signed_by: PENDING (operator ký cùng gói 4 dòng ①②③④)
      "verify": "existing PASS from v2.1, adjust for v4.0 GOM-C ARCHIVED context"},
     {"row": 16, "token": "TUT",       "episode": "a-negative-supp",
      "expected": "Duplicate của row 10 (TUT-A-NEG) — hoặc merge vào row 10 = 1 row, row 16 removed",
-     "TODO": "ANALYSIS quyết row 10 vs row 16 unify"}
+     "TODO": "ANALYSIS quyết row 10 vs row 16 unify"},
+
+    // ── K5 add: feeder tier-STRICT row (status PENDING-BUILD hiển thị, không im) ──
+    {"row": 17, "token": "BULLA", "episode": "registry_tier_STRICT_feeder",
+     "expected": "Episode BULLA registry 06-29→07-17 (freshwatch) nhận tier-STRICT flag từ feeder GOM-B hedge_base_strict (07-05→07-09 + 07-11→07-14 = 9 days B-path WITHIN episode span). Spec KÝ afbad16 whale_data unhedge_registry_spec §E-R1.",
+     "status":   "PENDING-BUILD",
+     "note":     "Code IMPL feeder chưa có — lib/registry_events.py chưa đọc GOM-B hedge_base_strict flag. Hiển thị 'PENDING-BUILD' trong fixture output, không im. Chờ operator ký impl scope.",
+     "provenance": "K5 fixture row add per TRIAGE-EVIDENCE-20260824 K5"}
   ],
   "gate_semantics": {
     "PASS": "actual event matches expected date/type per row",

@@ -135,3 +135,58 @@ unhedge_registry:
 
   # E-R7 acceptance
   acceptance_max_pct: 0.25 # tổng events ≤ 25% universe (loãng if vượt)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GOM-H — HANDOFF & SEAT-LIFT (PROVISIONAL, unsigned per operator DEV-BỔ-SUNG v2)
+# NGƯỠNG TẠM ANALYSIS xác nhận 24/08/2026 — chép nguyên văn per DEV-BỔ-SUNG v2 relay
+# Spec: bot-signals/docs/gom_detect_spec.md v4.0-draft §1-H (24/08)
+# Source: mm_stage_machine_v1_proposal_20260823 §6 — ANALYSIS HYP, fit trên 8 case
+# Ref: proposals/adapter_h1_spec_v0.1_20260824.md (SIGNED 24/08 ĐIỂM DỪNG 1)
+# ─────────────────────────────────────────────────────────────────────────────
+gom_h:
+  provisional_unsigned: true
+  source: "mm_stage_machine_v1_proposal_20260823 §6 — ANALYSIS HYP, fit trên 8 case"
+
+  # T0.1 compose (compose cần, cùng nhãn):
+  # funding ghim ≥14d (|f_avg| ≤5e-5) ∧ OI ≤1.2×min30 ∧ |ret14| ≤10% ∧ med7(vol) ≤ med30
+  t0_1:
+    funding_pin_days:   14        # |f_avg| ≤ funding_pin_abs trong ≥14d
+    funding_pin_abs:    5.0e-5
+    oi_over_min30_max:  1.2       # OI ≤ 1.2 × min30(oi)
+    ret14_abs_max:      0.10      # |ret14| ≤ 10%
+    vol_med7_over_med30_max: 1.0  # med7(vol) ≤ med30(vol)
+
+  # H1 KHO-STEP (adapter: proposals/adapter_h1_spec_v0.1_20260824.md):
+  # tồn tại cửa sổ ≤3 ngày liên tiếp với |balance(cuối)−balance(đầu)|/balance(đầu) ≥ 0.10
+  # T0.1 đánh giá tại ngày cuối cửa sổ. balance(đầu)=0/N/A → H1=N/A (không fire, không False-câm)
+  h1:
+    balance_delta_abs_min: 0.10   # |Δbalance|/balance(đầu) ≥ 10%
+    window_days_max:       3      # cửa sổ ≤3d liên tiếp
+
+  # H2 SEAT-LIFT (div_avg3 = ratio-of-means M1):
+  # (min(div_avg3 14d gần nhất) ≤0.6 ∧ div_avg3 hôm nay ≥1.0)
+  # ∨ (pos_r hôm nay / min(pos_r 14d) ≥1.25 ∧ oi ≤1.2×min30(oi))
+  # H2 KHÔNG có điều kiện funding — pin nằm ở T0.1
+  h2:
+    div_min_14d_max:    0.6       # min(div_avg3 14d) ≤ 0.6
+    div_today_min:      1.0       # div_avg3 today ≥ 1.0
+    pos_over_min14_min: 1.25      # pos_r_today / min(pos_r 14d) ≥ 1.25
+    oi_over_min30_max:  1.2       # oi ≤ 1.2 × min30(oi)  [same as t0_1]
+
+  # H3 PROBE (cờ, không điều kiện):
+  # vol ≥8×med14 ∧ |ret| ≤8%, vol = fapi k[7] fresh (P0-STORE-VOL-DUP)
+  h3:
+    vol_mult_med14_min: 8.0       # vol ≥ 8× med14
+    ret_abs_max:        0.08      # |ret| ≤ 8%
+    vol_source:         "fapi_k7_fresh"   # ĐỘC LẬP với store CSV vol_quote (P0-STORE-VOL-DUP-20260821)
+
+  # NaN semantics: fire NaN → False (FAIL-CLOSED); H1 thiếu data = N/A hiển thị, khác False
+  nan_semantics:
+    default:  "FAIL-CLOSED"       # NaN → False
+    h1_only:  "N-A-VISIBLE"       # H1 N/A hiển thị, phân biệt False vs N/A
+
+  # Compose: GOM-H = H1 ∨ (H2 ∧ T0.1); H3 chỉ nâng conf. REPORT-ONLY.
+  # KHÔNG dòng nào chạm thresholds.yaml (screen_thresholds only).
+  compose: "GOM-H = H1 OR (H2 AND T0.1)"
+  h3_role: "confidence booster only (không tham gia fire)"
+  output:  "REPORT-ONLY (Telegram khối riêng 'CAMPAIGN-PRE')"
