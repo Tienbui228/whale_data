@@ -14,6 +14,9 @@
 | **v1.2-FINAL+doctrine-pack** | **21/08/2026** | **§E-R8② metric weekpeak (thay reg%_cum) · §E-R8① MFE_k7 ≥+10% cho ≥50% alerts wave-2+ (thay ret_k7 close-basis) + wave-1 INTEL-grade report-only · §E-R4b MISSED-WAVE definitions (m1/m2/m3/HAND-OFF, m3≥3/60d → calib) · §E-R4b RE-ARM report-only productive-share nhóm gap≥2d (n≥10 ∧ share<40% mới falsifier, XÓA trần 50% cũ) · §E-R4b local_low inclusive-D (range j+1). Code `_try_rearm` đổi cùng commit — re-verify HEMI re-arm 08-06 / ⚡ 15/08 giữ nguyên.** Operator ký chat 21/08. |
 | **v1.2-FINAL+doctrine-pack+conformance-pack** | **21/08/2026** | **§E-R1 canonical `struct_n = count(div_avg3 ≤ 0.5)` trong episode (EXCLUDE gap-days); biến đếm cả gap-days đổi tên `ep_len`, cấm đội tên struct_n — hết IM-LẶNG ca E · §E-R1(b) eligibility spelled: "episode vừa break làm anchor trong ≤30d hậu-break" — hết IM-LẶNG ca F · Registry probe dùng `sn_count_le050` mới (không edit lib.detect_episodes để tránh chạm watchlist inline P0 SAFE) · consumer split canonical: watchlist=lib(ep_len semantics dưới nhãn struct_n giữ), registry=sn_count_le050 mới.** Operator ký chat 21/08. Ref L-58 (conformance fixture doctrine). |
 | **+conformance-text ①②③** | **21/08/2026** | **Chép nguyên văn chữ ký 21/08 (khối "[OPERATOR KÝ 21/08 → DEV] Chuỗi cơ học" mục 1-2 + bảng A-L đã có sha) vào section "Conformance-pack (fe4e38c) — text bổ sung ①②③": ① struct_n canonical = count(div≤0.5) [= sn_count_le050], ep_len đổi tên, **CẢ HAI consumer**. ② Luật mỗi-consumer-giữ-tiền-extract-của-nó (registry=ae5f2a0, watchlist=lib); lib/hedge_episode.py generic, lib/registry_events.py adapter registry. ③ Revert B/C/G thành văn + cases I/J/K/L bảng A-L với sha impl (d20bd8a, b6a44b7). Chữ ký 21/08, code d20bd8a/b6a44b7. Không viết thêm cơ chế ngoài text đã ký.** |
+| **+GOM-RESTRUCT-20260824 §E-R1 hai tier** | **24/08/2026** | **§E-R1 thêm episode hai tier (v4.0 gom-restruct): tier-LOOSE = struct_n ≥ 3 (mặc định) · tier-STRICT = hedge_base_strict từ GOM-B. STRICT ⊂ LOOSE. Ref afbad16 (B6 initial spec merge). Operator ký chat 24/08.** |
+| **+⑨-FIX-20260824 type-warning** | **24/08/2026** | **§E-R1 thêm 1 dòng TYPE-WARNING: `hedge_base_strict` value = `True \| False \| "N/A-WARMUP"` (string sentinel khi warmup < hedge_lookback_days-1). CẤM truthy-check reader (non-empty string ăn thành True). Feeder `assign_episode_tiers` handle 3 trạng thái. Ref gom_scan.py:129-165 (⑨-FIX 330d683) + grep-audit 2212a49. Operator ký chat 24/08.** |
+| **+⑧-B6-EX-20260824 LOOSE-only calib** | **24/08/2026** | **§E-R1 hai tier: thêm dòng bằng chứng calib "ON (4d) + HEMI (5d) = LOOSE-only" (thay dòng cũ có BULLA ví dụ STRICT). BULLA xuống thành chú thích nguyên văn ANALYSIS: "STRICT trên họ calib (_result hậu-regen), LOOSE trên runtime store — cause R3(i)(ii)(iii), hội tụ đo lại sau regen." Operator ký chat 24/08 (gói ⑧⑨⑩).** |
 
 ---
 
@@ -35,7 +38,11 @@
 
 **(a) UNHEDGE-BREAK:** hedge episode (định nghĩa watchlist v1.3 §1 — POINTER, không copy) kết thúc: `div > 0.5 liên tục ≥3d` (episode_break)
 
-**Episode hai tier (v4.0 gom-restruct 24/08):** tier-LOOSE = struct_n ≥ 3 (mặc định registry) · tier-STRICT = hedge_base_strict từ GOM-B (div≤0.5 bền 7d ∧ (pin ∨ absorption) ∧ B4). STRICT ⊂ LOOSE; báo cáo in tier cạnh episode. Bằng chứng calib: ON episode 4d, HEMI 5d = LOOSE-only — STRICT không được là điều kiện cần.
+**Episode hai tier (v4.0 gom-restruct 24/08):** tier-LOOSE = struct_n ≥ 3 (mặc định registry) · tier-STRICT = hedge_base_strict từ GOM-B (div≤0.5 bền 7d ∧ (pin ∨ absorption) ∧ B4). STRICT ⊂ LOOSE; báo cáo in tier cạnh episode.
+
+**[B6-EX-20260824 bằng chứng calib LOOSE-only]:** ON (episode 4d) + HEMI (episode 5d) = LOOSE-only — STRICT KHÔNG được là điều kiện cần.
+
+**[BULLA chú thích — NGUYÊN VĂN ANALYSIS 24/08]:** *"BULLA: STRICT trên họ calib (_result hậu-regen), LOOSE trên runtime store — cause R3(i)(ii)(iii), hội tụ đo lại sau regen."*
 
 **[⑨-FIX-20260824 TYPE-WARNING]:** `hedge_base_strict` value = `True | False | "N/A-WARMUP"` (string sentinel khi lookback < hedge_lookback_days-1, gom_scan.py:129-165). CẤM truthy-check reader (non-empty string ăn thành True). Dùng explicit `v is True` cho STRICT count · `v == "N/A-WARMUP"` cho warmup track · `v is False` cho không-HBS. Feeder `assign_episode_tiers` (lib/registry_events.py) đã handle 3 trạng thái.
 
