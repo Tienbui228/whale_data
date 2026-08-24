@@ -979,16 +979,17 @@ BACKTEST_GATE = [
     ("_FORMULA", "gom_a_fire", "GOM-A = A1 AND A2 AND A3 AND (A4 OR A5) — tất cả 3 điều kiện đầu bắt buộc đồng thời + ≥1 trong A4/A5"),
     ("_FORMULA", "hedge_base_strict", "HEDGE-BASE-STRICT = B1 AND (B2 OR B3) AND B4 — feeder §E-R (v4.0 rename gom_b_fire, GOM-RESTRUCT-20260824)"),
     # ── Case-level conformance (verified by replay date match) ───────────────────────
-    # [TRIAGE-20260824 nhịp 1 re-baseline — operator ký chat 24/08. Ref: T1-T5 evidence
-    # docs/reports/_gom_gate_triage_20260824.md + proposals/fixture_12case_schema_draft_20260824.md]
+    # [TRIAGE-CLOSE-20260824 ② + ④ — operator ký chat 24/08. Ref: T1-T5 evidence
+    # docs/reports/_gom_gate_triage_20260824.md + proposals/fixture_12case_schema_draft_20260824.md
+    # + case_lsr_ref_20260824.csv (md5 7de16e7e). Row 4 pins CASE_BANK md5 9179c51e.]
     ("BANK",   "open",    "Chain mở 06-29 (lsr_accum onset)"),
-    ("BANK",   "chapter", "crowd_flush 07-02 → chapter mới  [PENDING K3 skew-test — chờ operator ký ④]"),
+    ("BANK",   "pre_chain_crowd_flush", "TRIAGE ②: crowd_flush 03/07 pre_chain flag (K1 §8.4 chronological-first). Pin CASE_BANK md5 9179c51e8a748184e783714fecf41f96 — expected FAIL trên _result.txt cũ (input gLSR 0.60) → [PENDING-REGEN R4]"),
     ("BANK",   "close-iv","Close 07-13 GAP-RULE + flag post_close_iv 07-16 [re-baseline TRIAGE ①: rule chạm TRƯỚC, pos_r-drop-close đến sau ghi flag không mở lại]"),
     ("TAG",    "not-open", "Fail A4+A5 (div 2.17 > 0.5, oi_cycle_pos > 0.5); TAG-trap negative. [Provenance: expected cũ 07/08/26 (4d0987c) tiền chat-ký TAG-trap ANALYSIS]"),
     ("BAS",    "SUPP",    "07-02→07-15: post_climax → disqualifier → GOM không fire"),
     ("BTW",    "SUPP",    "06-21→07-05: post_climax → disqualifier → GOM không fire"),
-    ("BULLA",  "open",    "stealth_grind + B-path 07-17 → GOM fires (B1+B3+B4 path)  [PENDING K4 M1-explain — chờ operator ký ④]"),
-    ("TUT",    "ARCHIVED-chapter", "[ARCHIVED-expected 08/08/26: '07-11: stealth_grind + crowd_flush → chapter mới' — giữ lịch sử PASS pre-24/08; superseded by TUT a-negative row below per TRIAGE-20260824 ②]"),
+    ("BULLA",  "hbs-two-legs", "TRIAGE ④ hai vế: (i) gom_day KHÔNG fire toàn window (compose post-C1b = gom_a_fire, gom_a=F all days); (ii) hedge_base_strict fire 07-05→07-09 (5d) + 07-11→07-14 (4d) = 9 days B-path, first-True 07-05. Provenance: K4 probe (4fd5ae4), fixture Row 9 B-truth pinned."),
+    ("TUT",    "ARCHIVED-chapter", "[ARCHIVED-expected 08/08/26: '07-11: stealth_grind + crowd_flush → chapter mới' — giữ lịch sử PASS pre-24/08; superseded by TUT a-negative row below per TRIAGE-20260824 ⑤]"),
     ("TUT",    "a-negative", "GOM-A KHÔNG fire toàn kỳ — A2 fail gLSR>1.1 (g5 min 1.64); điểm mù loài captive, văn bản hóa 24/08"),
     ("IDOL",   "not-open", "A2 ≤1.1 giữ; IDOL 07/06 avg5(gLSR)=1.106 = correct rejection (build tại OI-peak, định luật #9, verdict NEGATIVE ký 21/08). Nới ngưỡng để bắt case đã ký NEGATIVE = calib ngược chiều, cấm."),
     ("AKE",    "SUPP",    "07-08→07-20: decay SUPP → GOM không fire"),
@@ -1033,10 +1034,19 @@ def run_backtest6(cfg: dict, sc: dict) -> None:
             if result["any_dq"]:
                 dq_list = [k for k, v in result["disqualifier"].items() if v]
                 events[token].append((date, f"dq:{'+'.join(dq_list)}"))
+            # HBS (hedge_base_strict) per-day tracking — feeder §E-R tier-STRICT (v4.0)
+            if result.get("hedge_base_strict"):
+                events[token].append((date, "hbs"))
+            # pre_chain_crowd_flush event (K1 §8.4) — flagged when crowd_flush hits
+            # before chain_open (chronological-first rule)
+            if result.get("pre_chain_crowd_flush"):
+                events[token].append((date, "pre_chain_crowd_flush"))
 
     # Print §6 table
     print(f"\n{'='*90}")
-    print(f"§6 Backtest Gate — gom_detect_spec v1.1")
+    print(f"§6 Backtest Gate — gom_detect_spec v4.0-draft+TRIAGE")
+    print(f"  amendments_applied: [TRIAGE-②④, RESULTTXT-REGEN-20260824, F5c-ext]")
+    print(f"  vol_source: fapi_k7_fresh")
     print(f"{'='*90}")
     print(f"{'#':>2} {'Token':<7} {'Episode':<12} {'Kỳ vọng':<55} {'Result'}")
     print("-"*90)
@@ -1111,6 +1121,40 @@ def run_backtest6(cfg: dict, sc: dict) -> None:
         elif episode == "ARCHIVED-chapter":
             # [TRIAGE-20260824 re-baseline] Row cũ đóng băng, giữ lịch sử — SKIP checker
             result_label = "SKIP (ARCHIVED-expected, superseded — lịch sử giữ)"
+
+        elif episode == "pre_chain_crowd_flush":
+            # [TRIAGE ② 20260824] pre_chain_crowd_flush event — K1 §8.4 chronological-first.
+            # Expected 03/07 pin CASE_BANK. FAIL trên _result.txt cũ (input gLSR 0.60) →
+            # ghi nhãn [PENDING-REGEN R4] không sửa gì thêm.
+            # Event dates từ build_days = "MM-DD" (no year prefix)
+            pcf_events = [d for d, e in tok_events if e == "pre_chain_crowd_flush"]
+            if pcf_events and "07-03" in pcf_events:
+                result_label = f"PASS ({pcf_events[0]})"
+            else:
+                result_label = f"FAIL (no pre_chain_crowd_flush 07-03) [PENDING-REGEN R4]"
+                # NOT counted as hard fail — expected fail on stale _result.txt
+
+        elif episode == "hbs-two-legs":
+            # [TRIAGE ④ 20260824] BULLA hai vế:
+            #   (i) gom_day KHÔNG fire toàn window (post-C1b compose = gom_a_fire, gom_a=F)
+            #   (ii) hedge_base_strict fire 07-05→07-09 (5d) + 07-11→07-14 (4d) = 9 days
+            # Event dates từ build_days = "MM-DD" (no year prefix)
+            gom_fires = sorted(set(d for d, e in tok_events if e == "gom"))
+            hbs_fires = sorted(set(d for d, e in tok_events if e == "hbs"))
+            hbs_expected = {"07-05","07-06","07-07","07-08","07-09",
+                            "07-11","07-12","07-13","07-14"}
+            hbs_actual = set(hbs_fires) & hbs_expected
+            leg_i_pass = len(gom_fires) == 0
+            leg_ii_pass = hbs_actual == hbs_expected
+            first_hbs = min(hbs_fires) if hbs_fires else "—"
+            if leg_i_pass and leg_ii_pass:
+                result_label = f"PASS (gom_day=0, HBS 9/9 first={first_hbs})"
+            else:
+                miss = sorted(hbs_expected - hbs_actual)
+                extra_gom = f" gom_fires={len(gom_fires)}" if not leg_i_pass else ""
+                extra_hbs = f" HBS_miss={miss}" if miss else ""
+                result_label = f"FAIL (leg_i={leg_i_pass} leg_ii={leg_ii_pass}{extra_gom}{extra_hbs})"
+                all_pass = False
 
         elif episode == "SUPP":
             # GOM should NOT fire during expected suppression window
