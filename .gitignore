@@ -7,6 +7,8 @@ data/*
 !data/state/hedge_watchlist_*.json
 !data/export/
 !data/export/watchlist_corrections_*.csv
+!data/reference/
+!data/reference/*.csv
 *.parquet
 *.log
 
