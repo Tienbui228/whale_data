@@ -1,0 +1,64 @@
+token,date,ve,grade,basis,graded_at,data_through
+BANANAS31,2026-07-04,pos-ratio,FP,ruling-V4/S7-gate_defs (b-cung 14/08): fires serial-pump = FP that bat ke outcome co hoc,2026-08-28,2026-08-26
+BANANAS31,2026-07-05,pos-ratio,FP,ruling-V4/S7-gate_defs (b-cung 14/08): fires serial-pump = FP that bat ke outcome co hoc,2026-08-28,2026-08-26
+BANANAS31,2026-07-06,pos-ratio,FP,ruling-V4/S7-gate_defs (b-cung 14/08): fires serial-pump = FP that bat ke outcome co hoc,2026-08-28,2026-08-26
+BANANAS31,2026-07-07,pos-ratio,FP,ruling-V4/S7-gate_defs (b-cung 14/08): fires serial-pump = FP that bat ke outcome co hoc,2026-08-28,2026-08-26
+BANANAS31,2026-07-09,pos-ratio,FP,ruling-V4/S7-gate_defs (b-cung 14/08): fires serial-pump = FP that bat ke outcome co hoc,2026-08-28,2026-08-26
+BANANAS31,2026-07-11,pos-ratio,FP,ruling-V4/S7-gate_defs (b-cung 14/08): fires serial-pump = FP that bat ke outcome co hoc,2026-08-28,2026-08-26
+BANANAS31,2026-07-12,pos-ratio,FP,ruling-V4/S7-gate_defs (b-cung 14/08): fires serial-pump = FP that bat ke outcome co hoc,2026-08-28,2026-08-26
+BREV,2026-08-04,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+BREV,2026-08-05,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+GENIUS,2026-08-10,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+GENIUS,2026-08-18,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+GENIUS,2026-08-19,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+GENIUS,2026-08-20,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+GENIUS,2026-08-21,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+HUMA,2026-08-06,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+HUMA,2026-08-07,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+HUMA,2026-08-08,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+OPG,2026-08-06,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+OPG,2026-08-08,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+OPG,2026-08-09,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+OPG,2026-08-10,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+OPG,2026-08-11,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+OPG,2026-08-12,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+OPG,2026-08-15,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+ROBO,2026-07-30,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+SAHARA,2026-08-10,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+SAHARA,2026-08-11,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+SAHARA,2026-08-12,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+SAHARA,2026-08-13,pos-ratio,PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-28,2026-08-26
+CARV,2026-07-21,pos-ratio,FP,"ret_max=2.4% @D+30, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-20
+CARV,2026-07-22,pos-ratio,FP,"ret_max=11.2% @D+30, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-21
+CARV,2026-07-23,pos-ratio,FP,"ret_max=13.3% @D+29, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-22
+CGPT,2026-06-29,pos-ratio,FP,"ret_max=7.9% @D+5, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-07-29
+CGPT,2026-07-12,pos-ratio,FP,"ret_max=26.1% @D+28, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-11
+CGPT,2026-07-14,pos-ratio,FP,"ret_max=24.5% @D+26, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-13
+CGPT,2026-07-15,pos-ratio,FP,"ret_max=25.3% @D+25, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-14
+CGPT,2026-07-16,pos-ratio,FP,"ret_max=27.5% @D+24, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-15
+CGPT,2026-07-17,pos-ratio,FP,"ret_max=27.0% @D+23, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-16
+COAI,2026-07-23,-,FP,"ret_max=21.3% @D+18, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-22
+GENIUS,2026-07-03,pos-ratio,FP,"ret_max=0.9% @D+1, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-02
+GENIUS,2026-07-04,pos-ratio,FP,"ret_max=0.0% @D+0, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-03
+GENIUS,2026-07-05,pos-ratio,FP,"ret_max=0.0% @D+0, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-04
+GENIUS,2026-07-06,pos-ratio,FP,"ret_max=0.0% @D+0, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-05
+GENIUS,2026-07-07,pos-ratio,FP,"ret_max=0.1% @D+19, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-06
+GENIUS,2026-07-08,pos-ratio,FP,"ret_max=5.7% @D+18, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-07
+GENIUS,2026-07-10,pos-ratio,FP,"ret_max=6.4% @D+16, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-09
+HUMA,2026-06-27,pos-ratio,FP,"ret_max=12.1% @D+10, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-07-27
+HUMA,2026-06-28,pos-ratio,FP,"ret_max=12.1% @D+9, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-07-28
+HUMA,2026-06-29,pos-ratio,FP,"ret_max=6.9% @D+8, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-07-29
+HUMA,2026-07-02,pos-ratio,FP,"ret_max=16.5% @D+5, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-01
+OPEN,2026-07-16,pos-ratio,FP,"ret_max=44.6% @D+23, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-15
+OPEN,2026-07-17,pos-ratio,FP,"ret_max=40.9% @D+22, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-16
+OPEN,2026-07-27,pos-ratio,FP,"ret_max=36.2% @D+12, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-26
+PROVE,2026-06-26,pos-ratio,FP,"ret_max=8.5% @D+12, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-07-26
+PROVE,2026-06-27,pos-ratio,FP,"ret_max=8.8% @D+11, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-07-27
+PROVE,2026-06-28,pos-ratio,FP,"ret_max=10.5% @D+10, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-07-28
+PROVE,2026-06-29,pos-ratio,FP,"ret_max=10.2% @D+9, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-07-29
+PROVE,2026-06-30,pos-ratio,FP,"ret_max=11.2% @D+8, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-07-30
+ROBO,2026-07-22,pos-ratio,FP,"ret_max=35.8% @D+23, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-08-21
+SIGN,2026-06-30,pos-ratio,FP,"ret_max=7.6% @D+11, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-07-30
+ZBT,2026-06-26,pos-ratio,FP,"ret_max=41.3% @D+5, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-07-26
+ZBT,2026-06-29,pos-ratio,FP,"ret_max=40.2% @D+2, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-07-29
+ZBT,2026-06-30,pos-ratio,FP,"ret_max=24.6% @D+1, window=31d, cha=census_ret_63 md5 300a1230, nguong=+50% S5; campaign-niem: khong ap (token ngoai bo-9)",2026-08-28,2026-07-30
