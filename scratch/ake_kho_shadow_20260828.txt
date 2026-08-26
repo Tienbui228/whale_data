@@ -1,0 +1,38 @@
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[AKE kho_raw=True days · H1-SHADOW eval (V①, report-only)]
+  yaml md5: 96cf9128e225b09eccc452a0120c7ae5
+  H1-shadow rule: kho(3d,≥10%) ∧ |ret14| ≤ 0.15 (NOT compose, chỉ visibility)
+  vs H1-strict:   kho(3d,≥10%) ∧ T0.1-compression (funding_max14≤5e-5 + oi + ret + vol)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  AKE adapter coverage: 2026-06-30 → 2026-08-26 (n=45 snapshots)
+
+          date     kho%  kho_raw   ret14   |ret14|≤0.15   fund_max14  fund_pin  H1-shadow  H1-strict
+  -------------------------------------------------------------------------------------------------------------------
+    2026-07-06   19.83%     True     N/A              F          N/A         F        N/A          W
+    2026-07-07   26.32%     True     N/A              F          N/A         F        N/A          W
+    2026-07-08   59.20%     True     N/A              F          N/A         F        N/A          W
+    2026-07-09   44.88%     True     N/A              F          N/A         F        N/A          W
+    2026-07-10   37.59%     True     N/A              F     5.61e-04         F        N/A          W
+    2026-07-17   25.38%     True  1.6893              F     5.61e-04         F          F          F
+    2026-07-18   23.31%     True  4.3528              F     6.41e-04         F          F          F
+    2026-07-19   28.33%     True  5.3173              F     6.41e-04         F          F          F
+    2026-07-20   12.73%     True  4.7886              F     6.41e-04         F          F          F
+    2026-07-21   12.44%     True  6.7477              F     6.41e-04         F          F          F
+    2026-07-22   12.67%     True  8.2434              F     6.41e-04         F          F          F
+    2026-07-24   39.60%     True 12.7562              F     4.31e-03         F          F          F
+    2026-07-25   57.52%     True 13.8647              F     4.31e-03         F          F          F
+    2026-07-26   53.10%     True 15.1803              F     4.31e-03         F          F          F
+    2026-07-27   28.97%     True 20.7525              F     4.31e-03         F          F          F
+    2026-07-28   10.94%     True 21.9836              F     4.31e-03         F          F          F
+    2026-07-29   10.88%     True  5.3798              F     4.31e-03         F          F          F
+    2026-07-30   11.25%     True  3.7248              F     4.31e-03         F          F          F
+    2026-08-15   26.00%     True  1.0526              F     3.81e-04         F          F          F
+
+  ═══ AGGREGATE ═══
+  n_kho_raw_days   : 19
+  H1-SHADOW hits   : 0  (0.0% of kho_raw days)
+  H1-STRICT hits   : 0  (0.0% of kho_raw days)
+
+  → H1-shadow phủ AKE KHÔNG — ANALYSIS quyết định V① đủ signal cho case AKE?
+════════════════════════════════════════════════════════════════════════════════════════════════════
