@@ -1,0 +1,231 @@
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[(2) BANK/CYS/AKE per-day H2-raw=T × T0.1 4 sub-vé (giá trị vs chưa-eligible tách bạch)]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+
+═══ BANK (BANKUSDT) ═══
+  H2-raw=T days: 10 — ['2026-07-10', '2026-07-11', '2026-08-15', '2026-08-16', '2026-08-17', '2026-08-18', '2026-08-19', '2026-08-20', '2026-08-21', '2026-08-22']
+
+  T0.1 4 sub-vé từng ngày H2-raw=T:
+  ─── 2026-07-10 · H2_raw=T ───
+    funding_pin   : 1.07e-04 ≤ 5e-05 → F
+    oi_floor      : 1.036 ≤ 1.2 → T [16d]
+    ret14         : 0.0338 ≤ 0.1 → T
+    med30_vol     : chưa-eligible: n_vol=16/30 [HARDCODE 30]
+  ─── 2026-07-11 · H2_raw=T ───
+    funding_pin   : 1.07e-04 ≤ 5e-05 → F
+    oi_floor      : 1.107 ≤ 1.2 → T [17d]
+    ret14         : 0.1189 ≤ 0.1 → F
+    med30_vol     : chưa-eligible: n_vol=17/30 [HARDCODE 30]
+  ─── 2026-08-15 · H2_raw=T ───
+    funding_pin   : 8.64e-04 ≤ 5e-05 → F
+    oi_floor      : 1.000 ≤ 1.2 → T [30d]
+    ret14         : 0.3395 ≤ 0.1 → F
+    med30_vol     : 0.100 ≤ 1.0 → T
+  ─── 2026-08-16 · H2_raw=T ───
+    funding_pin   : 8.64e-04 ≤ 5e-05 → F
+    oi_floor      : 1.000 ≤ 1.2 → T [30d]
+    ret14         : 0.2407 ≤ 0.1 → F
+    med30_vol     : 0.121 ≤ 1.0 → T
+  ─── 2026-08-17 · H2_raw=T ───
+    funding_pin   : 8.64e-04 ≤ 5e-05 → F
+    oi_floor      : 1.000 ≤ 1.2 → T [30d]
+    ret14         : 0.1720 ≤ 0.1 → F
+    med30_vol     : 0.182 ≤ 1.0 → T
+  ─── 2026-08-18 · H2_raw=T ───
+    funding_pin   : 8.64e-04 ≤ 5e-05 → F
+    oi_floor      : 1.021 ≤ 1.2 → T [30d]
+    ret14         : 0.2993 ≤ 0.1 → F
+    med30_vol     : 0.141 ≤ 1.0 → T
+  ─── 2026-08-19 · H2_raw=T ───
+    funding_pin   : 8.64e-04 ≤ 5e-05 → F
+    oi_floor      : 1.045 ≤ 1.2 → T [30d]
+    ret14         : 0.2588 ≤ 0.1 → F
+    med30_vol     : 0.147 ≤ 1.0 → T
+  ─── 2026-08-20 · H2_raw=T ───
+    funding_pin   : 3.90e-04 ≤ 5e-05 → F
+    oi_floor      : 1.006 ≤ 1.2 → T [30d]
+    ret14         : 0.1661 ≤ 0.1 → F
+    med30_vol     : 0.158 ≤ 1.0 → T
+  ─── 2026-08-21 · H2_raw=T ───
+    funding_pin   : 3.90e-04 ≤ 5e-05 → F
+    oi_floor      : 1.007 ≤ 1.2 → T [30d]
+    ret14         : 0.1160 ≤ 0.1 → F
+    med30_vol     : 0.162 ≤ 1.0 → T
+  ─── 2026-08-22 · H2_raw=T ───
+    funding_pin   : 3.90e-04 ≤ 5e-05 → F
+    oi_floor      : 1.029 ≤ 1.2 → T [30d]
+    ret14         : 0.0747 ≤ 0.1 → T
+    med30_vol     : 0.186 ≤ 1.0 → T
+
+
+═══ CYS (CYSUSDT) ═══
+  H2-raw=T days: 12 — ['2026-07-12', '2026-07-17', '2026-07-18', '2026-07-19', '2026-07-20', '2026-07-21', '2026-07-22', '2026-07-23', '2026-07-30', '2026-07-31', '2026-08-01', '2026-08-22']
+
+  T0.1 4 sub-vé từng ngày H2-raw=T:
+  ─── 2026-07-12 · H2_raw=T ───
+    funding_pin   : 9.42e-05 ≤ 5e-05 → F
+    oi_floor      : 1.021 ≤ 1.2 → T [30d]
+    ret14         : 0.1459 ≤ 0.1 → F
+    med30_vol     : 0.626 ≤ 1.0 → T
+  ─── 2026-07-17 · H2_raw=T ───
+    funding_pin   : 9.42e-05 ≤ 5e-05 → F
+    oi_floor      : 1.120 ≤ 1.2 → T [30d]
+    ret14         : 0.0515 ≤ 0.1 → T
+    med30_vol     : 0.705 ≤ 1.0 → T
+  ─── 2026-07-18 · H2_raw=T ───
+    funding_pin   : 1.17e-04 ≤ 5e-05 → F
+    oi_floor      : 1.018 ≤ 1.2 → T [30d]
+    ret14         : 0.0606 ≤ 0.1 → T
+    med30_vol     : 0.631 ≤ 1.0 → T
+  ─── 2026-07-19 · H2_raw=T ───
+    funding_pin   : 1.39e-04 ≤ 5e-05 → F
+    oi_floor      : 1.028 ≤ 1.2 → T [30d]
+    ret14         : 0.0429 ≤ 0.1 → T
+    med30_vol     : 0.705 ≤ 1.0 → T
+  ─── 2026-07-20 · H2_raw=T ───
+    funding_pin   : 1.39e-04 ≤ 5e-05 → F
+    oi_floor      : 1.032 ≤ 1.2 → T [30d]
+    ret14         : 0.1043 ≤ 0.1 → F
+    med30_vol     : 0.787 ≤ 1.0 → T
+  ─── 2026-07-21 · H2_raw=T ───
+    funding_pin   : 1.39e-04 ≤ 5e-05 → F
+    oi_floor      : 1.013 ≤ 1.2 → T [30d]
+    ret14         : 0.0785 ≤ 0.1 → T
+    med30_vol     : 0.786 ≤ 1.0 → T
+  ─── 2026-07-22 · H2_raw=T ───
+    funding_pin   : 1.39e-04 ≤ 5e-05 → F
+    oi_floor      : 1.059 ≤ 1.2 → T [30d]
+    ret14         : 0.0245 ≤ 0.1 → T
+    med30_vol     : 0.888 ≤ 1.0 → T
+  ─── 2026-07-23 · H2_raw=T ───
+    funding_pin   : 1.39e-04 ≤ 5e-05 → F
+    oi_floor      : 1.042 ≤ 1.2 → T [30d]
+    ret14         : 0.0376 ≤ 0.1 → T
+    med30_vol     : 0.888 ≤ 1.0 → T
+  ─── 2026-07-30 · H2_raw=T ───
+    funding_pin   : 1.39e-04 ≤ 5e-05 → F
+    oi_floor      : 1.000 ≤ 1.2 → T [30d]
+    ret14         : 0.0654 ≤ 0.1 → T
+    med30_vol     : 1.060 ≤ 1.0 → F
+  ─── 2026-07-31 · H2_raw=T ───
+    funding_pin   : 1.39e-04 ≤ 5e-05 → F
+    oi_floor      : 1.000 ≤ 1.2 → T [30d]
+    ret14         : 0.0678 ≤ 0.1 → T
+    med30_vol     : 1.095 ≤ 1.0 → F
+  ─── 2026-08-01 · H2_raw=T ───
+    funding_pin   : 1.60e-04 ≤ 5e-05 → F
+    oi_floor      : 1.055 ≤ 1.2 → T [30d]
+    ret14         : 0.0624 ≤ 0.1 → T
+    med30_vol     : 0.968 ≤ 1.0 → T
+  ─── 2026-08-22 · H2_raw=T ───
+    funding_pin   : 1.84e-03 ≤ 5e-05 → F
+    oi_floor      : 1.200 ≤ 1.2 → T [30d]
+    ret14         : 0.4379 ≤ 0.1 → F
+    med30_vol     : 0.758 ≤ 1.0 → T
+
+
+═══ AKE (AKEUSDT) ═══
+  H2-raw=T days: 17 — ['2026-07-10', '2026-07-11', '2026-07-12', '2026-07-13', '2026-07-14', '2026-07-17', '2026-07-18', '2026-07-19', '2026-07-20', '2026-07-21', '2026-07-22', '2026-07-23']... (+more)
+
+  T0.1 4 sub-vé từng ngày H2-raw=T:
+  ─── 2026-07-10 · H2_raw=T ───
+    funding_pin   : 5.61e-04 ≤ 5e-05 → F
+    oi_floor      : 1.102 ≤ 1.2 → T [14d]
+    ret14         : chưa-eligible: n_px=14/15
+    med30_vol     : chưa-eligible: n_vol=14/30 [HARDCODE 30]
+  ─── 2026-07-11 · H2_raw=T ───
+    funding_pin   : 5.61e-04 ≤ 5e-05 → F
+    oi_floor      : 1.118 ≤ 1.2 → T [15d]
+    ret14         : 0.4155 ≤ 0.1 → F
+    med30_vol     : chưa-eligible: n_vol=15/30 [HARDCODE 30]
+  ─── 2026-07-12 · H2_raw=T ───
+    funding_pin   : 5.61e-04 ≤ 5e-05 → F
+    oi_floor      : 1.192 ≤ 1.2 → T [16d]
+    ret14         : 0.4828 ≤ 0.1 → F
+    med30_vol     : chưa-eligible: n_vol=16/30 [HARDCODE 30]
+  ─── 2026-07-13 · H2_raw=T ───
+    funding_pin   : 5.61e-04 ≤ 5e-05 → F
+    oi_floor      : 1.100 ≤ 1.2 → T [17d]
+    ret14         : 0.4982 ≤ 0.1 → F
+    med30_vol     : chưa-eligible: n_vol=17/30 [HARDCODE 30]
+  ─── 2026-07-14 · H2_raw=T ───
+    funding_pin   : 5.61e-04 ≤ 5e-05 → F
+    oi_floor      : 1.090 ≤ 1.2 → T [18d]
+    ret14         : 0.4907 ≤ 0.1 → F
+    med30_vol     : chưa-eligible: n_vol=18/30 [HARDCODE 30]
+  ─── 2026-07-17 · H2_raw=T ───
+    funding_pin   : 5.61e-04 ≤ 5e-05 → F
+    oi_floor      : 15.188 ≤ 1.2 → F [21d]
+    ret14         : 1.6893 ≤ 0.1 → F
+    med30_vol     : chưa-eligible: n_vol=21/30 [HARDCODE 30]
+  ─── 2026-07-18 · H2_raw=T ───
+    funding_pin   : 6.41e-04 ≤ 5e-05 → F
+    oi_floor      : 16.574 ≤ 1.2 → F [22d]
+    ret14         : 4.3528 ≤ 0.1 → F
+    med30_vol     : chưa-eligible: n_vol=22/30 [HARDCODE 30]
+  ─── 2026-07-19 · H2_raw=T ───
+    funding_pin   : 6.41e-04 ≤ 5e-05 → F
+    oi_floor      : 23.553 ≤ 1.2 → F [23d]
+    ret14         : 5.3173 ≤ 0.1 → F
+    med30_vol     : chưa-eligible: n_vol=23/30 [HARDCODE 30]
+  ─── 2026-07-20 · H2_raw=T ───
+    funding_pin   : 6.41e-04 ≤ 5e-05 → F
+    oi_floor      : 22.330 ≤ 1.2 → F [24d]
+    ret14         : 4.7886 ≤ 0.1 → F
+    med30_vol     : chưa-eligible: n_vol=24/30 [HARDCODE 30]
+  ─── 2026-07-21 · H2_raw=T ───
+    funding_pin   : 6.41e-04 ≤ 5e-05 → F
+    oi_floor      : 17.606 ≤ 1.2 → F [25d]
+    ret14         : 6.7477 ≤ 0.1 → F
+    med30_vol     : chưa-eligible: n_vol=25/30 [HARDCODE 30]
+  ─── 2026-07-22 · H2_raw=T ───
+    funding_pin   : 6.41e-04 ≤ 5e-05 → F
+    oi_floor      : 17.227 ≤ 1.2 → F [26d]
+    ret14         : 8.2434 ≤ 0.1 → F
+    med30_vol     : chưa-eligible: n_vol=26/30 [HARDCODE 30]
+  ─── 2026-07-23 · H2_raw=T ───
+    funding_pin   : 6.41e-04 ≤ 5e-05 → F
+    oi_floor      : 15.867 ≤ 1.2 → F [27d]
+    ret14         : 10.6547 ≤ 0.1 → F
+    med30_vol     : chưa-eligible: n_vol=27/30 [HARDCODE 30]
+  ─── 2026-07-24 · H2_raw=T ───
+    funding_pin   : 4.31e-03 ≤ 5e-05 → F
+    oi_floor      : 19.855 ≤ 1.2 → F [28d]
+    ret14         : 12.7562 ≤ 0.1 → F
+    med30_vol     : chưa-eligible: n_vol=28/30 [HARDCODE 30]
+  ─── 2026-07-25 · H2_raw=T ───
+    funding_pin   : 4.31e-03 ≤ 5e-05 → F
+    oi_floor      : 12.472 ≤ 1.2 → F [29d]
+    ret14         : 13.8647 ≤ 0.1 → F
+    med30_vol     : chưa-eligible: n_vol=29/30 [HARDCODE 30]
+  ─── 2026-07-26 · H2_raw=T ───
+    funding_pin   : 4.31e-03 ≤ 5e-05 → F
+    oi_floor      : 13.202 ≤ 1.2 → F [30d]
+    ret14         : 15.1803 ≤ 0.1 → F
+    med30_vol     : 24.019 ≤ 1.0 → F
+
+  ... (2 ngày còn lại omitted, xem file)
+
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[(3) HEMI 07-16 4 sub-vé — kiểm boundary artifact PASS T-④]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  HEMI store_start: 2026-06-27
+  Target date 2026-07-16, days since store_start = 19
+  ─── 2026-07-16 · H2_raw=T ───
+    funding_pin   : 5.00e-05 ≤ 5e-05 → T
+    oi_floor      : 1.177 ≤ 1.2 → T [20d]
+    ret14         : 0.0954 ≤ 0.1 → T
+    med30_vol     : chưa-eligible: n_vol=20/30 [HARDCODE 30]
+
+  H2 detail 07-16:
+    n_pos_14=14 · n_oi_avail=20 (floor_obs_min=14)
+    div_today=0.6802 · div_min14=0.4659
+    r_pos=1.3916 (≥1.25?) · r_oi=1.1773 (≤1.2?)
+    → H2 raw = T
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[DỪNG] Task (0)(1)(2)(3) done. (4) chờ 824bdcb6. (5) sáng cron.
+════════════════════════════════════════════════════════════════════════════════════════════════════
