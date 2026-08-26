@@ -1,0 +1,122 @@
+
+[E1-CAVEAT ANALYSIS — chép nguyên văn ở đầu báo cáo, không sửa]
+
+"Các số này được fit trên chính 8 case positive → E1 replay pass phần lớn là by
+construction — ngưỡng H1/H2/H3 đã tune trên chính observations của 8 case.
+Ai đọc E1 như validation là rơi đúng bẫy L-53 / sanity-vòng-tròn.
+E1 là ĐO NỘI, không phải VALIDATION. Validation THẬT = E2 control-set + forward 30d.
+Gate off-draft phải ≥6/8 E1 + E2 FP rate + control ≥20 chưa-chạy."
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[CFG-PROVENANCE PHA-E-v2]
+  yaml: screen_thresholds.yaml  md5: b0ddb8ff2b15f12bc6093ab3ae932462
+  Values: t0_1.funding_pin_abs=5e-05, oi_over_min30_max=1.2, ret14_abs_max=0.1, vol_med7_over_med30_max=1.0
+          h1.balance_delta_abs_min=0.1, window_days_max=3
+          h2.div_min_14d_max=0.6, div_today_min=1.0, pos_over_min14_min=1.25, oi_over_min30_max=1.2
+          h3.vol_mult_med14_min=8.0, ret_abs_max=0.08
+  spec_version: v4.0-draft · amendments: [GOM-RESTRUCT, ⑬, H1-đường-(a)]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[E1-v2 (1) H1 REPLAY từ adapter historical (66 snapshots VPS-synced)]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+  Loaded 64 snapshots (window: 2026-06-17 → 2026-08-26)
+
+  token    n_days      H1_first        kho_steps ≤3d ≥10%
+  BANK         52    2026-07-20          6 windows
+  TUT          52           N/A          0 windows
+  CYS          52    2026-08-06          2 windows
+  HEMI         51    2026-08-17          3 windows
+  ON           52    2026-07-15          7 windows
+  CAP          47    2026-07-13          9 windows
+  AKE          45    2026-07-06         24 windows
+  BTW          28    2026-07-28          3 windows
+
+  Chi tiết cửa sổ |Δ|≥10%/≤3d (top 5 per token, sorted by delta_pct desc):
+    BANK:
+      2026-07-30 → 2026-08-03 (1d): |Δ|=0.4648 (46.48%)
+      2026-07-30 → 2026-08-05 (3d): |Δ|=0.4557 (45.57%)
+      2026-07-30 → 2026-08-04 (2d): |Δ|=0.4516 (45.16%)
+      2026-07-19 → 2026-07-22 (3d): |Δ|=0.2676 (26.76%)
+      2026-07-19 → 2026-07-21 (2d): |Δ|=0.2598 (25.98%)
+    CYS:
+      2026-08-04 → 2026-08-07 (3d): |Δ|=0.1093 (10.93%)
+      2026-08-04 → 2026-08-06 (2d): |Δ|=0.1062 (10.62%)
+    HEMI:
+      2026-08-16 → 2026-08-18 (2d): |Δ|=0.1897 (18.97%)
+      2026-08-16 → 2026-08-19 (3d): |Δ|=0.1873 (18.73%)
+      2026-08-16 → 2026-08-17 (1d): |Δ|=0.1832 (18.32%)
+    ON:
+      2026-07-25 → 2026-07-28 (3d): |Δ|=0.3019 (30.19%)
+      2026-07-25 → 2026-07-27 (2d): |Δ|=0.2582 (25.82%)
+      2026-07-25 → 2026-07-26 (1d): |Δ|=0.2515 (25.15%)
+      2026-07-24 → 2026-07-25 (1d): |Δ|=0.1864 (18.64%)
+      2026-07-14 → 2026-07-17 (3d): |Δ|=0.1043 (10.43%)
+    CAP:
+      2026-07-11 → 2026-07-15 (3d): |Δ|=0.3123 (31.23%)
+      2026-07-11 → 2026-07-14 (2d): |Δ|=0.2666 (26.66%)
+      2026-07-11 → 2026-07-13 (1d): |Δ|=0.2557 (25.57%)
+      2026-08-04 → 2026-08-06 (2d): |Δ|=0.1493 (14.93%)
+      2026-08-11 → 2026-08-14 (3d): |Δ|=0.1316 (13.16%)
+    AKE:
+      2026-07-07 → 2026-07-10 (3d): |Δ|=0.3759 (37.59%)
+      2026-07-07 → 2026-07-09 (2d): |Δ|=0.3744 (37.44%)
+      2026-07-07 → 2026-07-08 (1d): |Δ|=0.3515 (35.15%)
+      2026-07-23 → 2026-07-24 (1d): |Δ|=0.3403 (34.03%)
+      2026-07-24 → 2026-07-25 (1d): |Δ|=0.2968 (29.68%)
+    BTW:
+      2026-07-27 → 2026-07-30 (3d): |Δ|=0.1296 (12.96%)
+      2026-07-27 → 2026-07-29 (2d): |Δ|=0.1257 (12.57%)
+      2026-07-27 → 2026-07-28 (1d): |Δ|=0.1227 (12.27%)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[E1-v2 (2) WARMUP-BOUNDARY per H trên CASE substrate — chứng minh vùng mù]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+  Warmup requirements: H2 = 14 pos + 30 oi · H3 = 14 vol · T0.1 = 14 funding + 30 oi + 15 px + 30 vol
+
+  token    DAILY rows   first date   H2 eligible-first   H3 elig-first   T0.1 elig-first
+  BANK             73   2026-06-09          2026-07-24      2026-07-08        2026-07-24
+  TUT             112   2026-05-01          2026-07-26      2026-05-14        2026-07-26
+  CYS             232   2026-01-01               never      2026-01-14             never
+  HEMI             83   2026-06-01               never      2026-06-14             never
+  ON              302   2025-10-25               never      2025-11-07             never
+  CAP              57   2026-06-27               never      2026-07-10             never
+  AKE             112   2026-05-01               never      2026-05-14             never
+  BTW              78   2026-06-05               never      2026-06-18             never
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[E1-v2 (3) DUAL-SUBSTRATE — E1 chạy trên STORE 06-01→08-24 cạnh CASE]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  token   |                   CASE-substrate |                STORE 06-01→08-24
+          |         H1         H2         H3 |         H1         H2         H3
+  BANK    |        N/A 2026-08-15 2026-07-02 | 2026-07-20 2026-08-15 2026-07-22
+  TUT     |        N/A 2026-08-04 2026-08-04 |        N/A        N/A 2026-08-06
+  CYS     |        N/A        N/A        N/A | 2026-08-06 2026-07-12 2026-08-07
+  HEMI    |        N/A        N/A        N/A | 2026-08-17 2026-07-30 2026-07-21
+  ON      |        N/A        N/A        N/A | 2026-07-15        N/A 2026-07-22
+  CAP     |        N/A        N/A        N/A | 2026-07-13        N/A        N/A
+  AKE     |        N/A        N/A        N/A | 2026-07-06 2026-07-26 2026-07-20
+  BTW     |        N/A        N/A        N/A | 2026-07-28        N/A        N/A
+
+  LEAD vs ignition (STORE substrate):
+  token       ignition    lead_H1    lead_H2    lead_H3
+  BANK      2026-07-10       -10d       -36d       -12d
+  TUT       2026-07-08        N/A        N/A       -29d
+  CYS              N/A        N/A        N/A        N/A
+  HEMI      2026-07-20       -28d       -10d        -1d
+  ON               N/A        N/A        N/A        N/A
+  CAP       2026-07-30        17d        N/A        N/A
+  AKE              N/A        N/A        N/A        N/A
+  BTW              N/A        N/A        N/A        N/A
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[DEV → ANALYSIS ĐỀ NGHỊ]
+  E1 substrate: CASE window ngắn (~75d) → warmup 30-điểm OI nuốt vùng seat-lift
+    (H2 N/A 7/8 tokens, mâu thuẫn findings §6 seat-lift 6/8 tokens)
+  Đề nghị: E1 chạy trên STORE 06-01→08-24 (cùng lineage fapi-1d, warmup thỏa),
+           CASE làm cross-check duy nhất — hay operator giữ CASE-only và đọc N/A
+           như thuộc tính thiết kế?
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+[E1-v2 DỪNG] Bảng đầy đủ chờ operator điền + ký GOM-H off-draft.
