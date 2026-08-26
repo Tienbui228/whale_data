@@ -1,0 +1,104 @@
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[T-④ ERRATA · re-render semantics PRODUCTION (vol HARDCODE 30)]
+[AS-SIGNED exhibit ①] · trỏ d2e410a · header basis PER-VẾ
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Basis per-vé (production gom_h_daily.py):
+  T0.1 funding : n=14 (HARDCODE)
+  T0.1 oi      : n=floor_obs_min=14 (V② YAML)
+  T0.1 ret     : n=15 (px_15, HARDCODE)
+  T0.1 vol     : n=30 (HARDCODE 30)  ← khác regression trước
+  H2 pos       : n=14 (HARDCODE)
+  H2 oi        : n=floor_obs_min=14 (V②)
+
+  case              D0                      window     H1_first      perp_first         compose    lead         verdict
+  ----------------------------------------------------------------------------------------------------------------------------------
+  AKE       2026-07-15                06-27..07-14            —               —               —       —   NOT-EVALUABLE
+  BANK      2026-07-11                06-11..07-10            —               —               —       —   NOT-EVALUABLE
+  BTR       2026-08-26                07-27..08-25            —               —               —       —         NO-FIRE
+  BTW       2026-08-03                07-04..08-02            —               —               —       —         NO-FIRE
+  CAP       2026-07-30                06-30..07-29            —               —               —       —   NOT-EVALUABLE
+  CYS       2026-08-04                07-05..08-03            —               —               —       —         NO-FIRE
+  HEMI      2026-08-15                07-16..08-14            —               —               —       —         NO-FIRE
+  ON        2026-07-19                06-27..07-18            —               —               —       —   NOT-EVALUABLE
+  TUT       2026-07-09                06-27..07-08            —               —               —       —   NOT-EVALUABLE
+
+  ═══ AGGREGATE ═══
+  Expected 0/8 (per operator anticipation post vol-quorum align)
+
+  HEMI 07-16 NOTE: 3/4 vé T (funding=T 5.00e-5 exact · oi=T 1.177/1.2 · ret=T 0.095/0.10),
+  chặn bởi vol-quorum 20/30 [HARDCODE 30] → T0.1=W → không fire pre-D0.
+
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[FUNDING FULL PRECISION — HEMI 07-03..07-16 · BANANAS31 07-04 · COAI 07-23]
+[Question: 5.00e-05 exact số thật hay làm tròn lưu trữ? — V⑤ inclusive]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  ═══ HEMI ═══
+          date                    funding_avg                    funding_min                    funding_max funding_n
+    2026-07-03              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-04              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-05              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-06              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-07              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-08              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-09              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-10              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-11              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-12              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-13              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-14              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-15              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-16              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+
+  ═══ BANANAS31 (07-04 target; trailing 14d = 06-21..07-04) ═══
+
+  ═══ BANANAS31 ═══
+          date                    funding_avg                    funding_min                    funding_max funding_n
+    2026-06-21 np.float64(3.8996666666666665e-05)           np.float64(-6.9e-07)              np.float64(5e-05)    6
+    2026-06-22              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-06-23 np.float64(4.761166666666667e-05)          np.float64(3.567e-05)              np.float64(5e-05)    6
+    2026-06-24 np.float64(2.8613333333333336e-05)         np.float64(-1.318e-05)              np.float64(5e-05)    6
+    2026-06-25 np.float64(2.917666666666667e-05)         np.float64(-4.803e-05)              np.float64(5e-05)    6
+    2026-06-26              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-06-27              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-06-28              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-06-29              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-06-30              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-01              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-02              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-03              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-04              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+
+  ═══ COAI (07-23 target; trailing 14d = 07-10..07-23) ═══
+
+  ═══ COAI ═══
+          date                    funding_avg                    funding_min                    funding_max funding_n
+    2026-07-10              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-11              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-12              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-13              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-14              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-15              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-16              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-17              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-18              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-19              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-20              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-21              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-22              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+    2026-07-23              np.float64(5e-05)              np.float64(5e-05)              np.float64(5e-05)    6
+
+
+  ═══ SOURCE FIELD PROVENANCE ═══
+  freshwatch_daily_2026-07.csv header: date,symbol,px_avg,vol_quote,vol_source,taker_buy_pct,funding_avg,funding_min,funding_max,funding_n,oi_usd,lsr_pos_r,lsr_acc_r,lsr_global_r,taker_ratio,low_conf,src_ratio,data_ok,taker_source
+  funding_avg = per-day mean of funding_settlements (raw fapi funding rate)
+  funding_n = số settlement (3 per day for 8h symbols, 24 for 1h symbols)
+  Precision: python float (double, ~15-17 sig digits) → NO ROUNDING at read
+  → 5.00e-05 exact = raw funding value (from fapi settlement) matches gate exactly
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[DỪNG] (2) T-④ ERRATA production semantics · (3) funding precision paste.
+       (4) gate_defs 824bdcb6 CHỜ · (5) sáng cron.
+════════════════════════════════════════════════════════════════════════════════════════════════════
