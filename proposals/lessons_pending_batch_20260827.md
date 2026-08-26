@@ -2,9 +2,15 @@
 type: lessons-pending-batch
 version: V3 (27/08/2026)
 predecessor: proposals/lessons_pending_batch_V2.md (V2 21/08 — L-55/56/57/58/59 merged)
-status: DRAFT — chờ operator "ok batch lessons" ký đóng
+status: **SIGNED** — operator "ok batch lessons" ký chat 27/08. L-62/63/64/65 appended CASE_INDEX rows 67-70. lessons_learned.md regen. Sync commit: (post-commit)
 scope: L-49 → L-57 sheet-sync verify + L-62 (đường-đọc-thật) NEW + 3 named lessons NEW
        (SCOPE-BY-MANIFEST · cfg-provenance · flip-hai-chiều)
+signed_evidence:
+  - CASE_INDEX.xlsx pre-sync md5: 1c36954353cd54b74f784e78e1e2b68b (mtime 24/08 08:27)
+  - CASE_INDEX.xlsx post-sync md5: 13df4cd2f43b5e0e1d839febc87096e5 (mtime 26/08 10:18)
+  - lessons_learned.md pre-regen md5: 31e4561550ee8bb7eaadb633ca8f1398
+  - lessons_learned.md post-regen md5: be5e0ffe12a0752fbbb80be188c020d6
+  - Rows 67-70 verified in md: L-62/63/64/65 all present
 ---
 
 # LESSONS PENDING BATCH V3 — 27/08/2026

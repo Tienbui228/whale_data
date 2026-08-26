@@ -1,7 +1,7 @@
 # Lessons Learned — FreshWatch
 
 > Auto-generated tu CASE_INDEX.xlsx sheet LESSONS. Khong edit file nay truc tiep.
-> Lan sinh: 2026-08-21 · Tong: 62 bai hoc (L-01 → L-59)
+> Lan sinh: 2026-08-26 · Tong: 66 bai hoc (L-01 → L-65)
 
 ## L-01 [2026-07-30] BR (+BAS,TUT,BANK) — `dinh luat` · DA VAO master plan §1 #9
 OI-floor = so vi the MM: ratio doc tai day OI trong so cao (retail da roi); pos_r nhich tai nen chet = tin hieu som dam; ratio tai OI-peak phai chiet khau
@@ -247,3 +247,19 @@ CONFORMANCE FIXTURE: pin output MỌI consumer, không-pass-không-merge, đổi
 ## L-59 [2026-08-21] Batch V1 20/08 · P0 audit 21/08 (root-cause 'hiểu-nhầm-nhà') — `GOVERNANCE` · DA VAO — batch V2 21/08
 KÝ-KHÔNG-BẰNG-CHỨNG = CHƯA-XONG: lệnh ghi-sổ đã ký ĐÓNG bằng paste bằng-chứng-sau-ghi CÙNG chuyến. Không bằng chứng = việc CHƯA TỒN TẠI, CHẶN bước phụ thuộc. Sổ hai nhà (nguồn + view) khai rõ nguồn/view; view CHẾT >3d khi nguồn SỐNG = ALERT. Evidence #1: batch V1 ký 20/08 — 3 lần đòi không có bằng chứng (L-52/53/54 vào pending_batch nhưng chưa sync sheet), operator tự phát hiện md lessons_learned CHẾT từ 07/08 (14 ngày stale) trong khi sheet đã append đợt sau. Evidence #2: root-cause 'hiểu-nhầm-nhà' 21/08 P3 audit (agent commit pending_batch chờ operator paste tay, operator ký = agent nhập ngay + regen view). Signed batch V2 · operator ký chat 21/08.
 *Hanh dong tiep: Mọi commit ký lesson/spec/amendment: mandatory paste bằng-chứng-sau-ghi (mtime · sheet row · md section · commit sha). Cron alert: staleness check view vs nguồn — view/md mtime lag > 3d = Telegram alert.*
+
+## L-62 [2026-08-27] ERRATA-BAND-20260827 (⑬-CLOSE probe 5b + Scope-A hardcode band mismatch) — `RULE-DISCIPLINE` · SIGNED batch V3 27/08 → sheet 67
+Đường-đọc-thật: số/nhãn/verdict do probe/gate xuất ra CHỈ hợp lệ khi declare đường-đọc-thật của mọi ngưỡng dùng trong tính toán. Không declare = thước tách khỏi số = bảng vô hiệu. Rule bắt buộc header cfg-provenance: Nguồn thresholds (yaml path | hardcode | free-layer) + Giá trị THỰC từng ngưỡng dùng (không dựa comment) + Timestamp yaml mtime nếu source = yaml (staleness detect). Evidence: ERRATA-BAND-20260827 d353dc4 probe hardcode 0.505 vs prod 53.0.
+*Hanh dong tiep: Rà lại hardcode probe/task; thay yaml load + provenance header. Pre-commit hook 'no hardcoded thresholds' pending scope ký.*
+
+## L-63 [2026-08-27] ⑩-AMENDMENT chuỗi 24-26/08 (⑩ stub → 3 vế mở rộng, R4-v2 avg_px scope-miss) — `SCOPE-DISCIPLINE` · SIGNED batch V3 27/08 → sheet 68
+SCOPE-BY-MANIFEST: scope regen/canonicalize/migrate định nghĩa bằng DANH SÁCH BIẾN CANONICAL BỊ ẢNH HƯỞNG (fields cụ thể: taker_buy_pct, avg_px, lsr_pos, ...) và block chứa nó (KLINES/RATIO/OI), KHÔNG bằng tên slice mờ ('taker slice', 'LSR slice'). Manifest bảng per (block, col, source, consumer, canonical, verdict) làm nguồn duy nhất; xung đột → CONFLICT column, DỪNG hỏi. Evidence: ⑩ initial stub → R4-v1 chạm RATIO taker → B3 fail hội tụ do avg_px (KLINES) chưa regen → R4-v2 mở rộng scope. Manifest v1 SIGNED 4cd6ec3.
+*Hanh dong tiep: Mọi ⑥ regen/⑩ migrate/canonicalize ⇒ manifest bảng trước; verdict per col: REGEN / VERIFY-THEN-KEEP / DEPRECATE-RENAME / N/A-BLOCK. Missing col = CONFLICT DỪNG.*
+
+## L-64 [2026-08-27] ERRATA-BAND-20260827 fix 2 probe hardcode — `PROBE-DISCIPLINE` · SIGNED batch V3 27/08 → sheet 69
+cfg-provenance header: mọi probe/gate BẮT BUỘC in header cfg-provenance tại đầu run: [CFG-PROVENANCE <artifact>] Source: <yaml path | hardcode | free-layer> · Method: <load method> · Values ACTUALLY USED: <threshold_name> = <actual_value> [comment: source line]. Kèm assertions fail-loud khi mismatch. Không header = bảng vô hiệu (L-62 companion). Evidence: ERRATA-BAND d353dc4 fix _probe_5b_consumer_diff + _task_backfill_apply.
+*Hanh dong tiep: Template header in gom_scan.load_thresholds() wrapper; probe/task print auto. Lint rule pending scope ký.*
+
+## L-65 [2026-08-27] ERRATA-BAND-20260827 subset check FAIL 8+27 extras + ARIA/STAR spot — `RULE-CORRECTION` · SIGNED batch V3 27/08 → sheet 70
+Flip-set XOR hai chiều (band-change không đơn điệu): rule cũ 'band nới chỉ bớt flip' = GIẢ ĐỊNH SAI (L-28 DEV-instance). Rule ĐÚNG: flip-set dưới band-change là XOR HAI CHIỀU — mọi thay đổi band ⇒ RERUN toàn bộ bằng chứng flip, subset không được giả định. Mechanism: wider band = more 7d-window all-pass cases → flip transition NEW cases không tồn tại narrow band. Evidence: ERRATA subset FAIL (5b 8 extras, Scope-A 27 extras); ARIA 07-30 canonical crosses 0.53 boundary; STAR 06-28 canonical 06-24=0.5304 > 0.53 → PROD flip leg=T can=F. Documentation phải note 'subset không được giả định' cạnh mọi flip-count report.
+*Hanh dong tiep: R6 skeleton vocabulary + E2-backlog note updated. Mọi flip-report post-⑬ dùng rule mới.*
