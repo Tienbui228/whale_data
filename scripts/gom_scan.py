@@ -1015,13 +1015,13 @@ BACKTEST_GATE = [
     # [TRIAGE-CLOSE-20260824 ② + ④ — operator ký chat 24/08. Ref: T1-T5 evidence
     # docs/reports/_gom_gate_triage_20260824.md + proposals/fixture_12case_schema_draft_20260824.md
     # + case_lsr_ref_20260824.csv (md5 7de16e7e). Row 4 pins CASE_BANK md5 9179c51e.]
-    ("BANK",   "open",    "Chain mở 06-29 (lsr_accum onset)"),
-    ("BANK",   "pre_chain_crowd_flush", "TRIAGE ②: crowd_flush 03/07 pre_chain flag (K1 §8.4 chronological-first). Pin CASE_BANK md5 9179c51e8a748184e783714fecf41f96 — expected FAIL trên _result.txt cũ (input gLSR 0.60) → [PENDING-REGEN R4]"),
-    ("BANK",   "close-iv","Close 07-13 GAP-RULE + flag post_close_iv 07-16 [re-baseline TRIAGE ①: rule chạm TRƯỚC, pos_r-drop-close đến sau ghi flag không mở lại]"),
+    ("BANK",   "open",    "Chain mở 07-10 hậu-regen-v2 (lsr_accum onset, A4 d_pos_3d flip F→T ngày 07-10). [② KÝ 24/08: 07-09→07-10 +1d; provenance: '07-09 = input drift tiền-regen', A-conditions bảng ⑩-AMENDMENT evidence]"),
+    ("BANK",   "pre_chain_crowd_flush", "TRIAGE ②: crowd_flush 03/07 pre_chain flag (K1 §8.4 chronological-first). Pin CASE_BANK md5 9179c51e8a748184e783714fecf41f96. [KÝ 24/08 PASS emitter impl (3) 4b21251 → 07-03; hậu-regen chain_open=07-10, chapter trống trước 07-10]"),
+    ("BANK",   "close-iv","Close 07-14 GAP-RULE hậu-regen-v2 + flag post_close_iv 07-16 (đứng). [② KÝ 24/08: 07-13→07-14 +1d; provenance: '07-13 = input drift tiền-regen']"),
     ("TAG",    "not-open", "Fail A4+A5 (div 2.17 > 0.5, oi_cycle_pos > 0.5); TAG-trap negative. [Provenance: expected cũ 07/08/26 (4d0987c) tiền chat-ký TAG-trap ANALYSIS]"),
     ("BAS",    "SUPP",    "07-02→07-15: post_climax → disqualifier → GOM không fire"),
     ("BTW",    "SUPP",    "06-21→07-05: post_climax → disqualifier → GOM không fire"),
-    ("BULLA",  "hbs-two-legs", "TRIAGE ④ hai vế: (i) gom_day KHÔNG fire toàn window (compose post-C1b = gom_a_fire, gom_a=F all days); (ii) hedge_base_strict fire 07-05→07-09 (5d) + 07-11→07-14 (4d) = 9 days B-path, first-True 07-05. Provenance: K4 probe (4fd5ae4), fixture Row 9 B-truth pinned. [PENDING-REGEN R4] — HBS 07-05/9-days tính trên _result pre-regen; taker+LSR slice sẽ đổi theo ⑩+⑥ (RESULTTXT-REGEN-20260824)."),
+    ("BULLA",  "hbs-two-legs", "TRIAGE ④ hai vế HAI HỌ [KÝ 24/08]: (i) gom_day KHÔNG fire toàn window; (ii-calib) hedge_base_strict fire 07-05→07-09 (5d) + 07-11→07-14 (4d) = 9d B-path, first-True 07-05 (input regen-v2 canonical k[10]/k[7], _result hậu-regen b400b5fc); (ii-runtime row-17) 07-08, 5d (store legacy-derive r/(1+r), N/A-WARMUP 06-29→07-02). Divergence_note nguyên văn: 'cause (v)-taker-lineage 4 ngày (07-05/06/07/09), TỒN TẠI CHO ĐẾN KHI backfill lịch sử taker được ký riêng (migrate forward-only không xóa nó); hội tụ đo lại sau backfill nếu ký.'"),
     ("TUT",    "ARCHIVED-chapter", "[ARCHIVED-expected 08/08/26: '07-11: stealth_grind + crowd_flush → chapter mới' — giữ lịch sử PASS pre-24/08; superseded by TUT a-negative row below per TRIAGE-20260824 ⑤]"),
     ("TUT",    "a-negative", "GOM-A KHÔNG fire toàn kỳ — A2 fail gLSR>1.1 (g5 min 1.64); điểm mù loài captive, văn bản hóa 24/08"),
     ("IDOL",   "not-open", "A2 ≤1.1 giữ; IDOL 07/06 avg5(gLSR)=1.106 = correct rejection (build tại OI-peak, định luật #9, verdict NEGATIVE ký 21/08). Nới ngưỡng để bắt case đã ký NEGATIVE = calib ngược chiều, cấm."),

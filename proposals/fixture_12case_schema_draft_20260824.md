@@ -53,10 +53,15 @@ signed_by: PENDING (operator ký cùng gói 4 dòng ①②③④)
     {"row": 7,  "token": "BAS",  "episode": "SUPP",     "expected": "07-02→07-15: post_climax dq → GOM không fire", "provenance": "4d0987c stable", "verify": "PASS (dq fired)"},
     {"row": 8,  "token": "BTW",  "episode": "SUPP",     "expected": "06-21→07-05: post_climax dq → GOM không fire", "provenance": "4d0987c stable", "verify": "PASS (dq fired)"},
 
-    // ── Case-level BULLA v4.0 (2 vế) — draft chờ ký ──
-    {"row": 9,  "token": "BULLA", "episode": "hedge_base_strict",
+    // ── Case-level BULLA v4.0 (2 vế) HAI HỌ [KÝ 24/08 ⑩-AMENDMENT lượt cuối] ──
+    {"row": 9,  "token": "BULLA", "episode": "hedge_base_strict-hai-ho",
      "expected_i":  "gom_day KHÔNG fire toàn window (post-C1b compose = gom_a_fire only, gom_a=F all days)",
-     "expected_ii": "hedge_base_strict fire 2026-07-05 first-True; window 07-05→07-09 (5d) + 07-11→07-14 (4d) = 9 days B-path. Registry episode BULLA 06-29→07-17 (freshwatch) nhận tier-STRICT via feeder (spec afbad16, code IMPL 59a7a63, probe BULLA verified).",
+     "expected_ii_calib":  "hedge_base_strict fire 2026-07-05 first-True; window 07-05→07-09 (5d) + 07-11→07-14 (4d) = 9d B-path. Input: bulla_result.txt hậu-regen-v2 (bot-signals b400b5fc, LSR store canonical + KLINES taker k[10]/k[7] fresh).",
+     "expected_ii_runtime_row17": "hedge_base_strict fire 2026-07-08 first-True (5d, không 9d). Input: store freshwatch runtime (legacy derive r/(1+r), N/A-WARMUP 06-29→07-02 ⑨-fixed).",
+     "divergence_note_verbatim":
+       "[operator ký 24/08 ⑩-AMENDMENT ký lượt cuối] cause (v)-taker-lineage 4 ngày (07-05/06/07/09), "
+       "TỒN TẠI CHO ĐẾN KHI backfill lịch sử taker được ký riêng (migrate forward-only không xóa nó); "
+       "hội tụ đo lại sau backfill nếu ký.",
 
      "b_truth_table_04_to_15_july": [
        {"date": "2026-07-04", "b1": false, "b2": false, "b3": false, "b4": true,  "HBS": false},
@@ -81,9 +86,13 @@ signed_by: PENDING (operator ký cùng gói 4 dòng ①②③④)
      "provenance_note":
        "Expected cũ chain_open=2026-07-08 (spec §6 row 7, tiền-v4.0) = ước lượng draft; "
        "K4 probe (4fd5ae4) first-True hedge_base_strict = 2026-07-05 trên snapshot pin; "
-       "M1 loại trừ là nguyên nhân (diff ≤0.004).",
+       "M1 loại trừ là nguyên nhân (diff ≤0.004). "
+       "[⑩-AMENDMENT 24/08 KÝ LƯỢT CUỐI] Hai họ đóng dấu: calib 07-05/9d (regen-v2) · runtime 07-08/5d (store) · "
+       "residual (v)-taker-lineage 4d TỒN TẠI đến khi backfill lịch sử taker ký riêng.",
 
-     "TODO": "chờ operator ký gói re-baseline ①-⑤"},
+     "cause_tag_vocabulary_v0": ["RÌA-TRÁI", "WARMUP", "(v)-taker-lineage"],
+
+     "SIGNED": "operator ký 24/08 ⑩-AMENDMENT lượt cuối — hai họ đóng, (v)-tag pending backfill"},
 
     // ── Case-level TUT v4.0 (a-negative) — draft chờ ký ──
     {"row": 10, "token": "TUT", "episode": "a-negative",
@@ -116,12 +125,15 @@ signed_by: PENDING (operator ký cùng gói 4 dòng ①②③④)
      "expected": "Duplicate của row 10 (TUT-A-NEG) — hoặc merge vào row 10 = 1 row, row 16 removed",
      "TODO": "ANALYSIS quyết row 10 vs row 16 unify"},
 
-    // ── K5 add: feeder tier-STRICT row (status PENDING-BUILD hiển thị, không im) ──
+    // ── K5 add: feeder tier-STRICT row 17 (họ RUNTIME) — SIGNED 24/08 ⑩-AMENDMENT lượt cuối ──
     {"row": 17, "token": "BULLA", "episode": "registry_tier_STRICT_feeder",
-     "expected": "Episode BULLA registry 06-29→07-17 (freshwatch) nhận tier-STRICT flag từ feeder GOM-B hedge_base_strict (07-05→07-09 + 07-11→07-14 = 9 days B-path WITHIN episode span). Spec KÝ afbad16 whale_data unhedge_registry_spec §E-R1.",
-     "status":   "PENDING-BUILD",
-     "note":     "Code IMPL feeder chưa có — lib/registry_events.py chưa đọc GOM-B hedge_base_strict flag. Hiển thị 'PENDING-BUILD' trong fixture output, không im. Chờ operator ký impl scope.",
-     "provenance": "K5 fixture row add per TRIAGE-EVIDENCE-20260824 K5"}
+     "expected": "Episode BULLA registry 06-29→07-17 (freshwatch store runtime) nhận tier-STRICT flag từ feeder GOM-B hedge_base_strict = 5 days B-path (07-08, 07-11→07-14) WITHIN episode span. Input: store legacy-derive r/(1+r) + ⑨ N/A-WARMUP active. Spec afbad16 whale_data unhedge_registry_spec §E-R1.",
+     "status":   "SIGNED-RUNTIME-FAMILY (họ runtime; row 9 = họ calib bulla_result post-regen-v2)",
+     "divergence_note_verbatim":
+       "[operator ký 24/08 ⑩-AMENDMENT lượt cuối] Row 17 (runtime store legacy-derive) vs Row 9 (calib regen-v2 canonical k[10]/k[7]) chênh 4 ngày HBS (07-05/06/07/09 T ở calib · F ở runtime). "
+       "Cause (v)-taker-lineage — TỒN TẠI đến khi backfill lịch sử taker được ký riêng.",
+     "cause_tag_vocabulary_v0": ["RÌA-TRÁI", "WARMUP", "(v)-taker-lineage"],
+     "provenance": "K5 fixture row + ⑩-AMENDMENT hai họ ký lượt cuối 24/08 (companion b400b5fc/5a3acd3/4b21251/a594115 stack)"}
   ],
   "gate_semantics": {
     "PASS": "actual event matches expected date/type per row",
