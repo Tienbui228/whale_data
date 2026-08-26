@@ -1,8 +1,28 @@
-# V④ Runtime Cross-Day Cooldown — DIFF proposal chờ operator KÝ
+# V④ Runtime Cross-Day Cooldown — DIFF proposal (OPERATOR KÝ 28/08, 3 điều kiện)
 
-**Status:** DRAFT · CHỜ KÝ · post V④-hồi-tố-KÝ 26/08 (spec merge `96b57b8` formalized retroactively 26/08).
-**Ngày soạn:** 2026-08-28
+**Status:** OPERATOR KÝ 28/08 với 3 điều kiện · **CHỜ ANALYSIS 1-line cho scope (2) trước merge**.
+**Ngày soạn:** 2026-08-28 · **Ngày ký:** 2026-08-28 (post V④ hồi-tố 26/08)
 **Ref:** spec §1-H amend V④ (whale_data yaml `gom_h_cooldown_days=14` + `gom_h_cooldown_clean_days=3`); reuse §8.4(i) NGUYÊN VĂN, KHÔNG ngưỡng mới.
+
+---
+
+## 0. §8.4(i) NGUYÊN VĂN (paste bên cạnh diff per điều kiện 1)
+
+Từ `binance-bot-signals/docs/gom_detect_spec.md` line 360:
+
+> **(i)** Suppressor CỨNG (6 tín hiệu: `dist_wall`, `lsr_dist`, `funding_neg_div`, `funding_extreme`, `decay`, `post_climax`) bật = đóng chuỗi + **cooldown 14d từ first-fire của đợt** (fire = day0; blocked days 1→13; clear từ day14 = fire+14); **đợt mới = sau ≥3d sạch (không suppressor bắn)**. Trong cooldown, chuỗi KHÔNG được mở lại dù GOM fires. low_conf = flag không reset. Per-day DQ (`wrong_side`, `slope_dq`, `toi_dq`) = block ngày đó only, KHÔNG trigger cooldown 14d.
+
+**Chấm điều kiện (1) "3d sạch có thì giữ":** ✅ **CÓ** trong text gốc line 360. Giữ `clean_days=3` trong impl. KHÔNG ngưỡng mới, KHÔNG cắt bớt.
+
+---
+
+## OPERATOR KÝ 28/08 · 3 ĐIỀU KIỆN
+
+| # | Điều kiện | Trạng thái | Xử lý |
+|:-:|:--|:-:|:--|
+| 1 | Paste §8.4(i) nguyên văn cạnh diff; "3d sạch" có→giữ, không→cắt | ✅ Done §0 trên | Text gốc có "3d sạch" → giữ clean_days=3 |
+| 2 | Cooldown scope = per (token, compose-fire) bất kể nhánh H | ⏸ CHỜ ANALYSIS 1-line | Impl đã đúng scope (check GOM_H=T only, nhánh-agnostic) — chờ ANALYSIS confirm |
+| 3 | Backfill re-run KHÔNG đè; CSV cũ giữ `.pre_v4rt`, bản mới ghi cạnh | 📋 Plan ready | Bash: `for f in scratch/gom_h_daily_2026-08-2{2,3,4,5}.csv; do mv "$f" "$f.pre_v4rt"; done` trước rerun |
 
 ---
 
@@ -165,6 +185,8 @@ Từ `binance-bot-signals/docs/gom_detect_spec.md §8.4(i)`:
 
 CSV col `GOM_H` values sau impl: `T` · `F` · `F-COOLDOWN` · `N/A-WARMUP` · `N/A`.
 
+**Scope confirmation cho điều kiện (2):** `_check_gom_h_cooldown()` chỉ đọc CSV col `GOM_H` == `"T"` (compose-fire aggregate). **Nhánh-agnostic:** không phân biệt H1 fire vs H2+T0.1 fire — cả 2 đều trigger cooldown. Đây là scope "per (token, compose-fire) bất kể nhánh H" per operator điều kiện (2). **Chờ ANALYSIS 1-line confirm.**
+
 ---
 
 ## 5. Backtest evidence — MIRAUSDT case
@@ -182,12 +204,26 @@ CSV col `GOM_H` values sau impl: `T` · `F` · `F-COOLDOWN` · `N/A-WARMUP` · `
 
 ---
 
-## 6. Testing plan (post-ký)
+## 6. Testing plan (post-ký · post-ANALYSIS-1-line)
+
+**Điều kiện (3) — KHÔNG ĐÈ backfill:**
+```bash
+# VPS SSH: rename existing CSVs to .pre_v4rt BEFORE re-running
+for f in scratch/gom_h_daily_2026-08-2{1,2,3,4,5}.csv; do
+    [ -f "$f" ] && mv "$f" "$f.pre_v4rt"
+done
+# Then re-run under V④ runtime (writes fresh CSV cạnh .pre_v4rt)
+for d in 2026-08-21 2026-08-22 2026-08-23 2026-08-24 2026-08-25; do
+    .venv/bin/python3 scripts/gom_h_daily.py --date $d
+done
+# Diff:
+diff scratch/gom_h_daily_2026-08-25.csv.pre_v4rt scratch/gom_h_daily_2026-08-25.csv
+```
 
 1. **Unit test:** `_check_gom_h_cooldown` với sample fires history + edge cases (empty · 1 fire · 3d clean · exactly 14d).
-2. **Backfill re-run:** chạy lại 08-22..08-25 dưới V④ runtime → verify MIRA 08-25 flip T→F-COOLDOWN.
+2. **Backfill re-run KHÔNG ĐÈ:** rename `.pre_v4rt` → chạy lại 08-21..08-25 dưới V④ runtime → verify MIRA 08-25 flip T→F-COOLDOWN.
 3. **Live smoke:** đêm sau ký, cron 45 1 * * * chạy target=D-1, log GOM_H=F-COOLDOWN rows nếu có.
-4. **Regression census:** re-run E2 FULL 52 census dưới V④ runtime → per-token fires collapse. Update T-④ GATE RENDER.
+4. **Regression census T-④:** re-run E2 FULL 52 census dưới V④ runtime → per-token fires collapse. Update T-④ GATE RENDER trên bản MỚI (bản `.pre_v4rt` giữ nguyên đối chứng).
 
 ---
 
@@ -208,13 +244,17 @@ CSV col `GOM_H` values sau impl: `T` · `F` · `F-COOLDOWN` · `N/A-WARMUP` · `
 
 ## 8. Sign-off checklist
 
-- [ ] Operator KÝ diff (nguyên văn hoặc kèm sửa)
-- [ ] Merge into `scripts/gom_h_daily.py` với commit message `[V④-RUNTIME-COOLDOWN-20260828 · ký operator YYYY-MM-DD]`
-- [ ] SCP lên VPS: `scp scripts/gom_h_daily.py root@5.223.67.21:/root/Data_back_test/whale_data/scripts/`
-- [ ] Backfill re-run 08-22..08-{today-1} verify GOM_H=F-COOLDOWN rows
-- [ ] Commit backfill CSV updates + log paste
+- [x] Operator KÝ diff 28/08 với 3 điều kiện (1)(2)(3) — see top
+- [x] §8.4(i) nguyên văn paste (điều kiện 1) — §0
+- [x] "3d sạch" verify text gốc → GIỮ clean_days=3
+- [ ] **ANALYSIS xác nhận 1 dòng scope per (token, compose-fire) nhánh-agnostic (điều kiện 2)** ← GATE
+- [ ] Merge `scripts/gom_h_daily.py` commit `[V④-RUNTIME-COOLDOWN-20260828 · ký operator+ANALYSIS]`
+- [ ] SCP `scp scripts/gom_h_daily.py root@5.223.67.21:/root/Data_back_test/whale_data/scripts/`
+- [ ] Backfill KHÔNG ĐÈ: mv `.pre_v4rt` first, re-run 08-21..08-25 fresh CSV
+- [ ] Verify cron 01:45 UTC đêm kế: log mtime + CSV file
+- [ ] Commit backfill CSVs (cả `.pre_v4rt` cạnh CSV mới) + paste diff MIRA before/after
 - [ ] Update E2 census probe với `_check_gom_h_cooldown` semantic
-- [ ] Regression T-④ GATE RENDER — passes/evaluable số mới
+- [ ] Regression T-④ GATE RENDER trên bản MỚI — passes/evaluable số mới
 
 ---
 
