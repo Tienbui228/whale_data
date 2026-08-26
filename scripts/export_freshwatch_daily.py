@@ -65,7 +65,7 @@ EXPORT_COLS = [
     "vol_quote",
     "vol_source",   # [F5a-VOL-REBUILD-20260824]
     "taker_buy_pct",
-    "taker_source", # [⑩-AMENDMENT-20260824 vế 3] provenance: "k10_over_k7_fresh" | "r_over_1p r_LEGACY"
+    "taker_source", # [⑩-AMENDMENT-20260824 vế 3] provenance: "k10_over_k7_fresh" | "r_over_1plus_r_LEGACY"
     "funding_avg",
     "funding_min",
     "funding_max",
@@ -513,7 +513,7 @@ def _assemble_date(
         r = row.get("taker_ratio")
         if r is None or (isinstance(r, float) and np.isnan(r)):
             return None, "MISSING"
-        return float(r) / (1.0 + float(r)), "r_over_1p r_LEGACY"
+        return float(r) / (1.0 + float(r)), "r_over_1plus_r_LEGACY"
 
     _taker_result = df.apply(_taker_buy_pct_row, axis=1)
     df["taker_buy_pct"] = _taker_result.apply(lambda t: t[0])

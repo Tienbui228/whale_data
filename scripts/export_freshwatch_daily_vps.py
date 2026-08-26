@@ -526,7 +526,7 @@ def _assemble_date(
         r = row.get("taker_ratio")
         if r is None or (isinstance(r, float) and np.isnan(r)):
             return None, "MISSING"
-        return float(r) / (1.0 + float(r)), "r_over_1p r_LEGACY"
+        return float(r) / (1.0 + float(r)), "r_over_1plus_r_LEGACY"
 
     _taker_result = df.apply(_taker_buy_pct_row, axis=1)
     df["taker_buy_pct"] = _taker_result.apply(lambda t: t[0])
