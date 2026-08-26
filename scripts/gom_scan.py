@@ -1021,11 +1021,16 @@ BACKTEST_GATE = [
     ("TAG",    "not-open", "Fail A4+A5 (div 2.17 > 0.5, oi_cycle_pos > 0.5); TAG-trap negative. [Provenance: expected cũ 07/08/26 (4d0987c) tiền chat-ký TAG-trap ANALYSIS]"),
     ("BAS",    "SUPP",    "07-02→07-15: post_climax → disqualifier → GOM không fire"),
     ("BTW",    "SUPP",    "06-21→07-05: post_climax → disqualifier → GOM không fire"),
-    ("BULLA",  "hbs-two-legs", "TRIAGE ④ hai vế HAI HỌ [KÝ 24/08]: (i) gom_day KHÔNG fire toàn window; (ii-calib) hedge_base_strict fire 07-05→07-09 (5d) + 07-11→07-14 (4d) = 9d B-path, first-True 07-05 (input regen-v2 canonical k[10]/k[7], _result hậu-regen b400b5fc); (ii-runtime row-17) 07-08, 5d (store legacy-derive r/(1+r), N/A-WARMUP 06-29→07-02). Divergence_note nguyên văn: 'cause (v)-taker-lineage 4 ngày (07-05/06/07/09), TỒN TẠI CHO ĐẾN KHI backfill lịch sử taker được ký riêng (migrate forward-only không xóa nó); hội tụ đo lại sau backfill nếu ký.'"),
+    ("BULLA",  "hbs-two-legs", "⑬-CLOSE-KÝ-27/08 ① Row 9 re-baseline canonical: (i) gom_day KHÔNG fire toàn window; (ii) hedge_base_strict fire 07-08 + 07-11→07-14 = 5d B-path, first-True 07-08. HAI HỌ ĐỒNG NHẤT (calib post-regen-full 4e3851c2 = runtime store post-backfill fa4e259). Provenance verbatim: 'K4 first-True 07-05 = artifact of avg_px basis pre-regen'. (v)-tag = 0 post-canonical (hội tụ khép)."),
     ("TUT",    "ARCHIVED-chapter", "[ARCHIVED-expected 08/08/26: '07-11: stealth_grind + crowd_flush → chapter mới' — giữ lịch sử PASS pre-24/08; superseded by TUT a-negative row below per TRIAGE-20260824 ⑤]"),
     ("TUT",    "a-negative", "GOM-A KHÔNG fire toàn kỳ — A2 fail gLSR>1.1 (g5 min 1.64); điểm mù loài captive, văn bản hóa 24/08"),
     ("IDOL",   "not-open", "A2 ≤1.1 giữ; IDOL 07/06 avg5(gLSR)=1.106 = correct rejection (build tại OI-peak, định luật #9, verdict NEGATIVE ký 21/08). Nới ngưỡng để bắt case đã ký NEGATIVE = calib ngược chiều, cấm."),
     ("AKE",    "SUPP",    "07-08→07-20: decay SUPP → GOM không fire"),
+    # ⑪-BANANAS31-RE-TARGET-KÝ-27/08: máy GOM-C ARCHIVED (v4.0) → re-target 2 rows kế thừa vai:
+    #   Luật no-PASS-rỗng (skeleton): "Negative row assert trên máy ARCHIVED = tự re-target sang
+    #   máy kế thừa vai, hoặc [RETIRED] có chữ ký — không tồn tại PASS-rỗng."
+    ("BANANAS31", "a-not-open", "⑪(a) BANANAS31 GOM-A KHÔNG fire toàn kỳ serial-pump: per-day A1-A5 assertion; expected chain_open=0 (correct rejection). Provenance: gom_detect_spec v2.1 (14/08) + _probe_phase3_bananas31_gomc_gate_20260814.py (chat-ký 14/08)."),
+    ("BANANAS31", "h-not-fire-pending", "⑪(b) BANANAS31 GOM-H KHÔNG fire cùng kỳ [PENDING-BUILD PHA D]: kích hoạt khi PHA D xong (adapter H1 wire). Provenance: chat-ký 14/08 + PHA D safe-start gom_h yaml (4fd5ae4)."),
 ]
 
 
@@ -1163,6 +1168,22 @@ def run_backtest6(cfg: dict, sc: dict) -> None:
                 result_label = f"FAIL (chain_open at {opened[0]} — a-negative spec violated)"
                 all_pass = False
 
+        elif episode == "a-not-open":
+            # [⑪-BANANAS31-RE-TARGET-KÝ-27/08 (a)] GOM-A KHÔNG fire → chain_open=0.
+            # Luật no-PASS-rỗng: máy GOM-C ARCHIVED, re-target GOM-A per-day assert.
+            opened = [d for d, e in tok_events if e == "chain_open"]
+            if not opened:
+                result_label = "PASS (GOM-A 0 fires — a-not-open re-targeted per ⑪)"
+            else:
+                result_label = f"FAIL (chain_open at {opened[0]} — a-not-open violated)"
+                all_pass = False
+
+        elif episode == "h-not-fire-pending":
+            # [⑪-BANANAS31-RE-TARGET-KÝ-27/08 (b)] GOM-H not-fire [PENDING-BUILD PHA D]
+            # Chưa impl GOM-H event tracking trong whale_data eval_gom → PENDING soft-pass.
+            result_label = "PENDING-BUILD (GOM-H wire pending PHA D)"
+            # NOT counted as hard fail — pending impl
+
         elif episode == "ARCHIVED-chapter":
             # [TRIAGE-20260824 re-baseline] Row cũ đóng băng, giữ lịch sử — SKIP checker
             result_label = "SKIP (ARCHIVED-expected, superseded — lịch sử giữ)"
@@ -1180,25 +1201,26 @@ def run_backtest6(cfg: dict, sc: dict) -> None:
                 # NOT counted as hard fail — expected fail on stale _result.txt
 
         elif episode == "hbs-two-legs":
-            # [TRIAGE ④ 20260824] BULLA hai vế:
-            #   (i) gom_day KHÔNG fire toàn window (post-C1b compose = gom_a_fire, gom_a=F)
-            #   (ii) hedge_base_strict fire 07-05→07-09 (5d) + 07-11→07-14 (4d) = 9 days
-            # Event dates từ build_days = "MM-DD" (no year prefix)
+            # [⑬-CLOSE-KÝ-27/08 ①] BULLA re-baseline canonical:
+            #   (i) gom_day KHÔNG fire toàn window
+            #   (ii) hedge_base_strict fire 07-08 + 07-11→07-14 = 5 days, first-True 07-08
+            # HAI HỌ ĐỒNG NHẤT post-canonical (calib 4e3851c2 = runtime fa4e259).
             gom_fires = sorted(set(d for d, e in tok_events if e == "gom"))
             hbs_fires = sorted(set(d for d, e in tok_events if e == "hbs"))
-            hbs_expected = {"07-05","07-06","07-07","07-08","07-09",
-                            "07-11","07-12","07-13","07-14"}
+            hbs_expected = {"07-08", "07-11", "07-12", "07-13", "07-14"}
             hbs_actual = set(hbs_fires) & hbs_expected
+            hbs_extra = set(hbs_fires) - hbs_expected  # ngày firing ngoài expected
             leg_i_pass = len(gom_fires) == 0
-            leg_ii_pass = hbs_actual == hbs_expected
+            leg_ii_pass = (hbs_actual == hbs_expected) and (len(hbs_extra) == 0)
             first_hbs = min(hbs_fires) if hbs_fires else "—"
             if leg_i_pass and leg_ii_pass:
-                result_label = f"PASS (gom_day=0, HBS 9/9 first={first_hbs})"
+                result_label = f"PASS (gom_day=0, HBS 5/5 first={first_hbs})"
             else:
                 miss = sorted(hbs_expected - hbs_actual)
                 extra_gom = f" gom_fires={len(gom_fires)}" if not leg_i_pass else ""
                 extra_hbs = f" HBS_miss={miss}" if miss else ""
-                result_label = f"FAIL (leg_i={leg_i_pass} leg_ii={leg_ii_pass}{extra_gom}{extra_hbs})"
+                extra_fire = f" HBS_extra={sorted(hbs_extra)}" if hbs_extra else ""
+                result_label = f"FAIL (leg_i={leg_i_pass} leg_ii={leg_ii_pass}{extra_gom}{extra_hbs}{extra_fire})"
                 all_pass = False
 
         elif episode == "SUPP":

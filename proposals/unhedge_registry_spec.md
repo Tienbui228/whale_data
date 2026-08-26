@@ -42,7 +42,8 @@
 
 **[B6-EX-20260824 bằng chứng calib LOOSE-only]:** ON (episode 4d) + HEMI (episode 5d) = LOOSE-only — STRICT KHÔNG được là điều kiện cần.
 
-**[BULLA chú thích — NGUYÊN VĂN ANALYSIS 24/08]:** *"BULLA: STRICT trên họ calib (_result hậu-regen), LOOSE trên runtime store — cause R3(i)(ii)(iii), hội tụ đo lại sau regen."*
+**[⑫-BULLA-B6-STRICT-KÝ-27/08 phục hồi ví dụ STRICT + warmup-note (thay divergence_note cũ)]:**
+> **BULLA (episode 06-29→07-17 freshwatch) = tier-STRICT** — bằng chứng: hedge_base_strict fire 5 ngày (07-08 + 07-11→07-14) WITHIN episode span, HAI HỌ ĐỒNG NHẤT canonical basis (calib _result post-regen-full `4e3851c2` + runtime store post-backfill `fa4e259`). Warmup-note: hedge_base_strict N/A-WARMUP tại i<hedge_lb-1 (per ⑨-FIX `330d683`, formula `first_seen + max(7, 14 nếu med14) − 1`); BULLA runtime store first_seen=06-27, warmup 06-27..07-02 = 6d, first_non_warmup 07-03. Provenance: "K4 first-True 07-05 = artifact of avg_px basis pre-regen" — post-canonical (v)-tag = 0 hội tụ khép.
 
 **[⑨-FIX-20260824 TYPE-WARNING]:** `hedge_base_strict` value = `True | False | "N/A-WARMUP"` (string sentinel khi lookback < hedge_lookback_days-1, gom_scan.py:129-165). CẤM truthy-check reader (non-empty string ăn thành True). Dùng explicit `v is True` cho STRICT count · `v == "N/A-WARMUP"` cho warmup track · `v is False` cho không-HBS. Feeder `assign_episode_tiers` (lib/registry_events.py) đã handle 3 trạng thái.
 
