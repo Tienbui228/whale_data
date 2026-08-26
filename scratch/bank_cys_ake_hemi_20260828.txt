@@ -1,4 +1,22 @@
 ════════════════════════════════════════════════════════════════════════════════════════════════════
+⚠ ERRATA 28/08 · OFF-BY-1 INGEST-KEY BUG
+════════════════════════════════════════════════════════════════════════════════════════════════════
+  Kho_3d values trong file này (CYS section đặc biệt) dùng `ingest_date` (snapshot
+  filename) làm khóa balance series. Semantic thực = bal_date T-1 (per adapter_h1_spec
+  §3 output.date rule + §5 draft 28/08).
+
+  → Mọi "@ YYYY-MM-DD kho X%" cần DỊCH -1 day khi đọc theo bal_date semantic.
+
+  Bằng chứng: CYS "@ 2026-08-05 kho 3d: 3.11% (2d)" thực chất = bal_date 08-04.
+  Bal_date 08-05 (ingest_date 08-06) actual kho_3d = +10.68% (VƯỢT 10% gate) — số
+  THẬT chưa hiển thị trong file này.
+
+  Correction table đầy đủ: scratch/cys_reconcile_v2_20260828.txt.
+  KHÔNG rerun file này — errata note đủ cho ANALYSIS/operator đọc bảng bị lệch.
+  Semantic fix ở adapter_h1_spec §5 (bal_date + Δ3d inclusive) — CHỜ ANALYSIS chốt chữ.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
 [(2) BANK/CYS/AKE per-day H2-raw=T × T0.1 4 sub-vé (giá trị vs chưa-eligible tách bạch)]
 ════════════════════════════════════════════════════════════════════════════════════════════════════
 

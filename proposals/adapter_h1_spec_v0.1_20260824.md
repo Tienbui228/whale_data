@@ -44,6 +44,19 @@ schema_source: D:/Check onchain fresh wallets/snapshots/YYYY-MM-DD.json (A1 fore
    T0.1 evaluate tại ngày cuối cửa sổ.
    `balance(đầu) = 0` hoặc null → **H1 = N/A** ngày đó (không fire, không False-câm — phân biệt False vs N/A trong output).
 
+   **[DRAFT 28/08 CHỜ ANALYSIS chốt chữ] BAL_DATE SEMANTICS + Δ3d INCLUSIVE:**
+   - `bal_date` = `exchange_balance_date` = **T-1 UTC 00:00** của snapshot filename `T.json`
+     (bot cron 01:00 UTC ngày T → fetch Nansen "yesterday" balance = T-1 00:00 UTC).
+   - `ingest_date` = snapshot filename `T` (ngày bot chạy). **KHÔNG dùng làm khóa H1**.
+   - **Khóa H1 canonical = `bal_date`**. Series `balance[bal_date]` mới đúng semantic.
+   - **Δ3d inclusive** (per H1 operationalization): kiểm cửa sổ `[bal_date - k, bal_date]`
+     với `k ∈ {1, 2, 3}` (INCLUSIVE cả 1d, 2d, 3d), lấy max `|Δ|/b`. Không skip lookback nào.
+   - **Off-by-1 hazard:** probe cũ dùng `series[ingest_date]` = balance T-1 semantic
+     (b_end thực = balance T-1). Đọc kết quả PHẢI dịch nhãn về `bal_date = ingest_date - 1`.
+   - **Bằng chứng lỗi (CYS-reconcile-2 28/08):**
+     Old label: "CYS @ 2026-08-05 kho 3d: 3.11% (2d)" ← sai
+     Correct  : "CYS @ bal_date 2026-08-04 kho 3d: 3.11% (2d)" · bal_date 08-05 thực = +10.68%.
+
 6. **Coverage gap** (operator sửa (ii) 24/08):
    - **Option (b)+(c) combined**: last-seen backfill ≤2d với cờ `[LAST-SEEN-2D]`. Quá 2d → `N/A + [MISSING-SNAPSHOT]`.
    - **KHÔNG hạ `MIN_LIQUIDITY`** của bot (giữ $400K threshold hiện tại).
