@@ -274,11 +274,15 @@ def _eval_h1(sym: str, target_date: str, adapter_df: pd.DataFrame, cfg_h1,
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--date", required=True, help="YYYY-MM-DD or 'auto' for yesterday UTC")
+    ap.add_argument("--date", default="auto",
+                    help="YYYY-MM-DD or 'auto' (default) = yesterday UTC. Cron nên bỏ $(date...) subshell.")
     ap.add_argument("--output-dir", default=str(SCRATCH_DIR))
     ap.add_argument("--verbose", action="store_true", help="Print per-token detail")
     args = ap.parse_args()
 
+    # [P0-CRON-FIX 28/08] default=auto → yesterday UTC.
+    # Cron entry chuẩn (bỏ $(date...) subshell, tránh %-escape rủi ro):
+    #   45 1 * * * cd /root/Data_back_test/whale_data && .venv/bin/python3 scripts/gom_h_daily.py >> data/logs/gom_h_daily.log 2>&1
     if args.date == "auto":
         target = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
     else:
