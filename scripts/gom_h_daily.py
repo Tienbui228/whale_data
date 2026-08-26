@@ -229,9 +229,12 @@ def _eval_h3(df_sym: pd.DataFrame, date: str, cfg_h3) -> tuple[str, dict]:
     return ("T" if ok else "F"), detail
 
 
-def _eval_h1(sym: str, target_date: str, adapter_df: pd.DataFrame, cfg_h1) -> tuple[str, dict]:
+def _eval_h1(sym: str, target_date: str, adapter_df: pd.DataFrame, cfg_h1,
+             t01_status: str = None) -> tuple[str, dict]:
     """H1 KHO-STEP eval from adapter output.
-    Simple: check today's row in adapter_df; kho_step_pct ≥ 10% AND no [API-FAILED] etc.
+    Per spec §1-H (ký 24/08 amend GOM-RESTRUCT + H1-đường-(a) 28/08):
+      H1 = |Δbalance| ≥[10%] trong ≤[3]d ∧ T0.1-compression đang bật tại ngày cuối cửa sổ
+    kho_step_pct alone không đủ — phải AND với t01_status=="T" ngày target.
     """
     detail = {}
     token = sym[:-4] if sym.endswith("USDT") else sym
@@ -246,11 +249,19 @@ def _eval_h1(sym: str, target_date: str, adapter_df: pd.DataFrame, cfg_h1) -> tu
         return "N/A", detail
     kho_step = r.get("kho_step_pct")
     detail["kho_step_pct"] = kho_step
+    detail["t01_gate"] = t01_status
     if kho_step is None or pd.isna(kho_step):
         return "N/A", detail
     threshold_pct = cfg_h1["balance_delta_abs_min"] * 100.0  # config is fraction; step is pct
-    ok = abs(float(kho_step)) >= threshold_pct
-    return ("T" if ok else "F"), detail
+    kho_ok = abs(float(kho_step)) >= threshold_pct
+    # Spec §1-H: ∧ T0.1-compression đang bật tại ngày cuối cửa sổ
+    if not kho_ok:
+        return "F", detail
+    if t01_status is None or t01_status == "N/A-WARMUP":
+        return "N/A", detail  # không xác định được T0.1 → H1 N/A
+    if t01_status == "T":
+        return "T", detail
+    return "F", detail  # kho fire nhưng T0.1 không compression → không H1
 
 
 def main():
@@ -325,7 +336,7 @@ def main():
             continue
 
         t01_status, t01_detail = _eval_t01(df_sym, target, gom_h_cfg["t0_1"])
-        h1_status, h1_detail = _eval_h1(sym, target, adapter_df, gom_h_cfg["h1"])
+        h1_status, h1_detail = _eval_h1(sym, target, adapter_df, gom_h_cfg["h1"], t01_status)
         h2_status, h2_detail = _eval_h2(df_sym, target, gom_h_cfg["h2"])
         h3_status, h3_detail = _eval_h3(df_sym, target, gom_h_cfg["h3"])
 

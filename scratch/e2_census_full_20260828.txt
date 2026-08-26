@@ -1,0 +1,190 @@
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[E2-CENSUS FULL 52 · CFG-PROVENANCE L-64]
+  yaml         : screen_thresholds.yaml  md5: b0ddb8ff2b15f12bc6093ab3ae932462
+  spec         : gom_detect_spec.md  md5: 9de0b2dd35e7686602ab98f302258db4
+  H1 doctrine  : |Δbalance|≥10%/≤3d ∧ T0.1-compression tại ngày cuối [FIXED per §1-H line 138]
+  GOM-H compose: H1 ∨ (H2 ∧ T0.1); H3 booster
+  Window       : 2026-06-26 → 2026-08-22
+  Filter       : |ret| < 30.0%
+  Substrate    : STORE freshwatch_daily (per E1-v3 DEV recommendation)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+[ROSTER] fw-139 − 8 case = 131 candidates
+  Eligible |ret|<30% : 52 (FULL CENSUS below)
+  Excluded ≥30%     : 33
+  Missing STORE     : 46
+  Pilot-24 (E2-SEED-PICK ebbf790) = alphabetical first 24, nhãn [SEED-PROTOCOL-VIOLATED — agent-picked]
+  Nansen snapshots loaded: 64 (for H1 balance series)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[E2-CENSUS FULL 52 · FP scan GOM-H each day, H1 SPEC-FIXED]
+  Compose: GOM-H = H1 ∨ (H2 ∧ T0.1); H1 = kho ∧ T0.1  → effectively T0.1 ∧ (kho ∨ H2)
+  Empty column TP/FP for ANALYSIS/operator to fill per fire row
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  token      pilot     ret  days  t01  h1_kho  h1_fx   h2   h3  gh_fx  TP/FP   
+  -------------------------------------------------------------------------------
+  0G            P✓  -20.4%    55    2       8      0    0    0      0  [  ]    
+  AIN           P✓  -20.6%    54    0       0      0    0    0      0  [  ]    
+  ALLO          P✓  -22.1%    55    0       8      0   11    0      0  [  ]    
+  APR           P✓    6.0%    55    0       4      0    0    2      0  [  ]    
+  AT            P✓   -2.5%    55    6       0      0    0    1      0  [  ]    
+  B2            P✓  -12.4%    55    0       5      0    0    0      0  [  ]    
+  BANANAS31     P✓    3.9%    55   18       6      1   16    1      7  [  ]    
+  BARD          P✓   -8.9%    55    0       0      0    0    1      0  [  ]    
+  BASED         P✓   18.0%    55    0       0      0    0    0      0  [  ]    
+  BLESS         P✓    7.1%    54    0       0      0    2    1      0  [  ]    
+  BLUAI         P✓  -10.0%    54    0       1      0    4    2      0  [  ]    
+  BREV          P✓    1.5%    55   17       0      0    9    0      2  [  ]    
+  CARV          P✓  -16.8%    55    4       0      0   13    0      3  [  ]    
+  CGPT          P✓   14.3%    54   18       0      0    9    0      6  [  ]    
+  COAI          P✓   11.5%    55    5       1      1    0    0      1  [  ]    
+  COLLECT       P✓   26.1%    55    0       0      0    0    0      0  [  ]    
+  FF            P✓   13.8%    55    4       0      0    0    0      0  [  ]    
+  FOLKS         P✓  -17.9%    55    1       0      0    1    0      0  [  ]    
+  GENIUS        P✓  -18.2%    55   22       0      0   28    0     12  [  ]    
+  HOLO          P✓    1.0%    55   24       0      0    3    1      0  [  ]    
+  HUMA          P✓  -10.8%    55   27       0      0   11    0      7  [  ]    
+  HYPER         P✓  -11.1%    55    0       0      0    1    1      0  [  ]    
+  INX           P✓  -10.1%    55    0       6      0    0    0      0  [  ]    
+  IRYS          P✓   -1.2%    55    3       2      0    2    0      0  [  ]    
+  KGEN           -    0.8%    55    0       3      0    0    2      0  [  ]    
+  MERL           -   11.9%    55   28       3      0    0    0      0  [  ]    
+  MYX            -  -12.6%    54    0       0      0    1    0      0  [  ]    
+  NAORIS         -  -17.1%    55    0       0      0    4    0      0  [  ]    
+  O              -    7.2%    55    0       1      0    3    0      0  [  ]    
+  OPEN           -    4.5%    55   14       0      0    6    0      3  [  ]    
+  OPG            -  -22.3%    55   11       0      0   20    0      7  [  ]    
+  PLAY           -  -11.0%    54    0       0      0    0    0      0  [  ]    
+  POWER          -    5.0%    55    0       5      0    0    1      0  [  ]    
+  PROVE          -   -5.4%    55   29       0      0    5    0      5  [  ]    
+  Q              -   24.6%    55    0       0      0    0    0      0  [  ]    
+  ROBO           -  -13.5%    55    2       3      0   26    0      2  [  ]    
+  SAHARA         -  -25.3%    55   11       0      0   17    0      4  [  ]    
+  SIGN           -   -8.0%    55   24       8      0    6    0      1  [  ]    
+  SIREN          -  -15.1%    55    0       0      0    0    0      0  [  ]    
+  SOON           -   18.8%    55    0       0      0    1    1      0  [  ]    
+  SOPH           -  -18.4%    55    2       0      0    4    0      0  [  ]    
+  SPACE          -  -26.9%    54    2       0      0    0    0      0  [  ]    
+  SQD            -  -13.5%    55    6       0      0    0    1      0  [  ]    
+  STAR           -    2.3%    55    0       6      0    3    2      0  [  ]    
+  TAG            -   -9.3%    58    5      10      0    0    2      0  [  ]    
+  TOSHI          -   21.0%    55    1       2      0    0    1      0  [  ]    
+  UAI            -  -16.5%    55    6       3      0    0    2      0  [  ]    
+  USELESS        -  -15.1%    55    0       1      0    0    0      0  [  ]    
+  XAN            -   24.6%    55    0      10      0    0    0      0  [  ]    
+  XPIN           -  -21.5%    55    0       2      0    0    1      0  [  ]    
+  YB             -    9.3%    54    8       0      0    8    1      0  [  ]    
+  ZBT            -  -26.3%    55    3      10      0   20    2      3  [  ]    
+
+[FP AGGREGATE — H1 SPEC-FIXED]
+  Census size          : 52 tokens (FULL 52 eligible)
+  Tokens ≥1 GOM-H fire : 14/52 (26.9%)
+  Total GOM-H fires    : 63
+  Total token-days     : 2855
+  FP rate/day (upper)  : 2.21%  ← upper bound; TP hidden trong roster
+
+  Per-vế raw counts:
+    T0.1  : 303
+    H1_kho (raw)    : 108
+    H1_fixed (∧T0.1): 2   ← spec-compliant
+    H2  : 234
+    H3  : 26
+
+[H1 SPEC-FIX IMPACT — kho-only vs kho∧T0.1]
+  H1 kho raw    : 108 fires (previous incorrect implementation)
+  H1 spec-fixed : 2 fires (∧ T0.1)  → giảm 106 fires (98.1% cắt xuống)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[PER-FIRE ROWS — ANALYSIS/operator chấm cột TP/FP dòng-per-dòng]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+     # token              date     active       conf  t01  h1_fx   h2   h3 TP/FP   
+  -----------------------------------------------------------------------------------
+     1 BANANAS31    2026-07-04  H1+H2+T01     normal    T      T    T    F [  ]     [⑪-CONTROL-ÂM · H1-mồi predicted-FP-mode xung đột row 14 — CHỜ ANALYSIS/OPERATOR]
+     2 BANANAS31    2026-07-05     H2+T01     normal    T      F    T    F [  ]     [⑪-CONTROL-ÂM · H1-mồi predicted-FP-mode xung đột row 14 — CHỜ ANALYSIS/OPERATOR]
+     3 BANANAS31    2026-07-06     H2+T01     normal    T      F    T    F [  ]     [⑪-CONTROL-ÂM · H1-mồi predicted-FP-mode xung đột row 14 — CHỜ ANALYSIS/OPERATOR]
+     4 BANANAS31    2026-07-07     H2+T01     normal    T      F    T    F [  ]     [⑪-CONTROL-ÂM · H1-mồi predicted-FP-mode xung đột row 14 — CHỜ ANALYSIS/OPERATOR]
+     5 BANANAS31    2026-07-09     H2+T01     normal    T      F    T    F [  ]     [⑪-CONTROL-ÂM · H1-mồi predicted-FP-mode xung đột row 14 — CHỜ ANALYSIS/OPERATOR]
+     6 BANANAS31    2026-07-11     H2+T01     normal    T      F    T    F [  ]     [⑪-CONTROL-ÂM · H1-mồi predicted-FP-mode xung đột row 14 — CHỜ ANALYSIS/OPERATOR]
+     7 BANANAS31    2026-07-12     H2+T01     normal    T    N/A    T    F [  ]     [⑪-CONTROL-ÂM · H1-mồi predicted-FP-mode xung đột row 14 — CHỜ ANALYSIS/OPERATOR]
+     8 BREV         2026-08-04     H2+T01     normal    T      F    T    F [  ]    
+     9 BREV         2026-08-05     H2+T01     normal    T      F    T    F [  ]    
+    10 CARV         2026-07-21     H2+T01     normal    T      F    T    F [  ]    
+    11 CARV         2026-07-22     H2+T01     normal    T      F    T    F [  ]    
+    12 CARV         2026-07-23     H2+T01     normal    T      F    T    F [  ]    
+    13 CGPT         2026-06-29     H2+T01     normal    T    N/A    T    F [  ]    
+    14 CGPT         2026-07-12     H2+T01     normal    T    N/A    T    F [  ]    
+    15 CGPT         2026-07-14     H2+T01     normal    T      F    T    F [  ]    
+    16 CGPT         2026-07-15     H2+T01     normal    T      F    T    F [  ]    
+    17 CGPT         2026-07-16     H2+T01     normal    T      F    T    F [  ]    
+    18 CGPT         2026-07-17     H2+T01     normal    T      F    T    F [  ]    
+    19 COAI         2026-07-23         H1     normal    T      T    F    F [  ]    
+    20 GENIUS       2026-07-03     H2+T01     normal    T      F    T    F [  ]    
+    21 GENIUS       2026-07-04     H2+T01     normal    T      F    T    F [  ]    
+    22 GENIUS       2026-07-05     H2+T01     normal    T      F    T    F [  ]    
+    23 GENIUS       2026-07-06     H2+T01     normal    T      F    T    F [  ]    
+    24 GENIUS       2026-07-07     H2+T01     normal    T      F    T    F [  ]    
+    25 GENIUS       2026-07-08     H2+T01     normal    T      F    T    F [  ]    
+    26 GENIUS       2026-07-10     H2+T01     normal    T      F    T    F [  ]    
+    27 GENIUS       2026-08-10     H2+T01     normal    T      F    T    F [  ]    
+    28 GENIUS       2026-08-18     H2+T01     normal    T      F    T    F [  ]    
+    29 GENIUS       2026-08-19     H2+T01     normal    T      F    T    F [  ]    
+    30 GENIUS       2026-08-20     H2+T01     normal    T      F    T    F [  ]    
+    31 GENIUS       2026-08-21     H2+T01     normal    T      F    T    F [  ]    
+    32 HUMA         2026-06-27     H2+T01     normal    T    N/A    T    F [  ]    
+    33 HUMA         2026-06-28     H2+T01     normal    T    N/A    T    F [  ]    
+    34 HUMA         2026-06-29     H2+T01     normal    T    N/A    T    F [  ]    
+    35 HUMA         2026-07-02     H2+T01     normal    T      F    T    F [  ]    
+    36 HUMA         2026-08-06     H2+T01     normal    T      F    T    F [  ]    
+    37 HUMA         2026-08-07     H2+T01     normal    T      F    T    F [  ]    
+    38 HUMA         2026-08-08     H2+T01     normal    T      F    T    F [  ]    
+    39 OPEN         2026-07-16     H2+T01     normal    T      F    T    F [  ]    
+    40 OPEN         2026-07-17     H2+T01     normal    T      F    T    F [  ]    
+    41 OPEN         2026-07-27     H2+T01     normal    T      F    T    F [  ]    
+    42 OPG          2026-08-06     H2+T01     normal    T      F    T    F [  ]    
+    43 OPG          2026-08-08     H2+T01     normal    T      F    T    F [  ]    
+    44 OPG          2026-08-09     H2+T01     normal    T      F    T    F [  ]    
+    45 OPG          2026-08-10     H2+T01     normal    T      F    T    F [  ]    
+    46 OPG          2026-08-11     H2+T01     normal    T      F    T    F [  ]    
+    47 OPG          2026-08-12     H2+T01     normal    T      F    T    F [  ]    
+    48 OPG          2026-08-15     H2+T01     normal    T      F    T    F [  ]    
+    49 PROVE        2026-06-26     H2+T01     normal    T    N/A    T    F [  ]    
+    50 PROVE        2026-06-27     H2+T01     normal    T    N/A    T    F [  ]    
+    51 PROVE        2026-06-28     H2+T01     normal    T    N/A    T    F [  ]    
+    52 PROVE        2026-06-29     H2+T01     normal    T    N/A    T    F [  ]    
+    53 PROVE        2026-06-30     H2+T01     normal    T      F    T    F [  ]    
+    54 ROBO         2026-07-22     H2+T01     normal    T      F    T    F [  ]    
+    55 ROBO         2026-07-30     H2+T01     normal    T      F    T    F [  ]    
+    56 SAHARA       2026-08-10     H2+T01     normal    T      F    T    F [  ]    
+    57 SAHARA       2026-08-11     H2+T01     normal    T      F    T    F [  ]    
+    58 SAHARA       2026-08-12     H2+T01     normal    T      F    T    F [  ]    
+    59 SAHARA       2026-08-13     H2+T01     normal    T      F    T    F [  ]    
+    60 SIGN         2026-06-30     H2+T01     normal    T      F    T    F [  ]    
+    61 ZBT          2026-06-26     H2+T01     normal    T    N/A    T    F [  ]    
+    62 ZBT          2026-06-29     H2+T01     normal    T    N/A    T    F [  ]    
+    63 ZBT          2026-06-30     H2+T01     normal    T      F    T    F [  ]    
+
+[CSV OUTPUT] e2_census_perfire_20260828.csv  md5: 3f08043d7ba758b1a58b301a286c00a2
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[CAVEAT FIX per operator (2)]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  BANANAS31 = ⑪ CONTROL-ÂM (ANALYSIS dự báo H1-mồi, KHÔNG phải BULLA).
+  Fires của BANANAS31 = predicted-FP-mode HOẶC bug(1) H1 spec-thiếu.
+  Xung đột row 14: ghi thành mục riêng chờ ANALYSIS/operator chấm TP/FP.
+  Agent KHÔNG tự phân loại TP cho BANANAS31 (removes E2-SEED commit's incorrect
+  "known case" hint).
+
+  BULLA (hai họ, ⑬-CLOSE canonical) KHÔNG có trong seed E2 (BULLA31 in fw-139? check).
+
+  BULLA* trong fw-139: True
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[DỪNG] (1) H1-SPEC-CHECK verdict: THIẾU → FIXED (gom_h_daily.py + census script)
+       (3) E2-census FULL 52 eligible với H1 spec-fixed
+       Pilot-24 gắn nhãn [SEED-PROTOCOL-VIOLATED — agent-picked]
+       CSV per-fire ready cho ANALYSIS chấm TP/FP.
+       Còn nợ (i) VPS 08-21 4 H1-fire recheck · (ii) D3 day-1/2 rerun — separate
+════════════════════════════════════════════════════════════════════════════════════════════════════

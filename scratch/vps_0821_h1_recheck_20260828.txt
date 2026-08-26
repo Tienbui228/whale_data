@@ -1,0 +1,45 @@
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[VPS 08-21 4 H1-FIRE RECHECK · H1 SPEC-FIX (kho ∧ T0.1)]
+  Date: 2026-08-21
+  Tokens: ['CROSS', 'GWEI', 'TOSHI', 'TRIA'] (per e2_backlog VPS rerun report)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  ─── CROSS (CROSSUSDT) ───
+    kho: balance=40943351.60 · best |Δ|/b=4.24% (2d) · gate=10% → FAIL
+    T0.1: F
+      funding_pin (max|f|≤5e-5) : max=1.27e-04  → False
+      oi_ratio (≤1.2)           : 2.1208421361370555  → False
+      ret14 (≤0.10)             : 0.2200  → False
+      vol med7/med30 (≤1.0)     : 4512464/1559047=2.894  → False
+    H1 SPEC-FIXED verdict: F (kho fails)
+
+  ─── GWEI (GWEIUSDT) ───
+    kho: balance=40291722.53 · best |Δ|/b=10.13% (3d) · gate=10% → PASS
+    T0.1: F
+      funding_pin (max|f|≤5e-5) : max=2.96e-04  → False
+      oi_ratio (≤1.2)           : 1.0748204767623455  → True
+      ret14 (≤0.10)             : 0.1310  → False
+      vol med7/med30 (≤1.0)     : 7180031/11332650=0.634  → True
+    H1 SPEC-FIXED verdict: F (kho fires but T0.1 fails)  ← WAS H1 fire trước fix, GIỜ KHÔNG
+
+  ─── TOSHI (TOSHIUSDT) ───
+    kho: balance=1210273518.05 · best |Δ|/b=15.34% (3d) · gate=10% → PASS
+    T0.1: F
+      funding_pin (max|f|≤5e-5) : max=9.95e-05  → False
+      oi_ratio (≤1.2)           : 1.149377946799738  → True
+      ret14 (≤0.10)             : 0.1583  → False
+      vol med7/med30 (≤1.0)     : 804132/811635=0.991  → True
+    H1 SPEC-FIXED verdict: F (kho fires but T0.1 fails)  ← WAS H1 fire trước fix, GIỜ KHÔNG
+
+  ─── TRIA (TRIAUSDT) ───
+    kho: balance=335451310.63 · best |Δ|/b=409.12% (3d) · gate=10% → PASS
+    T0.1: F
+      funding_pin (max|f|≤5e-5) : max=4.23e-04  → False
+      oi_ratio (≤1.2)           : 2.3902320029411395  → False
+      ret14 (≤0.10)             : 0.0989  → True
+      vol med7/med30 (≤1.0)     : 12256977/2856093=4.292  → False
+    H1 SPEC-FIXED verdict: F (kho fires but T0.1 fails)  ← WAS H1 fire trước fix, GIỜ KHÔNG
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[VERDICT] Xem trên — bao nhiêu trong 4 tokens giữ H1=T sau fix?
+════════════════════════════════════════════════════════════════════════════════════════════════════
