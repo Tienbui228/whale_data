@@ -29,7 +29,9 @@ if sys.platform == "win32":
 REPO = Path(r"D:/Data back test/whale_data")
 DEFAULT_REF = REPO / "scratch/e2_census_perfire_v2_20260828.csv"
 
-REQUIRED_COLS = {"token", "date", "h2_vé", "grade", "basis", "graded_at", "data_through"}
+REQUIRED_COLS = {"token", "date", "grade", "basis", "graded_at", "data_through"}
+# h2_vé column: nhận cả alias "ve" hoặc "h2_ve" per operator relay (1) 28/08
+H2VE_ALIASES = {"h2_vé", "h2_ve", "ve", "vé"}
 VALID_GRADES = {"TP", "FP", "PENDING", "NOT-EVALUABLE"}
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?")
@@ -50,8 +52,16 @@ def _load_reference(path: Path) -> set:
     return ref
 
 
-def validate(grades_path: Path, ref_path: Path, verbose: bool = True) -> tuple[bool, list]:
-    """Return (accept, errors)."""
+def validate(grades_path: Path, ref_path: Path, verbose: bool = True,
+             full_63_expected: bool = None) -> tuple[bool, list]:
+    """Return (accept, errors).
+
+    full_63_expected:
+      None (default) → infer từ row count: if len(rows) == 63 → apply COVERAGE.
+                        Else partial-by-design, SKIP COVERAGE (per operator relay 28/08).
+      True           → force COVERAGE check
+      False          → force SKIP COVERAGE
+    """
     errors = []
 
     if not grades_path.exists():
@@ -78,7 +88,14 @@ def validate(grades_path: Path, ref_path: Path, verbose: bool = True) -> tuple[b
         print(f"[FILE] {grades_path.name}: {len(rows)} rows · cols: {sorted(cols)}")
         print(f"       md5: {hashlib.md5(open(grades_path,'rb').read()).hexdigest()}")
 
-    # Schema check
+    # h2_vé alias: nhận "ve" / "h2_ve" / "h2_vé" / "vé"
+    h2ve_col_found = cols & H2VE_ALIASES
+    if not h2ve_col_found:
+        errors.append(f"[SCHEMA] missing h2_vé column (accept aliases: {sorted(H2VE_ALIASES)})")
+    elif verbose:
+        print(f"[H2VE] using alias col: {sorted(h2ve_col_found)}")
+
+    # Schema check (không đòi h2_vé riêng, dùng alias set)
     missing = REQUIRED_COLS - cols
     if missing:
         errors.append(f"[SCHEMA] missing required cols: {sorted(missing)}")
@@ -120,18 +137,28 @@ def validate(grades_path: Path, ref_path: Path, verbose: bool = True) -> tuple[b
     missing_from_ref = ref - graded_keys
     extra_not_in_ref = graded_keys - ref
 
-    if len(rows) != len(ref):
-        errors.append(f"[COVERAGE] {len(rows)} rows vs {len(ref)} expected trong CSV-63 (thiếu {len(missing_from_ref)}, dư {len(extra_not_in_ref)})")
+    # [OPERATOR RELAY 28/08] COVERAGE rule chỉ áp bản FULL-63.
+    # Bản partial (n<63) = by-design, KHÔNG ingest nhưng cross-ref không REJECT.
+    if full_63_expected is None:
+        full_63_expected = (len(rows) == len(ref))
+    if full_63_expected:
+        if len(rows) != len(ref):
+            errors.append(f"[COVERAGE] {len(rows)} rows vs {len(ref)} expected trong CSV-63 (thiếu {len(missing_from_ref)}, dư {len(extra_not_in_ref)})")
+    elif verbose:
+        print(f"[COVERAGE-SKIP] {len(rows)} rows < {len(ref)} → partial-by-design, không REJECT (per operator relay 28/08)")
 
+    # EXTRA vẫn REJECT bất kể partial or full — không được có key ngoài CSV-63
     if extra_not_in_ref:
         errors.append(f"[EXTRA] {len(extra_not_in_ref)} keys không có trong CSV-63: {sorted(extra_not_in_ref)[:5]}...")
 
-    if missing_from_ref and verbose:
+    if missing_from_ref and verbose and full_63_expected:
         print(f"\n[COVERAGE-DETAIL] {len(missing_from_ref)} fire keys chưa được grade:")
         for k in sorted(missing_from_ref)[:20]:
             print(f"  {k}")
         if len(missing_from_ref) > 20:
             print(f"  ... (+{len(missing_from_ref)-20} more)")
+    elif missing_from_ref and verbose:
+        print(f"\n[PARTIAL-INFO] {len(missing_from_ref)}/{len(ref)} keys chưa grade — hợp lệ cho bản partial")
 
     accept = len(errors) == 0
     return accept, errors
