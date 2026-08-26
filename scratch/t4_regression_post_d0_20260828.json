@@ -1,0 +1,65 @@
+{
+  "spec_sha": "c8cf65b0",
+  "code_sha": "166085f",
+  "gate_defs_md5": "c369905251ec3bdc4afde097cbecbc03",
+  "d0_table": {
+    "BANK": "2026-07-11",
+    "TUT": "2026-07-09",
+    "CYS": "2026-08-04",
+    "AKE": "2026-07-15",
+    "BTW": "2026-08-03",
+    "HEMI": "2026-08-15",
+    "ON": "2026-07-19",
+    "CAP": "2026-07-30",
+    "BTR": "2026-08-26"
+  },
+  "gate_results": [
+    {
+      "tok": "AKE",
+      "verdict": "NO-FIRE",
+      "reason": "h1_eval=3d h2t01_eval=4d"
+    },
+    {
+      "tok": "BANK",
+      "verdict": "NO-FIRE",
+      "reason": "h1_eval=2d h2t01_eval=2d"
+    },
+    {
+      "tok": "BTR",
+      "verdict": "NO-FIRE",
+      "reason": "h1_eval=24d h2t01_eval=30d"
+    },
+    {
+      "tok": "BTW",
+      "verdict": "NO-FIRE",
+      "reason": "h1_eval=22d h2t01_eval=30d"
+    },
+    {
+      "tok": "CAP",
+      "verdict": "NO-FIRE",
+      "reason": "h1_eval=17d h2t01_eval=18d"
+    },
+    {
+      "tok": "CYS",
+      "verdict": "NO-FIRE",
+      "reason": "h1_eval=26d h2t01_eval=30d"
+    },
+    {
+      "tok": "HEMI",
+      "verdict": "PASS",
+      "compose_first": "2026-07-16",
+      "lead": 30
+    },
+    {
+      "tok": "ON",
+      "verdict": "NO-FIRE",
+      "reason": "h1_eval=7d h2t01_eval=8d"
+    },
+    {
+      "tok": "TUT",
+      "verdict": "NOT-EVALUABLE",
+      "reason": "H all N/A trong window (06-27..07-08)"
+    }
+  ],
+  "passes_over_evaluable": "1/8"
+}

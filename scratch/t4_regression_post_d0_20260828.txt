@@ -1,0 +1,30 @@
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[T-④ REGRESSION · post-KÝ · §4 D0-table + §2 window]
+  gate_defs md5: c369905251ec3bdc4afde097cbecbc03
+  D0 canonical (9 tokens): {'BANK': '2026-07-11', 'TUT': '2026-07-09', 'CYS': '2026-08-04', 'AKE': '2026-07-15', 'BTW': '2026-08-03', 'HEMI': '2026-08-15', 'ON': '2026-07-19', 'CAP': '2026-07-30', 'BTR': '2026-08-26'}
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[T-④ REGRESSION BODY · substrate STORE · V④-RT two-lane cooldown]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  case              D0                      window     H1_first    H2+T01_first   compose_first    lead         verdict   reason
+  ---------------------------------------------------------------------------------------------------------------------------------------
+  AKE       2026-07-15                06-27..07-14            —               —               —       —         NO-FIRE   h1_eval=3d perp_eval=4d
+  BANK      2026-07-11                06-11..07-10            —               —               —       —         NO-FIRE   h1_eval=2d perp_eval=2d
+  BTR       2026-08-26                07-27..08-25            —               —               —       —         NO-FIRE   h1_eval=24d perp_eval=30d
+  BTW       2026-08-03                07-04..08-02            —               —               —       —         NO-FIRE   h1_eval=22d perp_eval=30d
+  CAP       2026-07-30                06-30..07-29            —               —               —       —         NO-FIRE   h1_eval=17d perp_eval=18d
+  CYS       2026-08-04                07-05..08-03            —               —               —       —         NO-FIRE   h1_eval=26d perp_eval=30d
+  HEMI      2026-08-15                07-16..08-14            —      2026-07-16      2026-07-16    +30d            PASS   h1=27d perp=30d
+  ON        2026-07-19                06-27..07-18            —               —               —       —         NO-FIRE   h1_eval=7d perp_eval=8d
+  TUT       2026-07-09                06-27..07-08            —               —               —       —   NOT-EVALUABLE   mọi H không-evaluable
+
+  ═══ T-④ GATE VERDICT (post-D0-KÝ, §2 window, V④-RT cooldown) ═══
+  passes / evaluable : 1 / 8  (12.5%)
+  Rút mẫu số NOT-EVALUABLE : 1
+  Gate threshold §3 E1 = 6/8 (số [ ] chờ operator xác nhận)
+  → E1 condition CHƯA đạt threshold 6/8 (passes=1)
+
+[JSON dump]
+  t4_regression_post_d0_20260828.json  md5: b5e7439b6842266144ce00398c52537d
