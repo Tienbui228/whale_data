@@ -43,7 +43,8 @@ FW_SYMS = REPO / "data/config/freshwatch_symbols.txt"
 YAML_PATH = REPO / "screen_thresholds.yaml"
 SCRATCH_DIR = REPO / "scratch"
 SPEC_VERSION = "v4.0-draft"
-AMENDMENTS = ["GOM-RESTRUCT-20260824", "⑬-COLUMN-MANIFEST-20260826"]
+AMENDMENTS = ["GOM-RESTRUCT-20260824", "⑬-COLUMN-MANIFEST-20260826",
+              "V①-⑤-20260828", "V④-RT-2CHỐT-ANALYSIS-20260828"]
 
 # ─── Warmup thresholds (điểm-non-null) ───
 WARMUP_H2_POS_N = 14
@@ -243,25 +244,32 @@ def _eval_h1(sym: str, target_date: str, adapter_df: pd.DataFrame, cfg_h1,
     Per spec §1-H (ký 24/08 amend GOM-RESTRUCT + H1-đường-(a) 28/08):
       H1 = |Δbalance| ≥[10%] trong ≤[3]d ∧ T0.1-compression đang bật tại ngày cuối cửa sổ
     kho_step_pct alone không đủ — phải AND với t01_status=="T" ngày target.
+
+    detail["kho_raw"] = "True"/"False"/"N/A" — RAW kho check TRƯỚC T0.1 gate,
+      used by V④-RT lane_kho cooldown reset (raw_condition per ANALYSIS 2-chốt).
     """
     detail = {}
     token = sym[:-4] if sym.endswith("USDT") else sym
     row = adapter_df[adapter_df["symbol"] == token]
     if row.empty:
         detail["flag"] = "MISSING-SYMBOL"
+        detail["kho_raw"] = "N/A"
         return "N/A", detail
     r = row.iloc[0]
     flags = str(r.get("flags", "") or "")
     detail["flags"] = flags
     if "[API-FAILED]" in flags or "[MISSING-SNAPSHOT]" in flags:
+        detail["kho_raw"] = "N/A"
         return "N/A", detail
     kho_step = r.get("kho_step_pct")
     detail["kho_step_pct"] = kho_step
     detail["t01_gate"] = t01_status
     if kho_step is None or pd.isna(kho_step):
+        detail["kho_raw"] = "N/A"
         return "N/A", detail
     threshold_pct = cfg_h1["balance_delta_abs_min"] * 100.0  # config is fraction; step is pct
     kho_ok = abs(float(kho_step)) >= threshold_pct
+    detail["kho_raw"] = "True" if kho_ok else "False"
     # Spec §1-H: ∧ T0.1-compression đang bật tại ngày cuối cửa sổ
     if not kho_ok:
         return "F", detail
@@ -270,6 +278,83 @@ def _eval_h1(sym: str, target_date: str, adapter_df: pd.DataFrame, cfg_h1,
     if t01_status == "T":
         return "T", detail
     return "F", detail  # kho fire nhưng T0.1 không compression → không H1
+
+
+def _check_lane_cooldown(sym: str, target: str, lane: str,
+                          scratch_dir: Path,
+                          cooldown_days: int = 14,
+                          clean_days: int = 3) -> tuple[bool, str, int, int]:
+    """V④-RT two-lane cooldown check per §8.4(i) mục con GOM-H (ANALYSIS 2 chốt 28/08).
+
+    Args:
+      lane: "kho" (H1-kho) hoặc "perp" (H2 ∧ T0.1) — hai lane độc lập, đồng hồ riêng.
+
+    Returns: (in_cooldown, reason, days_since_last_fire, clean_streak)
+      - in_cooldown=True → block THIS lane compose fire (mark F-COOLDOWN[lane])
+      - Re-arm iff BOTH: days_since >= cooldown_days AND clean_streak >= clean_days
+      - Raw_condition per lane:
+          lane="kho"  → h1_raw column (kho_step ≥10% RAW, trước T0.1 gate)
+          lane="perp" → h2t01_raw column ((H2 AND T0.1) RAW, aggregate)
+      - N/A không đếm là sạch (đồng hồ đứng, không reset)
+    """
+    target_dt = datetime.strptime(target, "%Y-%m-%d")
+    active_lanes_col = "active_lanes"
+    raw_col = "h1_raw" if lane == "kho" else "h2t01_raw"
+
+    # Step 1: find most recent lane fire (active_lanes contains this lane)
+    last_lane_fire = None
+    for lb in range(1, cooldown_days * 2 + 1):  # scan up to 2×cooldown for lane fire
+        d = (target_dt - timedelta(days=lb)).strftime("%Y-%m-%d")
+        csv_path = Path(scratch_dir) / f"gom_h_daily_{d}.csv"
+        if not csv_path.exists():
+            continue
+        try:
+            df = pd.read_csv(csv_path)
+            row = df[df["symbol"] == sym]
+            if row.empty:
+                continue
+            active_lanes = str(row.iloc[0].get(active_lanes_col, "") or "")
+            if lane in active_lanes.split("+"):
+                last_lane_fire = d
+                break
+        except Exception:
+            continue
+
+    if last_lane_fire is None:
+        return False, "no-prev-lane-fire", 0, 0
+
+    last_fire_dt = datetime.strptime(last_lane_fire, "%Y-%m-%d")
+    days_since = (target_dt - last_fire_dt).days
+
+    # Step 2: walk backward from target-1 to last_fire+1, count clean streak
+    # Rule: raw==False → streak+1; raw==True → streak reset; raw==N/A → hold (không đếm, không reset)
+    clean_streak = 0
+    max_clean = 0
+    for lb in range(1, days_since):
+        d = (target_dt - timedelta(days=lb)).strftime("%Y-%m-%d")
+        csv_path = Path(scratch_dir) / f"gom_h_daily_{d}.csv"
+        if not csv_path.exists():
+            continue  # missing CSV → hold (đồng hồ đứng)
+        try:
+            df = pd.read_csv(csv_path)
+            row = df[df["symbol"] == sym]
+            if row.empty:
+                continue
+            raw_val = str(row.iloc[0].get(raw_col, "N/A") or "N/A")
+            if raw_val == "False":
+                clean_streak += 1
+                max_clean = max(max_clean, clean_streak)
+            elif raw_val == "True":
+                clean_streak = 0  # reset chuỗi sạch
+            # N/A → hold (đồng hồ đứng)
+        except Exception:
+            continue
+
+    # Re-arm needs BOTH conditions
+    if days_since >= cooldown_days and max_clean >= clean_days:
+        return False, f"re-arm(t={days_since}d,clean={max_clean}d)", days_since, max_clean
+
+    return True, f"cooldown-lane={lane}-since-{last_lane_fire}(t={days_since}d,clean={max_clean}d)", days_since, max_clean
 
 
 def main():
@@ -356,29 +441,85 @@ def main():
             if s == "T" or s == "F" or s in ("N/A-WARMUP", "N/A"):
                 coverage[h][s] += 1
 
-        # Compose GOM-H = H1 ∨ (H2 ∧ T0.1); H3 nâng conf
+        # Compose GOM-H = (H1 ∨ (H2 ∧ T0.1)) AND NOT cooldown[lane]; H3 nâng conf
+        # [V④-RT 2-chốt ANALYSIS 28/08] Two-lane independent cooldown:
+        #   lane_kho = H1-kho status; lane_perp = (H2 ∧ T0.1) status
         h1_t = h1_status == "T"
         h2t01 = (h2_status == "T") and (t01_status == "T")
-        # If H1 has data and either fires
-        if h1_t or h2t01:
+
+        # RAW conditions (trước cooldown gate) — for 3d-sạch counting in cooldown reset
+        # h1_raw = kho ≥10% (raw, không ∧ T0.1); h2t01_raw = h2 ∧ t01 compose T (aggregate)
+        h1_raw_str = h1_detail.get("kho_raw", "N/A")  # from _eval_h1
+        if h2_status == "T" and t01_status == "T":
+            h2t01_raw_str = "True"
+        elif h2_status in ("W", "N/A-WARMUP", "N/A") or t01_status in ("W", "N/A-WARMUP", "N/A"):
+            h2t01_raw_str = "N/A"
+        else:
+            h2t01_raw_str = "False"
+
+        # Per-lane cooldown check
+        cd_days = gom_h_cfg.get("gom_h_cooldown_days", 14)
+        cn_days = gom_h_cfg.get("gom_h_cooldown_clean_days", 3)
+        active_lanes = []
+        suppressed_lanes = []
+        suppressed_notes = []
+
+        # lane kho: raw = h1_raw True. Check cooldown iff raw=True.
+        if h1_raw_str == "True":
+            in_cd_kho, cd_reason_kho, days_k, clean_k = _check_lane_cooldown(
+                sym, target, "kho", SCRATCH_DIR, cd_days, cn_days)
+            if in_cd_kho:
+                suppressed_lanes.append("kho")
+                suppressed_notes.append(f"[SUPPRESSED {days_k}/14 lane=kho]")
+            elif h1_t:  # kho_raw True AND passes T0.1 gate → lane_kho fire
+                active_lanes.append("kho")
+            # else: kho_raw True but T0.1 fail → h1_t=False, don't fire lane_kho (but not suppressed either)
+
+        # lane perp: raw = h2 ∧ t01 True.
+        if h2t01_raw_str == "True":
+            in_cd_perp, cd_reason_perp, days_p, clean_p = _check_lane_cooldown(
+                sym, target, "perp", SCRATCH_DIR, cd_days, cn_days)
+            if in_cd_perp:
+                suppressed_lanes.append("perp")
+                suppressed_notes.append(f"[SUPPRESSED {days_p}/14 lane=perp]")
+            elif h2t01:
+                active_lanes.append("perp")
+
+        # Compose GOM_H
+        if active_lanes:
             gom_h = "T"
             n_fire += 1
             active = []
-            if h1_t: active.append("H1")
-            if h2t01: active.append("H2+T0.1")
+            if "kho" in active_lanes: active.append("H1")
+            if "perp" in active_lanes: active.append("H2+T0.1")
             conf = "conf-boosted" if h3_status == "T" else "normal"
             fires.append({"symbol": sym, "active": active, "conf": conf,
                           "h1": h1_status, "h2": h2_status, "t01": t01_status, "h3": h3_status,
-                          "h1_detail": h1_detail})
+                          "h1_detail": h1_detail, "suppressed_note": " ".join(suppressed_notes)})
+        elif suppressed_lanes:
+            # No new fire, but at least one lane suppressed
+            gom_h = "F-COOLDOWN[" + "+".join(suppressed_lanes) + "]"
+            conf = "-"
+            fires.append({"symbol": sym, "active": [f"[suppressed:{'+'.join(suppressed_lanes)}]"],
+                          "conf": f"blocked",
+                          "h1": h1_status, "h2": h2_status, "t01": t01_status, "h3": h3_status,
+                          "h1_detail": h1_detail, "suppressed_note": " ".join(suppressed_notes)})
         else:
             gom_h = "F" if (h1_status in ("F",) and h2_status in ("F","N/A-WARMUP") and t01_status in ("F","N/A-WARMUP")) else \
                     ("N/A-WARMUP" if "N/A-WARMUP" in (t01_status, h2_status) else "F")
             conf = "-"
 
+        active_lanes_str = "+".join(active_lanes) if active_lanes else ""
+        suppressed_note_str = " ".join(suppressed_notes) if suppressed_notes else ""
+
         results.append({
             "symbol": sym, "date": target,
             "T0.1": t01_status, "H1": h1_status, "H2": h2_status, "H3": h3_status,
             "GOM_H": gom_h, "conf": conf,
+            "active_lanes": active_lanes_str,        # [V④-RT] kho | perp | kho+perp | ""
+            "h1_raw": h1_raw_str,                     # [V④-RT] True/False/N/A pre-T01-gate
+            "h2t01_raw": h2t01_raw_str,               # [V④-RT] True/False/N/A compose raw
+            "suppressed_note": suppressed_note_str,   # [V④-RT] "[SUPPRESSED n/14 lane=X]"
             "h1_kho_step_pct": h1_detail.get("kho_step_pct"),
             "h1_flags": h1_detail.get("flags", ""),
             "t01_fund_pinned": t01_detail.get("fund_pinned"),

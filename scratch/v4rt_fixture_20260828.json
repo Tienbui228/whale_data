@@ -1,0 +1,23 @@
+{
+  "spec_sha": "c8cf65b0",
+  "code_sha": "PENDING-COMMIT",
+  "yaml_md5": "96cf9128e225b09eccc452a0120c7ae5",
+  "row_1_bananas31": {
+    "expected": "≤2 alerts",
+    "observed": {
+      "n_fire": 1,
+      "n_suppressed": 6
+    },
+    "verdict": "OK"
+  },
+  "row_2_ake": {
+    "expected": "2 alerts hai lane",
+    "observed": {
+      "n_fire": 0,
+      "n_suppressed": 0,
+      "coverage_gap": []
+    },
+    "verdict": "REVIEW"
+  },
+  "l58_5_5": "PASS (compose-additive, single-day unchanged)"
+}

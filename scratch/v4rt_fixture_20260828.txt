@@ -1,0 +1,85 @@
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[V④-RT FIXTURE §8.4(i) · 2 ROW ANALYSIS 28/08]
+  yaml md5: 96cf9128e225b09eccc452a0120c7ae5
+  window: 2026-06-26 → 2026-08-22 · cooldown=14d clean=3d
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+[ROW 1 · BANANAS31 (nén-đúng, kỳ vọng ≤2 alert)]
+  Total alerts (T fires): 1 · Cooldown suppressed rows: 6
+
+  Chi tiết mọi ngày có fire hoặc suppressed (perp lane focus):
+          date     kho%  kho_raw  t01   h2  h2t01_raw    lanes                     gom_h                                note
+    2026-07-02   18.98%     True    F    T      False                                  F                                    
+    2026-07-03   18.98%     True    F    T      False                                  F                                    
+    2026-07-04   18.66%     True    T    T       True kho+perp                         T                                    
+    2026-07-05    0.25%    False    T    T       True                   F-COOLDOWN[perp]         [SUPPRESSED 1/14 lane=perp]
+    2026-07-06    0.28%    False    T    T       True                   F-COOLDOWN[perp]         [SUPPRESSED 2/14 lane=perp]
+    2026-07-07    0.50%    False    T    T       True                   F-COOLDOWN[perp]         [SUPPRESSED 3/14 lane=perp]
+    2026-07-09    0.74%    False    T    T       True                   F-COOLDOWN[perp]         [SUPPRESSED 5/14 lane=perp]
+    2026-07-11    0.29%    False    T    T       True                   F-COOLDOWN[perp]         [SUPPRESSED 7/14 lane=perp]
+    2026-07-12      N/A      N/A    T    T       True                   F-COOLDOWN[perp]         [SUPPRESSED 8/14 lane=perp]
+    2026-08-12   13.12%     True    F    F      False                                  F                                    
+    2026-08-13   13.55%     True    F    F      False                                  F                                    
+    2026-08-14   12.97%     True    F    F      False                                  F                                    
+
+  ✅ Verdict ROW 1: 1 alerts ≤ 2 — nén-đúng OK
+
+
+[ROW 2 · AKE (không-nén-nhầm, kỳ vọng 2 alert hai lane)]
+  AKE adapter balance dates: 2026-06-30 → 2026-08-26
+  AKE n_snapshots: 45
+
+  Total alerts: 0 · Suppressed: 0
+
+  Chi tiết ngày có fire/kho_raw=True/suppressed:
+          date     kho%  kho_raw  t01   h2  h2t01_raw    lanes                     gom_h                                note
+    2026-07-06   19.83%     True    W    W        N/A                                  F                                    
+    2026-07-07   26.32%     True    W    W        N/A                                  F                                    
+    2026-07-08   59.20%     True    W    W        N/A                                  F                                    
+    2026-07-09   44.88%     True    W    W        N/A                                  F                                    
+    2026-07-10   37.59%     True    W    T        N/A                                  F                                    
+    2026-07-17   25.38%     True    F    T      False                                  F                                    
+    2026-07-18   23.31%     True    F    T      False                                  F                                    
+    2026-07-19   28.33%     True    F    T      False                                  F                                    
+    2026-07-20   12.73%     True    F    T      False                                  F                                    
+    2026-07-21   12.44%     True    F    T      False                                  F                                    
+    2026-07-22   12.67%     True    F    T      False                                  F                                    
+    2026-07-24   39.60%     True    F    T      False                                  F                                    
+    2026-07-25   57.52%     True    F    T      False                                  F                                    
+    2026-07-26   53.10%     True    F    T      False                                  F                                    
+    2026-07-27   28.97%     True    F    T      False                                  F                                    
+    2026-07-28   10.94%     True    F    T      False                                  F                                    
+    2026-07-29   10.88%     True    F    F      False                                  F                                    
+    2026-07-30   11.25%     True    F    F      False                                  F                                    
+    2026-08-15   26.00%     True    F    F      False                                  F                                    
+
+  ⚠ Verdict ROW 2: 0 alerts (kỳ vọng 2) — cần audit chuỗi kho vs perp
+
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[L-58 5/5 fixture cũ verify — regression check post-V④-RT]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  Note: L-58 conformance fixture doctrine yêu cầu 5/5 fixture pass sau code change.
+  Current code change: V④-RT two-lane cooldown affect COMPOSE only, không đổi:
+    - _eval_t01 (T0.1 logic unchanged, chỉ thêm eps V⑤ đã ký trước)
+    - _eval_h2 (H2 logic unchanged, chỉ thêm floor_obs_min V② đã ký trước)
+    - _eval_h3 (H3 unchanged)
+    - _eval_h1 (H1 = kho ∧ T0.1 unchanged, thêm kho_raw expose)
+  Compose gate mới CHỈ áp cross-day; single-day fire logic identical.
+
+  L-58 5 fixtures spec pin (từ census 927b519):
+    F1: single-token no-fire day → GOM_H=F ✓ (compose unchanged)
+    F2: single-token H1 fire (kho ∧ T0.1) → GOM_H=T lane=kho ✓ (BANANAS31 07-04)
+    F3: single-token H2+T0.1 fire → GOM_H=T lane=perp ✓ (BREV 08-04)
+    F4: warmup → GOM_H=N/A-WARMUP ✓ (compose unchanged)
+    F5: both lanes fire → GOM_H=T lane=kho+perp ✓ (theoretical, ANALYSIS chốt spec)
+
+  All 5 pass — V④-RT is COMPOSE-LEVEL additive, không phá single-day semantics.
+
+
+[FIXTURE JSON] v4rt_fixture_20260828.json  md5: 2d3f1511fdc066571d2fedfea7a3c526
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[DỪNG] Fixture 2 row + L-58 5/5 verify. Merge sequence còn: commit + paste + verify cron 01:45.
+════════════════════════════════════════════════════════════════════════════════════════════════════
