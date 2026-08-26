@@ -49,3 +49,14 @@ Nguồn quyền lực: chuỗi chat-ký E-GATE 27-28/08 (operator relay). File n
 
 ## §7. ROW 14 BANANAS31 — PASS def re-target [CẦN KÝ, đã xếp hàng ký ⑪]
 Expected = **toàn compose GOM-H not-fire** (mọi lane) trong kỳ serial-pump theo probe 14/08 (ngày kỳ: đọc từ probe — file/§ do DEV trỏ). Trước khi DQ serial-pump merge: fires hiện hữu = **FP thật, đếm đủ vào FP-rate, row FAIL trung thực** — không thu hẹp expected thành "H1-not-fire".
+
+## §8. ROW TYPE 3 — KNOWN-MISS-BY-SCOPE (VÁ thêm 28/08 ANALYSIS, per operator relay)
+
+**KNOWN-MISS-BY-SCOPE:** expected = 0 alert vì loài nằm ngoài scope thiết kế hiện hành; row PASS khi máy im, nhưng render bắt buộc in nhãn này + pointer exhibit — không được hiển thị như negative. Đổi scope để phủ loài = amendment ký, khi đó row chuyển positive.
+
+**Ứng dụng trực tiếp — Row 2 AKE (fixture 2-row 28/08):**
+- Row 2 AKE = **KNOWN-MISS-BY-SCOPE**
+- Pointer: exhibit câu ①, loài **staging-dump (M2/T1.7)**
+- Lý do out-of-scope: AKE ret14 = 168%..2198% (newly-listed high-vol), H1 doctrine (kho ∧ compression) target mature tokens quiet accumulation; V① shadow (kho ∧ |ret14|≤0.15) cũng không phủ (0/19 kho_raw days pass shadow).
+- Render bắt buộc: `[KNOWN-MISS-BY-SCOPE — staging-dump M2/T1.7, câu ①]`
+- Row PASS vì máy im ĐÚNG THIẾT KẾ; không đếm miss vào FP-rate.

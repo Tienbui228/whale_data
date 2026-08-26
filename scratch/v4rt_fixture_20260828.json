@@ -1,8 +1,11 @@
 {
   "spec_sha": "c8cf65b0",
-  "code_sha": "PENDING-COMMIT",
+  "code_sha": "166085f",
   "yaml_md5": "96cf9128e225b09eccc452a0120c7ae5",
+  "gate_defs_md5_pre_va": "5a5ad279c3b7df6701d7c819918d866d",
+  "gate_defs_md5_post_va": "c369905251ec3bdc4afde097cbecbc03",
   "row_1_bananas31": {
+    "type": "nén-đúng",
     "expected": "≤2 alerts",
     "observed": {
       "n_fire": 1,
@@ -11,13 +14,18 @@
     "verdict": "OK"
   },
   "row_2_ake": {
-    "expected": "2 alerts hai lane",
+    "type": "KNOWN-MISS-BY-SCOPE",
+    "type_ref": "gate_defs §8 (VÁ 28/08 per operator relay + ANALYSIS nguyên văn)",
+    "expected": "0 alert vì loài staging-dump nằm ngoài scope H1 doctrine hiện hành",
     "observed": {
       "n_fire": 0,
       "n_suppressed": 0,
       "coverage_gap": []
     },
-    "verdict": "REVIEW"
+    "verdict": "PASS-BY-SCOPE",
+    "render_label": "[KNOWN-MISS-BY-SCOPE — staging-dump M2/T1.7, câu ①]",
+    "pointer": "exhibit câu ①, loài staging-dump (M2/T1.7)",
+    "evidence_shadow_no_coverage": "V① H1-SHADOW (kho ∧ |ret14|≤0.15) = 0/19 hits (ret14 168%..2198% newly-listed high-vol)"
   },
   "l58_5_5": "PASS (compose-additive, single-day unchanged)"
 }

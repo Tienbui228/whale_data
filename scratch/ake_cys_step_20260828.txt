@@ -1,0 +1,65 @@
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[(2) T-① AKE STEP — 2 ngày cuối cửa sổ step: 06/07 · 08/07]
+  yaml md5: 96cf9128e225b09eccc452a0120c7ae5
+  Semantic: 'ngày cuối cửa sổ step' = target date. Kho ≤3d window ending target.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  ─── AKE step-end = 2026-07-06 ───
+    Kho 3d: b_end=19146424809 · best |Δ|/b=19.83% (2d)
+    T0.1 overall: W  ·  floor_basis=10d
+      WARMUP: floor_basis 10d
+
+  ─── AKE step-end = 2026-07-08 ───
+    Kho 3d: b_end=27278974896 · best |Δ|/b=59.20% (3d)
+    T0.1 overall: W  ·  floor_basis=12d
+      WARMUP: floor_basis 12d
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[(3) CYS HAI-LANE VERIFY]
+  Window: 2026-06-26 → 2026-08-22 census
+  Condition row: gap perp-fire → kho ≤14d ∧ H1 fire thật
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  ═══ (i) CYS H2-fires full window ═══
+  H2=T ngày: 12 — ['2026-07-12', '2026-07-17', '2026-07-18', '2026-07-19', '2026-07-20', '2026-07-21', '2026-07-22', '2026-07-23', '2026-07-30', '2026-07-31']... (+more)
+  H2 ∧ T0.1 = perp-fire ngày: 0 — []
+
+  ═══ (ii) CYS H1 raw + T0.1 4 sub-vế ngày 03-05/08 ═══
+
+  ─── CYS @ 2026-08-03 ───
+    Kho 3d: b_end=76850643 · |Δ|/b=0.00% (Noned) → kho_raw=F
+    T0.1: F
+      funding_max14 : 1.60e-04 ≤ 5e-05 → F
+      oi_ratio      : 1.0468 ≤ 1.2 → T
+      |ret14|       : 0.0656 ≤ 0.10 → T
+      med7/med30    : 786729/790220=0.996 ≤ 1.0 → T
+
+  ─── CYS @ 2026-08-04 ───
+    Kho 3d: b_end=76888166 · |Δ|/b=0.05% (1d) → kho_raw=F
+    T0.1: F
+      funding_max14 : 3.10e-04 ≤ 5e-05 → F
+      oi_ratio      : 1.0318 ≤ 1.2 → T
+      |ret14|       : 0.5704 ≤ 0.10 → F
+      med7/med30    : 840252/790220=1.063 ≤ 1.0 → F
+
+  ─── CYS @ 2026-08-05 ───
+    Kho 3d: b_end=79238013 · |Δ|/b=3.11% (2d) → kho_raw=F
+    T0.1: F
+      funding_max14 : 1.30e-03 ≤ 5e-05 → F
+      oi_ratio      : 3.2273 ≤ 1.2 → F
+      |ret14|       : 1.0878 ≤ 0.10 → F
+      med7/med30    : 840252/813153=1.033 ≤ 1.0 → F
+
+  ═══ (iii) ROW CONDITION CHECK ═══
+  ⚠ CYS không có perp-fire (H2 ∧ T0.1) nào trong window — condition FAIL
+    → row không hợp lệ cho CYS. Báo ANALYSIS tìm ứng viên khác (per cảnh báo).
+
+  ═══ CẢNH BÁO PRE-CHECK: CYS 08-06 T0.1 funding ═══
+    CYS 08-06 funding_max14 = 1.30e-03  (threshold ≤ 5e-5)
+    funding_pin verdict = F
+    ⚠ hard-F funding — per cảnh báo operator: trượt → báo ANALYSIS tìm ứng viên khác, KHÔNG ép
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[DỪNG] (2)(3) done. (0)(1)(4) blocked pending gate_defs file + operator sign.
+       (5) morning nợ cũ.
+════════════════════════════════════════════════════════════════════════════════════════════════════
