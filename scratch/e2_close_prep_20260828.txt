@@ -1,0 +1,246 @@
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[(1) CROSS-BUG TRACE · gom_h_daily.py pre-fix _eval_h1 vs adapter kho_step_pct]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Pre-fix _eval_h1 (before commit 927b519):
+  ```
+  kho_step = r.get("kho_step_pct")                                    # (a) adapter output
+  threshold_pct = cfg_h1["balance_delta_abs_min"] * 100.0             # = 0.10 * 100 = 10.0
+  ok = abs(float(kho_step)) >= threshold_pct                          # (b) single-value check
+  ```
+
+Đường tính (a) — adapter_h1_nansen.py:156-160:
+  ```
+  kho_step_pct = delta_pct if delta_pct is not None else None         # bot's field pass-through
+  if kho_step_pct is None and bal + prev available:
+      kho_step_pct = (bal - prev) / prev                              # ← FALLBACK: FRACTION
+  ```
+
+Đường tính (b): kho_step assumed PCT vs threshold 10.0 pct.
+
+═══ CROSS 08-21 GIÁ TRỊ THẬT (raw Nansen snapshot) ═══
+
+  bot exchange_delta_pct    : -4.081963345743606   ← BOT UNIT = PCT (–4.08%)
+  bot exchange_balance_tokens: 40943352
+  bot exchange_prev_tokens  : 42685769
+  bot exchange_delta_tokens : -1742417
+  ratio |bal−prev|/prev     : 4.082%  (1-day)
+  probe _kho_3d best        : 4.24% (lb=2d)  ← 3-day spec-correct scan
+
+═══ TRACE 4.24% pass gate 10%? ═══
+  Pre-fix code path (a→b):
+    kho_step = -4.081963 (from bot delta_pct, PCT unit, 1-day)
+    threshold_pct = 10.0 (pct)
+    check: abs(-4.081963) >= 10.0 → False
+    → CROSS PRE-FIX GATE-CHECK LÀ FAIL
+
+  Vậy 4.24% (probe 3-day) KHÔNG PASS gate 10% dưới bất kỳ đường code nào.
+  Cũng chưa có đường code nào ép fire CROSS 08-21.
+
+═══ VERDICT CROSS-BUG ═══
+  KHÔNG PHẢI "bug thứ hai" ở gate check. Có thể là:
+  (A) VPS report "5 fires CROSS/GWEI/TOSHI/TRIA [H1]" trong e2_backlog:105
+      là paraphrase/typo; thực tế chỉ TOSHI (bot delta_pct=+11.18%) đủ single-day 10% gate.
+      GWEI (-1.87%), CROSS (-4.08%), TRIA (-8.98%) đều fail single-day gate.
+  (B) VPS gom_h_daily.py có scale conversion khác chưa xác định (không thấy trong code hiện).
+  Cần: DEV cross-check log VPS 08-21 gom_h_daily thô — số kho_step_pct nào được compare.
+
+  ⚠ BUG THẬT (đã fix trong commit 927b519):
+    - Old code chỉ single-day (adapter delta_pct 1d), spec yêu cầu ≤3d window.
+    - Old code không có ∧ T0.1 gate.
+  Fix: _eval_h1_fixed dùng balance_series 3-day scan + T0.1 gate.
+
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[(1) BẢNG H1-v4 8 CASE — kho ∧ T0.1 tại H1_first ngày (v3 adapter historical)]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  token     H1_v3 (kho only)   H1_v4 (kho ∧ T0.1)          change    lead_v4
+  ------------------------------------------------------------------------------------------
+  BANK            2026-07-20                  N/A            DROP           
+  TUT                    N/A                  N/A            same           
+  CYS             2026-08-06                  N/A            DROP           
+  HEMI            2026-08-17                  N/A            DROP           
+  ON              2026-07-15                  N/A            DROP           
+  CAP             2026-07-13                  N/A            DROP           
+  AKE             2026-07-06                  N/A            DROP           
+  BTW             2026-07-28                  N/A            DROP           
+
+  CAP +17d SỚM CHECK:
+    H1_v4 = N/A  → CAP +17d SỚM CHẾT (T0.1 gate không pass 07-13)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[(2) H1_FIXED = 2 FIRES · giá trị đủ 3 vế (kho + T0.1 4 điều kiện)]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  Fires với H1_fixed=T:
+
+  ─── BANANAS31 @ 2026-07-04 ───
+    kho: b_start=1966709316 b_end=2333638953 lb=3d |Δ|/b=18.66%  → PASS 10%
+    T0.1 4 vé:
+      funding_pin max|f|=|5.00e-05| ≤ 5e-5 → T
+      oi_ratio=1.1977 ≤ 1.2                → T
+      ret14=0.0813 ≤ 0.10                     → T
+      med7/med30=2923857/4629240=0.632 ≤ 1.0 → T
+    T0.1 overall: T   →  H1_fixed = kho(T) ∧ T0.1(T) = T
+
+  ─── COAI @ 2026-07-23 ───
+    kho: b_start=41102994 b_end=36584641 lb=3d |Δ|/b=10.99%  → PASS 10%
+    T0.1 4 vé:
+      funding_pin max|f|=|5.00e-05| ≤ 5e-5 → T
+      oi_ratio=1.0635 ≤ 1.2                → T
+      ret14=0.0660 ≤ 0.10                     → T
+      med7/med30=2463883/3030308=0.813 ≤ 1.0 → T
+    T0.1 overall: T   →  H1_fixed = kho(T) ∧ T0.1(T) = T
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[(3) BANANAS31 7 fires · per-fire nhánh + giá trị · XUNG ĐỘT ROW 14 material]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  ─── BANANAS31 @ 2026-07-04 ───
+    active: H1+H2+T01  ·  conf: normal
+    H1 kho 3d: |Δ|/b=18.66% (3d) — PASS 10% gate
+    T0.1: funding=T oi=T ret=T vol=T → T
+    H2: div_min14=6.368 div_today=7.230  ·  r_pos=1.510 r_oi=1.198
+        vé1 div-cut: False   vé2 pos-ratio: True   → active -/pos-ratio
+
+  ─── BANANAS31 @ 2026-07-05 ───
+    active: H2+T01  ·  conf: normal
+    H1 kho 3d: |Δ|/b=0.25% (2d) — fail 10% gate
+    T0.1: funding=T oi=T ret=T vol=T → T
+    H2: div_min14=6.368 div_today=8.060  ·  r_pos=1.811 r_oi=1.172
+        vé1 div-cut: False   vé2 pos-ratio: True   → active -/pos-ratio
+
+  ─── BANANAS31 @ 2026-07-06 ───
+    active: H2+T01  ·  conf: normal
+    H1 kho 3d: |Δ|/b=0.28% (2d) — fail 10% gate
+    T0.1: funding=T oi=T ret=T vol=T → T
+    H2: div_min14=6.368 div_today=9.001  ·  r_pos=1.842 r_oi=1.163
+        vé1 div-cut: False   vé2 pos-ratio: True   → active -/pos-ratio
+
+  ─── BANANAS31 @ 2026-07-07 ───
+    active: H2+T01  ·  conf: normal
+    H1 kho 3d: |Δ|/b=0.50% (3d) — fail 10% gate
+    T0.1: funding=T oi=T ret=T vol=T → T
+    H2: div_min14=6.368 div_today=9.490  ·  r_pos=1.862 r_oi=1.143
+        vé1 div-cut: False   vé2 pos-ratio: True   → active -/pos-ratio
+
+  ─── BANANAS31 @ 2026-07-09 ───
+    active: H2+T01  ·  conf: normal
+    H1 kho 3d: |Δ|/b=0.74% (3d) — fail 10% gate
+    T0.1: funding=T oi=T ret=T vol=T → T
+    H2: div_min14=6.368 div_today=9.428  ·  r_pos=1.693 r_oi=1.000
+        vé1 div-cut: False   vé2 pos-ratio: True   → active -/pos-ratio
+
+  ─── BANANAS31 @ 2026-07-11 ───
+    active: H2+T01  ·  conf: normal
+    H1 kho 3d: |Δ|/b=0.29% (3d) — fail 10% gate
+    T0.1: funding=T oi=T ret=T vol=T → T
+    H2: div_min14=6.403 div_today=8.222  ·  r_pos=1.690 r_oi=1.105
+        vé1 div-cut: False   vé2 pos-ratio: True   → active -/pos-ratio
+
+  ─── BANANAS31 @ 2026-07-12 ───
+    active: H2+T01  ·  conf: normal
+    H1 kho: MISSING balance (N/A)
+    T0.1: funding=T oi=T ret=T vol=T → T
+    H2: div_min14=6.484 div_today=7.602  ·  r_pos=1.629 r_oi=1.070
+        vé1 div-cut: False   vé2 pos-ratio: True   → active -/pos-ratio
+
+═══ BANANAS31 SUMMARY ═══
+  Ngày 07-04: H1+H2+T01 (fire cả 3) — cần ANALYSIS chấm TP/FP row 14
+  Ngày 07-05..07-12 (6 fires): H2+T01 only (kho không đủ 3d)
+  Nhánh H2 chi phối = pos-ratio (per ⑪ analysis đã báo)
+  → xung đột row 14 material: H1-mồi predicted-FP mode + H2-pos-ratio dominant
+
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[(4) T0.1 SUB-VẾ KILL — n token-days {H1_kho ∧ T0.1-vế-riêng} · vế nào giết giao điểm]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  Roster: full 52 eligible (|ret|<30% same as census)
+  Window: 2026-06-26 → 2026-08-22
+
+  Total (tok, day) with H1 kho ≥10% (3d) : 113
+
+  Của những (tok, day) đó, số ngày mỗi T0.1 vé pass:
+    vé                n_pass        %
+    funding_pin           16    14.2%
+    oi_ok                 42    37.2%
+    ret_ok                42    37.2%
+    vol_ok                47    41.6%
+    ALL 4 pass             2     1.8%  ← final H1_fixed=T
+
+  ⇒ Vế nào GIẾT giao điểm nhiều nhất = vé có %pass THẤP nhất.
+  ⇒ Data này cho ANALYSIS đọc câu hỏi "ngưỡng T0.1-trong-H1" (funding_pin có quá chặt?).
+
+
+  Chi tiết 113 kho-ok (tok,day) — dump cho ANALYSIS:
+  tok                date   funding_pin   oi  ret  vol  ovr
+  TAG          2026-07-16             F    F    F    F    F
+  TAG          2026-07-17             F    F    T    F    F
+  TAG          2026-07-18             F    F    T    F    F
+  TAG          2026-07-27             F    F    F    T    F
+  TAG          2026-07-28             F    F    F    T    F
+  TAG          2026-07-29             F    F    F    T    F
+  TAG          2026-07-30             F    F    F    T    F
+  TAG          2026-08-15             F    F    F    T    F
+  TAG          2026-08-16             F    T    F    T    F
+  TAG          2026-08-17             F    T    F    T    F
+  ALLO         2026-07-27             F    F    F    T    F
+  ALLO         2026-07-28             F    F    F    T    F
+  ALLO         2026-07-29             F    T    F    T    F
+  ALLO         2026-07-30             F    T    F    T    F
+  ALLO         2026-08-04             F    T    F    T    F
+  ALLO         2026-08-05             F    T    F    T    F
+  ALLO         2026-08-06             F    T    F    T    F
+  ALLO         2026-08-07             F    T    F    T    F
+  UAI          2026-07-17             F    F    T    F    F
+  UAI          2026-07-18             F    F    F    F    F
+  UAI          2026-07-19             F    F    F    T    F
+  BANANAS31    2026-07-02             T    T    F    T    F
+  BANANAS31    2026-07-03             T    T    F    T    F
+  BANANAS31    2026-07-04             T    T    T    T    T
+  BANANAS31    2026-08-12             T    F    F    F    F
+  BANANAS31    2026-08-13             T    F    F    F    F
+  BANANAS31    2026-08-14             T    F    F    F    F
+  COAI         2026-07-23             T    T    T    T    T
+  USELESS      2026-08-22             F    F    F    F    F
+  APR          2026-08-17             F    F    T    F    F
+  APR          2026-08-18             F    F    T    F    F
+  APR          2026-08-19             F    F    T    F    F
+  APR          2026-08-20             F    F    T    F    F
+  TOSHI        2026-08-21             F    T    F    T    F
+  TOSHI        2026-08-22             F    F    F    F    F
+  0G           2026-07-07             F    T    F    T    F
+  0G           2026-07-08             F    T    F    T    F
+  0G           2026-07-09             F    T    F    T    F
+  0G           2026-07-10             F    T    T    T    F
+  0G           2026-07-11             F    T    F    T    F
+  0G           2026-08-13             T    F    T    T    F
+  0G           2026-08-14             T    F    T    T    F
+  0G           2026-08-15             T    F    F    T    F
+  KGEN         2026-08-08             F    F    F    F    F
+  KGEN         2026-08-09             F    F    F    F    F
+  KGEN         2026-08-10             F    F    T    F    F
+  STAR         2026-07-17             F    F    F    F    F
+  STAR         2026-07-18             F    F    F    F    F
+  STAR         2026-07-19             F    F    F    F    F
+  STAR         2026-08-15             F    F    F    F    F
+  STAR         2026-08-16             F    F    T    F    F
+  STAR         2026-08-17             F    F    F    F    F
+  XAN          2026-07-04             T    F    F    F    F
+  XAN          2026-07-22             F    F    T    F    F
+  XAN          2026-07-23             F    F    T    F    F
+  XAN          2026-07-28             F    F    T    T    F
+  XAN          2026-07-29             F    F    T    T    F
+  XAN          2026-07-30             F    F    T    T    F
+  XAN          2026-08-11             F    F    T    F    F
+  XAN          2026-08-12             F    F    T    F    F
+  ... 46 more rows omitted (see CSV)
+
+  [CSV] e2_h1_kho_ok_t01_veles_20260828.csv  md5: c17123c6737c70be9831d1d796be49e7
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[DỪNG] E2-close-prep (1)(2)(3)(4) done · Census 63-row CSV giữ nguyên chờ ANALYSIS.
+       (5) sáng mai — D3 cron log paste separate.
+════════════════════════════════════════════════════════════════════════════════════════════════════
