@@ -53,20 +53,26 @@ def main():
         sys.exit(0)
 
     last_success = last_run.get("last_success", "")
-    if last_success != expected_last:
-        _log(f"[SKIP] last_success={last_success} ≠ expected={expected_last} — máy tắt/bot fail; H1 sẽ N/A ngày đó (adapter cờ)")
+    # [FIX 28/08] last_success = ISO datetime "YYYY-MM-DDThh:mm:ss"; expected_last = date "YYYY-MM-DD"
+    # → compare date portion only (last_success[:10]) không compare full string.
+    last_success_date = last_success[:10] if last_success else ""
+    if last_success_date != expected_last:
+        _log(f"[SKIP] last_success_date={last_success_date} ≠ expected={expected_last} (raw={last_success}) — máy tắt/bot fail; H1 sẽ N/A ngày đó (adapter cờ)")
         sys.exit(0)
 
     # Guard passed — sync snapshots + last_run.json
     _log(f"[GUARD-PASS] last_success={last_success} matches expected. Proceed sync.")
 
     # Sync new-only via SCP (rsync unavailable on Windows OpenSSH by default)
-    snapshots_glob = str(LOCAL_SNAPSHOTS / "*.json")
-    r = subprocess.run(
-        ["scp", "-p", snapshots_glob, f"{VPS_HOST}:{VPS_PATH}"],
-        capture_output=True, text=True, shell=False,
-    )
-    _log(f"[SCP snapshots] rc={r.returncode}  stderr={r.stderr[:200]}")
+    # [FIX 28/08] Windows OpenSSH scp KHÔNG expand glob *.json → phải liệt file explicit.
+    snapshot_files = sorted(LOCAL_SNAPSHOTS.glob("*.json"))
+    if not snapshot_files:
+        _log(f"[SKIP] snapshots dir empty: {LOCAL_SNAPSHOTS}")
+        sys.exit(0)
+    # Pass explicit file list (scp accept multiple sources + 1 dest)
+    scp_args = ["scp", "-p"] + [str(p) for p in snapshot_files] + [f"{VPS_HOST}:{VPS_PATH}"]
+    r = subprocess.run(scp_args, capture_output=True, text=True, shell=False)
+    _log(f"[SCP snapshots] rc={r.returncode}  n_files={len(snapshot_files)}  stderr={r.stderr[:200]}")
 
     r2 = subprocess.run(
         ["scp", "-p", str(LOCAL_LAST_RUN), f"{VPS_HOST}:{VPS_PATH}"],
