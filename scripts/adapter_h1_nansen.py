@@ -24,8 +24,18 @@ from typing import Optional
 import pandas as pd
 
 
-BOT_SNAPSHOTS = Path(r"D:/Check onchain fresh wallets/snapshots")
-BOT_LAST_RUN = Path(r"D:/Check onchain fresh wallets/last_run.json")
+# [H1-đường-(a) KÝ 28/08] Adapter đọc VPS-synced snapshot (VPS = đường chạy chính duy nhất).
+# Local Windows Task Scheduler 01:10 UTC (post Nansen 01:00) rsync/scp local snapshots
+# + last_run.json → VPS data/raw/nansen_snapshots/. Retention 30d rotate.
+# Máy tắt/bot fail → H1=N/A ngày đó theo cờ adapter, không coi sự cố.
+# Env-detect: posix (VPS) → VPS path; win32 (local dev) → local path fallback.
+import os as _os_env
+if _os_env.name == "posix" or _os_env.environ.get("ADAPTER_H1_VPS_MODE"):
+    BOT_SNAPSHOTS = Path("/root/Data_back_test/whale_data/data/raw/nansen_snapshots")
+    BOT_LAST_RUN = Path("/root/Data_back_test/whale_data/data/raw/nansen_snapshots/last_run.json")
+else:
+    BOT_SNAPSHOTS = Path(r"D:/Check onchain fresh wallets/snapshots")
+    BOT_LAST_RUN = Path(r"D:/Check onchain fresh wallets/last_run.json")
 
 
 def _load_snapshot(date_str: str) -> Optional[dict]:
