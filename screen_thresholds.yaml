@@ -148,11 +148,15 @@ gom_h:
   source: "mm_stage_machine_v1_proposal_20260823 §6 — ANALYSIS HYP, fit trên 8 case"
 
   # T0.1 compose (compose cần, cùng nhãn):
-  # funding ghim ≥14d (|f_avg| ≤5e-5) ∧ OI ≤1.2×min30 ∧ |ret14| ≤10% ∧ med7(vol) ≤ med30
+  # funding ghim ≥14d (|f_avg| ≤5e-5+ε) ∧ OI ≤1.2×min(oi, floor_basis) ∧ |ret14| ≤10% ∧ med7(vol) ≤ med30
+  # [V⑤ 28/08 ANALYSIS ký] funding_pin inclusive-by-design: check abs(v) <= pin_abs + 1e-9
+  # [V② 28/08 ANALYSIS ký] OI-FLOOR: min(available) với floor_obs_min=14 PROVISIONAL (chờ T-②)
   t0_1:
     funding_pin_days:   14        # |f_avg| ≤ funding_pin_abs trong ≥14d
     funding_pin_abs:    5.0e-5
-    oi_over_min30_max:  1.2       # OI ≤ 1.2 × min30(oi)
+    funding_pin_eps:    1.0e-9    # [V⑤] boundary inclusive ε (5e-5 = giá trị ghim, inclusive by design)
+    oi_over_min30_max:  1.2       # OI ≤ 1.2 × min(oi available)
+    floor_obs_min:      14        # [V② PROVISIONAL — chờ T-②] min N observations cho min(oi) floor
     ret14_abs_max:      0.10      # |ret14| ≤ 10%
     vol_med7_over_med30_max: 1.0  # med7(vol) ≤ med30(vol)
 
@@ -165,13 +169,15 @@ gom_h:
 
   # H2 SEAT-LIFT (div_avg3 = ratio-of-means M1):
   # (min(div_avg3 14d gần nhất) ≤0.6 ∧ div_avg3 hôm nay ≥1.0)
-  # ∨ (pos_r hôm nay / min(pos_r 14d) ≥1.25 ∧ oi ≤1.2×min30(oi))
+  # ∨ (pos_r hôm nay / min(pos_r 14d) ≥1.25 ∧ oi ≤1.2×min(oi available))
   # H2 KHÔNG có điều kiện funding — pin nằm ở T0.1
+  # [V② 28/08 ANALYSIS ký] H2-vế-2 OI-FLOOR: min(available) với floor_obs_min=14 PROVISIONAL
   h2:
     div_min_14d_max:    0.6       # min(div_avg3 14d) ≤ 0.6
     div_today_min:      1.0       # div_avg3 today ≥ 1.0
     pos_over_min14_min: 1.25      # pos_r_today / min(pos_r 14d) ≥ 1.25
-    oi_over_min30_max:  1.2       # oi ≤ 1.2 × min30(oi)  [same as t0_1]
+    oi_over_min30_max:  1.2       # oi ≤ 1.2 × min(oi available)
+    floor_obs_min:      14        # [V② PROVISIONAL — chờ T-②] min N observations cho min(oi) floor
 
   # H3 PROBE (cờ, không điều kiện):
   # vol ≥8×med14 ∧ |ret| ≤8%, vol = fapi k[7] fresh (P0-STORE-VOL-DUP)
@@ -185,8 +191,15 @@ gom_h:
     default:  "FAIL-CLOSED"       # NaN → False
     h1_only:  "N-A-VISIBLE"       # H1 N/A hiển thị, phân biệt False vs N/A
 
-  # Compose: GOM-H = H1 ∨ (H2 ∧ T0.1); H3 chỉ nâng conf. REPORT-ONLY.
-  # KHÔNG dòng nào chạm thresholds.yaml (screen_thresholds only).
-  compose: "GOM-H = H1 OR (H2 AND T0.1)"
+  # Compose: GOM-H = (H1 ∨ (H2 ∧ T0.1)) AND NOT gom_h_cooldown_14d; H3 chỉ nâng conf. REPORT-ONLY.
+  # [V④ 28/08 OPERATOR KÝ] compose thêm DQ = suppressor serial-pump (§8.4.i cooldown 14d reuse):
+  #   first GOM-H fire = day0; blocked days 1→13; clear day14; đợt mới sau ≥3d sạch (no GOM-H fire).
+  #   Tái dùng NGUYÊN VĂN §8.4(i) semantic — KHÔNG ngưỡng mới.
+  # [V① 28/08 ANALYSIS ký] H1-SHADOW report-only: "H1-shadow = kho(3d,≥10%) ∧ |ret14|≤0.15"
+  #   KHÔNG count trong compose.
+  compose: "GOM-H = (H1 OR (H2 AND T0.1)) AND NOT gom_h_cooldown_14d"
   h3_role: "confidence booster only (không tham gia fire)"
+  h1_shadow: "kho(3d,≥10%) AND |ret14|<=0.15 — REPORT-ONLY, không compose"
+  gom_h_cooldown_days: 14         # [V④] reuse §8.4(i) từ-first-fire; sạch >=3d để reset đợt
+  gom_h_cooldown_clean_days: 3    # [V④] ≥3d sạch = đợt mới
   output:  "REPORT-ONLY (Telegram khối riêng 'CAMPAIGN-PRE')"

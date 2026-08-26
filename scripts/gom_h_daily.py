@@ -138,20 +138,25 @@ def _eval_t01(df_sym: pd.DataFrame, date: str, cfg_t01) -> tuple[str, dict]:
     detail["n_oi_30"] = len(oi_30)
     detail["n_px_15"] = len(px_15)
     detail["n_vol_30"] = len(vol_30)
-    if (len(funding_14) < WARMUP_T01_FUNDING_N or len(oi_30) < WARMUP_T01_OI_N
+    # [V② OI-FLOOR] Warmup floor: funding_14 + floor_obs_min oi + px_15 + vol_30
+    floor_obs_min = cfg_t01.get("floor_obs_min", 14)
+    if (len(funding_14) < WARMUP_T01_FUNDING_N or len(oi_30) < floor_obs_min
         or len(px_15) < 15 or len(vol_30) < WARMUP_T01_VOL_MED30_N):
+        detail["floor_basis"] = f"{len(oi_30)}d"
         return "N/A-WARMUP", detail
-    # 1) funding pinned 14d: all |f| ≤ pin_abs
+    # 1) funding pinned 14d: all |f| ≤ pin_abs (+ ε for boundary inclusive per V⑤)
     pin_abs = cfg_t01["funding_pin_abs"]
-    fund_pinned = all(abs(v) <= pin_abs for v in funding_14)
+    pin_eps = cfg_t01.get("funding_pin_eps", 1.0e-9)
+    fund_pinned = all(abs(v) <= pin_abs + pin_eps for v in funding_14)
     detail["fund_pinned"] = fund_pinned
-    # 2) OI ≤ 1.2 × min30
+    # 2) OI ≤ 1.2 × min(oi available) — floor_basis = len(oi_30) (V②)
     oi_today = df_sym[df_sym["date"] == date]["oi_usd"].iloc[0] if not df_sym[df_sym["date"] == date].empty else float("nan")
     if pd.isna(oi_today):
         return "N/A-WARMUP", detail
-    oi_min30 = min(oi_30)
-    oi_ok = oi_today <= cfg_t01["oi_over_min30_max"] * oi_min30
-    detail["oi_ratio"] = oi_today / oi_min30 if oi_min30 > 0 else float("nan")
+    oi_min = min(oi_30)  # min(available), floor_obs_min already gated warmup
+    detail["floor_basis"] = f"{len(oi_30)}d"
+    oi_ok = oi_today <= cfg_t01["oi_over_min30_max"] * oi_min
+    detail["oi_ratio"] = oi_today / oi_min if oi_min > 0 else float("nan")
     # 3) |ret14| ≤ 10%
     ret14 = _compute_ret14(df_sym, date)
     if pd.isna(ret14):
@@ -171,10 +176,13 @@ def _eval_t01(df_sym: pd.DataFrame, date: str, cfg_t01) -> tuple[str, dict]:
 def _eval_h2(df_sym: pd.DataFrame, date: str, cfg_h2) -> tuple[str, dict]:
     """H2 SEAT-LIFT eval."""
     detail = {}
+    # [V② OI-FLOOR H2-vế-2] floor_obs_min replaces 30d hard req
+    floor_obs_min = cfg_h2.get("floor_obs_min", 14)
     pos_14 = _values_upto(df_sym, date, "lsr_pos_r", 14)
     oi_30 = _values_upto(df_sym, date, "oi_usd", 30)
     detail["n_pos_14"] = len(pos_14); detail["n_oi_30"] = len(oi_30)
-    if len(pos_14) < WARMUP_H2_POS_N or len(oi_30) < WARMUP_H2_OI_N:
+    detail["floor_basis"] = f"{len(oi_30)}d"
+    if len(pos_14) < WARMUP_H2_POS_N or len(oi_30) < floor_obs_min:
         return "N/A-WARMUP", detail
     # div_avg3 today + min14
     div_today = _compute_div_avg3(df_sym, date)
@@ -195,10 +203,10 @@ def _eval_h2(df_sym: pd.DataFrame, date: str, cfg_h2) -> tuple[str, dict]:
         pos_ratio = float("nan")
     oi_today = df_sym[df_sym["date"] == date]["oi_usd"]
     oi_today = float(oi_today.iloc[0]) if not oi_today.empty and pd.notna(oi_today.iloc[0]) else float("nan")
-    oi_min30 = min(oi_30)
-    if pd.isna(oi_today) or oi_min30 <= 0:
+    oi_min = min(oi_30)  # [V②] min(available) with floor_obs_min already gated
+    if pd.isna(oi_today) or oi_min <= 0:
         return "N/A-WARMUP", detail
-    oi_ratio = oi_today / oi_min30
+    oi_ratio = oi_today / oi_min
     v2 = (pd.notna(pos_ratio) and pos_ratio >= cfg_h2["pos_over_min14_min"]
           and oi_ratio <= cfg_h2["oi_over_min30_max"])
     return ("T" if (v1 or v2) else "F"), detail
