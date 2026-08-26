@@ -67,12 +67,17 @@ print(f"    p90 |Δ|: {covered['delta_abs'].quantile(0.90):.4f}")
 print(f"    max |Δ|: {covered['delta_abs'].max():.4f}")
 
 # Consumer: absorption() flip check on 12 tokens
-# absorption fires when 7d taker_buy_pct in [44, 50.5]% + range ≤10%
+# absorption fires when 7d taker_buy_pct in [44, taker_buy_max]% + range ≤10%
 # → Test if flipping legacy vs canonical changes absorption() output per (token, day)
-print(f"\n  Absorption() flip check (7d window [44,50.5]%):")
-# Build days per token, run absorption logic
+# [ERRATA-BAND-20260827 α] Was hardcoded [0.44, 0.505] = MISMATCH vs prod 53.0.
+# Now load yaml + cfg-provenance header (rule R6 skeleton).
+import scripts.gom_scan as _gom_scan_erratafix
+_cfg = _gom_scan_erratafix.load_thresholds(); _abs = _cfg["absorption"]
+tbp_44 = _abs["taker_buy_min"] / 100.0
+tbp_50_5 = _abs["taker_buy_max"] / 100.0  # var name legacy; PROD value = 0.53
+print(f"\n[CFG-PROVENANCE 5b] absorption band [{tbp_44}, {tbp_50_5}] loaded thresholds.yaml (ERRATA-BAND fixed)")
+print(f"  Absorption() flip check (7d window [{tbp_44*100:.1f}, {tbp_50_5*100:.1f}]%):")
 absorption_diffs = []
-tbp_44 = 0.44; tbp_50_5 = 0.505  # fraction thresholds
 
 for sym in sorted(TOKENS):
     df_sym = df_store[df_store["symbol"] == sym].sort_values("date").reset_index(drop=True)

@@ -18,18 +18,41 @@
 | `(v)-taker-lineage` / `(v)-px-basis` / `(v)-basis-mixed` | Basis divergence between families | pending backfill/regen scope decision | **0** (hội tụ khép post-canonical) |
 | `KHÁC` | Bug thật (block merge) | **0 required** | **0** |
 
-## 6 fix (từ operator ký 24/08 R6 pin HOÃN) — resolved trong pin v2
+## 6 fix (từ operator ký 24/08 R6 pin HOÃN) — resolved trong pin v2 (ERRATA-fixed 27/08)
 
 | # | Fix | Status |
 |---:|---|:---:|
 | 1 | Paste full changelog md5 R4-v2 (thay `32b6d018...` truncated) | ✓ file `docs/reports/resulttxt_regen_v2_changelog_20260824.md` + regen-manifest changelog `20260827` |
-| 2 | Unify rows 6/14 (TAG open + TAG-trap) → **1 row TAG** | ✓ Row 6 mới = TAG-trap-negative unified (bỏ row 14 duplicate) |
-| 3 | Unify rows 11/14 (IDOL open + IDOL-NEG 4b) → **1 row IDOL** | ✓ Row 11 mới = IDOL-NEG 4b unified (bỏ row 14 dup) |
-| 4 | Fix cross-ref TUT 10/16 → **1 row TUT unified** | ✓ Row 10 mới = TUT-A-NEG unified (bỏ row 16 dup); Row 15 giữ ARCHIVED-chapter |
+| 2 | Unify rows **6/13** (TAG open + TAG-trap) → **1 row TAG** | ✓ Row 6 mới = TAG trap-negative unified (bỏ row 13 duplicate); **ERRATA fix**: draft trước ghi `6/14` sai — TAG-trap ở row 13 fixture MD |
+| 3 | Unify rows **11/14** (IDOL open + IDOL-NEG 4b) → **1 row IDOL** | ✓ Row 11 mới = IDOL neg-4b unified (bỏ row 14 dup) |
+| 4 | Fix cross-ref TUT **10/16** → **1 row TUT unified** | ✓ Row 10 mới = TUT-A-NEG unified (bỏ row 16 dup); Row 15 giữ ARCHIVED-chapter |
 | 5 | BANANAS31 re-scope (⑪) — GOM-C ARCHIVED → 2 rows re-target | ✓ Row 13 BANANAS31 a-not-open + Row 14 h-not-fire-pending |
-| 6 | Row 4 thêm ref CASE_BANK md5 9179c51e per chữ ký | ✓ Row 4 đã có md5 trong BACKTEST_GATE gom_scan.py:1019 |
+| 6 | Row 4 thêm ref CASE_BANK md5 `9179c51e` per chữ ký | ✓ Row 4 đã có md5 trong BACKTEST_GATE gom_scan.py:1019 |
 | Bonus | Commit case_lsr_ref (path + sha) | ✓ committed `5a3acd3` at `data/reference/case_lsr_ref_20260824.csv` md5 `7de16e7e...` |
 | Bonus | Pin one-time trên giá trị hậu-backfill+canonical | ✓ this file (post ⑬-CLOSE stack: `b17efe8`) |
+
+## Row-ID map cũ (fixture MD 17 rows) → mới (R6 v2 pin 16 rows)
+
+| Old ID (fixture_12case_schema_draft) | New ID (R6 v2 pin) | Change |
+|---:|---:|---|
+| 1 _FORMULA gom_a_fire | 1 _FORMULA gom_a_fire | unchanged |
+| 2 _FORMULA hedge_base_strict | 2 _FORMULA hedge_base_strict | unchanged |
+| 3 BANK open | 3 BANK open (07-10) | date updated post-canonical |
+| 4 BANK chapter (TBD) | 4 BANK pre_chain_crowd_flush (07-03) | episode renamed + pin CASE_BANK md5 |
+| 5 BANK close (TBD) | 5 BANK close-iv (07-14) | episode + date confirmed |
+| 6 TAG open (TBD) | **6 TAG trap-negative** | **UNIFY 6+13** (TAG open TBD merged with row 13 TAG-trap) |
+| 7 BAS SUPP | 7 BAS SUPP | unchanged |
+| 8 BTW SUPP | 8 BTW SUPP | unchanged |
+| 9 BULLA hbs canonical | 9 BULLA hbs canonical 5d/07-08 | ① re-baseline 5d canonical |
+| 10 TUT a-negative | **10 TUT a-negative** | **UNIFY 10+16** (bỏ row 16 dup) |
+| 11 IDOL open (TBD) | **11 IDOL neg-4b** | **UNIFY 11+14** (bỏ row 14 dup) |
+| 12 AKE SUPP | 12 AKE SUPP | unchanged (④ N/A-BLOCK for _result regen scope) |
+| 13 TAG trap-negative | (merged into row 6) | REMOVED |
+| 14 IDOL neg-4b | (merged into row 11) | REMOVED |
+| 15 BANANAS31 negative | **13 BANANAS31 a-not-open** + **14 BANANAS31 h-not-fire-pending** | **⑪ RE-TARGET 2 rows mới** thay row 15 cũ |
+| 16 TUT a-negative-supp (dup) | (merged into row 10) | REMOVED |
+| — | **15 TUT ARCHIVED-chapter** | moved from earlier baseline position |
+| 17 BULLA registry_tier_STRICT_feeder | 16 BULLA registry_tier_STRICT_feeder | renumbered |
 
 ---
 
@@ -57,7 +80,10 @@
 | 11 | `tut_result.txt` | `a0927a8c...` |
 | 12 | `ake_result.txt` | (unchanged; ④ N/A-BLOCK) |
 
-## BACKTEST_GATE 15 rows canonical (v2 pin)
+## BACKTEST_GATE 15 rows canonical (v2 pin) — verdict: **13 PASS + 1 PENDING-BUILD + 1 SKIP**
+
+(Rows 1-2 = _FORMULA verified in code counted as PASS; Row 14 BANANAS31 h-not-fire-pending = PENDING-BUILD soft; Row 15 TUT ARCHIVED-chapter = SKIP)
+
 
 | # | Token | Episode | Expected | Provenance | Verdict |
 |---:|---|---|---|---|---|
@@ -83,11 +109,18 @@
 |---:|---|---|---|---|---|
 | 16 | **BULLA** | registry_tier_STRICT_feeder | Episode 06-29→07-17 (freshwatch) nhận tier-STRICT via feeder GOM-B; HBS 5d WITHIN span | K5 fixture + ⑫-BULLA-B6-STRICT-KÝ-27/08 (spec `b17efe8`) | tier-STRICT (feeder impl `59a7a63`) |
 
-## HEMI ANCHOR verify (GATE R6)
+## HEMI ANCHOR verify (GATE R6) — ERRATA prose fix
 
-Rerun probe `_probe_hemi_anchor_gate_r6_20260827.py` verified:
-- HEMI 1 episode 07-05→07-11 (5d) invariant vs baseline
-- ⚡ 15/08 vol 48.3× (campaign-defining) TRUE
+Rerun probe `_probe_hemi_anchor_gate_r6_20260827.py` verified (ERRATA prose fix 27/08):
+- HEMI 1 episode **07-05→07-11 (ep_len=7, count_le050=5)** invariant vs baseline — KHÔNG "5d" (ep_len 7 ngày, chỉ 5 ngày count div≤0.5)
+- ⚡ 15/08 vol / **median 14d prior** (spec §E-R canonical, was med5d in initial probe = SAI SPEC) = **47.7×** (campaign-defining TRUE)
+- Code paste probe fixed (`_probe_hemi_anchor_gate_r6_20260827.py:107-115`):
+  ```python
+  pre_15 = [r for r in arr if "2026-08-01" <= r["date"] <= "2026-08-14"]  # 14d window
+  vals = sorted([r["vol"] for r in pre_15 if r["vol"] == r["vol"]])
+  med_vol_pre_14d = vals[len(vals)//2]  # median canonical
+  vol_ratio = r_815["vol"] / med_vol_pre_14d
+  ```
 - Tier LOOSE (count_le050=5)
 - GATE(i) 3 vế RE-ARM formula uses px+oi (không đọc taker) → invariant qua canonical basis change
 - **GATE R6 PASS** — R6 pin eligible

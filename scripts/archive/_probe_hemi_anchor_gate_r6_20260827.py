@@ -103,16 +103,18 @@ h_814_20 = [r for r in arr if "2026-08-14" <= r["date"] <= "2026-08-20"]
 for r in h_814_20:
     print(f"    {r['date']}: px={r['px']:.6f} vol={r['vol']:.0f} pos={r['pos']:.3f} gLSR={r.get('acc',NaN)}")
 
-# Vol ratio 15/08 vs prior 5d median
-pre_15 = [r for r in arr if "2026-08-09" <= r["date"] <= "2026-08-14"]
+# [ERRATA-BAND-20260827 fix] Vol ratio 15/08 vs prior 14d median (spec §E-R canonical),
+# was med5d (sai spec — L-53 evidence "vol 50-70×med14").
+pre_15 = [r for r in arr if "2026-08-01" <= r["date"] <= "2026-08-14"]
 if pre_15:
-    med_vol_pre = sorted([r["vol"] for r in pre_15 if r["vol"] == r["vol"]])[len(pre_15)//2]
+    vals = sorted([r["vol"] for r in pre_15 if r["vol"] == r["vol"]])
+    med_vol_pre_14d = vals[len(vals)//2] if vals else 0
     r_815 = next((r for r in arr if r["date"] == "2026-08-15"), None)
-    if r_815 and med_vol_pre > 0:
-        vol_ratio = r_815["vol"] / med_vol_pre
-        print(f"\n    15/08 vol {r_815['vol']:.0f} / median 5d prior {med_vol_pre:.0f} = {vol_ratio:.1f}×")
+    if r_815 and med_vol_pre_14d > 0:
+        vol_ratio = r_815["vol"] / med_vol_pre_14d
+        print(f"\n    15/08 vol {r_815['vol']:.0f} / median 14d prior {med_vol_pre_14d:.0f} = {vol_ratio:.1f}× (med14 canonical)")
         if vol_ratio >= 10:
-            print(f"    ✓ ⚡ 15/08 wave-2 IGNITE = TRUE (campaign-defining vol spike)")
+            print(f"    ✓ ⚡ 15/08 wave-2 IGNITE = TRUE (campaign-defining vol spike, med14 basis)")
         else:
             print(f"    △ vol_ratio {vol_ratio:.1f}× < 10× threshold — wave-2 signal marginal")
 

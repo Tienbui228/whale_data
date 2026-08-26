@@ -102,8 +102,14 @@ def _consumer_diff_5b_clone(scratch_df, store_df):
         "max_abs": covered["delta_abs"].max(),
     }
 
-    # Absorption flip count per (symbol, day): 7d window [0.44, 0.505]%
-    tbp_lo, tbp_hi = 0.44, 0.505
+    # Absorption flip count per (symbol, day): 7d window PROD band
+    # [ERRATA-BAND-20260827 α] Was hardcoded [0.44, 0.505] = MISMATCH vs prod 53.0.
+    # Load yaml + cfg-provenance header (R6 skeleton rule).
+    import scripts.gom_scan as _gom_scan_erratafix
+    _cfg_e = _gom_scan_erratafix.load_thresholds(); _abs_e = _cfg_e["absorption"]
+    tbp_lo = _abs_e["taker_buy_min"] / 100.0
+    tbp_hi = _abs_e["taker_buy_max"] / 100.0  # PROD = 0.53
+    print(f"  [CFG-PROVENANCE Scope-A] absorption band [{tbp_lo}, {tbp_hi}] loaded thresholds.yaml (ERRATA-BAND fixed)")
     flip_rows = []
     for sym, g in covered.sort_values(["symbol","date"]).groupby("symbol"):
         g = g.reset_index(drop=True)
