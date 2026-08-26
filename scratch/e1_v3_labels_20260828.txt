@@ -1,0 +1,89 @@
+
+[E1-CAVEAT ANALYSIS — chép nguyên văn ở đầu báo cáo, không sửa]
+
+"Các số này được fit trên chính 8 case positive → E1 replay pass phần lớn là by
+construction — ngưỡng H1/H2/H3 đã tune trên chính observations của 8 case.
+Ai đọc E1 như validation là rơi đúng bẫy L-53 / sanity-vòng-tròn.
+E1 là ĐO NỘI, không phải VALIDATION. Validation THẬT = E2 control-set + forward 30d.
+Gate off-draft phải ≥6/8 E1 + E2 FP rate + control ≥20 chưa-chạy."
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[CFG-PROVENANCE PHA-E-v3]
+  yaml: screen_thresholds.yaml  md5: b0ddb8ff2b15f12bc6093ab3ae932462
+  Values: h1.balance_delta_abs_min=0.1, window_days_max=3
+          h2.div_min_14d_max=0.6, div_today_min=1.0, pos_over_min14_min=1.25, oi_over_min30_max=1.2
+  H1 adapter window: 2026-06-30 → 2026-08-22 (VPS-synced snapshots)
+  spec_version: v4.0-draft · amendments: [GOM-RESTRUCT, ⑬, H1-đường-(a), E1-v3-labels]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[E1-v3 (1)(2) LEAD LABELS + RUNWAY-PRE-IGNITION]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+  Quy ước MỚI: lead = ignition − H_first (dương = SỚM: cảnh báo trước ignition)
+  Runway window: 2026-06-30 → ignition (nếu <14d → H1 LEFT-CENSOR)
+
+  token       ignition   runway |     H1_first    lead_H1 |     H2_first    lead_H2 |     H3_first    lead_H3
+  -------------------------------------------------------------------------------------------------------------
+  BANK      2026-07-10      10d |   2026-07-20   -10d TRỄ |   2026-08-15   -36d TRỄ |   2026-07-22   -12d TRỄ
+      → [LEFT-CENSOR — handoff pre-window, không đánh giá H1]
+  TUT       2026-07-08       8d |          N/A        N/A |          N/A        N/A |   2026-08-06   -29d TRỄ
+      → [LEFT-CENSOR — handoff pre-window, không đánh giá H1]
+  CYS              N/A      N/A |   2026-08-06        N/A |   2026-07-12        N/A |   2026-08-07        N/A
+  HEMI      2026-07-20      20d |   2026-08-17   -28d TRỄ |   2026-07-30   -10d TRỄ |   2026-07-21    -1d TRỄ
+  ON               N/A      N/A |   2026-07-15        N/A |          N/A        N/A |   2026-07-22        N/A
+  CAP       2026-07-30      30d |   2026-07-13   +17d SỚM |          N/A        N/A |          N/A        N/A
+  AKE              N/A      N/A |   2026-07-06        N/A |   2026-07-26        N/A |   2026-07-20        N/A
+  BTW              N/A      N/A |   2026-07-28        N/A |          N/A        N/A |          N/A        N/A
+
+  CAP H1 FIX: previous v2 hiển thị '+17d (post)' SAI CHIỀU.
+    CAP ignition=2026-07-30, H1_first=2026-07-13 → lead = 30−13 = +17d SỚM (H1 cảnh báo trước 17 ngày).
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[E1-v3 (3) HEMI 07-12 STORE — warmup H2 per-vế analysis]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+  STORE first_seen  : 2026-06-27  (n_days=55)
+  STORE last_seen   : 2026-08-23
+  H2 warmup req: 14 lsr_pos_r + 30 oi_usd (per vế 2 pos-ratio)
+                 14 pos + 14 div (per vế 1 div-cut)
+
+  first date đủ 14 pos    : 2026-07-10
+  first date đủ 14 oi     : 2026-07-10
+  first date đủ 30 oi     : 2026-07-29  ← vế 2 pos-ratio warmup gate
+
+  Ngày HYP target: 2026-07-12  (ignition HEMI=2026-07-20)
+  → target 2026-07-12 NẰM TRONG WARMUP (min30 gate = 2026-07-29, còn thiếu 17d)
+  → Vế 2 pos-ratio KHÔNG THỂ eval ngày 2026-07-12 (min30 oi warmup mù)
+  → Vế 1 div-cut ELIGIBLE ngày 2026-07-12 (đủ 14 pos)
+
+  ═══ FINDING CHO ANALYSIS ═══
+  "HEMI un-hedge 07-12: vế 2 pos-ratio bị min30-oi-warmup che.
+   STORE first_seen=2026-06-27, cần 30d oi → first eligible=2026-07-29.
+   Chỉ vế 1 div-cut còn eval được — bỏ sót nhánh dominant (92.3% fw-139 fires)."
+
+  H2 eval STORE tại 2026-07-12 (raw):
+    _eval_h2 → W  (T=fire, F=fail, W=warmup)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[E1-v3 (4) CYS 07-12 STORE — H2 branch analysis]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+  Ngày target: 2026-07-12  (E1-v2 STORE H2_first = 2026-07-12)
+  STORE first_seen: 2026-05-26, n_days=87
+
+  Warmup: pos_14 n=14 · oi_30 n=30
+
+  Vế 1 div-cut (div_min14 ≤ 0.6 ∧ div_today ≥ 1.0):
+    div_min14  = 0.7594410152206419
+    div_today  = 0.8143936546124352
+    div_min14 ≤ 0.6? False   ·  div_today ≥ 1.0? False   → VẾ 1 = False
+
+  Vế 2 pos-ratio (pos/min14 ≥ 1.25 ∧ oi/min30 ≤ 1.2):
+    pos_today  = 1.6928   ·  pos_min14 = 1.3027   →  ratio = 1.2994549781223614
+    oi_today   = 7457589.3437   ·  oi_min30  = 7301833.49735   →  ratio = 1.021331059713499
+    pos/min14 ≥ 1.25? True   ·  oi/min30 ≤ 1.2? True   → VẾ 2 = True
+
+  KẾT LUẬN: H2 fire = vế1(False) ∨ vế2(True) = True
+    → Nhánh POS-RATIO bật (seat-lift pos surge)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[E1-v3 DỪNG] Bảng thay v2 · caveat giữ nguyên · chờ operator [ ] + ký GOM-H off-draft.
+════════════════════════════════════════════════════════════════════════════════════════════════════
