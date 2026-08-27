@@ -1,9 +1,8 @@
 {
-  "spec_sha": "c8cf65b0",
-  "code_sha": "166085f",
-  "yaml_md5": "96cf9128e225b09eccc452a0120c7ae5",
-  "gate_defs_md5_pre_va": "5a5ad279c3b7df6701d7c819918d866d",
-  "gate_defs_md5_post_va": "c369905251ec3bdc4afde097cbecbc03",
+  "spec_sha": "490a8f49",
+  "gate_defs_md5": "f275c53c4a0f42b5a7b190e6e0143ca5",
+  "yaml_md5": "59aadeb928017b5a663c9f279a2c0150",
+  "code_sha_prod": "e851db50 (ramp wire + tripwire + conf fix pending commit)",
   "row_1_bananas31": {
     "type": "nén-đúng",
     "expected": "≤2 alerts",
@@ -14,18 +13,14 @@
     "verdict": "OK"
   },
   "row_2_ake": {
-    "type": "KNOWN-MISS-BY-SCOPE",
-    "type_ref": "gate_defs §8 (VÁ 28/08 per operator relay + ANALYSIS nguyên văn)",
-    "expected": "0 alert vì loài staging-dump nằm ngoài scope H1 doctrine hiện hành",
-    "observed": {
-      "n_fire": 0,
-      "n_suppressed": 0,
-      "coverage_gap": []
-    },
-    "verdict": "PASS-BY-SCOPE",
-    "render_label": "[KNOWN-MISS-BY-SCOPE — staging-dump M2/T1.7, câu ①]",
-    "pointer": "exhibit câu ①, loài staging-dump (M2/T1.7)",
-    "evidence_shadow_no_coverage": "V① H1-SHADOW (kho ∧ |ret14|≤0.15) = 0/19 hits (ret14 168%..2198% newly-listed high-vol)"
+    "type": "POSITIVE",
+    "sub_label": "via-ramp [PROVISIONAL-30d]",
+    "type_ref": "operator verdict 29/08 · AKE kho-ramp bắt được 07-13 (73.5%) + 07-14 (79.6%)",
+    "auto_revert_if": "kho-ramp trigger khai tử (amendment ký) → tự động revert về KNOWN-MISS-BY-SCOPE",
+    "provisional_expiry": "30d report-only từ compose gói-nhẹ merge (29/08+30d = 2026-09-28)",
+    "expected_post_verdict": "H1-ramp fire pre-D0 → PASS lead ≥1d",
+    "observed_probe": {"h1_ramp_pre_D0": ["2026-07-13", "2026-07-14"], "d0": "2026-07-15"},
+    "verdict": "POSITIVE"
   },
   "row_3_pending_live_two_lane": {
     "type": "PENDING-LIVE two-lane",
@@ -34,7 +29,9 @@
     "observed": {
       "MIRA_2026-08-24": {"lane": "perp", "GOM_H": "T", "role": "first-fire perp lane"},
       "MIRA_2026-08-25": {"lane": "perp", "GOM_H": "F-COOLDOWN[perp]", "role": "cooldown blocked 1/14 sau first-fire"},
-      "LA_2026-08-25":   {"lane": "perp", "GOM_H": "T", "role": "different token, no prev fire"}
+      "MIRA_2026-08-26": {"lane": "perp", "GOM_H": "F-COOLDOWN[perp]", "role": "cooldown 2/14 (verified cron 27/08 01:45 UTC)"},
+      "LA_2026-08-25": {"lane": "perp", "GOM_H": "T", "role": "different token, no prev fire"},
+      "LA_2026-08-26": {"lane": "perp", "GOM_H": "F-COOLDOWN[perp]", "role": "cooldown 1/14 (verified cron 27/08 01:45 UTC)"}
     },
     "pending_maturity_dates": {
       "MIRA_08-24_matures": "2026-09-23 (D+30 for TP/FP grade per §5)",
@@ -44,30 +41,34 @@
     "verdict": "PENDING-LIVE (evidence intact, waiting maturity)",
     "note": "Live cross-day cooldown mechanism verified operational (MIRA T→F-COOLDOWN diff). Case bộ 9 KHÔNG replace row này — đợi runtime accumulate ≥30d live fires."
   },
-  "row_14_bananas31_re_target": {
-    "type": "row 14 BANANAS31 (§7 gate_defs)",
-    "type_ref": "gate_defs §7 PASS def re-target [CẦN KÝ ⑪]",
-    "expected_pre_dq_serial": "toàn compose GOM-H not-fire trong kỳ serial-pump (probe 14/08)",
-    "measured_post_v4rt": {
-      "n_fire": 1,
-      "n_suppressed": 6,
-      "note": "post V④-RT: 1 fire (07-04) + 6 suppressed (07-05..07-12) vs expected toàn-not-fire → còn FAIL"
+  "row_14_bananas31_dq_demo": {
+    "type": "DQ-demo",
+    "type_ref": "operator verdict 29/08 · gate_defs §7 DQ-SERIAL v0 merged (spec 490a8f49)",
+    "status": "PASS",
+    "expected_post_dq_v0": "toàn compose GOM-H not-fire mọi lane trong kỳ serial-pump",
+    "observed_probe_dq_v0": {
+      "kỳ_serial_pump": "2026-07-04 → 2026-07-12 (7 census rows)",
+      "n_fire_post_dq": 0,
+      "n_dq_render": 7,
+      "render_lines": [
+        "[DQ-SERIAL] BANANAS31 lane=kho+perp (07-04)",
+        "[DQ-SERIAL] BANANAS31 lane=perp (07-05..07-12, 6 rows)"
+      ],
+      "cooldown_khoi_khong": true
     },
-    "verdict": "FAIL (measured 1+6 vs expected 0)",
-    "waiting": "ANALYSIS chốt (a) DQ serial-pump merge vào compose HAY (b) re-target expected accept 1 fire+cooldown",
-    "note": "§7 pre-DQ-merge: fires hiện hữu = FP thật đếm đủ vào FP-rate, row FAIL trung thực — không thu hẹp expected"
+    "assert_am_ban": "raw=False (BANANAS31 các ngày ngoài kỳ) → KHÔNG in [DQ-SERIAL] (chặn nhãn-ma, đối xứng nhãn-câm)",
+    "note": "Trạng thái PASS (cấm chữ POSITIVE per operator verdict). DQ-demo mô tả DQ v0 hoạt động đúng lane per-lane, không khởi cooldown."
   },
   "row_r4_testa_pending_state_wire": {
     "type": "PENDING-STATE-WIRE",
     "type_ref": "r4 fixture · post-MERGE lib/registry_events.py (e22732e) + operator relay 28/08",
-    "test_scenario": "TESTA · rel_ep_kind='current' + ep[i].in_hedge=True · pos_r=max30 + r_pos_over_min14=1.65 + acc_ratio=0.333 (all rules pass) · expected r4 GATE FAIL",
-    "current_observation": "r4 FIRES (placeholder allow current+in_hedge until RE-ARM state store wired)",
-    "expected_behavior_post_wire": "r4 gate FAIL: current in_hedge (not post-break, no RE-ARM signal) → state_gate FALSE → return None",
-    "verdict_now": "PENDING-STATE-WIRE (partial-by-design)",
-    "lat_pass_condition": "wrapper adds RE-ARM state store (JSON persist open/close/re-arm state per token); _check_r4_evidence receives state via arg, gate check external re-arm signal AND current in_hedge → False when not RE-ARM state",
-    "auto_flip_pass_when": "wrapper scripts/registry_daily.py FULL impl merged (post day-27-28 build) → state store lands → fixture re-run → r4 returns None for TESTA current-in_hedge (no re-arm) → PASS-BY-DESIGN",
-    "render_label": "[PENDING-STATE-WIRE — flip PASS post wrapper state store]",
-    "task_ref": "proposals/registry_phase2_cron_deploy_20260828.md + r4_diff_registry_events_20260828.md"
+    "current_observation": "r4 FIRES (placeholder allow current+in_hedge)",
+    "auto_flip_pass_when": "wrapper scripts/registry_daily.py FULL impl merged → RE-ARM state store lands → fixture re-run → r4 returns None cho TESTA current-in_hedge",
+    "verdict_now": "PENDING-STATE-WIRE"
+  },
+  "census_header_notes": {
+    "dq_count_per_lane_correct": "24 (BANANAS31 lane_kho=8d + lane_perp=16d)",
+    "dq_count_58_old_replaced": "SỐ 58 CŨ = đếm SAI (total-day approach, không per-lane) → THAY BẰNG 24 per-lane"
   },
   "l58_5_5": "PASS (compose-additive, single-day unchanged)"
 }

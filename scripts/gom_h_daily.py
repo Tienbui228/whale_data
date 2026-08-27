@@ -467,12 +467,40 @@ def main():
         token_bare = sym[:-4] if sym.endswith("USDT") else sym
         dq_serial_hit = token_bare in dq_members
 
-        # h1_raw = h1_kho_step OR h1_kho_ramp (kho-ramp PROVISIONAL wire)
-        # For now, h1_raw_str tracks kho_step only; kho-ramp = separate check
+        # h1_raw = h1_kho_step OR h1_kho_ramp — PRODUCTION wire (was stub)
         h1_step_raw = (h1_raw_str == "True")
-        # kho-ramp: |balance(D) - balance(D-14)| / balance(D-14) ≥ 0.15
-        # Implementation stub: needs balance_series lookback 14d — placeholder False
-        h1_ramp_raw = False  # TODO: wire ramp check via balance_series[D-14]
+        # kho-ramp: |balance(D) - balance(D-14)| / balance(D-14) ≥ 0.15 via adapter
+        # Adapter reads snapshot bal_date semantic §5 (SIGNED 28/08); ingest_date = target+1
+        h1_ramp_raw = False
+        try:
+            ramp_cfg = goi_nhe_cfg.get("kho_ramp", {})
+            ramp_thr = ramp_cfg.get("delta_min", 0.15)
+            ramp_win = ramp_cfg.get("window_days", 14)
+            # adapter_df has one row per token · we need balance series for D-14
+            # Read from raw snapshot: ingest_date = target+1
+            _snap_dir = Path("/root/Data_back_test/whale_data/data/raw/nansen_snapshots") \
+                if _os_env.name == "posix" else Path("D:/Check onchain fresh wallets/snapshots")
+            _target_dt = datetime.strptime(target, "%Y-%m-%d")
+            _ingest_now = (_target_dt + timedelta(days=1)).strftime("%Y-%m-%d")
+            _ingest_prev = (_target_dt + timedelta(days=1) - timedelta(days=ramp_win)).strftime("%Y-%m-%d")
+            _snap_now = _snap_dir / f"{_ingest_now}.json"
+            _snap_prev = _snap_dir / f"{_ingest_prev}.json"
+            if _snap_now.exists() and _snap_prev.exists():
+                import json as _json
+                _d_now = _json.loads(_snap_now.read_text(encoding="utf-8"))
+                _d_prev = _json.loads(_snap_prev.read_text(encoding="utf-8"))
+                _b_now = next((r.get("exchange_balance_tokens")
+                               for r in _d_now.get("rows", [])
+                               if r.get("symbol", "").upper() == token_bare), None)
+                _b_prev = next((r.get("exchange_balance_tokens")
+                                for r in _d_prev.get("rows", [])
+                                if r.get("symbol", "").upper() == token_bare), None)
+                if _b_now is not None and _b_prev is not None and _b_prev > 0:
+                    _ramp_delta = abs(_b_now - _b_prev) / _b_prev
+                    if _ramp_delta >= ramp_thr:
+                        h1_ramp_raw = True
+        except Exception:
+            pass  # ramp check fail-silent → treat as False (conservative)
         h1_raw_gn = h1_step_raw or h1_ramp_raw
         # h2_raw_gn: H2 raw regardless of T0.1
         h2_raw_gn = (h2_status == "T")
@@ -497,7 +525,8 @@ def main():
             elif n_pass >= 2: level = "MED"
             else: level = "LOW"
             na_str = ",".join(na_list) if na_list else "-"
-            return f"conf={level} ({n_pass}/{n_eval}; N/A: {na_str})"
+            # Fix: return WITHOUT "conf=" prefix (caller adds it, avoid double)
+            return f"{level} ({n_pass}/{n_eval}; N/A: {na_str})"
 
         # Per-lane cooldown check (KEEP V④-RT semantic)
         cd_days = gom_h_cfg.get("gom_h_cooldown_days", 14)
@@ -542,11 +571,29 @@ def main():
             active = []
             if "kho" in active_lanes: active.append("H1")
             if "perp" in active_lanes: active.append("H2")
+            # [GOI-NHE tripwire runtime · SIGNED] record fire, check 0.4 trip
+            tripwire_note = ""
+            try:
+                _tw_path = REPO / "lib/tripwire_e2.py"
+                if _tw_path.exists():
+                    if str(REPO) not in sys.path: sys.path.insert(0, str(REPO))
+                    from lib.tripwire_e2 import record_fire
+                    _tw_cfg = goi_nhe_cfg.get("tripwire_e2", {})
+                    _tripped, _rate, _action = record_fire(
+                        token_bare, target,
+                        trailing_days=_tw_cfg.get("trailing_days", 30),
+                        max_per_token=_tw_cfg.get("max_alert_per_token", 0.4),
+                    )
+                    if _tripped:
+                        tripwire_note = _action
+            except Exception:
+                pass
             fires.append({"symbol": sym, "active": active, "conf": conf_label_str,
                           "h1": h1_status, "h2": h2_status, "t01": t01_status, "h3": h3_status,
                           "h1_detail": h1_detail,
                           "suppressed_note": " ".join(suppressed_notes),
-                          "dq_note": " ".join(dq_notes)})
+                          "dq_note": " ".join(dq_notes),
+                          "tripwire_note": tripwire_note})
         elif dq_notes:
             # DQ-SERIAL blocked, KHÔNG khởi cooldown per §7.1
             gom_h = "F-DQ-SERIAL"
