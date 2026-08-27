@@ -144,6 +144,40 @@ unhedge_registry:
     state_max_days:    30        # window state gate (un-hedge ≤30d)
     report_only_days:  30        # from go-live, 30d report-only trước ARMED
 
+# ─────────────────────────────────────────────────────────────────────────────
+# [GOI-NHE-20260829 · gate_defs §7 referent] DQ-SERIAL v0 — danh-sách-token chữ-ký
+# Chặn fire compose (cả hai lane) TRƯỚC emit. Thêm/bớt = ký, cấm hardcode.
+# ─────────────────────────────────────────────────────────────────────────────
+dq_serial:
+  members: [BANANAS31]
+  source: "b-cứng 14/08, operator ký 29/08"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# [GOI-NHE-20260829 · SIGNED] Compose gói-nhẹ + kho-ramp + tripwire 0.4
+# ─────────────────────────────────────────────────────────────────────────────
+goi_nhe:
+  signed: true
+  source: "operator ký chat 29/08 'ok gói-nhẹ'"
+  compose_mode: "H1-raw OR H2-raw"          # bắn trần, không AND
+  conf_mapping:
+    HIGH:   4              # 4/4 sub-vé T0.1 pass (trên vế evaluable)
+    MED:    [2, 3]         # 2-3 pass
+    LOW:    [0, 1]         # 0-1 pass
+    nan_policy: "N-A-KHONG-DEM"   # NaN in N/A, không đếm, không impute
+    display_format: "conf=<LEVEL> (<pass>/<eval>; N/A: <list>)"
+    apply_lane: "both"     # áp cả 2 lane {kho, perp}
+  kho_ramp:
+    delta_min:   0.15                  # Δ balance ≥ 15%
+    window_days: 14                    # trong ≤ 14d
+    provisional_ky_kem: true           # 30d report-only tự trả giá FP
+    inclusive_D: true                  # mẫu balance(D-14) inclusive
+    empty_or_na: "N-A-KHONG-FIRE"      # đầu 0/N/A → N/A không fire
+  tripwire_e2:
+    trailing_days:      30
+    max_alert_per_token: 0.4           # trần alert/token/30d hậu-cooldown
+    action_if_trip:     "flag+Telegram+report_only"  # KHÔNG tự tắt
+    control_universe:   139
+
   # E-R7 acceptance
   acceptance_max_pct: 0.25 # tổng events ≤ 25% universe (loãng if vượt)
 

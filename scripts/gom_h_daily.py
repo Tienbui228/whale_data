@@ -43,8 +43,8 @@ FW_SYMS = REPO / "data/config/freshwatch_symbols.txt"
 YAML_PATH = REPO / "screen_thresholds.yaml"
 SCRATCH_DIR = REPO / "scratch"
 SPEC_VERSION = "v4.0-draft"
-AMENDMENTS = ["GOM-RESTRUCT-20260824", "⑬-COLUMN-MANIFEST-20260826",
-              "V①-⑤-20260828", "V④-RT-2CHỐT-ANALYSIS-20260828"]
+AMENDMENTS = ["GOI-NHE-20260829", "V④-RT-2CHỐT-ANALYSIS-20260828",
+              "⑬-COLUMN-MANIFEST-20260826", "GOM-RESTRUCT-20260824"]
 
 # ─── Warmup thresholds (điểm-non-null) ───
 WARMUP_H2_POS_N = 14
@@ -457,53 +457,112 @@ def main():
         else:
             h2t01_raw_str = "False"
 
-        # Per-lane cooldown check
+        # [GOI-NHE-20260829] compose = H1-raw OR H2-raw · T0.1 → NHÃN CONF
+        # h1_raw_gn = kho ≥10%/≤3d OR ramp ≥15%/≤14d (kho-ramp PROVISIONAL-KÝ-KÈM)
+        # h2_raw_gn = H2 raw (independent of T0.1)
+        # Compose OR without AND gate; T0.1 pass count → conf label
+        goi_nhe_cfg = cfg.get("goi_nhe", {})
+        dq_serial_cfg = cfg.get("dq_serial", {})
+        dq_members = set(dq_serial_cfg.get("members", []))
+        token_bare = sym[:-4] if sym.endswith("USDT") else sym
+        dq_serial_hit = token_bare in dq_members
+
+        # h1_raw = h1_kho_step OR h1_kho_ramp (kho-ramp PROVISIONAL wire)
+        # For now, h1_raw_str tracks kho_step only; kho-ramp = separate check
+        h1_step_raw = (h1_raw_str == "True")
+        # kho-ramp: |balance(D) - balance(D-14)| / balance(D-14) ≥ 0.15
+        # Implementation stub: needs balance_series lookback 14d — placeholder False
+        h1_ramp_raw = False  # TODO: wire ramp check via balance_series[D-14]
+        h1_raw_gn = h1_step_raw or h1_ramp_raw
+        # h2_raw_gn: H2 raw regardless of T0.1
+        h2_raw_gn = (h2_status == "T")
+
+        # T0.1 conf mapping: count sub-vé pass on evaluable subset (skip N/A)
+        def _conf_label(t01_detail):
+            subs = {
+                "funding_pin": t01_detail.get("fund_pinned"),
+                "oi_min30":    (t01_detail.get("oi_ratio") is not None and
+                                 t01_detail.get("oi_ratio") <= gom_h_cfg["t0_1"]["oi_over_min30_max"]),
+                "ret14":       (t01_detail.get("ret14") is not None and
+                                 t01_detail.get("ret14") <= gom_h_cfg["t0_1"]["ret14_abs_max"]),
+                "med30_vol":   (t01_detail.get("vol_med7_med30_ratio") is not None and
+                                 t01_detail.get("vol_med7_med30_ratio") <= gom_h_cfg["t0_1"]["vol_med7_over_med30_max"]),
+            }
+            na_list = [k for k, v in subs.items() if v is None]
+            eval_pass = [k for k, v in subs.items() if v is True]
+            eval_fail = [k for k, v in subs.items() if v is False]
+            n_eval = len(eval_pass) + len(eval_fail)
+            n_pass = len(eval_pass)
+            if n_pass >= 4: level = "HIGH"
+            elif n_pass >= 2: level = "MED"
+            else: level = "LOW"
+            na_str = ",".join(na_list) if na_list else "-"
+            return f"conf={level} ({n_pass}/{n_eval}; N/A: {na_str})"
+
+        # Per-lane cooldown check (KEEP V④-RT semantic)
         cd_days = gom_h_cfg.get("gom_h_cooldown_days", 14)
         cn_days = gom_h_cfg.get("gom_h_cooldown_clean_days", 3)
         active_lanes = []
         suppressed_lanes = []
         suppressed_notes = []
+        dq_notes = []
 
-        # lane kho: raw = h1_raw True. Check cooldown iff raw=True.
-        if h1_raw_str == "True":
-            in_cd_kho, cd_reason_kho, days_k, clean_k = _check_lane_cooldown(
-                sym, target, "kho", SCRATCH_DIR, cd_days, cn_days)
-            if in_cd_kho:
-                suppressed_lanes.append("kho")
-                suppressed_notes.append(f"[SUPPRESSED {days_k}/14 lane=kho]")
-            elif h1_t:  # kho_raw True AND passes T0.1 gate → lane_kho fire
-                active_lanes.append("kho")
-            # else: kho_raw True but T0.1 fail → h1_t=False, don't fire lane_kho (but not suppressed either)
+        # lane kho: check DQ-SERIAL first, then cooldown
+        if h1_raw_gn:
+            if dq_serial_hit:
+                dq_notes.append(f"[DQ-SERIAL] {token_bare} lane=kho")
+            else:
+                in_cd_kho, cd_reason_kho, days_k, clean_k = _check_lane_cooldown(
+                    sym, target, "kho", SCRATCH_DIR, cd_days, cn_days)
+                if in_cd_kho:
+                    suppressed_lanes.append("kho")
+                    suppressed_notes.append(f"[SUPPRESSED {days_k}/14 lane=kho]")
+                else:
+                    active_lanes.append("kho")
 
-        # lane perp: raw = h2 ∧ t01 True.
-        if h2t01_raw_str == "True":
-            in_cd_perp, cd_reason_perp, days_p, clean_p = _check_lane_cooldown(
-                sym, target, "perp", SCRATCH_DIR, cd_days, cn_days)
-            if in_cd_perp:
-                suppressed_lanes.append("perp")
-                suppressed_notes.append(f"[SUPPRESSED {days_p}/14 lane=perp]")
-            elif h2t01:
-                active_lanes.append("perp")
+        # lane perp: check DQ-SERIAL first, then cooldown
+        if h2_raw_gn:
+            if dq_serial_hit:
+                dq_notes.append(f"[DQ-SERIAL] {token_bare} lane=perp")
+            else:
+                in_cd_perp, cd_reason_perp, days_p, clean_p = _check_lane_cooldown(
+                    sym, target, "perp", SCRATCH_DIR, cd_days, cn_days)
+                if in_cd_perp:
+                    suppressed_lanes.append("perp")
+                    suppressed_notes.append(f"[SUPPRESSED {days_p}/14 lane=perp]")
+                else:
+                    active_lanes.append("perp")
 
-        # Compose GOM_H
+        conf_label_str = _conf_label(t01_detail) if (active_lanes or suppressed_lanes or dq_notes) else "-"
+
+        # Compose GOM_H (GÓI-NHẸ: OR, no AND gate)
         if active_lanes:
             gom_h = "T"
             n_fire += 1
             active = []
             if "kho" in active_lanes: active.append("H1")
-            if "perp" in active_lanes: active.append("H2+T0.1")
-            conf = "conf-boosted" if h3_status == "T" else "normal"
-            fires.append({"symbol": sym, "active": active, "conf": conf,
+            if "perp" in active_lanes: active.append("H2")
+            fires.append({"symbol": sym, "active": active, "conf": conf_label_str,
                           "h1": h1_status, "h2": h2_status, "t01": t01_status, "h3": h3_status,
-                          "h1_detail": h1_detail, "suppressed_note": " ".join(suppressed_notes)})
+                          "h1_detail": h1_detail,
+                          "suppressed_note": " ".join(suppressed_notes),
+                          "dq_note": " ".join(dq_notes)})
+        elif dq_notes:
+            # DQ-SERIAL blocked, KHÔNG khởi cooldown per §7.1
+            gom_h = "F-DQ-SERIAL"
+            fires.append({"symbol": sym, "active": ["[DQ-SERIAL blocked]"],
+                          "conf": conf_label_str,
+                          "h1": h1_status, "h2": h2_status, "t01": t01_status, "h3": h3_status,
+                          "h1_detail": h1_detail,
+                          "suppressed_note": "", "dq_note": " ".join(dq_notes)})
         elif suppressed_lanes:
             # No new fire, but at least one lane suppressed
             gom_h = "F-COOLDOWN[" + "+".join(suppressed_lanes) + "]"
-            conf = "-"
             fires.append({"symbol": sym, "active": [f"[suppressed:{'+'.join(suppressed_lanes)}]"],
-                          "conf": f"blocked",
+                          "conf": conf_label_str,
                           "h1": h1_status, "h2": h2_status, "t01": t01_status, "h3": h3_status,
-                          "h1_detail": h1_detail, "suppressed_note": " ".join(suppressed_notes)})
+                          "h1_detail": h1_detail,
+                          "suppressed_note": " ".join(suppressed_notes), "dq_note": ""})
         else:
             gom_h = "F" if (h1_status in ("F",) and h2_status in ("F","N/A-WARMUP") and t01_status in ("F","N/A-WARMUP")) else \
                     ("N/A-WARMUP" if "N/A-WARMUP" in (t01_status, h2_status) else "F")
@@ -511,14 +570,17 @@ def main():
 
         active_lanes_str = "+".join(active_lanes) if active_lanes else ""
         suppressed_note_str = " ".join(suppressed_notes) if suppressed_notes else ""
+        dq_note_str = " ".join(dq_notes) if dq_notes else ""
 
         results.append({
             "symbol": sym, "date": target,
             "T0.1": t01_status, "H1": h1_status, "H2": h2_status, "H3": h3_status,
-            "GOM_H": gom_h, "conf": conf,
-            "active_lanes": active_lanes_str,        # [V④-RT] kho | perp | kho+perp | ""
-            "h1_raw": h1_raw_str,                     # [V④-RT] True/False/N/A pre-T01-gate
-            "h2t01_raw": h2t01_raw_str,               # [V④-RT] True/False/N/A compose raw
+            "GOM_H": gom_h, "conf": conf_label_str,
+            "active_lanes": active_lanes_str,        # kho | perp | kho+perp | ""
+            "h1_raw": h1_raw_str,                     # kho_step pre-T01-gate
+            "h2t01_raw": h2t01_raw_str,
+            "h1_ramp_raw": "True" if h1_ramp_raw else "False",  # [GOI-NHE] kho-ramp check
+            "dq_note": dq_note_str,                   # [GOI-NHE §7.1] [DQ-SERIAL] label
             "suppressed_note": suppressed_note_str,   # [V④-RT] "[SUPPRESSED n/14 lane=X]"
             "h1_kho_step_pct": h1_detail.get("kho_step_pct"),
             "h1_flags": h1_detail.get("flags", ""),
