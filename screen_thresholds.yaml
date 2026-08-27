@@ -221,6 +221,24 @@ goi_nhe:
     stress_ret_max:    -0.08           # ret1d ≤ -8%
     stress_combine:    "OR"            # (vol ≥ 5× ∨ ret ≤ -8%)
     precedence:        "stress > 2x2"  # BROAD-STRESS override CONCENTRATED/BROAD-QUIET
+  # [H4 v1 KÝ 30/08 · DOM-LEVEL · thay H4.1-v0 GATE-FAILED · proposal md5 77cbcda0470b7bab89301c356676b462]
+  # gom_detect_spec §1-H4 v1 merged upstream (bot-signals) · yaml §3 GHI ĐÈ (không có key v0)
+  h4:
+    signed:                 true
+    source:                 "operator ký 30/08 — H4 v1 DOM-LEVEL"
+    provisional_unsigned:   true    # ngưỡng [ ] chờ control-gate 27/09; credit đã ký
+    dom:                    0.80    # top100_dom ≥ 0.80 → DOM-HIGH
+    dom_rise_pp:            3       # ≥+3pp giữa 2 snap → DOM-RISING
+    t01_min:                2       # ≥2 vế T0.1 → compression-gate trigger
+    resnap_days:            14      # chưa snapshot trong 14d mới re-call
+    credit_cap_daily:       2       # cap 2 call/ngày (đã ký chat 30/08)
+    replay_budget_once:     10      # one-shot 10 call cho replay TUT+BTW
+    # Amendment (a) — nhánh G3 KÝ 27/08 (/tgm/holders KHÔNG historical date-param):
+    falsifier:              "tracker-niêm TUT 83% · BTW 96% (§10 findings rev9 7019a5d3) + forward-verify khi hai con vào trigger"
+    # Amendment (b) — top100_dom BA THƯỚC + field-note (KÝ 27/08 · thước operative chờ 27/09):
+    top100_dom_measures:    ["raw", "ex-exchange", "ex-structural"]
+    top100_dom_operative:   ""      # chờ survey-verdict 27/09
+    field_note:             "ownership_percentage = fraction 0-1 (verified Σ top-10 = 0.9027 TUT 27/08 cap 2/2)"
   # [D4 KÝ 27/08 · Review-bundle 27/09 = 6 món SỐNG · V③-cutpoint hồ-sơ-đóng]
   review_bundle_20260927:
     scheduled_date:    "2026-09-27"
