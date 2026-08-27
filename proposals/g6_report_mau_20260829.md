@@ -7,6 +7,8 @@
 - **Đêm-3 29/08 01:45 UTC target=2026-08-28** = official #2 cùng rev4-FINAL.
 - **rev3/rev4 conf-fix note:** display-family (không đổi compose).
 - **compose-string VPS (freeze giữ):** yaml `gom_h.compose` VPS md5 `3820b87c` vẫn giữ wording cũ `"(H1 OR (H2 AND T0.1)) AND NOT gom_h_cooldown_14d"` — stale so với code rev4-FINAL. **Behavior đã chứng qua SELF-CHECK-COMPOSE 3-dòng (CYS 07-12 h2_status=T, BTR 07-28 ramp=15.04%, BANANAS31 dq skip)**. LOCAL yaml đã sửa reflect true `"h1_raw OR h2_raw · T0.1 → NHÃN CONF"`. SCP compose-fix vào yaml VPS **SAU đêm-3** (29/08 01:45 UTC), không đụng compose behavior.
+- **H1 kho metric fix (α-3 KÝ 27/08 LOCAL only tới hết freeze):** adapter `_kho_step_3d_best` canonical 3d-best per spec §5 · conformance fixture PASS 4/4 (XAN 07-03=10.10%T · BTR 07-29=12.02%T · TUT 08-09=4.58%F · CAP 07-12 prev-0-edge bắt lb=3). SCP SAU đêm-3.
+- **Tripwire trailing-30d hybrid kỷ nguyên (post SCP hậu-freeze):** counter đêm-4+ sẽ trộn kỷ-nguyên-1d (under-count trước fix) với 3d-best (post fix) → rate leo dần vài ngày đầu. Kỳ vọng hội tụ về ~**0.845 census baseline** (85 kept fires / 52 eligible × 30/58). 4.4 victims/day là số THÔ (258/58) — kept hậu-cooldown thấp hơn nhiều. Đọc số với chú thích, không hoảng.
 - **✅ rev4-FINAL RAMP RESTORATION (operator ky 27/08 confirm accept):** `os as _os_env` import fix restore ramp compute (silent-fail 4 revs cũ). Đêm-2/3 official CÙNG BASELINE f99ef3c8 (ramp sống lần đầu trên cron từ 2026-08-28). yaml `goi_nhe.kho_ramp.provisional_30d_start=2026-08-28` ghi mốc L-28.
 - **WALLETSET 2×2 wired** (KÝ 27/08 thresholds |Δbal|≥50% · |Δholders|≥5 abs · stress vol≥5× ∨ ret≤-8% OR) — 3 CSV cột + `[WALLETSET: <tag>]` trailer sau `[VERIFY-WALLETSET]`. Anchor SOPH.
 

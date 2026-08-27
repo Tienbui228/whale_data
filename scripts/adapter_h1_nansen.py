@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 import hashlib
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 import pandas as pd
 
@@ -36,6 +36,64 @@ if _os_env.name == "posix" or _os_env.environ.get("ADAPTER_H1_VPS_MODE"):
 else:
     BOT_SNAPSHOTS = Path(r"D:/Check onchain fresh wallets/snapshots")
     BOT_LAST_RUN = Path(r"D:/Check onchain fresh wallets/last_run.json")
+
+
+def _kho_step_3d_best(token_upper: str, ingest_date_str: str,
+                       snapshots_dir: Path = None) -> Optional[float]:
+    """Canonical H1 kho-step per spec §5 gói-nhẹ: max(|Δ|/prev) over lb ∈ {1,2,3}.
+
+    Semantic:
+      - Đọc balance từ snapshot[ingest_date] và snapshot[ingest-1,-2,-3]
+      - Mỗi leg: dp = (b_now - b_start)/b_start · giữ leg có max |dp|
+      - N/A-leg (missing snapshot or b_start ≤ 0) → bỏ leg (không tính)
+      - Cả 3 legs N/A → return None (N/A metric)
+      - Return SIGNED PERCENT (leg có max |Δ|). Ví dụ +10.10% hoặc -97.19%.
+
+    Fixture (conformance L-66 trọng-tài):
+      XAN 2026-07-03 = 10.10% T (>= 10%)
+      BTR 2026-07-29 = 12.02% T (>= 10%)
+      TUT 2026-08-09 = 4.58% F (< 10%)
+      CAP 2026-07-12 prev-0-edge = 3d-best bắt được (lb=3 fallback)
+    """
+    if snapshots_dir is None:
+        snapshots_dir = BOT_SNAPSHOTS
+
+    def _load_bal(ing_str: str) -> Optional[float]:
+        p = snapshots_dir / f"{ing_str}.json"
+        if not p.exists(): return None
+        try:
+            snap = json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            return None
+        if not isinstance(snap, dict): return None
+        for r in snap.get("rows", []):
+            if not r: continue
+            if (r.get("symbol") or "").upper() == token_upper:
+                bal = r.get("exchange_balance_tokens")
+                if bal is None: return None
+                try:
+                    b = float(bal)
+                    return b if b > 0 else None  # b≤0 → N/A (chống chia-0)
+                except (TypeError, ValueError):
+                    return None
+        return None
+
+    b_now = _load_bal(ingest_date_str)
+    if b_now is None: return None
+    d_now = datetime.strptime(ingest_date_str, "%Y-%m-%d")
+    best_signed = None
+    best_abs = -1.0
+    for lb in range(1, 4):
+        d_start = (d_now - timedelta(days=lb)).strftime("%Y-%m-%d")
+        b_start = _load_bal(d_start)
+        if b_start is None: continue  # N/A-leg bỏ
+        signed = (b_now - b_start) / b_start
+        ab = abs(signed)
+        if ab > best_abs:
+            best_abs = ab
+            best_signed = signed
+    if best_signed is None: return None  # cả 3 legs N/A
+    return best_signed * 100.0  # signed PERCENT
 
 
 def _load_snapshot(date_str: str) -> Optional[dict]:
@@ -151,13 +209,18 @@ def read_adapter_daily(ingest_date: str, last_seen_days: int = 2) -> pd.DataFram
             else:
                 flags.append("[MISSING-SNAPSHOT]")
 
-        # kho_step_pct: bot delta_pct (fraction 0-1) → normalize as-is
-        # Bot returns fraction (0.00656 = 0.656%). Adapter keeps fraction; runner applies threshold.
-        kho_step_pct = delta_pct if delta_pct is not None else None
-        # Fallback compute if delta_pct null but balance + prev available
-        if kho_step_pct is None and bal_tokens is not None and prev_tokens is not None:
+        # [FIX α-3 KÝ 27/08] kho_step_pct = canonical 3d-best per spec §5
+        # (was: bot's exchange_delta_pct = 1d only → under-fire spec §3 "≤3d BEST")
+        # Bot's delta_pct is SIGNED PERCENT (e.g., -97.19 for -97.19%). Canonical fn
+        # trả cùng convention (signed percent). Consumer (_eval_h1) đọc như cũ.
+        kho_step_pct = _kho_step_3d_best(sym.upper(), ingest_date)
+        # Fallback: nếu 3d-best N/A (cả 3 legs N/A) VÀ bot có 1d delta → dùng 1d làm floor
+        # (avoid regression cho những trường hợp adapter thấp hơn: giữ signal 1d nếu có)
+        if kho_step_pct is None and delta_pct is not None:
+            kho_step_pct = float(delta_pct)
+        elif kho_step_pct is None and bal_tokens is not None and prev_tokens is not None:
             if float(prev_tokens) > 0:
-                kho_step_pct = (float(bal_tokens) - float(prev_tokens)) / float(prev_tokens)
+                kho_step_pct = (float(bal_tokens) - float(prev_tokens)) / float(prev_tokens) * 100.0
             # prev=0 → N/A (chống chia-0 kiểu CAP listing 0→130M per spec)
 
         # Cột phụ [BOT-COMPUTED]
