@@ -1,0 +1,23 @@
+# V③-v2 flip_day · KÝ 27/08 · 4 ANALYSIS rules
+# code md5=f99ef3c819ef60cb3948e5e5ac0bf6ea · yaml md5=4bf1d83d8ac01ca685c3ef64a36e7e5b · gate_defs md5=f275c53c4a0f42b5a7b190e6e0143ca5
+# obs_min=14 source=yaml goi_nhe.obs_min · leg-set: t0_1+h2+h1+h3 rolling (cấm hardcode-30)
+# H2 baseline: div_today_min=1.0 · div_min_14d_max=0.6 · pos_over_min14_min=1.25 · oi_over_min30_max=1.2 · floor_obs_min=14
+# Rule ①: header in obs_min + source yaml + leg-set (cấm hardcode 30) ✓
+# Rule ②: div_min14_max=0.6 ĐỨNG YÊN mọi nấc (chặn nhiều = KẾT QUẢ ghi bảng, không sửa) ✓
+# Rule ③: control-52 = full-vé hậu-cooldown mỗi nấc (H1-kho + H2-perp cả 2 lanes) ✓
+# Rule ④: cột recall-thật (blocking@flip=none) TÁCH khỏi recall-ảo (blocking≠none) ✓
+#
+# Recall summary per cut:
+#   cut=0.9: n_flip=2 · recall-thật=0 (—) · recall-ảo=2 (BULLA, FHE) · ctrl-52 add=1
+#   cut=0.85: n_flip=2 · recall-thật=0 (—) · recall-ảo=2 (BULLA, FHE) · ctrl-52 add=3
+#   cut=0.8: n_flip=3 · recall-thật=0 (—) · recall-ảo=3 (ACU, BULLA, FHE) · ctrl-52 add=9
+#
+token,baseline_kept,cut_0.9_kept,cut_0.9_flip_day,cut_0.9_blocking@flip,cut_0.85_kept,cut_0.85_flip_day,cut_0.85_blocking@flip,cut_0.8_kept,cut_0.8_flip_day,cut_0.8_blocking@flip
+ACU,0,0,—,—,0,—,—,1,2026-08-20,pos(1.02<1.25) | div_today(0.82<1.0) | oi(4.18>1.2)
+ARIA,0,0,—,—,0,—,—,0,—,—
+BULLA,1,1,2026-07-29,pos(1.00<1.25) | div_today(0.91<1.0) | oi(3.89>1.2),1,2026-07-23,pos(1.19<1.25) | div_today(0.85<1.0) | oi(2.17>1.2),1,2026-07-20,pos(1.22<1.25) | div_today(0.83<1.0) | oi(1.68>1.2)
+FHE,0,1,2026-08-18,pos(1.05<1.25) | div_today(0.93<1.0) | oi(1.70>1.2),1,2026-08-18,pos(1.05<1.25) | div_today(0.93<1.0) | oi(1.70>1.2),1,2026-08-18,pos(1.05<1.25) | div_today(0.93<1.0) | oi(1.70>1.2)
+LIGHT,0,0,—,—,0,—,—,0,—,—
+SQD,0,0,—,—,0,—,—,0,—,—
+TRADOOR,0,0,—,—,0,—,—,0,—,—
+XNY,0,0,—,—,0,—,—,0,—,—
