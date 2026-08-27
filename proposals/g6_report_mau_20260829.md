@@ -12,6 +12,19 @@
 - **✅ rev4-FINAL RAMP RESTORATION (operator ky 27/08 confirm accept):** `os as _os_env` import fix restore ramp compute (silent-fail 4 revs cũ). Đêm-2/3 official CÙNG BASELINE f99ef3c8 (ramp sống lần đầu trên cron từ 2026-08-28). yaml `goi_nhe.kho_ramp.provisional_30d_start=2026-08-28` ghi mốc L-28.
 - **WALLETSET 2×2 wired** (KÝ 27/08 thresholds |Δbal|≥50% · |Δholders|≥5 abs · stress vol≥5× ∨ ret≤-8% OR) — 3 CSV cột + `[WALLETSET: <tag>]` trailer sau `[VERIFY-WALLETSET]`. Anchor SOPH.
 
+## Review-bundle 2026-09-27 · 6 món (D4 · KÝ 27/08 vá LOCAL)
+
+Chuyến review 30d hậu-gói-nhẹ · tất cả 6 items PROVISIONAL, chốt bằng bằng chứng vận hành đêm-2→28/09:
+
+1. **ramp** — `goi_nhe.kho_ramp.delta_min=0.15 / window_days=14` · provisional_30d_start=2026-08-28 (đêm đầu ramp sống trên cron). Review: FP-load ramp lane, có cần điều chỉnh delta_min hoặc tách ramp lane cooldown riêng không?
+2. **[50%]-walletset** — `goi_nhe.verify_walletset.min_abs_delta=0.50` (SOPH-anchor). Review: SOPH-loại-migration bao nhiêu case trong 30d, cần grade DELIST-MIGRATION vs MARKET-REAL từ operator soi.
+3. **WALLETSET 2×2** — `goi_nhe.walletset_2x2` {50% / 5 / 5× / -8% OR}. Review: distribution 2×2 tag rate, có cần tighten stress OR/AND?
+4. **AKE-row2** — fixture Row-2 AKE via-ramp [PROVISIONAL-30d]. Review: kho-ramp bắt AKE 07-13/07-14 pre-D0 07-15 vẫn PASS? auto_revert nếu ramp khai tử.
+5. **MA-shadow** — [PENDING-DEF] MA shadow amendment (chưa có spec ký, chờ operator drop).
+6. **H4-[ ]** — [PENDING-DEF] H4 lane (holders shift) — spec chờ M1 diff. M2 holders-history KHẢ THI cho 130/139 tokens (≥30d), TUT 86%, BTW 48%.
+
+Vá LOCAL vào yaml `goi_nhe.review_bundle_20260927` block dưới.
+
 ## Format Telegram khối CAMPAIGN-PRE (post gói-nhẹ + rev2 3-fix KÝ 27/08)
 
 ```
