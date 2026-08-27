@@ -1,0 +1,50 @@
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[G3 T-④ RE-RENDER · compose GÓI-NHẸ (H1-raw OR H2-raw) · basis=14d · §2 window]
+  gate_defs md5: f275c53c4a0f42b5a7b190e6e0143ca5
+  amendments: GOI-NHE-20260829, V④-RT, ⑬, GOM-RESTRUCT
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  case              D0                    window      H1-first      H2-first   compose-first                      conf    lead          status
+  -------------------------------------------------------------------------------------------------------------------------------------------------
+  AKE       2026-07-15              06-27..07-14    2026-07-05    2026-07-10      2026-07-05  LOW (0/0; N/A: funding_p    +10d            PASS
+  BANK      2026-07-11              06-11..07-10             —    2026-07-10      2026-07-10  MED (2/3; N/A: med30_vol     +1d            PASS
+  BTR       2026-08-26              07-27..08-25    2026-07-28             —      2026-07-28  MED (2/3; N/A: med30_vol    +29d            PASS
+  BTW       2026-08-03              07-04..08-02    2026-07-27             —      2026-07-27         LOW (1/4; N/A: -)     +7d            PASS
+  CAP       2026-07-30              06-30..07-29    2026-07-12             —      2026-07-12  LOW (0/3; N/A: med30_vol    +18d            PASS
+  CYS       2026-08-04              07-05..08-03             —    2026-07-12      2026-07-12         MED (2/4; N/A: -)    +23d            PASS
+  HEMI      2026-08-15              07-16..08-14             —    2026-07-16      2026-07-16  MED (3/3; N/A: med30_vol    +30d            PASS
+  ON        2026-07-19              06-27..07-18    2026-07-14             —      2026-07-14  MED (2/3; N/A: med30_vol     +5d            PASS
+  TUT       2026-07-09              06-27..07-08             —             —               —                         —       —         NO-FIRE
+
+  passes/evaluable = 8/9 vs [6/8]  (PASS threshold)
+  (DEV render — không tuyên gate per operator G3 note)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[G4 CENSUS re-run control-52 · compose GÓI-NHẸ hậu-cooldown · trip 0.4]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  Control eligible: 52 tokens (target 52)
+
+  Raw fires:  465
+  Kept post-cooldown: 85
+  DQ-SERIAL blocked days: 58
+  Conf phân bố (kept): {'HIGH': 9, 'MED': 48, 'LOW': 28}
+
+  E2 tripwire 0.4/token/30d (compose gói-nhẹ mới):
+    avg = 0.845 · trần 0.4 · verdict: TRIPPED
+    (Cấm suy 0.16 cũ — compose khác semantic per operator)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[G5 DQ CHECK + AKE kho-ramp thử]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  DQ-SERIAL yaml members: ['BANANAS31']
+  spec §7 (bot-signals) referent 29/08: DQ-SERIAL v0 CÓ (spec sha 490a8f49 merged)
+  Code wire: gom_h_daily.py compose loop CÓ dq_serial_hit check TRƯỚC cooldown
+  → Row 14 status: POSITIVE post-DQ-v0 (fires blocked by DQ, không khởi cooldown)
+
+  AKE kho-ramp thử (window 06-27→07-14 pre-D0 07-15):
+    n_ramp_fire pre-D0: 2
+      2026-07-13  ramp=73.50%
+      2026-07-14  ramp=79.59%
+    → BÁO ANALYSIS: AKE row 2 kho-ramp bắt được → xem lại loại row
