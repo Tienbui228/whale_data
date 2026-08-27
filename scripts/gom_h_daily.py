@@ -580,6 +580,16 @@ def main():
                 h1_label_pct = h1_ramp_pct_signed * 100.0
                 h1_direction = "in" if h1_ramp_pct_signed >= 0 else "out"
 
+        # [KÝ 27/08 guard VERIFY-WALLETSET · display-only PROVISIONAL-30d]
+        # Kho out-step |Δ|≥50%/1d → tag [VERIFY-WALLETSET]. Người soi kiểm
+        # nguồn trước khi tin thị-trường. KHÔNG chặn compose, KHÔNG cooldown.
+        verify_ws_note = ""
+        vws_cfg = goi_nhe_cfg.get("verify_walletset", {})
+        if vws_cfg.get("signed") and h1_direction == "out" and h1_label_pct is not None:
+            _vws_thr = vws_cfg.get("min_abs_delta", 0.50) * 100.0  # yaml stored as fraction
+            if abs(h1_label_pct) >= _vws_thr:
+                verify_ws_note = "[VERIFY-WALLETSET]"
+
         # Compose GOM_H (GÓI-NHẸ: OR, no AND gate)
         if active_lanes:
             gom_h = "T"
@@ -613,7 +623,8 @@ def main():
                           "h1_detail": h1_detail,
                           "suppressed_note": " ".join(suppressed_notes),
                           "dq_note": " ".join(dq_notes),
-                          "tripwire_note": tripwire_note})
+                          "tripwire_note": tripwire_note,
+                          "verify_ws_note": verify_ws_note})
         elif dq_notes:
             # DQ-SERIAL blocked, KHÔNG khởi cooldown per §7.1
             gom_h = "F-DQ-SERIAL"
@@ -648,6 +659,7 @@ def main():
             "h2t01_raw": h2t01_raw_str,
             "h1_ramp_raw": "True" if h1_ramp_raw else "False",  # [GOI-NHE] kho-ramp check
             "h1_direction": h1_direction,             # [KÝ 27/08 B2] in|out|"" (kho lane only)
+            "verify_ws_note": (verify_ws_note if "kho" in active_lanes else ""),  # [KÝ 27/08 rev3]
             "dq_note": dq_note_str,                   # [GOI-NHE §7.1] [DQ-SERIAL] label
             "suppressed_note": suppressed_note_str,   # [V④-RT] "[SUPPRESSED n/14 lane=X]"
             "h1_kho_step_pct": h1_detail.get("kho_step_pct"),
@@ -693,6 +705,7 @@ def main():
             if f.get("suppressed_note"): trailer_parts.append(f["suppressed_note"])
             if f.get("dq_note"): trailer_parts.append(f["dq_note"])
             if f.get("tripwire_note"): trailer_parts.append(f["tripwire_note"])
+            if f.get("verify_ws_note"): trailer_parts.append(f["verify_ws_note"])
             trailer = ("  " + "  ".join(trailer_parts)) if trailer_parts else ""
             print(f"  {f['symbol']}  [{active_str}]  conf={f['conf']}  H3={f['h3']}{trailer}")
     # Footer

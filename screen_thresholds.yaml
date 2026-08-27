@@ -177,6 +177,18 @@ goi_nhe:
     max_alert_per_token: 0.4           # trần alert/token/30d hậu-cooldown
     action_if_trip:     "flag+Telegram+report_only"  # KHÔNG tự tắt
     control_universe:   139
+  # [KÝ 27/08 guard VERIFY-WALLETSET · PROVISIONAL-30d review cùng kho-ramp]
+  # Kho out-step |Δ|≥50%/1d → render tag [VERIFY-WALLETSET] (display-only,
+  # vẫn hiện đủ). Người soi kiểm nguồn (relabel/delist-migration/market-real)
+  # trước khi tin thị-trường. KHÔNG chặn compose, KHÔNG khởi cooldown mới.
+  verify_walletset:
+    signed:         true
+    source:         "operator ký 27/08 (SOPH triage exhibit: 08-21 BSC withdraw → 08-24→25 -97% kho drop)"
+    min_abs_delta:  0.50               # |Δ| ≥ 50%/1d
+    window_days:    1                  # đơn vị step 1 ngày
+    scope:          "kho-out"          # chỉ áp Δ<0 (out-step)
+    display_only:   true               # không compose gate
+    review_expiry:  "2026-09-26"       # 30d từ ký (2026-08-27 +30d)
 
   # E-R7 acceptance
   acceptance_max_pct: 0.25 # tổng events ≤ 25% universe (loãng if vượt)
