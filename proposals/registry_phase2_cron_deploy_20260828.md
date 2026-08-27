@@ -45,13 +45,44 @@ ROLLBACK: (i) --live flag remove → chỉ dry-run; (ii) rollback file: keep 30d
 
 ## Sign-off checklist
 
-- [ ] Operator KÝ deploy plan (5 dòng + semantic recap)
-- [ ] DEV viết `scripts/registry_daily.py` per skeleton (không có sẵn, cần task riêng)
-- [ ] Smoke test dry-run trên VPS: expected "SẼ open X close Y re-arm Z", 0 file writes
-- [ ] `--live` first run + verify §E-R8 guards trip check
-- [ ] Cron install VPS: `crontab -e` append `50 1 * * *` line
+- [x] Operator KÝ deploy plan (5 dòng + semantic recap) — 28/08
+- [x] Operator KÝ scope wrapper (i): lib engine only, wrapper 1.6d — 28/08
+- [x] DEV extend lib r1/r2/r3-arm helpers (`lib/registry_events.py` commit b081480) — 26/08 EOD
+- [x] DEV §E-R8 guards runtime (`lib/registry_er8_guards.py`) — day 27 EOD
+- [x] DEV State store JSON (`lib/registry_state_store.py`) — day 27 EOD
+- [ ] DEV Telegram module với assertion (per operator plan (b) 27/08) — day 28
+- [ ] DEV runner glue `scripts/registry_daily.py` FULL (replace stub) — day 28
+- [ ] DEV fixture L-58 5/5 wrapper — day 28
+- [ ] Smoke test dry-run VPS: expected "SẼ open X close Y re-arm Z", 0 file writes — day 28
+- [ ] `--live` first run + verify §E-R8 guards trip check — sáng 29/08
+- [ ] Cron 50 01 UTC đã install (registry_daily.py stub) — 26/08
 - [ ] Miss-audit autopsy log path setup: `data/logs/registry_autopsy.log`
 - [ ] Case BTR + HEMI review sau 30d forward (chấm §E-R8 falsifier)
+
+## [PLAN UPDATE 27/08 per operator (a)(b) — post FULL merge luật ANALYSIS]
+
+### (a) TESTA expected TÍNH LẠI + snapshot pin
+
+Khi wrapper FULL merge (`scripts/registry_daily.py` real + state store wire):
+1. **TESTA expected phải TÍNH LẠI** trên wrapper trước khi gate chấm (not carry-forward
+   từ pre-merge fixture)
+2. **Cùng snapshot pin** với mọi row registry — KHÔNG nửa cũ nửa mới (luật ANALYSIS)
+3. Fixture BTR-positive (đã có), TESTA-negative-post-wire (chờ), + PENDING-STATE-WIRE
+   auto-flip PASS khi state store lands
+4. Snapshot pin = single YAML md5 + single lib commit sha + single fixture md5 per gate run
+
+### (b) Telegram module — assertion tầng-alert
+
+Telegram module (day 28 build) BẮT BUỘC:
+1. Assertion: `trigger event` ∧ `tg_send trace trong log` (log format: `[YYYY-MM-DDTHH:MM:SSZ]
+   TG-SEND sym=<X> event=<E> ok=<True|False> reason=<err|OK>`)
+2. Fixture kiểm được: mock TG endpoint → verify log line matches (trigger fire → send call)
+3. Fail-loud: nếu trigger fire nhưng tg_send skip (env var missing / API fail) → log WARN
+   + increment counter cho §E-R8 ③ miss-audit tracking
+4. Test cases:
+   - trigger + env set → tg_send True → log OK line
+   - trigger + env missing → tg_send skip → log WARN
+   - trigger + API 5xx → tg_send False → log WARN + counter++
 
 ## Cost-of-delay note
 
