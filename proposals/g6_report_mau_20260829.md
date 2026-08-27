@@ -6,6 +6,7 @@
 - **Đêm-2 28/08 01:45 UTC target=2026-08-27** = máy-final **rev4-FINAL** code md5 `f99ef3c8` (gom_h_daily.py) + `83d0e131` (tripwire_e2.py) + yaml `3820b87c` + counter `1c104491` — accumulates rev2 3-fix + rev3 VERIFY-WALLETSET + rev4 CONF-FIX + **rev4-FINAL v2.1-THẬT yaml obs_min single-source + WALLETSET 2×2 wire + os import fix**.
 - **Đêm-3 29/08 01:45 UTC target=2026-08-28** = official #2 cùng rev4-FINAL.
 - **rev3/rev4 conf-fix note:** display-family (không đổi compose).
+- **compose-string VPS (freeze giữ):** yaml `gom_h.compose` VPS md5 `3820b87c` vẫn giữ wording cũ `"(H1 OR (H2 AND T0.1)) AND NOT gom_h_cooldown_14d"` — stale so với code rev4-FINAL. **Behavior đã chứng qua SELF-CHECK-COMPOSE 3-dòng (CYS 07-12 h2_status=T, BTR 07-28 ramp=15.04%, BANANAS31 dq skip)**. LOCAL yaml đã sửa reflect true `"h1_raw OR h2_raw · T0.1 → NHÃN CONF"`. SCP compose-fix vào yaml VPS **SAU đêm-3** (29/08 01:45 UTC), không đụng compose behavior.
 - **✅ rev4-FINAL RAMP RESTORATION (operator ky 27/08 confirm accept):** `os as _os_env` import fix restore ramp compute (silent-fail 4 revs cũ). Đêm-2/3 official CÙNG BASELINE f99ef3c8 (ramp sống lần đầu trên cron từ 2026-08-28). yaml `goi_nhe.kho_ramp.provisional_30d_start=2026-08-28` ghi mốc L-28.
 - **WALLETSET 2×2 wired** (KÝ 27/08 thresholds |Δbal|≥50% · |Δholders|≥5 abs · stress vol≥5× ∨ ret≤-8% OR) — 3 CSV cột + `[WALLETSET: <tag>]` trailer sau `[VERIFY-WALLETSET]`. Anchor SOPH.
 
