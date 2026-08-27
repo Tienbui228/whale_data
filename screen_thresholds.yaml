@@ -286,7 +286,9 @@ gom_h:
   #   Tái dùng NGUYÊN VĂN §8.4(i) semantic — KHÔNG ngưỡng mới.
   # [V① 28/08 ANALYSIS ký] H1-SHADOW report-only: "H1-shadow = kho(3d,≥10%) ∧ |ret14|≤0.15"
   #   KHÔNG count trong compose.
-  compose: "GOM-H = (H1 OR (H2 AND T0.1)) AND NOT gom_h_cooldown_14d"
+  # [U-v3 KÝ 27/08] compose = one-source-of-truth reflect rev4-FINAL code path (gói-nhẹ OR)
+  # cũ trước 08-29: "(H1 OR (H2 AND T0.1)) AND NOT cooldown" — stale so với code rev4-FINAL
+  compose: "GOM-H = h1_raw OR h2_raw · T0.1 → NHÃN CONF · per-lane cooldown 14d (gói-nhẹ GOI-NHE-20260829)"
   h3_role: "confidence booster only (không tham gia fire)"
   h1_shadow: "kho(3d,≥10%) AND |ret14|<=0.15 — REPORT-ONLY, không compose"
   gom_h_cooldown_days: 14         # [V④] reuse §8.4(i) từ-first-fire; sạch >=3d để reset đợt
