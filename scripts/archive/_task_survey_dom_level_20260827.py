@@ -29,14 +29,17 @@ SEED = 42
 # Nhóm A — chép §10 tracker rev9 (cấm fetch)
 # Source: docs/proposals/phase_tag_v0_4_proven_case_findings_20260821.md §10
 # ═══════════════════════════════════════════════════════════════════════════════
-# Format: (token, top100_raw_from_tracker, note)
+# Format: (token, top100_raw_from_tracker, note) · sửa 27/08: đủ 9 dòng per operator
 NHOM_A = [
     ("BANK", 0.51,  "BANK §10 · 51%"),
     ("TUT",  0.83,  "TUT §10 · 83% (embedded text: 'kho 83% trên sàn, top-100')"),
     ("CYS",  0.81,  "CYS §10 · 81%"),
     ("AKE",  0.86,  "AKE §10 · 86% (+50%)"),
     ("BTW",  0.96,  "BTW §10 · 96%"),
-    ("HEMI", None,  "HEMI §10 · row shows '770M' (raw supply count, không phải %) — N/A-METRIC-MISMATCH"),
+    ("HEMI", None,  "HEMI §10 · row shows '770M' (raw supply count) — N/A-METRIC-MISMATCH"),
+    ("ON",   None,  "ON §10 · KHÔNG có top-100 số — N/A-SOURCE-TRACKER"),
+    ("CAP",  None,  "CAP §10 · KHÔNG có top-100 số — N/A-SOURCE-TRACKER"),
+    ("BTR",  None,  "BTR §10/§15 · KHÔNG có top-100 số — N/A-SOURCE-TRACKER"),
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -97,14 +100,18 @@ def detect_chain(contract):
     return "bsc"  # Nansen bot CHAIN=bnb (per core_nansen.py)
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# BscScan-free tokenholderlist — BLOCKED (V1 deprecated · V2 BSC = paid)
+# BscScan-free tokenholderlist — BLOCKED (V1 deprecated · V2 BSC = paid · WEB Cloudflare)
+# Test 27/08: 3 paths tested, all blocked:
+#   1. BscScan V1 API `/api?module=stats/token` → DEPRECATED (per response 27/08)
+#   2. Etherscan V2 API chainid=56 → 402 Free access not supported for BSC (paid tier)
+#   3. bscscan.com/token/generic-tokenholders2 web page → HTTP 403 Cloudflare challenge
 # ═══════════════════════════════════════════════════════════════════════════════
 def fetch_top100_holders_bscscan_free(contract):
-    """DOCUMENTED FAIL — free path blocked as of 2026-08-27 (V1 deprecated, V2 BSC paid).
+    """DOCUMENTED FAIL — 3 free paths blocked 27/08.
     Returns dict with sentinel."""
     return {
         "status": "N/A-SOURCE-FREE-BLOCKED",
-        "reason": "BscScan V1 deprecated + Etherscan V2 BSC requires paid plan",
+        "reason": "3 paths tested 27/08: V1 API deprecated · V2 API BSC paid · web Cloudflare-403",
         "top100_raw": None,
         "top100_ex_exchange": None,
         "top100_ex_structural": None,
@@ -230,10 +237,29 @@ with open(OUT_CSV, "w", encoding="utf-8", newline="") as f:
     f.write(f"# Reproducible: random.seed({SEED}); random.sample(sorted(pool), n)\n")
     f.write(f"# Nhóm C: {NHOM_C}\n")
     f.write(f"# Nhóm D: {NHOM_D}\n")
-    f.write(f"# BLOCKER: BscScan V1 DEPRECATED (per API test 27/08) · Etherscan V2 BSC = PAID PLAN\n")
+    f.write(f"# BLOCKER: 3 paths tested 27/08 free access - ALL BLOCKED:\n")
+    f.write(f"#   1. BscScan V1 API `/api?module=stats/token`  → DEPRECATED (per response 27/08)\n")
+    f.write(f"#   2. Etherscan V2 API `chainid=56`             → HTTP 402 'Free access not supported for BSC'\n")
+    f.write(f"#   3. bscscan.com/token/generic-tokenholders2   → HTTP 403 Cloudflare challenge\n")
     f.write(f"#   → Nhóm B/C/D top100_dom = N/A-SOURCE-FREE-BLOCKED\n")
-    f.write(f"#   → CẦN OPERATOR ký: (a) PRO API key, (b) alternative source, (c) scope adjust\n")
-    f.write(f"# Nhóm A: source=tracker §10 rev9 (cấm fetch) — thước ex-exchange/ex-structural: N/A-TRACKER-NO-BREAKDOWN\n")
+    f.write(f"#\n")
+    f.write(f"# PRICE TABLE 2-cột trình operator ký (không tự chọn):\n")
+    f.write(f"#   (a) Etherscan V2 paid tier:\n")
+    f.write(f"#       Free tier: KHÔNG hỗ trợ BSC (docs: 'no free tier for BNB Chain')\n")
+    f.write(f"#       Lite plan: $49/mo (5 calls/sec) · [tier THẤP NHẤT cho BSC access]\n")
+    f.write(f"#       Standard:  $199/mo (10 calls/sec · 200K daily calls)\n")
+    f.write(f"#       Source: https://apis.io/plans/etherscan/etherscan-plans-pricing/\n")
+    f.write(f"#   (b) Alternative rẻ nhất: BSCTrace (MegaNode) - free tier BNB Chain\n")
+    f.write(f"#       'Free tier for small projects · one paid tier for larger use'\n")
+    f.write(f"#       Endpoints: JSON-RPC 2.0 + enhanced (nr_getAssetTransfers)\n")
+    f.write(f"#       Source: https://www.bnbchain.org/en/blog/migration-guide-bscscan-api-to-bsctrace-api-via-meganode\n")
+    f.write(f"#   (c) 🛑 LOẠI: Nansen (vi phạm 0-Nansen constraint + phá cap 2/day)\n")
+    f.write(f"#   → CẦN OPERATOR KÝ (a) hoặc (b) · agent không tự chọn\n")
+    f.write(f"#\n")
+    f.write(f"# Nhóm A: source=tracker §10 rev9 (cấm fetch) · sửa 27/08 đủ 9 dòng\n")
+    f.write(f"#   BANK 51% · TUT 83% · CYS 81% · AKE 86% · BTW 96% · HEMI N/A-METRIC-MISMATCH\n")
+    f.write(f"#   ON N/A-SOURCE-TRACKER · CAP N/A-SOURCE-TRACKER · BTR N/A-SOURCE-TRACKER\n")
+    f.write(f"#   thước ex-exchange/ex-structural: N/A-TRACKER-NO-BREAKDOWN\n")
     f.write(f"#\n")
     f.write(f"# BẢNG TÓM per nhóm × thước:\n")
     for s in summary:

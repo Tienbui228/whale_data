@@ -181,11 +181,23 @@ goi_nhe:
                                           # (70678b7 → 531c4d1 → ec8782e → 0ef10f7)
                                           # chết silent — NameError _os_env nuốt bởi
                                           # except-pass; họ save_snapshot: L-28.
+  # [E2-METRIC-20260831 KÝ 31/08 · v2] rate FP metric merged
+  # Công thức v2 (ANALYSIS ký 31/08): rate = n_FP_graded / 52 / window_days × 30
+  # Source: file grades MỚI NHẤT họ census_63_grades_* (md5 in header)
+  # SELF-CHECK bắt buộc: kỳ vọng 0.428 trên grades v4 (lệch → DỪNG paste)
+  # Output đêm: "tripwire FP-rate=<val> [TRIP|OK] · raw=<x> (context)"
+  # Auto-untrip: chu kỳ re-grade 04:06 (≤0.4 → gỡ flag + Telegram note)
+  # Wire: lib/tripwire_e2_v2.py · TREO chạy thật tới grades-v4 file vào repo
   tripwire_e2:
-    trailing_days:      30
+    trailing_days:       30
     max_alert_per_token: 0.4           # trần alert/token/30d hậu-cooldown
-    action_if_trip:     "flag+Telegram+report_only"  # KHÔNG tự tắt
-    control_universe:   139
+    action_if_trip:      "flag+Telegram+report_only"  # KHÔNG tự tắt (v1) / auto-untrip 04:06 (v2)
+    control_universe:    52            # v2 canonical: control-52 hậu-cooldown (không 139)
+    metric_version:      "v2-20260831"
+    formula:             "n_FP_graded / 52 / window_days × 30"
+    grades_file_glob:    "scratch/census_63_grades_*.csv"
+    expected_rate_v4:    0.428         # SELF-CHECK gate cho grades-v4
+    auto_untrip_at:      "04:06 UTC"   # chu kỳ re-grade
   # [KÝ 27/08 guard VERIFY-WALLETSET · PROVISIONAL-30d review cùng kho-ramp]
   # Kho out-step |Δ|≥50%/1d → render tag [VERIFY-WALLETSET] (display-only,
   # vẫn hiện đủ). Người soi kiểm nguồn (relabel/delist-migration/market-real)
