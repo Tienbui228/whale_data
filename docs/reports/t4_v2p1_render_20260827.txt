@@ -1,6 +1,7 @@
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-[T-④ v2.1 CONF-FIX rev4 · KÝ-27/08 · gate_defs f275c53c · yaml b03420a8]
-  fix: WARMUP_T01_VOL_MED30_N 30→14 (obs_min chung mọi rolling-vế)
+[T-④ v2.1-THẬT CONF-FIX rev4 · KÝ-27/08 · gate_defs f275c53c · yaml b1887d17]
+  obs_min=14 (source: yaml goi_nhe.obs_min)
+  fix: hằng WARMUP_T01_VOL_MED30_N repointed → yaml goi_nhe.obs_min (v2.1-THẬT)
   scope: CHỈ cột conf re-render · fires/leads/trigger/gate KHÔNG đổi
 ════════════════════════════════════════════════════════════════════════════════════════════════════
 
@@ -23,3 +24,20 @@
 
   ═══ CONF LEVEL DELTA ═══
   HEMI    MED→HIGH        MED (3/3; N/A: med30_vol)                          → HIGH (4/4; N/A: -)
+
+  ═══ MISS-DETAIL 2 dòng — loài dữ liệu trượt (per operator KÝ 27/08) ═══
+
+  TUT (NO-FIRE) — LOÀI DỮ LIỆU cohort-B nghiêm nhất (left-censor/captive §3):
+    · store: 12d pre-D0 (06-27..07-08, D0=07-09) — dưới ngưỡng H2 pos_14=14 obs
+    · H2 evaluable 0/12 ngày (pos_14 chưa đủ 14 obs bao giờ trong window)
+    · H1 evaluable 10/12 (snapshot bắt đầu 06-30, 2 ngày đầu window captive)
+    · kho phẳng: max_step_3d=0.33% · max_ramp_14d=0.00% (handoff nằm trước cửa sổ adapter 06-30)
+    → KHÔNG phải formula: đúng lỗ left-censor + captive §3, chờ store lấp ≥14d pre-D0
+
+  BTR (signed-only miss) — LOÀI NẠP-CHẬM (đúng loài trigger-ramp sinh ra để vá):
+    · window 30d 07-27..08-25 · store đầy đủ
+    · compose_first 07-28: step_3d=3.70% (<10%) · ramp_14d=15.04% (≥15% fires ramp)
+    · balance trend 85M→115M (~35% nạp trong 28d) — steady accumulation không có 'bậc'
+    · signed-only strips ramp trigger → BTR classified miss (bậc ≥10%/≤3d không có tại compose-first)
+    · kèm-ramp bắt được: +29d lead PASS
+    → Ký signed-only = chấp nhận miss loài này cho tới ramp qua review 30d (kỳ hạn 09-28)

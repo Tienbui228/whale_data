@@ -32,6 +32,12 @@ cfg = cfg_all["gom_h"]
 dq_members = set(cfg_all.get("dq_serial", {}).get("members", []))
 gn_cfg = cfg_all.get("goi_nhe", {})
 kho_ramp_cfg = gn_cfg.get("kho_ramp", {})
+# [v2.1-THẬT KÝ 27/08] obs_min canonical từ yaml goi_nhe.obs_min
+OBS_MIN = gn_cfg.get("obs_min")
+_obs_min_source = "yaml goi_nhe.obs_min" if OBS_MIN is not None else "fallback 14"
+if OBS_MIN is None: OBS_MIN = 14
+cfg.setdefault("t0_1", {})["floor_obs_min"] = OBS_MIN
+cfg.setdefault("h2", {})["floor_obs_min"] = OBS_MIN
 
 # CONF cũ (v2) kết quả tay từ artifact 20260827:
 CONF_OLD = {
@@ -198,9 +204,11 @@ def _h1_raw_detail(tok, date):
 
 gate_results = []
 lines_out = []
+_yaml_md5 = hashlib.md5(open(YAML_PATH, "rb").read()).hexdigest()
 lines_out.append("═" * 100)
-lines_out.append(f"[T-④ v2.1 CONF-FIX rev4 · KÝ-27/08 · gate_defs f275c53c · yaml b03420a8]")
-lines_out.append(f"  fix: WARMUP_T01_VOL_MED30_N 30→14 (obs_min chung mọi rolling-vế)")
+lines_out.append(f"[T-④ v2.1-THẬT CONF-FIX rev4 · KÝ-27/08 · gate_defs f275c53c · yaml {_yaml_md5[:8]}]")
+lines_out.append(f"  obs_min={OBS_MIN} (source: {_obs_min_source})")
+lines_out.append(f"  fix: hằng WARMUP_T01_VOL_MED30_N repointed → yaml goi_nhe.obs_min (v2.1-THẬT)")
 lines_out.append(f"  scope: CHỈ cột conf re-render · fires/leads/trigger/gate KHÔNG đổi")
 lines_out.append("═" * 100)
 lines_out.append("")
@@ -280,6 +288,25 @@ if level_changes:
 else:
     lines_out.append(f"  (no LEVEL changes — only mẫu-số / N/A list adjustments)")
 
+# ═══ MISS-DETAIL (per operator KÝ 27/08 · verify số cho ANALYSIS off-draft) ═══
+lines_out.append("")
+lines_out.append(f"  ═══ MISS-DETAIL 2 dòng — loài dữ liệu trượt (per operator KÝ 27/08) ═══")
+lines_out.append(f"")
+lines_out.append(f"  TUT (NO-FIRE) — LOÀI DỮ LIỆU cohort-B nghiêm nhất (left-censor/captive §3):")
+lines_out.append(f"    · store: 12d pre-D0 (06-27..07-08, D0=07-09) — dưới ngưỡng H2 pos_14=14 obs")
+lines_out.append(f"    · H2 evaluable 0/12 ngày (pos_14 chưa đủ 14 obs bao giờ trong window)")
+lines_out.append(f"    · H1 evaluable 10/12 (snapshot bắt đầu 06-30, 2 ngày đầu window captive)")
+lines_out.append(f"    · kho phẳng: max_step_3d=0.33% · max_ramp_14d=0.00% (handoff nằm trước cửa sổ adapter 06-30)")
+lines_out.append(f"    → KHÔNG phải formula: đúng lỗ left-censor + captive §3, chờ store lấp ≥14d pre-D0")
+lines_out.append(f"")
+lines_out.append(f"  BTR (signed-only miss) — LOÀI NẠP-CHẬM (đúng loài trigger-ramp sinh ra để vá):")
+lines_out.append(f"    · window 30d 07-27..08-25 · store đầy đủ")
+lines_out.append(f"    · compose_first 07-28: step_3d=3.70% (<10%) · ramp_14d=15.04% (≥15% fires ramp)")
+lines_out.append(f"    · balance trend 85M→115M (~35% nạp trong 28d) — steady accumulation không có 'bậc'")
+lines_out.append(f"    · signed-only strips ramp trigger → BTR classified miss (bậc ≥10%/≤3d không có tại compose-first)")
+lines_out.append(f"    · kèm-ramp bắt được: +29d lead PASS")
+lines_out.append(f"    → Ký signed-only = chấp nhận miss loài này cho tới ramp qua review 30d (kỳ hạn 09-28)")
+
 report = "\n".join(lines_out) + "\n"
 out_txt = REPO / "docs/reports/t4_v2p1_render_20260827.txt"
 out_txt.parent.mkdir(parents=True, exist_ok=True)
@@ -287,10 +314,12 @@ out_txt.write_text(report, encoding="utf-8")
 
 out_json = REPO / "docs/reports/t4_v2p1_gate_results_20260827.json"
 payload = {
-    "artifact_type": "T-④ v2.1 CONF-FIX rev4",
+    "artifact_type": "T-④ v2.1-THẬT CONF-FIX rev4",
     "generated_at": datetime.now(timezone.utc).isoformat(),
-    "fix": "WARMUP_T01_VOL_MED30_N 30→14 (obs_min chung mọi rolling-vế)",
+    "fix": "hằng WARMUP_T01_VOL_MED30_N repointed → yaml goi_nhe.obs_min (v2.1-THẬT)",
     "scope": "CHỈ cột conf re-render · fires/leads/trigger/gate KHÔNG đổi",
+    "obs_min": OBS_MIN,
+    "obs_min_source": _obs_min_source,
     "snapshot_pin": {
         "gate_defs_md5": hashlib.md5(open(GATE_DEFS, "rb").read()).hexdigest(),
         "yaml_md5":      hashlib.md5(open(YAML_PATH, "rb").read()).hexdigest(),
@@ -300,6 +329,23 @@ payload = {
         "passes_kem_ramp_provisional": passes_with_ramp,
         "evaluable": evaluable,
         "note": "unchanged from v2 — compose logic không đổi",
+    },
+    "miss_detail": {
+        "TUT": {
+            "reason": "LOÀI DỮ LIỆU cohort-B (left-censor + captive §3)",
+            "store_days_pre_D0": 12, "H2_eval_days": "0/12", "H1_eval_days": "10/12",
+            "max_step_3d_pct": 0.33, "max_ramp_14d_pct": 0.00,
+            "note": "H2 pos_14 cần ≥14 obs, store 12d chưa đủ; H1 kho phẳng handoff trước 06-30 adapter",
+        },
+        "BTR": {
+            "reason": "LOÀI NẠP-CHẬM (steady accumulation, không có bậc)",
+            "compose_first": "2026-07-28", "step_3d_at_compose_pct": 3.70,
+            "ramp_14d_at_compose_pct": 15.04,
+            "balance_growth_28d": "85M → 115M (~35% nạp trong 28d)",
+            "signed_only_verdict": "miss (không có bậc ≥10%/≤3d tại compose-first)",
+            "kem_ramp_verdict": "PASS +29d lead via H1-ramp",
+            "review_expiry": "2026-09-28 (30d từ ký ramp)",
+        },
     },
     "gate_results": gate_results,
 }

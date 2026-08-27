@@ -1,17 +1,40 @@
 {
-  "artifact_type": "T-④ v2.1 CONF-FIX rev4",
-  "generated_at": "2026-08-27T03:59:39.023647+00:00",
-  "fix": "WARMUP_T01_VOL_MED30_N 30→14 (obs_min chung mọi rolling-vế)",
+  "artifact_type": "T-④ v2.1-THẬT CONF-FIX rev4",
+  "generated_at": "2026-08-27T04:14:27.693404+00:00",
+  "fix": "hằng WARMUP_T01_VOL_MED30_N repointed → yaml goi_nhe.obs_min (v2.1-THẬT)",
   "scope": "CHỈ cột conf re-render · fires/leads/trigger/gate KHÔNG đổi",
+  "obs_min": 14,
+  "obs_min_source": "yaml goi_nhe.obs_min",
   "snapshot_pin": {
     "gate_defs_md5": "f275c53c4a0f42b5a7b190e6e0143ca5",
-    "yaml_md5": "b03420a8b606f4af95eed4b3ea41d535"
+    "yaml_md5": "b1887d179939d744a0f2860bc3ef7618"
   },
   "gate_ke": {
     "passes_may_ky_step_only": 7,
     "passes_kem_ramp_provisional": 8,
     "evaluable": 9,
     "note": "unchanged from v2 — compose logic không đổi"
+  },
+  "miss_detail": {
+    "TUT": {
+      "reason": "LOÀI DỮ LIỆU cohort-B (left-censor + captive §3)",
+      "store_days_pre_D0": 12,
+      "H2_eval_days": "0/12",
+      "H1_eval_days": "10/12",
+      "max_step_3d_pct": 0.33,
+      "max_ramp_14d_pct": 0.0,
+      "note": "H2 pos_14 cần ≥14 obs, store 12d chưa đủ; H1 kho phẳng handoff trước 06-30 adapter"
+    },
+    "BTR": {
+      "reason": "LOÀI NẠP-CHẬM (steady accumulation, không có bậc)",
+      "compose_first": "2026-07-28",
+      "step_3d_at_compose_pct": 3.7,
+      "ramp_14d_at_compose_pct": 15.04,
+      "balance_growth_28d": "85M → 115M (~35% nạp trong 28d)",
+      "signed_only_verdict": "miss (không có bậc ≥10%/≤3d tại compose-first)",
+      "kem_ramp_verdict": "PASS +29d lead via H1-ramp",
+      "review_expiry": "2026-09-28 (30d từ ký ramp)"
+    }
   },
   "gate_results": [
     {

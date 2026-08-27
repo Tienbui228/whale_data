@@ -158,6 +158,10 @@ dq_serial:
 goi_nhe:
   signed: true
   source: "operator ký chat 29/08 'ok gói-nhẹ'"
+  # [rev4 v2.1-THẬT KÝ 27/08] canonical obs_min cho MỌI rolling-vế
+  # (funding_14 hằng semantic 14 · px_15 hằng semantic 15 cần 14d-return ·
+  #  ROLLING vế: floor_obs_min oi/vol lấy từ đây thay hằng)
+  obs_min: 14
   compose_mode: "H1-raw OR H2-raw"          # bắn trần, không AND
   conf_mapping:
     HIGH:   4              # 4/4 sub-vé T0.1 pass (trên vế evaluable)
@@ -189,6 +193,29 @@ goi_nhe:
     scope:          "kho-out"          # chỉ áp Δ<0 (out-step)
     display_only:   true               # không compose gate
     review_expiry:  "2026-09-26"       # 30d từ ký (2026-08-27 +30d)
+  # [KÝ 27/08 WALLETSET 2×2 · display-only · PROVISIONAL cùng chuyến review ramp+[50%]]
+  # Auto-tag {CONCENTRATED · BROAD-QUIET · BROAD-STRESS} từ 3 metric:
+  #   (i)  |Δbal|/prev 1d ≥ 0.50 (reuse VERIFY-WALLETSET threshold)
+  #   (ii) |Δholders|/prev 1d ≥ 5 (abs)
+  #   (iii) stress = vol_today/med14(vol) ≥ 5× ∨ ret1d ≤ -8% (OR)
+  # Matrix:
+  #   holders lớn (≥5) + |Δbal|≥50%  → CONCENTRATED
+  #   holders lớn (≥5) + |Δbal|<50%  → BROAD-QUIET
+  #   stress cùng ngày (any bal/holders) → BROAD-STRESS (override)
+  #   không match → không tag
+  # Anchor exhibit: SOPH 2026-08-25 (|Δbal|=97.19%, |Δholders|=1 < 5 → không tag
+  # 2×2, nhưng vẫn có [VERIFY-WALLETSET] trailer — 2 hệ tag độc lập).
+  walletset_2x2:
+    signed:            true
+    source:            "operator ký 27/08 · 3 phân bố fw-139 30d · anchor SOPH"
+    display_only:      true
+    review_expiry:     "2026-09-26"   # cùng chuyến ramp + [50%] review
+    bal_min_abs_delta: 0.50            # |Δbal|/prev ≥ 50%
+    holders_min_abs:   5               # |Δholders| ≥ 5 (abs)
+    stress_vol_min:    5.0             # vol_today/med14 ≥ 5×
+    stress_ret_max:    -0.08           # ret1d ≤ -8%
+    stress_combine:    "OR"            # (vol ≥ 5× ∨ ret ≤ -8%)
+    precedence:        "stress > 2x2"  # BROAD-STRESS override CONCENTRATED/BROAD-QUIET
 
   # E-R7 acceptance
   acceptance_max_pct: 0.25 # tổng events ≤ 25% universe (loãng if vượt)

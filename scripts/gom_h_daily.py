@@ -28,7 +28,7 @@ Usage:
   python scripts/gom_h_daily.py --date auto           # yesterday UTC
 """
 from __future__ import annotations
-import sys, io, argparse, hashlib, math
+import sys, io, argparse, hashlib, math, os as _os_env
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from statistics import median
@@ -377,6 +377,17 @@ def main():
 
     cfg = _load_cfg()
     gom_h_cfg = cfg.get("gom_h", {})
+    # [v2.1-THẬT KÝ 27/08] obs_min canonical từ yaml goi_nhe.obs_min
+    # Ép mọi rolling-vế đọc cùng source (T0.1 vol, H2 pos-oi, H1 cooldown-eval)
+    _obs_min_yaml = (cfg.get("goi_nhe") or {}).get("obs_min")
+    OBS_MIN = _obs_min_yaml if _obs_min_yaml is not None else 14
+    _obs_min_source = "yaml goi_nhe.obs_min" if _obs_min_yaml is not None else "default fallback 14"
+    # Sync T0.1/H2 floor_obs_min sang OBS_MIN nếu yaml đã có canonical
+    if _obs_min_yaml is not None:
+        gom_h_cfg.setdefault("t0_1", {})["floor_obs_min"] = OBS_MIN
+        gom_h_cfg.setdefault("h2",   {})["floor_obs_min"] = OBS_MIN
+    global WARMUP_T01_VOL_MED30_N
+    WARMUP_T01_VOL_MED30_N = OBS_MIN
     symbols = _load_universe()
     store = _load_store(target)
     yaml_md5 = _md5(YAML_PATH)
@@ -386,6 +397,7 @@ def main():
     print(f"[CFG-PROVENANCE gom_h_daily]")
     print(f"  Source: {YAML_PATH.relative_to(REPO)} (yaml load)")
     print(f"  yaml md5: {yaml_md5}")
+    print(f"  obs_min={OBS_MIN} (source: {_obs_min_source})")
     print(f"  Values ACTUALLY USED (gom_h section):")
     for key, val in gom_h_cfg.items():
         if isinstance(val, dict):
@@ -602,6 +614,80 @@ def main():
             if abs(h1_label_pct) >= _vws_thr:
                 verify_ws_note = "[VERIFY-WALLETSET]"
 
+        # [KÝ 27/08 WALLETSET 2×2 · display-only · anchor SOPH]
+        # Auto-tag {CONCENTRATED · BROAD-QUIET · BROAD-STRESS} from
+        # (i) |Δbal|/prev · (ii) |Δholders| · (iii) stress vol/ret
+        walletset_tag = ""
+        ws_delta_bal_pct = None
+        ws_delta_holders = None
+        ws_stress_flag = ""
+        ws_cfg = goi_nhe_cfg.get("walletset_2x2", {})
+        if ws_cfg.get("signed"):
+            try:
+                # Compute (i) |Δbal|/prev 1d — reuse h1_kho_step_pct (already signed %)
+                _step_pct = h1_detail.get("kho_step_pct")
+                if _step_pct is not None:
+                    ws_delta_bal_pct = float(_step_pct)  # already in %
+                # Compute (ii) Δholders 1d — read snapshot directly
+                _target_dt = datetime.strptime(target, "%Y-%m-%d")
+                _snap_dir = Path("/root/Data_back_test/whale_data/data/raw/nansen_snapshots") \
+                    if _os_env.name == "posix" else Path("D:/Check onchain fresh wallets/snapshots")
+                _ing_now = (_target_dt + timedelta(days=1)).strftime("%Y-%m-%d")
+                _ing_prev = (_target_dt).strftime("%Y-%m-%d")
+                _holders = {"now": None, "prev": None}
+                for _ing, _key in [(_ing_now, "now"), (_ing_prev, "prev")]:
+                    _sp = _snap_dir / f"{_ing}.json"
+                    if _sp.exists():
+                        import json as _json
+                        _d = _json.loads(_sp.read_text(encoding="utf-8"))
+                        _row = next((r for r in _d.get("rows", [])
+                                     if (r or {}).get("symbol", "").upper() == token_bare), None)
+                        if _row is not None:
+                            _h = _row.get("exchange_holders")
+                            if _h is not None:
+                                try: _holders[_key] = int(_h)
+                                except (TypeError, ValueError): pass
+                if _holders["now"] is not None and _holders["prev"] is not None:
+                    ws_delta_holders = _holders["now"] - _holders["prev"]
+                # Compute (iii) stress vol/med14 + ret1d — use last row from store
+                _row_today = store[(store["symbol"] == sym) & (store["date"] == target)]
+                if not _row_today.empty:
+                    _r = _row_today.iloc[0]
+                    _vol_today = _r.get("vol_quote")
+                    _px_today = _r.get("px_avg")
+                    _prev14 = store[(store["symbol"] == sym) & (store["date"] < target)].sort_values("date").tail(14)
+                    if len(_prev14) >= 14 and _vol_today is not None:
+                        _med14 = _prev14["vol_quote"].median()
+                        _vol_ratio = float(_vol_today) / _med14 if _med14 and _med14 > 0 else None
+                    else:
+                        _vol_ratio = None
+                    _prev1 = store[(store["symbol"] == sym) & (store["date"] < target)].sort_values("date").tail(1)
+                    if not _prev1.empty and _px_today is not None:
+                        _px_prev = _prev1.iloc[0].get("px_avg")
+                        _ret1d = (float(_px_today) - float(_px_prev)) / float(_px_prev) if _px_prev and _px_prev > 0 else None
+                    else:
+                        _ret1d = None
+                    _stress_vol = _vol_ratio is not None and _vol_ratio >= ws_cfg.get("stress_vol_min", 5.0)
+                    _stress_ret = _ret1d is not None and _ret1d <= ws_cfg.get("stress_ret_max", -0.08)
+                    if _stress_vol or _stress_ret:
+                        _parts = []
+                        if _stress_vol: _parts.append(f"vol={_vol_ratio:.1f}x")
+                        if _stress_ret: _parts.append(f"ret={_ret1d*100:+.1f}%")
+                        ws_stress_flag = " ".join(_parts)
+                # Assemble matrix tag
+                _bal_thr = ws_cfg.get("bal_min_abs_delta", 0.50) * 100.0
+                _hold_thr = ws_cfg.get("holders_min_abs", 5)
+                _big_bal = ws_delta_bal_pct is not None and abs(ws_delta_bal_pct) >= _bal_thr
+                _big_hold = ws_delta_holders is not None and abs(ws_delta_holders) >= _hold_thr
+                if ws_stress_flag:
+                    walletset_tag = f"[WALLETSET: BROAD-STRESS · {ws_stress_flag}]"
+                elif _big_hold and _big_bal:
+                    walletset_tag = "[WALLETSET: CONCENTRATED]"
+                elif _big_hold and not _big_bal:
+                    walletset_tag = "[WALLETSET: BROAD-QUIET]"
+            except Exception:
+                pass  # display-only guard, fail-silent
+
         # Compose GOM_H (GÓI-NHẸ: OR, no AND gate)
         if active_lanes:
             gom_h = "T"
@@ -636,7 +722,8 @@ def main():
                           "suppressed_note": " ".join(suppressed_notes),
                           "dq_note": " ".join(dq_notes),
                           "tripwire_note": tripwire_note,
-                          "verify_ws_note": verify_ws_note})
+                          "verify_ws_note": verify_ws_note,
+                          "walletset_tag": walletset_tag})
         elif dq_notes:
             # DQ-SERIAL blocked, KHÔNG khởi cooldown per §7.1
             gom_h = "F-DQ-SERIAL"
@@ -644,7 +731,8 @@ def main():
                           "conf": conf_label_str,
                           "h1": h1_status, "h2": h2_status, "t01": t01_status, "h3": h3_status,
                           "h1_detail": h1_detail,
-                          "suppressed_note": "", "dq_note": " ".join(dq_notes)})
+                          "suppressed_note": "", "dq_note": " ".join(dq_notes),
+                          "walletset_tag": walletset_tag})
         elif suppressed_lanes:
             # No new fire, but at least one lane suppressed
             gom_h = "F-COOLDOWN[" + "+".join(suppressed_lanes) + "]"
@@ -652,7 +740,8 @@ def main():
                           "conf": conf_label_str,
                           "h1": h1_status, "h2": h2_status, "t01": t01_status, "h3": h3_status,
                           "h1_detail": h1_detail,
-                          "suppressed_note": " ".join(suppressed_notes), "dq_note": ""})
+                          "suppressed_note": " ".join(suppressed_notes), "dq_note": "",
+                          "walletset_tag": walletset_tag})
         else:
             gom_h = "F" if (h1_status in ("F",) and h2_status in ("F","N/A-WARMUP") and t01_status in ("F","N/A-WARMUP")) else \
                     ("N/A-WARMUP" if "N/A-WARMUP" in (t01_status, h2_status) else "F")
@@ -672,6 +761,10 @@ def main():
             "h1_ramp_raw": "True" if h1_ramp_raw else "False",  # [GOI-NHE] kho-ramp check
             "h1_direction": h1_direction,             # [KÝ 27/08 B2] in|out|"" (kho lane only)
             "verify_ws_note": (verify_ws_note if "kho" in active_lanes else ""),  # [KÝ 27/08 rev3]
+            "wallet_delta_pct":     ws_delta_bal_pct,     # [KÝ 27/08 2×2] |Δbal|/prev signed %
+            "wallet_delta_holders": ws_delta_holders,     # [KÝ 27/08 2×2] Δholders signed
+            "wallet_stress_flag":   ws_stress_flag,       # [KÝ 27/08 2×2] "vol=X.Xx ret=+X.X%" or ""
+            "walletset_tag":        walletset_tag,        # [KÝ 27/08 2×2] BROAD-STRESS|CONCENTRATED|BROAD-QUIET|""
             "dq_note": dq_note_str,                   # [GOI-NHE §7.1] [DQ-SERIAL] label
             "suppressed_note": suppressed_note_str,   # [V④-RT] "[SUPPRESSED n/14 lane=X]"
             "h1_kho_step_pct": h1_detail.get("kho_step_pct"),
@@ -718,6 +811,7 @@ def main():
             if f.get("dq_note"): trailer_parts.append(f["dq_note"])
             if f.get("tripwire_note"): trailer_parts.append(f["tripwire_note"])
             if f.get("verify_ws_note"): trailer_parts.append(f["verify_ws_note"])
+            if f.get("walletset_tag"): trailer_parts.append(f["walletset_tag"])
             trailer = ("  " + "  ".join(trailer_parts)) if trailer_parts else ""
             print(f"  {f['symbol']}  [{active_str}]  conf={f['conf']}  H3={f['h3']}{trailer}")
     # Footer

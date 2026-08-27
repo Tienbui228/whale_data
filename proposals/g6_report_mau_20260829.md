@@ -3,10 +3,11 @@
 **Status:** MẪU FORMAT · CHỜ cron 28/08 01:45 UTC + 29/08 01:45 UTC (2 nights official post rev3) để paste NGUYÊN VĂN.
 **Snapshot pin:** spec bot-signals sha `490a8f49` · gate_defs md5 `f275c53c` · yaml md5 `b03420a8` (rev3 +verify_walletset).
 - **Đêm-1 27/08 01:45 UTC target=2026-08-26** = archive-note pre-wire (code `e851db50` cũ, `conf=conf=` double + `[[suppressed:perp]]` không trailer) — KHÔNG counted G6 official.
-- **Đêm-2 28/08 01:45 UTC target=2026-08-27** = máy-final **rev4** code md5 `c509b264` (gom_h_daily.py) + `83d0e131` (tripwire_e2.py) + yaml `b03420a8` + counter `1c104491` — accumulates rev2 3-fix + rev3 VERIFY-WALLETSET + **rev4 CONF-FIX** (obs_min=14 mọi rolling-vế + numpy-bool coerce).
-- **Đêm-3 29/08 01:45 UTC target=2026-08-28** = official #2 cùng rev4.
-- **rev3/rev4 note:** Cả hai display-family (tag hiển thị + conf label semantic) — KHÔNG đổi compose gate/cooldown → 2 đêm official vẫn tính từ đêm-2 unchanged.
-- **rev4 conf-fix impact:** conf mẫu số nay đúng /4 (was /3 fake do numpy-bool bug). Ví dụ 08-25 smoke: LAUSDT/MIRAUSDT chuyển MED(3/3)→**HIGH(4/4)**; các fires khác chuyển (x/3)→(x/4).
+- **Đêm-2 28/08 01:45 UTC target=2026-08-27** = máy-final **rev4-FINAL** code md5 `f99ef3c8` (gom_h_daily.py) + `83d0e131` (tripwire_e2.py) + yaml `3820b87c` + counter `1c104491` — accumulates rev2 3-fix + rev3 VERIFY-WALLETSET + rev4 CONF-FIX + **rev4-FINAL v2.1-THẬT yaml obs_min single-source + WALLETSET 2×2 wire + os import fix**.
+- **Đêm-3 29/08 01:45 UTC target=2026-08-28** = official #2 cùng rev4-FINAL.
+- **rev3/rev4 conf-fix note:** display-family (không đổi compose).
+- **⚠ rev4-FINAL COMPOSE CHANGE:** `os as _os_env` import fix (hidden bug) restore ramp lane compute — fires 08-25 = **16 → 30** vì 18 tokens h1_ramp_raw=True trước đây silent-fail. Đây KHÔNG display-only. **Chờ operator soi:** accept ramp restoration (G6 count reset đêm-2 rev4-FINAL) hoặc rollback via yaml flag disable ramp.
+- **WALLETSET 2×2 wired** (KÝ 27/08 thresholds |Δbal|≥50% · |Δholders|≥5 abs · stress vol≥5× ∨ ret≤-8% OR) — 3 CSV cột + `[WALLETSET: <tag>]` trailer sau `[VERIFY-WALLETSET]`. Anchor SOPH.
 
 ## Format Telegram khối CAMPAIGN-PRE (post gói-nhẹ + rev2 3-fix KÝ 27/08)
 
@@ -77,6 +78,9 @@ CAMPAIGN-PRE 2026-08-26: 14 fires (fw-139)
 - [ ] **Fix B3 verified:** `data/state/tripwire_e2_counter.json` mỗi token chỉ 1 entry cho 08-27 (không duplicate)
 - [ ] **Guard rev3 verified:** kho-out |Δ|≥50%/1d → trailer `[VERIFY-WALLETSET]` (yaml min_abs_delta=0.50); CSV cột `verify_ws_note`
 - [ ] **rev4 conf-fix verified:** mẫu số conf hiển thị /4 (không /3), obs_min=14 mọi rolling-vế; ví dụ fire nào full 4-vế pass = HIGH (4/4; N/A: -)
+- [ ] **rev4-FINAL yaml single-source verified:** header in `obs_min=14 (source: yaml goi_nhe.obs_min)`
+- [ ] **WALLETSET 2×2 wired:** `[WALLETSET: <CONCENTRATED|BROAD-QUIET|BROAD-STRESS>]` trailer sau `[VERIFY-WALLETSET]`; CSV cột `walletset_tag`, `wallet_delta_pct`, `wallet_delta_holders`, `wallet_stress_flag`
+- [ ] **ramp restoration (accidental os fix):** so sánh fire count đêm-2 vs đêm-1 pre-wire — nếu tăng ~2× thì ramp lane actually working; operator soi decide reset
 - [ ] Conf format: `conf=<LEVEL> (n_pass/n_eval; N/A: <list>)` — không double `conf=` prefix
 - [ ] CSV md5 khớp log `[OUTPUT]` line
 

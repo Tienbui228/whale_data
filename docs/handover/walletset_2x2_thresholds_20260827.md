@@ -178,3 +178,40 @@ Per operator "display-only, chưa code tag cho tới chữ operator". Sau khi op
 - Wire compute trong gom_h_daily.py (thêm 3 cột CSV: wallet_delta_pct, wallet_delta_holders, wallet_stress_flag)
 - Render tag `[WALLETSET: <CONCENTRATED|BROAD-QUIET|BROAD-STRESS>]` trailer sau `[VERIFY-WALLETSET]` khi kho lane active
 - yaml goi_nhe.walletset_2x2 block với 3 ngưỡng + matrix rules
+
+---
+
+## KÝ 27/08 · CHỐT NGƯỠNG + WIRED
+
+Operator KÝ 27/08:
+- (i) |Δbal| ≥ **50%** (reuse VERIFY-WALLETSET threshold)
+- (ii) |Δholders| ≥ **5** (**abs**)
+- (iii) stress = vol/med14 ≥ **5×** OR ret1d ≤ **-8%** (**OR** combine)
+- Cả 3 PROVISIONAL cùng chuyến review ramp + [50%] · expiry 2026-09-26
+
+**Wired vào yaml `goi_nhe.walletset_2x2`** (yaml md5 mới `3820b87c`) + `gom_h_daily.py` rev4-final. CSV +cột `wallet_delta_pct`, `wallet_delta_holders`, `wallet_stress_flag`, `walletset_tag`. Trailer `[WALLETSET: <tag>]` sau `[VERIFY-WALLETSET]`.
+
+## Anchor exhibit — SOPH 2026-08-25
+
+- |Δbal| = **-97.19%** (≥50% ✓)
+- |Δholders| = **1** (38-39, **<5** ✗)
+- stress: vol/med14 = ~3× (<5× ✗), ret1d = -4.3% (>-8% ✗) → **KHÔNG stress**
+- Result: **KHÔNG tag 2×2** (chỉ có `[VERIFY-WALLETSET]` từ hệ riêng)
+
+**Bài học anchor:** kho drop lớn ≠ CONCENTRATED tự động — cần cả 2 điều kiện (|Δbal| + |Δholders|). SOPH là **DELIST-MIGRATION** (holders phẳng, 1 whale rời tập với hầu hết balance) — matrix 2×2 đúng không tag; VERIFY-WALLETSET catch riêng.
+
+## Smoke 08-25 wire verify (VPS post-SCP)
+
+30 fires (was 16 pre-os-fix — xem note ramp restoration bên dưới), tag phân bố:
+- BROAD-STRESS: BASUSDT (vol=8.6× ret=-12.2%) · CLOUSDT (ret=-8.5%) · HANAUSDT (vol=9.8×) · HEMIUSDT (ret=-13.9%) · TACUSDT (vol=118.7×) · 龙虾USDT (vol=9.7×)
+- BROAD-QUIET: 0GUSDT · OPNUSDT · XPINUSDT
+- CONCENTRATED: (không có 08-25)
+- SOPH: **không tag 2×2** (anchor case) — chỉ `[VERIFY-WALLETSET]`
+
+## NOTE — ramp restoration side-effect (accidental, cần operator soi)
+
+Khi wire 2×2, phát hiện `_os_env` chưa import trong prod → `import os as _os_env` bổ sung. Fix ĐỒNG THỜI restore ramp compute (silent-fail từ trước): fires 08-25 nhảy **16 → 30** vì 14 fires H1-ramp (18 tokens h1_ramp_raw=True) trước đây bị nuốt trong try/except.
+
+Đây KHÔNG phải display-only — compose semantic đổi. Nếu operator soi lại và muốn:
+- **Accept ramp restoration** (per gói-nhẹ compose OR intent) → G6 2 đêm official RESET count từ đêm-2 rev4-final code md5 mới
+- **Rollback ramp** (nếu muốn signed-only trước ramp review 09-28) → cần yaml flag disable ramp trong compose, giữ display-only
