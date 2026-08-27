@@ -176,6 +176,11 @@ goi_nhe:
     provisional_ky_kem: true           # 30d report-only tự trả giá FP
     inclusive_D: true                  # mẫu balance(D-14) inclusive
     empty_or_na: "N-A-KHONG-FIRE"      # đầu 0/N/A → N/A không fire
+    # [KÝ 27/08 confirm 0i-b — DEV ghi] ramp sống trên cron từ đêm đầu này:
+    provisional_30d_start: "2026-08-28"  # đêm đầu ramp sống trên cron; 4 revs trước
+                                          # (70678b7 → 531c4d1 → ec8782e → 0ef10f7)
+                                          # chết silent — NameError _os_env nuốt bởi
+                                          # except-pass; họ save_snapshot: L-28.
   tripwire_e2:
     trailing_days:      30
     max_alert_per_token: 0.4           # trần alert/token/30d hậu-cooldown

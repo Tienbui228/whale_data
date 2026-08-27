@@ -2,11 +2,11 @@
 
 **Status:** MẪU FORMAT · CHỜ cron 28/08 01:45 UTC + 29/08 01:45 UTC (2 nights official post rev3) để paste NGUYÊN VĂN.
 **Snapshot pin:** spec bot-signals sha `490a8f49` · gate_defs md5 `f275c53c` · yaml md5 `b03420a8` (rev3 +verify_walletset).
-- **Đêm-1 27/08 01:45 UTC target=2026-08-26** = archive-note pre-wire (code `e851db50` cũ, `conf=conf=` double + `[[suppressed:perp]]` không trailer) — KHÔNG counted G6 official.
+- **Đêm-1 27/08 01:45 UTC target=2026-08-26** = archive-note pre-wire (code `e851db50` cũ, `conf=conf=` double + `[[suppressed:perp]]` không trailer + **ramp dead c509b264 lineage** · NameError `_os_env` nuốt bởi except-pass trong chuỗi 70678b7 → 531c4d1 → ec8782e → 0ef10f7; log H1 `n_eval=0 n_NA=139` confirming) — KHÔNG counted G6 official.
 - **Đêm-2 28/08 01:45 UTC target=2026-08-27** = máy-final **rev4-FINAL** code md5 `f99ef3c8` (gom_h_daily.py) + `83d0e131` (tripwire_e2.py) + yaml `3820b87c` + counter `1c104491` — accumulates rev2 3-fix + rev3 VERIFY-WALLETSET + rev4 CONF-FIX + **rev4-FINAL v2.1-THẬT yaml obs_min single-source + WALLETSET 2×2 wire + os import fix**.
 - **Đêm-3 29/08 01:45 UTC target=2026-08-28** = official #2 cùng rev4-FINAL.
 - **rev3/rev4 conf-fix note:** display-family (không đổi compose).
-- **⚠ rev4-FINAL COMPOSE CHANGE:** `os as _os_env` import fix (hidden bug) restore ramp lane compute — fires 08-25 = **16 → 30** vì 18 tokens h1_ramp_raw=True trước đây silent-fail. Đây KHÔNG display-only. **Chờ operator soi:** accept ramp restoration (G6 count reset đêm-2 rev4-FINAL) hoặc rollback via yaml flag disable ramp.
+- **✅ rev4-FINAL RAMP RESTORATION (operator ky 27/08 confirm accept):** `os as _os_env` import fix restore ramp compute (silent-fail 4 revs cũ). Đêm-2/3 official CÙNG BASELINE f99ef3c8 (ramp sống lần đầu trên cron từ 2026-08-28). yaml `goi_nhe.kho_ramp.provisional_30d_start=2026-08-28` ghi mốc L-28.
 - **WALLETSET 2×2 wired** (KÝ 27/08 thresholds |Δbal|≥50% · |Δholders|≥5 abs · stress vol≥5× ∨ ret≤-8% OR) — 3 CSV cột + `[WALLETSET: <tag>]` trailer sau `[VERIFY-WALLETSET]`. Anchor SOPH.
 
 ## Format Telegram khối CAMPAIGN-PRE (post gói-nhẹ + rev2 3-fix KÝ 27/08)
@@ -80,7 +80,9 @@ CAMPAIGN-PRE 2026-08-26: 14 fires (fw-139)
 - [ ] **rev4 conf-fix verified:** mẫu số conf hiển thị /4 (không /3), obs_min=14 mọi rolling-vế; ví dụ fire nào full 4-vế pass = HIGH (4/4; N/A: -)
 - [ ] **rev4-FINAL yaml single-source verified:** header in `obs_min=14 (source: yaml goi_nhe.obs_min)`
 - [ ] **WALLETSET 2×2 wired:** `[WALLETSET: <CONCENTRATED|BROAD-QUIET|BROAD-STRESS>]` trailer sau `[VERIFY-WALLETSET]`; CSV cột `walletset_tag`, `wallet_delta_pct`, `wallet_delta_holders`, `wallet_stress_flag`
-- [ ] **ramp restoration (accidental os fix):** so sánh fire count đêm-2 vs đêm-1 pre-wire — nếu tăng ~2× thì ramp lane actually working; operator soi decide reset
+- [ ] **ramp-line đầu tiên (rev4-FINAL):** in ramp evaluated `n=?` + có token nào h1_ramp fire/gần-fire không? kỳ vọng ~18 tokens (từ smoke 08-25 h1_ramp_raw=True count)
+- [ ] **walletset tag xuất hiện đúng ngưỡng ký:** trailer `[WALLETSET: <tag>]` cho token thỏa (|Δbal|≥50% + |Δholders|≥5) hoặc (stress vol≥5×/ret≤-8% OR); anchor SOPH KHÔNG tag 2×2 (holders Δ=1<5)
+- [ ] **CODE-FREEZE VPS:** md5 gom_h_daily.py + yaml TRƯỚC/SAU cron identical (cấm SCP đến 29/08 01:45 UTC)
 - [ ] Conf format: `conf=<LEVEL> (n_pass/n_eval; N/A: <list>)` — không double `conf=` prefix
 - [ ] CSV md5 khớp log `[OUTPUT]` line
 
