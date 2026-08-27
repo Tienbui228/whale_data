@@ -51,6 +51,21 @@ from datetime import date as _date, timedelta as _td
 
 from lib.hedge_episode import detect_episodes, calc_div, NaN, ok
 
+# [r4 SIGNED 28/08 · operator KÝ (ii)] YAML config loader for r4 evidence
+import yaml as _yaml
+_ER4_R4_CACHE = None
+
+def _load_er4_r4_cfg(yaml_path="screen_thresholds.yaml"):
+    """Load er4_r4 threshold block từ screen_thresholds.yaml — KHÔNG hardcode.
+    Return None if block missing (r4 disabled)."""
+    global _ER4_R4_CACHE
+    if _ER4_R4_CACHE is None:
+        try:
+            _ER4_R4_CACHE = _yaml.safe_load(open(yaml_path, encoding="utf-8"))
+        except Exception:
+            return None
+    return (_ER4_R4_CACHE or {}).get("unhedge_registry", {}).get("er4_r4")
+
 
 # ── D4 header (ER-HOME 21/08 luật): mọi probe/gate BẮT BUỘC gọi _run_header() đầu run ──
 SPEC_PATH_CANONICAL = "D:/Data back test/whale_data/proposals/unhedge_registry_spec.md"
@@ -366,9 +381,79 @@ def _detect_ev(arr, ep, i, sn_min, window_start, window_end,
     if not (_pos_ok(arr, i) and _px_ok(arr, i, hspx)):
         return None
 
+    # [r4 SIGNED 28/08 · operator KÝ (ii)] Augment r4_evidence — REPORT-ONLY, không thay trig
+    # Điều kiện 1: ngưỡng từ yaml er4_r4 (không hardcode)
+    # Điều kiện 2: augment-only, không mutate state
+    # Điều kiện 3: conf-scheme re-arm → dừng-flag "CONF-SCHEME PENDING" nếu chưa có
+    _r4_cfg = _load_er4_r4_cfg()
+    r4_evidence = _check_r4_evidence(arr, ep, i, _r4_cfg, rel_ep_id, rel_ep_kind) if _r4_cfg else None
+
     return {
         "i": i, "date": d, "trig": trig, "sn": sn, "hspx": hspx, "ep_min": ep_min,
         "rel_ep_id": rel_ep_id, "rel_ep_kind": rel_ep_kind,
+        "r4_evidence": r4_evidence,   # None nếu r4 not applicable or state gate fail
+    }
+
+
+# ── [r4 SIGNED 28/08 · operator KÝ (ii)] r4 evidence check ─────────────────────
+def _check_r4_evidence(arr, ep, i, cfg_r4, rel_ep_id, rel_ep_kind):
+    """§E-R4(r4) evidence detector — REPORT-ONLY (augment-only, không mutate state).
+
+    State gate: token trong un-hedge ≤state_max_days ∨ RE-ARM state.
+    Rule: pos_r=max30 ∧ pos_r/min14 ≥ pos_over_min14 ∧ acc_r ≤ acc_over_max14 × max14.
+
+    Return dict với flag="r4" + values + "CONF-SCHEME PENDING" note nếu chưa có.
+    Return None nếu:
+      - cfg_r4 None (r4 disabled)
+      - warmup fail (< 30d data)
+      - state gate fail
+      - rule fail
+    """
+    if cfg_r4 is None or i < 30:
+        return None
+
+    # State gate: post_break window ≤state_max_days OR current in_hedge with re-arm signal
+    state_max = cfg_r4.get("state_max_days", 30)
+    in_state = False
+    if rel_ep_kind == "post_break":
+        for j in range(max(0, i - state_max), i):
+            if ep[j]["in_hedge"]:
+                gap = i - j
+                if gap <= state_max:
+                    in_state = True; break
+    elif rel_ep_kind == "current" and ep[i].get("in_hedge"):
+        # RE-ARM candidate needs external state store — placeholder marker for consumer
+        in_state = True
+    if not in_state:
+        return None
+
+    # Fetch pos_r / acc_r trailing series
+    pos_30 = [arr[j].get("pos_r") for j in range(max(0, i-29), i+1) if arr[j].get("pos_r") is not None]
+    pos_14 = [arr[j].get("pos_r") for j in range(max(0, i-13), i+1) if arr[j].get("pos_r") is not None]
+    acc_14 = [arr[j].get("acc_r") for j in range(max(0, i-13), i+1) if arr[j].get("acc_r") is not None]
+    if len(pos_30) < 30 or len(pos_14) < 14 or len(acc_14) < 14:
+        return None
+
+    pos_today = arr[i].get("pos_r")
+    acc_today = arr[i].get("acc_r")
+    if pos_today is None or acc_today is None: return None
+
+    pos_max30 = max(pos_30); pos_min14 = min(pos_14); acc_max14 = max(acc_14)
+
+    if cfg_r4.get("pos_at_max30", True) and pos_today < pos_max30 - 1e-9:
+        return None
+    r_pos = pos_today / pos_min14 if pos_min14 > 0 else 0
+    if r_pos < cfg_r4.get("pos_over_min14", 1.30):
+        return None
+    if acc_today > cfg_r4.get("acc_over_max14", 0.50) * acc_max14:
+        return None
+
+    return {
+        "flag": "r4",
+        "pos_today": pos_today, "pos_max30": pos_max30, "pos_min14": pos_min14,
+        "r_pos_over_min14": r_pos,
+        "acc_today": acc_today, "acc_max14": acc_max14,
+        "note": "REPORT-ONLY · nâng re-arm conf + ⚡-watch · CONF-SCHEME PENDING",
     }
 
 

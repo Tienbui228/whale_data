@@ -133,6 +133,17 @@ unhedge_registry:
   rehedge_min_d:   5       # RE-HEDGED: new episode div_avg3 ≤0.5 ≥5d
   expire_days:     90      # EXPIRED: 90d không ignite
 
+  # [r4 SIGNED 28/08 operator KÝ (ii) · 3 điều kiện thỏa]
+  # §E-R4(r4) evidence flag — REPORT-ONLY augment (nâng re-arm conf + ⚡-watch)
+  # State gate: token trong un-hedge ≤state_max_days ∨ RE-ARM state
+  # PROVISIONAL free-layer chờ control-set
+  er4_r4:
+    pos_at_max30:      true      # pos_r_today = max(pos_r trailing 30d)
+    pos_over_min14:    1.30      # pos_r_today / min(pos_r 14d) ≥ 1.30
+    acc_over_max14:    0.50      # acc_r_today ≤ 0.50 × max(acc_r 14d)
+    state_max_days:    30        # window state gate (un-hedge ≤30d)
+    report_only_days:  30        # from go-live, 30d report-only trước ARMED
+
   # E-R7 acceptance
   acceptance_max_pct: 0.25 # tổng events ≤ 25% universe (loãng if vượt)
 
