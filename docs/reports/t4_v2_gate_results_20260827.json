@@ -1,0 +1,192 @@
+{
+  "artifact_type": "T-④ v2 gate_results",
+  "generated_at": "2026-08-27T03:40:34.129917+00:00",
+  "snapshot_pin": {
+    "gate_defs_md5": "f275c53c4a0f42b5a7b190e6e0143ca5",
+    "yaml_md5": "b03420a8b606f4af95eed4b3ea41d535",
+    "amendments": [
+      "GOI-NHE-20260829",
+      "V④-RT-2CHỐT-ANALYSIS-20260828",
+      "⑬-COLUMN-MANIFEST-20260826",
+      "GOM-RESTRUCT-20260824"
+    ]
+  },
+  "gate_ke": {
+    "passes_may_ky_step_only": 7,
+    "passes_kem_ramp_provisional": 8,
+    "evaluable": 9,
+    "threshold_rule": "≥6/evaluable per operator (a)",
+    "may_ky_verdict": "PASS",
+    "kem_ramp_verdict": "PASS"
+  },
+  "gate_results": [
+    {
+      "tok": "AKE",
+      "d0": "2026-07-15",
+      "window": "06-27..07-14",
+      "compose_first": "2026-07-05",
+      "trigger": "H1-step",
+      "h2_ve": null,
+      "conf_str": "LOW (0/0; N/A: 4 vế [funding_pin,oi_min30,ret14,med30_vol])",
+      "conf_level": "LOW",
+      "conf_pass": 0,
+      "conf_eval": 0,
+      "conf_na": [
+        "funding_pin",
+        "oi_min30",
+        "ret14",
+        "med30_vol"
+      ],
+      "kho_step_pct": 19.82923931193619,
+      "kho_ramp_pct": null,
+      "lead_days": 10,
+      "status": "PASS"
+    },
+    {
+      "tok": "BANK",
+      "d0": "2026-07-11",
+      "window": "06-11..07-10",
+      "compose_first": "2026-07-10",
+      "trigger": "H2",
+      "h2_ve": "pos-ratio",
+      "conf_str": "MED (2/3; N/A: med30_vol)",
+      "conf_level": "MED",
+      "conf_pass": 2,
+      "conf_eval": 3,
+      "conf_na": [
+        "med30_vol"
+      ],
+      "kho_step_pct": 1.5330098503724798,
+      "kho_ramp_pct": null,
+      "lead_days": 1,
+      "status": "PASS"
+    },
+    {
+      "tok": "BTR",
+      "d0": "2026-08-26",
+      "window": "07-27..08-25",
+      "compose_first": "2026-07-28",
+      "trigger": "H1-ramp",
+      "h2_ve": null,
+      "conf_str": "MED (2/3; N/A: med30_vol)",
+      "conf_level": "MED",
+      "conf_pass": 2,
+      "conf_eval": 3,
+      "conf_na": [
+        "med30_vol"
+      ],
+      "kho_step_pct": 3.6953219615377635,
+      "kho_ramp_pct": 15.042550776607083,
+      "lead_days": 29,
+      "status": "PASS"
+    },
+    {
+      "tok": "BTW",
+      "d0": "2026-08-03",
+      "window": "07-04..08-02",
+      "compose_first": "2026-07-27",
+      "trigger": "H1-step",
+      "h2_ve": null,
+      "conf_str": "LOW (1/4; N/A: -)",
+      "conf_level": "LOW",
+      "conf_pass": 1,
+      "conf_eval": 4,
+      "conf_na": [],
+      "kho_step_pct": 12.322759217932932,
+      "kho_ramp_pct": 20.22970584445804,
+      "lead_days": 7,
+      "status": "PASS"
+    },
+    {
+      "tok": "CAP",
+      "d0": "2026-07-30",
+      "window": "06-30..07-29",
+      "compose_first": "2026-07-12",
+      "trigger": "H1-step",
+      "h2_ve": null,
+      "conf_str": "LOW (0/3; N/A: med30_vol)",
+      "conf_level": "LOW",
+      "conf_pass": 0,
+      "conf_eval": 3,
+      "conf_na": [
+        "med30_vol"
+      ],
+      "kho_step_pct": 29.2440011951268,
+      "kho_ramp_pct": null,
+      "lead_days": 18,
+      "status": "PASS"
+    },
+    {
+      "tok": "CYS",
+      "d0": "2026-08-04",
+      "window": "07-05..08-03",
+      "compose_first": "2026-07-12",
+      "trigger": "H2",
+      "h2_ve": "pos-ratio",
+      "conf_str": "MED (2/4; N/A: -)",
+      "conf_level": "MED",
+      "conf_pass": 2,
+      "conf_eval": 4,
+      "conf_na": [],
+      "kho_step_pct": 5.23263024960633,
+      "kho_ramp_pct": null,
+      "lead_days": 23,
+      "status": "PASS"
+    },
+    {
+      "tok": "HEMI",
+      "d0": "2026-08-15",
+      "window": "07-16..08-14",
+      "compose_first": "2026-07-16",
+      "trigger": "H2",
+      "h2_ve": "pos-ratio",
+      "conf_str": "MED (3/3; N/A: med30_vol)",
+      "conf_level": "MED",
+      "conf_pass": 3,
+      "conf_eval": 3,
+      "conf_na": [
+        "med30_vol"
+      ],
+      "kho_step_pct": 1.0330765199695529,
+      "kho_ramp_pct": 0.938249719465769,
+      "lead_days": 30,
+      "status": "PASS"
+    },
+    {
+      "tok": "ON",
+      "d0": "2026-07-19",
+      "window": "06-27..07-18",
+      "compose_first": "2026-07-14",
+      "trigger": "H1-step",
+      "h2_ve": null,
+      "conf_str": "MED (2/3; N/A: med30_vol)",
+      "conf_level": "MED",
+      "conf_pass": 2,
+      "conf_eval": 3,
+      "conf_na": [
+        "med30_vol"
+      ],
+      "kho_step_pct": 10.070843315413835,
+      "kho_ramp_pct": 5.642708425322807,
+      "lead_days": 5,
+      "status": "PASS"
+    },
+    {
+      "tok": "TUT",
+      "d0": "2026-07-09",
+      "window": "06-27..07-08",
+      "compose_first": null,
+      "trigger": null,
+      "h2_ve": null,
+      "conf_str": "—",
+      "conf_level": null,
+      "conf_pass": null,
+      "conf_eval": null,
+      "conf_na": [],
+      "kho_step_pct": null,
+      "kho_ramp_pct": null,
+      "lead_days": null,
+      "status": "NO-FIRE"
+    }
+  ]
+}

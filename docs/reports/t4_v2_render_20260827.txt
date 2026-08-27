@@ -1,0 +1,78 @@
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[T-④ RE-RENDER v2 · GOI-NHE-20260829 · gate_defs f275c53c · L-59 file-canonical]
+  gate_defs md5: f275c53c4a0f42b5a7b190e6e0143ca5
+  amendments: GOI-NHE-20260829 · V④-RT · ⑬ · GOM-RESTRUCT
+  fixes: (a) col trigger + gate KÉP máy-ký vs kèm-ramp
+         (b) conf display: mẫu số evaluable thật · N/A liệt kê đủ · bỏ conf=conf=
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  case              D0                    window   compose-first    trigger      H2-vế                                conf    lead          status
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------
+  AKE       2026-07-15              06-27..07-14      2026-07-05    H1-step          — LOW (0/0; N/A: 4 vế [funding_pin,oi_min30,ret14,med30_vol])    +10d            PASS
+  BANK      2026-07-11              06-11..07-10      2026-07-10         H2  pos-ratio           MED (2/3; N/A: med30_vol)     +1d            PASS
+  BTR       2026-08-26              07-27..08-25      2026-07-28    H1-ramp          —           MED (2/3; N/A: med30_vol)    +29d            PASS
+  BTW       2026-08-03              07-04..08-02      2026-07-27    H1-step          —                   LOW (1/4; N/A: -)     +7d            PASS
+  CAP       2026-07-30              06-30..07-29      2026-07-12    H1-step          —           LOW (0/3; N/A: med30_vol)    +18d            PASS
+  CYS       2026-08-04              07-05..08-03      2026-07-12         H2  pos-ratio                   MED (2/4; N/A: -)    +23d            PASS
+  HEMI      2026-08-15              07-16..08-14      2026-07-16         H2  pos-ratio           MED (3/3; N/A: med30_vol)    +30d            PASS
+  ON        2026-07-19              06-27..07-18      2026-07-14    H1-step          —           MED (2/3; N/A: med30_vol)     +5d            PASS
+  TUT       2026-07-09              06-27..07-08               —          —          —                                   —       —         NO-FIRE
+
+  ═══ GATE KÉP ═══
+  passes máy-ký (step-only trigger) : 7/9
+  passes kèm-ramp[PROVISIONAL]      : 8/9
+  threshold [6/8] · máy-ký PASS · kèm-ramp PASS
+
+  AKE 0/0 explain (07-05):
+    subs: {'funding_pin': None, 'oi_min30': None, 'ret14': None, 'med30_vol': None}
+    → 4/4 vế N/A: ['funding_pin', 'oi_min30', 'ret14', 'med30_vol']
+    → conf label: LOW (0/0; N/A: 4 vế [funding_pin,oi_min30,ret14,med30_vol])
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[CENSUS v3-input · 85 kept gói-nhẹ + conf/trigger/tuổi/TP_FP · append-only khuôn v2]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  Eligible: 52 · Kept fires (gói-nhẹ hậu-cooldown): 85
+  Conf phân bố: HIGH=9 · MED=48 · LOW=28
+
+  ═══ DQ-58 breakdown per-lane per-day ═══
+    BANANAS31: lane_kho=8d · lane_perp=16d · total=24 (KHÔNG khởi cooldown)
+
+  ═══ HIGH-9 fires (ưu tiên ANALYSIS chấm) ═══
+    GENIUS     2026-07-10  trigger=      H2  HIGH (4/4; N/A: -)
+    GENIUS     2026-08-10  trigger=      H2  HIGH (4/4; N/A: -)
+    PROVE      2026-06-26  trigger=      H2  HIGH (4/4; N/A: -)
+    HUMA       2026-06-27  trigger=      H2  HIGH (4/4; N/A: -)
+    OPEN       2026-07-16  trigger=      H2  HIGH (4/4; N/A: -)
+    ZBT        2026-06-26  trigger=      H2  HIGH (4/4; N/A: -)
+    OPG        2026-08-10  trigger=      H2  HIGH (4/4; N/A: -)
+    BREV       2026-08-04  trigger=      H2  HIGH (4/4; N/A: -)
+    CGPT       2026-07-12  trigger=      H2  HIGH (4/4; N/A: -)
+
+  Output: census_63_grades_v3_input_20260829.csv  md5: b3436b88e67083916559892df8061334
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[KHO-RAMP PROD WIRE STATUS]
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+gom_h_daily.py:475 → h1_ramp_raw = False  ← HARDCODE STUB
+                     TODO: wire ramp check via balance_series[D-14]
+
+Verdict: kho-ramp = PROBE-ONLY (this script + G3 probe)
+         PROD (cron gom_h_daily.py) chỉ dùng step ≥10%/≤3d, KHÔNG ramp
+
+Impact:
+  - Cron đêm nay 27/08 01:45 UTC compose = step-only (NO ramp)
+  - AKE 07-13/07-14 ramp fires KHÔNG kích compose prod → cron sẽ MISS ramp signal
+  - T-④ 8/9 PASS con số trong G3 → dùng probe (có ramp) — nếu prod KHÔNG ramp,
+    T-④ prod passes có thể thấp hơn (AKE mất H1-ramp pathway)
+
+Go-live ≠ verify — khai rõ trong G6 report:
+  "ramp: probe-only, prod wire chờ commit X" (X = TBD sau operator ký merge)
+
+Next commit sẽ wire ramp vào prod _kho_ramp_14d + integration vào compose loop.
+
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[DỪNG] T-④ v2 + Census v3 + kho-ramp status ready.
+════════════════════════════════════════════════════════════════════════════════════════════════════
