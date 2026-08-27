@@ -118,6 +118,7 @@ Quy ước vòng đời artifact:
 \- Tầng HUMAN không đổi: không ghi thresholds.yaml (đề xuất → proposals/), không điền verdict CASE sheet.
 \- **PROBE STORE TRƯỚC** khi fetch external API: ssh VPS → kiểm tra partition tồn tại + log collector → chỉ fetch ngoài khi (b) cần lịch sử trước ngày store bắt đầu (one-off backfill, có nhãn) hoặc (c) data type không có trong store (ghi DEV task). KHÔNG lập đường collect song song ad-hoc.
 \- **tape one-shot vào cron → cùng luật fail-behavior**: missing-dependency → ERROR + exit≠0 + alert (cấm no-op êm). (L-44)
+\- **PROBE-SUBMIT RULE (án lệ #2, KÝ 27/08)**: Bảng probe/counterfactual chỉ được nộp khi ĐẦU FILE in SELF-CHECK qua fixture-trọng-tài (IMPORT prod + conformance rows PASS tại sha đang import). Thiếu self-check = **bảng KHÔNG TỒN TẠI**. Án lệ: U-replay-v1 (reimplemented compose STRICT-AND thay vì gói-nhẹ OR) · V③-v2-blocking (`h2_blocking_axis_at` tự dựng, không import prod _eval_h2 → mis-labeled recall-ảo). Fixture-trọng-tài phải in đủ: `SELF-CHECK-COMPOSE-N: <case> · PASS|FAIL` cho ≥3 case đủ cover leg-set. FAIL = không nộp; artifact retire với errata "artifact probe tự dựng".
 
 ## PHASE-TAG CASE_INDEX → case_state_map workflow (ký 18/08, án PHASE-TAG-v0.3.3)
 

@@ -221,16 +221,18 @@ goi_nhe:
     stress_ret_max:    -0.08           # ret1d ≤ -8%
     stress_combine:    "OR"            # (vol ≥ 5× ∨ ret ≤ -8%)
     precedence:        "stress > 2x2"  # BROAD-STRESS override CONCENTRATED/BROAD-QUIET
-  # [D4 KÝ 27/08 · Review-bundle 27/09 - 6 món] chốt hậu-gói-nhẹ 30d
+  # [D4 KÝ 27/08 · Review-bundle 27/09 = 6 món SỐNG · V③-cutpoint hồ-sơ-đóng]
   review_bundle_20260927:
     scheduled_date:    "2026-09-27"
     items:
       - "ramp: kho_ramp.delta_min 0.15 / window 14d · provisional_start 2026-08-28 · FP-load review"
-      - "verify_walletset: min_abs_delta 0.50 · anchor SOPH · DELIST-MIGRATION vs MARKET-REAL grade"
+      - "verify_walletset [50%]: min_abs_delta 0.50 · anchor SOPH · DELIST-MIGRATION vs MARKET-REAL grade"
       - "walletset_2x2: {50% · 5 abs · 5× ∨ -8% OR} · distribution tighten review"
       - "AKE-row2: via-ramp PROVISIONAL-30d · fixture Row-2 · auto_revert nếu ramp khai tử"
       - "MA-shadow: [PENDING-DEF] chờ operator drop spec"
-      - "H4-[ ]: [PENDING-DEF] holders lane · M2 feasibility 130/139 tokens ≥30d · chờ M1 diff"
+      - "H4-v1-thước+[0.80]: holders lane (M2 feasibility 130/139 tokens ≥30d) + falsifier ≥0.80 gate · chờ M1 diff"
+    hồ_sơ_đóng_trình_đọc:
+      - "V③-cutpoint: Tiên nhìn, KHÔNG ký số (research đóng · closed-no-change per ANALYSIS 31/08)"
     dependency: "operator ký M1 diff + rev9 findings trước khi wire D1/D3"
 
   # E-R7 acceptance
