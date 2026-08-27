@@ -1,16 +1,21 @@
 # G6 Report mẫu 2 đêm — Telegram khối CAMPAIGN-PRE post gói-nhẹ
 
-**Status:** MẪU FORMAT · CHỜ cron 27/08 01:45 UTC + 28/08 01:45 UTC (2 nights forward) để paste NGUYÊN VĂN.
-**Snapshot pin:** spec bot-signals sha `490a8f49` · gate_defs md5 `f275c53c` · yaml md5 `59aadeb9` · code md5 `025f30f5` · lib r1/r2/r3-arm/er8/state-store/telegram merged.
+**Status:** MẪU FORMAT · CHỜ cron 28/08 01:45 UTC + 29/08 01:45 UTC (2 nights official post rev2) để paste NGUYÊN VĂN.
+**Snapshot pin:** spec bot-signals sha `490a8f49` · gate_defs md5 `f275c53c` · yaml md5 `59aadeb9`.
+- **Đêm-1 27/08 01:45 UTC target=2026-08-26** = archive-note pre-wire (code `e851db50` cũ, `conf=conf=` double + `[[suppressed:perp]]` không trailer) — KHÔNG counted G6 official.
+- **Đêm-2 28/08 01:45 UTC target=2026-08-27** = máy-final **rev2** code md5 `a260a8ca` (gom_h_daily.py) + `83d0e131` (tripwire_e2.py) + counter `1c104491` — post 3-fix KÝ 27/08 (B1 trailer + B2 h1_direction/label + B3 dedup).
+- **Đêm-3 29/08 01:45 UTC target=2026-08-28** = official #2 cùng rev2.
 
-## Format Telegram khối CAMPAIGN-PRE (post gói-nhẹ)
+## Format Telegram khối CAMPAIGN-PRE (post gói-nhẹ + rev2 3-fix KÝ 27/08)
 
 ```
 CAMPAIGN-PRE <YYYY-MM-DD>: <N> fires (fw-<M>)
-  <SYM1>USDT  [<active>]  conf=<LEVEL> (<n_pass>/<n_eval>; N/A: <list>)  H3=<T|F|N/A>
-  <SYM2>USDT  [<active>]  conf=<LEVEL> (<n_pass>/<n_eval>; N/A: <list>)  H3=<T|F|N/A>
-  <SYM3>USDT  [[suppressed:perp]]  conf=<LEVEL> (...)  [SUPPRESSED n/14 lane=perp]
-  <SYM4>USDT  [DQ-SERIAL blocked]  conf=<LEVEL> (...)  [DQ-SERIAL] <SYM4> lane=<kho|perp>
+  <SYM1>USDT  [H2]  conf=<LEVEL> (<n_pass>/<n_eval>; N/A: <list>)  H3=<T|F|N/A>
+  <SYM2>USDT  [H1]  conf=<LEVEL> (...)  H3=<T|F|N/A>                          # Δ≥+10% accumulation
+  <SYM2b>USDT [H1-OUT -X.X%]  conf=<LEVEL> (...)  H3=<T|F|N/A>                # Δ≤-10% distribution (rev2 B2)
+  <SYM2c>USDT [H1-OUT -X.X% + H2]  conf=<LEVEL> (...)  H3=<T|F|N/A>           # kho-out + perp-hit
+  <SYM3>USDT  [[suppressed:perp]]  conf=<LEVEL> (...)  H3=<T|F|N/A>  [SUPPRESSED n/14 lane=perp]     # rev2 B1
+  <SYM4>USDT  [[DQ-SERIAL blocked]]  conf=<LEVEL> (...)  H3=<T|F|N/A>  [DQ-SERIAL] <SYM4> lane=<kho|perp>
 
 ---
 spec_version: v4.0-draft
@@ -24,34 +29,55 @@ basis: 14d (obs_min=14 signed operator ký 29/08)
 vol_source: fapi_k7_fresh
 ```
 
-## Đêm 1 · 27/08 01:45 UTC target=2026-08-26 (CHỜ)
+## Đêm-1 (pre-wire archive-note) · 27/08 01:45 UTC target=2026-08-26
+
+**Status:** ARCHIVE-ONLY code `e851db50` cũ · KHÔNG counted G6 official.
+**Bug đã biết:** `conf=conf=MED (...)` double-prefix · `[[suppressed:perp]]` không có trailer `[SUPPRESSED n/14 lane=perp]`.
+**Đã fix ở rev2 (KÝ 27/08):** áp dụng từ đêm-2 trở đi.
 
 ```
-[MTIME] scratch/gom_h_daily_2026-08-26.csv: <chờ cron>
-[MTIME] data/logs/gom_h_daily.log: <chờ cron>
-[TELEGRAM BLOCK NGUYÊN VĂN]: <paste khi cron xong>
+[MTIME] scratch/gom_h_daily_2026-08-26.csv: 2026-08-27 01:45 UTC
+[TELEGRAM BLOCK NGUYÊN VĂN — PRE-WIRE, chấm archive]:
+CAMPAIGN-PRE 2026-08-26: 14 fires (fw-139)
+  0GUSDT  [H2]  conf=conf=MED (2/3; N/A: -)  H3=F       # bug: double conf=
+  ...
+  MIRAUSDT  [[suppressed:perp]]  conf=conf=MED (3/3; N/A: -)  H3=F   # bug: no trailer
 ```
 
-## Đêm 2 · 28/08 01:45 UTC target=2026-08-27 (CHỜ)
+## Đêm-2 (official #1 rev2) · 28/08 01:45 UTC target=2026-08-27
 
 ```
 [MTIME] scratch/gom_h_daily_2026-08-27.csv: <chờ cron sáng 28>
 [MTIME] data/logs/gom_h_daily.log: <chờ>
+[CODE MD5] gom_h_daily.py=a260a8ca · tripwire_e2.py=83d0e131 · counter=1c104491 pre-fire
 [TELEGRAM BLOCK NGUYÊN VĂN]: <paste khi cron xong>
 ```
 
-## Sáng 27/08 verification checklist
+## Đêm-3 (official #2 rev2) · 29/08 01:45 UTC target=2026-08-28
 
-- [ ] Syslog `2026-08-27T01:45` có CRON CMD `scripts/gom_h_daily.py`
-- [ ] `scratch/gom_h_daily_2026-08-26.csv` mtime = `Aug 27 01:45..01:46` UTC
-- [ ] `data/logs/gom_h_daily.log` grew (last entry timestamp `2026-08-27T01:45..`)
+```
+[MTIME] scratch/gom_h_daily_2026-08-28.csv: <chờ cron sáng 29>
+[MTIME] data/logs/gom_h_daily.log: <chờ>
+[CODE MD5] gom_h_daily.py=a260a8ca · tripwire_e2.py=83d0e131 (unchanged)
+[TELEGRAM BLOCK NGUYÊN VĂN]: <paste khi cron xong>
+```
+
+## Sáng 28/08 verification checklist (đêm-2 rev2 official #1)
+
+- [ ] Syslog `2026-08-28T01:45` có CRON CMD `scripts/gom_h_daily.py`
+- [ ] `scratch/gom_h_daily_2026-08-27.csv` mtime = `Aug 28 01:45..01:46` UTC
+- [ ] `data/logs/gom_h_daily.log` grew (last entry timestamp `2026-08-28T01:45..`)
 - [ ] Telegram khối CAMPAIGN-PRE sent (nếu có fires) · log line `TG-SEND ok=True`
 - [ ] Coverage per H match format · basis=14d in
-- [ ] Conf format: `conf=<LEVEL> (n_pass/n_eval; N/A: <list>)` — không double "conf=" prefix (cosmetic bug fix pass)
+- [ ] **Fix B1 verified:** MIRA-cooldown-hàng có trailer `[SUPPRESSED n/14 lane=perp]` sau `H3=<X>`
+- [ ] **Fix B2 verified:** kho-fire hàng nào Δ<0 → `[H1-OUT -X.X%]`, Δ>0 → `[H1]`, CSV cột `h1_direction` in|out
+- [ ] **Fix B3 verified:** `data/state/tripwire_e2_counter.json` mỗi token chỉ 1 entry cho 08-27 (không duplicate)
+- [ ] Conf format: `conf=<LEVEL> (n_pass/n_eval; N/A: <list>)` — không double `conf=` prefix
+- [ ] CSV md5 khớp log `[OUTPUT]` line
 
-## Sáng 28/08 verification checklist
+## Sáng 29/08 verification checklist (đêm-3 rev2 official #2)
 
-Same as 27/08 + target 2026-08-27.
+Same as sáng 28/08 + target 2026-08-28. Verify tripwire counter accumulates purely (no dedup collisions across 2 days).
 
 ## KHỚP nghĩa với gate_defs §3 gói-nhẹ 5 điểm
 

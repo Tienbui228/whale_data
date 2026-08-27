@@ -42,10 +42,12 @@ def record_fire(token, fire_date, counter_path=DEFAULT_COUNTER_PATH,
     """
     counter = _load_counter(counter_path)
     fires = counter.get(token, [])
-    fires.append(fire_date)
+    # Dedup (token, fire_date): re-runs same day must not inflate rate (KÝ 27/08 B3)
+    if fire_date not in fires:
+        fires.append(fire_date)
     # Purge older than trailing_days
     cutoff = _date.fromisoformat(fire_date) - _td(days=trailing_days)
-    fires = [f for f in fires if _date.fromisoformat(f) >= cutoff]
+    fires = sorted({f for f in fires if _date.fromisoformat(f) >= cutoff})
     counter[token] = fires
     _save_counter(counter, counter_path)
 

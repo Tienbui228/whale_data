@@ -472,6 +472,7 @@ def main():
         # kho-ramp: |balance(D) - balance(D-14)| / balance(D-14) ≥ 0.15 via adapter
         # Adapter reads snapshot bal_date semantic §5 (SIGNED 28/08); ingest_date = target+1
         h1_ramp_raw = False
+        h1_ramp_pct_signed = None  # [KÝ 27/08 B2] signed ramp % for direction split
         try:
             ramp_cfg = goi_nhe_cfg.get("kho_ramp", {})
             ramp_thr = ramp_cfg.get("delta_min", 0.15)
@@ -496,8 +497,9 @@ def main():
                                 for r in _d_prev.get("rows", [])
                                 if r.get("symbol", "").upper() == token_bare), None)
                 if _b_now is not None and _b_prev is not None and _b_prev > 0:
-                    _ramp_delta = abs(_b_now - _b_prev) / _b_prev
-                    if _ramp_delta >= ramp_thr:
+                    _ramp_signed = (_b_now - _b_prev) / _b_prev
+                    h1_ramp_pct_signed = _ramp_signed
+                    if abs(_ramp_signed) >= ramp_thr:
                         h1_ramp_raw = True
         except Exception:
             pass  # ramp check fail-silent → treat as False (conservative)
@@ -564,12 +566,30 @@ def main():
 
         conf_label_str = _conf_label(t01_detail) if (active_lanes or suppressed_lanes or dq_notes) else "-"
 
+        # [KÝ 27/08 B2] h1_direction split (KHO lane render only, semantic raw unchanged):
+        #   Δ>0 → "in" (accumulation)  ·  Δ<0 → "out" (distribution)
+        # Priority: step_pct if step_raw, else ramp_pct if ramp-only fire
+        h1_direction = ""
+        h1_label_pct = None  # signed % for render label
+        if "kho" in active_lanes:
+            _step_pct = h1_detail.get("kho_step_pct")
+            if h1_step_raw and _step_pct is not None:
+                h1_label_pct = _step_pct
+                h1_direction = "in" if _step_pct >= 0 else "out"
+            elif h1_ramp_raw and h1_ramp_pct_signed is not None:
+                h1_label_pct = h1_ramp_pct_signed * 100.0
+                h1_direction = "in" if h1_ramp_pct_signed >= 0 else "out"
+
         # Compose GOM_H (GÓI-NHẸ: OR, no AND gate)
         if active_lanes:
             gom_h = "T"
             n_fire += 1
             active = []
-            if "kho" in active_lanes: active.append("H1")
+            if "kho" in active_lanes:
+                if h1_direction == "out" and h1_label_pct is not None:
+                    active.append(f"H1-OUT {h1_label_pct:+.1f}%")
+                else:
+                    active.append("H1")
             if "perp" in active_lanes: active.append("H2")
             # [GOI-NHE tripwire runtime · SIGNED] record fire, check 0.4 trip
             tripwire_note = ""
@@ -627,6 +647,7 @@ def main():
             "h1_raw": h1_raw_str,                     # kho_step pre-T01-gate
             "h2t01_raw": h2t01_raw_str,
             "h1_ramp_raw": "True" if h1_ramp_raw else "False",  # [GOI-NHE] kho-ramp check
+            "h1_direction": h1_direction,             # [KÝ 27/08 B2] in|out|"" (kho lane only)
             "dq_note": dq_note_str,                   # [GOI-NHE §7.1] [DQ-SERIAL] label
             "suppressed_note": suppressed_note_str,   # [V④-RT] "[SUPPRESSED n/14 lane=X]"
             "h1_kho_step_pct": h1_detail.get("kho_step_pct"),
@@ -667,7 +688,13 @@ def main():
         print(f"CAMPAIGN-PRE {target}: {n_fire} fires (fw-{len(symbols)})")
         for f in fires:
             active_str = " + ".join(f["active"])
-            print(f"  {f['symbol']}  [{active_str}]  conf={f['conf']}  H3={f['h3']}")
+            # [KÝ 27/08 B1] Trailer per spec §6: append [SUPPRESSED n/14 lane=x] / [DQ-SERIAL] / tripwire
+            trailer_parts = []
+            if f.get("suppressed_note"): trailer_parts.append(f["suppressed_note"])
+            if f.get("dq_note"): trailer_parts.append(f["dq_note"])
+            if f.get("tripwire_note"): trailer_parts.append(f["tripwire_note"])
+            trailer = ("  " + "  ".join(trailer_parts)) if trailer_parts else ""
+            print(f"  {f['symbol']}  [{active_str}]  conf={f['conf']}  H3={f['h3']}{trailer}")
     # Footer
     print(f"\n---")
     print(f"spec_version: {SPEC_VERSION}")
