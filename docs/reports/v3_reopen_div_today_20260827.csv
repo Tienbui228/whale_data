@@ -1,0 +1,23 @@
+# V③-REOPEN DATA TABLE · KÝ 27/08 · 8 div_today-blocked + control-52 cutpoint sweep
+# code md5=f99ef3c819ef60cb3948e5e5ac0bf6ea · yaml md5=4bf1d83d8ac01ca685c3ef64a36e7e5b
+# Baseline H2 dao: div_today_min=1.0 · div_min14≤0.6 · pos≥1.25
+# Import máy prod (L-66) · compose gói-nhẹ + cooldown 14d + re-arm 3d
+# Cột: blocked-8 flipped = số con lật thành có kept fire post-cooldown
+#       ctrl-52 added = số fires MỚI trên 52 control tokens (fw-139 - 9-case - DQ - BLOCKED_8)
+#
+# BEST-DAY per BLOCKED_8 (baseline):
+#   ACU        best_day=2026-08-20 div_today=0.818 pos_ratio=1.021
+#   ARIA       best_day=2026-08-15 div_today=0.461 pos_ratio=1.247
+#   BULLA      best_day=2026-08-02 div_today=1.307 pos_ratio=1.219
+#   FHE        best_day=2026-08-19 div_today=0.932 pos_ratio=1.034
+#   LIGHT      best_day=2026-07-27 div_today=0.329 pos_ratio=1.000
+#   SQD        best_day=2026-08-18 div_today=0.794 pos_ratio=1.443
+#   TRADOOR    best_day=2026-07-23 div_today=0.569 pos_ratio=1.151
+#   XNY        best_day=2026-07-03 div_today=0.699 pos_ratio=1.184
+#
+# BASELINE (dao=1.0): blocked-8 kept=1 · ctrl-52 kept=91
+#
+cutpoint,blocked8_baseline_total,blocked8_at_cut_total,blocked8_flipped_count,blocked8_flipped_list,ctrl52_baseline_total,ctrl52_at_cut_total,ctrl52_added_fires
+0.9,1,2,1,FHE,91,92,1
+0.85,1,2,1,FHE,91,94,3
+0.8,1,3,2,"ACU, FHE",91,100,9

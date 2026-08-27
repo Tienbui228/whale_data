@@ -22,6 +22,8 @@ Chuyến review 30d hậu-gói-nhẹ · tất cả 6 items PROVISIONAL, chốt b
 4. **AKE-row2** — fixture Row-2 AKE via-ramp [PROVISIONAL-30d]. Review: kho-ramp bắt AKE 07-13/07-14 pre-D0 07-15 vẫn PASS? auto_revert nếu ramp khai tử.
 5. **MA-shadow** — [PENDING-DEF] MA shadow amendment (chưa có spec ký, chờ operator drop).
 6. **H4-[ ]** — [PENDING-DEF] H4 lane (holders shift) — spec chờ M1 diff. M2 holders-history KHẢ THI cho 130/139 tokens (≥30d), TUT 86%, BTW 48%.
+   - **H4-feasibility TUT (per operator (3) 27/08):** holders 390@06-30 → 585@08-22 = **+195 (+50%)** trong window · **đúng loại tell H4 nhắm** · prognosis falsifier tốt.
+   - **BTW falsifier:** 48% coverage/34d holders series ngắn (211@07-05 → 228@08-08 = +8%) — chờ **verdict ANALYSIS** (partial replay hay thay ứng viên khác) TRƯỚC khi D3 replay chạy.
 
 Vá LOCAL vào yaml `goi_nhe.review_bundle_20260927` block dưới.
 
