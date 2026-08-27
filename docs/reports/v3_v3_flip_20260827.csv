@@ -1,0 +1,27 @@
+# V③-v3 flip_day · rebuild v1-only blocking + lead_vs_cross + THẬT/LATE · KÝ 27/08
+# ERRATA: h2_blocking_axis_at (v2) RETIRED — artifact probe tự dựng (v2 axes indiscriminate check)
+# V③-v3: blocking@flip_v1 = which v1 leg fails under BASELINE dao=1.0 (dao sweep ảnh hưởng chỉ v1)
+# code md5=f99ef3c819ef60cb3948e5e5ac0bf6ea · yaml md5=4bf1d83d8ac01ca685c3ef64a36e7e5b · gate_defs md5=f275c53c4a0f42b5a7b190e6e0143ca5
+# obs_min=14 source=yaml goi_nhe.obs_min · leg-set: t0_1+h2+h1+h3 rolling (cấm hardcode-30)
+# H2 baseline: div_today_min=1.0 · div_min_14d_max=0.6 · pos_over_min14_min=1.25 · oi_over_min30_max=1.2 · floor_obs_min=14
+# Rules v3: ①header ✓ · ②div_min14 ĐỨNG YÊN ✓ · ③control-52 full-vé ✓ · ④ v3 THẬT (lead≥1d) vs LATE (lead<1) — recall-ảo RETIRED
+# GUARD ANNEX: 4 FORMULA-NEAR pre-cross-verified ✓
+#   ENSO 07-12 pre D_cross=08-06 (lead 25d) · FF 07-20 pre 08-24 (lead 35d)
+#   MUBARAK 07-28 pre 08-08 (lead 11d)   · SQD 07-04 pre 08-10 (lead 37d)
+#   Captive labels chỉ làm best-day trông GẦN hơn thực — vẫn xa dao.
+# IMPORT prod (L-66): _eval_h2 IMPORT · v1_blocking_axis_at dùng detail từ prod
+#
+# Recall summary per cut (V③-v3):
+#   cut=0.9: n_flip=2 · THẬT=0 (—) · LATE=2 (BULLA, FHE) · ctrl-52 add=1
+#   cut=0.85: n_flip=2 · THẬT=0 (—) · LATE=2 (BULLA, FHE) · ctrl-52 add=3
+#   cut=0.8: n_flip=3 · THẬT=0 (—) · LATE=3 (ACU, BULLA, FHE) · ctrl-52 add=9
+#
+token,D_cross,baseline_kept,cut_0.9_kept,cut_0.9_flip_day,cut_0.9_blocking@flip_v1,cut_0.9_lead_vs_cross,cut_0.9_label,cut_0.85_kept,cut_0.85_flip_day,cut_0.85_blocking@flip_v1,cut_0.85_lead_vs_cross,cut_0.85_label,cut_0.8_kept,cut_0.8_flip_day,cut_0.8_blocking@flip_v1,cut_0.8_lead_vs_cross,cut_0.8_label
+ACU,2026-08-13,0,0,—,—,,no-flip,0,—,—,,no-flip,1,2026-08-20,div_today(0.818<1.0),-7,LATE
+ARIA,2026-08-10,0,0,—,—,,no-flip,0,—,—,,no-flip,0,—,—,,no-flip
+BULLA,2026-07-17,1,1,2026-07-29,div_today(0.912<1.0),-12,LATE,1,2026-07-23,div_today(0.855<1.0),-6,LATE,1,2026-07-20,div_today(0.826<1.0),-3,LATE
+FHE,2026-08-06,0,1,2026-08-18,div_today(0.929<1.0),-12,LATE,1,2026-08-18,div_today(0.929<1.0),-12,LATE,1,2026-08-18,div_today(0.929<1.0),-12,LATE
+LIGHT,2026-08-08,0,0,—,—,,no-flip,0,—,—,,no-flip,0,—,—,,no-flip
+SQD,2026-08-10,0,0,—,—,,no-flip,0,—,—,,no-flip,0,—,—,,no-flip
+TRADOOR,2026-08-06,0,0,—,—,,no-flip,0,—,—,,no-flip,0,—,—,,no-flip
+XNY,2026-07-24,0,0,—,—,,no-flip,0,—,—,,no-flip,0,—,—,,no-flip
