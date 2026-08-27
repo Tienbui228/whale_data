@@ -395,6 +395,75 @@ def _detect_ev(arr, ep, i, sn_min, window_start, window_end,
     }
 
 
+# ── [WRAPPER DAY-27 · r1/r2/r3-arm helpers stub] Chờ full build ──────────────
+# Per operator KÝ 28/08 wrapper scope: lib extend r1/r2/r3-arm helpers, wrapper
+# tái dùng — cấm rebuild trigger/re-arm. E-R4b RE-ARM conditions:
+#   r1: days_since_ignite ≥ rearm_r1_days (yaml default 14)
+#   r2: px_now / local_low_since_ignite ≥ rearm_r2_px (yaml default 1.15)
+#   r3: oi_now / oi_local_low_since_ignite ≥ rearm_r3_oi (yaml default 1.30)
+# Yaml source: screen_thresholds.yaml unhedge_registry block (SIGNED E-R4b v1.1 20/08).
+
+def _load_unhedge_cfg(yaml_path="screen_thresholds.yaml"):
+    """Load unhedge_registry config từ yaml — reuse cache same as er4_r4."""
+    global _ER4_R4_CACHE
+    if _ER4_R4_CACHE is None:
+        try:
+            _ER4_R4_CACHE = _yaml.safe_load(open(yaml_path, encoding="utf-8"))
+        except Exception:
+            return None
+    return (_ER4_R4_CACHE or {}).get("unhedge_registry")
+
+
+def check_rearm_r1(days_since_ignite, cfg=None):
+    """r1: days_since_ignite ≥ rearm_r1_days. Return bool."""
+    if cfg is None: cfg = _load_unhedge_cfg()
+    if cfg is None: return False
+    thr = cfg.get("rearm_r1_days", 14)
+    return days_since_ignite is not None and days_since_ignite >= thr
+
+
+def check_rearm_r2(px_now, local_low_since_ignite, cfg=None):
+    """r2: px_now / local_low_since_ignite ≥ rearm_r2_px. Return bool."""
+    if cfg is None: cfg = _load_unhedge_cfg()
+    if cfg is None or local_low_since_ignite is None or local_low_since_ignite <= 0:
+        return False
+    thr = cfg.get("rearm_r2_px", 1.15)
+    return (px_now / local_low_since_ignite) >= thr
+
+
+def check_rearm_r3(oi_now, oi_local_low_since_ignite, cfg=None):
+    """r3: oi_now / oi_local_low_since_ignite ≥ rearm_r3_oi. Return bool."""
+    if cfg is None: cfg = _load_unhedge_cfg()
+    if cfg is None or oi_local_low_since_ignite is None or oi_local_low_since_ignite <= 0:
+        return False
+    thr = cfg.get("rearm_r3_oi", 1.30)
+    return (oi_now / oi_local_low_since_ignite) >= thr
+
+
+def check_rearm_all(state, arr, i, cfg=None):
+    """Compose r1 ∧ r2 ∧ r3 với state dict {days_since_ignite, local_low_px, local_low_oi}.
+    Return (fires: bool, detail: dict) — REPORT-ONLY, không mutate state.
+    """
+    if cfg is None: cfg = _load_unhedge_cfg()
+    if state is None or cfg is None:
+        return False, {"reason": "state or cfg missing"}
+    days_si = state.get("days_since_ignite")
+    ll_px = state.get("local_low_px_since_ignite")
+    ll_oi = state.get("local_low_oi_since_ignite")
+    px_now = arr[i].get("px_avg") if arr and i < len(arr) else None
+    oi_now = arr[i].get("oi_usd") if arr and i < len(arr) else None
+    r1 = check_rearm_r1(days_si, cfg)
+    r2 = check_rearm_r2(px_now, ll_px, cfg)
+    r3 = check_rearm_r3(oi_now, ll_oi, cfg)
+    fires = r1 and r2 and r3
+    return fires, {
+        "r1": r1, "r2": r2, "r3": r3,
+        "days_since_ignite": days_si, "px_now": px_now, "ll_px": ll_px,
+        "oi_now": oi_now, "ll_oi": ll_oi,
+        "fires": fires,
+    }
+
+
 # ── [r4 SIGNED 28/08 · operator KÝ (ii)] r4 evidence check ─────────────────────
 def _check_r4_evidence(arr, ep, i, cfg_r4, rel_ep_id, rel_ep_kind):
     """§E-R4(r4) evidence detector — REPORT-ONLY (augment-only, không mutate state).

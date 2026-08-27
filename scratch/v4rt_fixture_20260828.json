@@ -57,5 +57,17 @@
     "waiting": "ANALYSIS chốt (a) DQ serial-pump merge vào compose HAY (b) re-target expected accept 1 fire+cooldown",
     "note": "§7 pre-DQ-merge: fires hiện hữu = FP thật đếm đủ vào FP-rate, row FAIL trung thực — không thu hẹp expected"
   },
+  "row_r4_testa_pending_state_wire": {
+    "type": "PENDING-STATE-WIRE",
+    "type_ref": "r4 fixture · post-MERGE lib/registry_events.py (e22732e) + operator relay 28/08",
+    "test_scenario": "TESTA · rel_ep_kind='current' + ep[i].in_hedge=True · pos_r=max30 + r_pos_over_min14=1.65 + acc_ratio=0.333 (all rules pass) · expected r4 GATE FAIL",
+    "current_observation": "r4 FIRES (placeholder allow current+in_hedge until RE-ARM state store wired)",
+    "expected_behavior_post_wire": "r4 gate FAIL: current in_hedge (not post-break, no RE-ARM signal) → state_gate FALSE → return None",
+    "verdict_now": "PENDING-STATE-WIRE (partial-by-design)",
+    "lat_pass_condition": "wrapper adds RE-ARM state store (JSON persist open/close/re-arm state per token); _check_r4_evidence receives state via arg, gate check external re-arm signal AND current in_hedge → False when not RE-ARM state",
+    "auto_flip_pass_when": "wrapper scripts/registry_daily.py FULL impl merged (post day-27-28 build) → state store lands → fixture re-run → r4 returns None for TESTA current-in_hedge (no re-arm) → PASS-BY-DESIGN",
+    "render_label": "[PENDING-STATE-WIRE — flip PASS post wrapper state store]",
+    "task_ref": "proposals/registry_phase2_cron_deploy_20260828.md + r4_diff_registry_events_20260828.md"
+  },
   "l58_5_5": "PASS (compose-additive, single-day unchanged)"
 }
