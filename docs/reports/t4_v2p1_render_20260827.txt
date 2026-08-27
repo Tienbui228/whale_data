@@ -1,0 +1,25 @@
+════════════════════════════════════════════════════════════════════════════════════════════════════
+[T-④ v2.1 CONF-FIX rev4 · KÝ-27/08 · gate_defs f275c53c · yaml b03420a8]
+  fix: WARMUP_T01_VOL_MED30_N 30→14 (obs_min chung mọi rolling-vế)
+  scope: CHỈ cột conf re-render · fires/leads/trigger/gate KHÔNG đổi
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  case       trigger   lead conf_v2 (cũ)                                            conf_v2.1 (rev4)                                   delta          
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+  AKE        H1-step   +10d LOW (0/0; N/A: 4 vế [funding_pin,oi_min30,ret14,med30_vol]) LOW (0/0; N/A: 4 vế [funding_pin,oi_min30,ret14,med30_vol]) same           
+  BANK            H2    +1d MED (2/3; N/A: med30_vol)                               MED (3/4; N/A: -)                                  same           
+  BTR        H1-ramp   +29d MED (2/3; N/A: med30_vol)                               MED (2/4; N/A: -)                                  same           
+  BTW        H1-step    +7d LOW (1/4; N/A: -)                                       LOW (1/4; N/A: -)                                  same           
+  CAP        H1-step   +18d LOW (0/3; N/A: med30_vol)                               LOW (1/4; N/A: -)                                  same           
+  CYS             H2   +23d MED (2/4; N/A: -)                                       MED (2/4; N/A: -)                                  same           
+  HEMI            H2   +30d MED (3/3; N/A: med30_vol)                               HIGH (4/4; N/A: -)                                 MED→HIGH       
+  ON         H1-step    +5d MED (2/3; N/A: med30_vol)                               MED (2/4; N/A: -)                                  same           
+  TUT              —      — —                                                       —                                                  same           
+
+  ═══ GATE KÉP (v2.1 unchanged from v2 — compose logic không đổi) ═══
+  passes máy-ký (step + H2)          : 7/9
+  passes kèm-ramp[PROVISIONAL]        : 8/9
+  threshold ≥6/eval: máy-ký PASS · kèm-ramp PASS
+
+  ═══ CONF LEVEL DELTA ═══
+  HEMI    MED→HIGH        MED (3/3; N/A: med30_vol)                          → HIGH (4/4; N/A: -)

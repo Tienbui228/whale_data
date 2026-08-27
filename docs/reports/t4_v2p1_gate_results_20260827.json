@@ -1,0 +1,117 @@
+{
+  "artifact_type": "T-④ v2.1 CONF-FIX rev4",
+  "generated_at": "2026-08-27T03:59:39.023647+00:00",
+  "fix": "WARMUP_T01_VOL_MED30_N 30→14 (obs_min chung mọi rolling-vế)",
+  "scope": "CHỈ cột conf re-render · fires/leads/trigger/gate KHÔNG đổi",
+  "snapshot_pin": {
+    "gate_defs_md5": "f275c53c4a0f42b5a7b190e6e0143ca5",
+    "yaml_md5": "b03420a8b606f4af95eed4b3ea41d535"
+  },
+  "gate_ke": {
+    "passes_may_ky_step_only": 7,
+    "passes_kem_ramp_provisional": 8,
+    "evaluable": 9,
+    "note": "unchanged from v2 — compose logic không đổi"
+  },
+  "gate_results": [
+    {
+      "tok": "AKE",
+      "d0": "2026-07-15",
+      "compose_first": "2026-07-05",
+      "trigger": "H1-step",
+      "conf_v2_old": "LOW (0/0; N/A: 4 vế [funding_pin,oi_min30,ret14,med30_vol])",
+      "conf_v2p1_new": "LOW (0/0; N/A: 4 vế [funding_pin,oi_min30,ret14,med30_vol])",
+      "level_change": "same",
+      "lead_days": 10,
+      "status": "PASS"
+    },
+    {
+      "tok": "BANK",
+      "d0": "2026-07-11",
+      "compose_first": "2026-07-10",
+      "trigger": "H2",
+      "conf_v2_old": "MED (2/3; N/A: med30_vol)",
+      "conf_v2p1_new": "MED (3/4; N/A: -)",
+      "level_change": "same",
+      "lead_days": 1,
+      "status": "PASS"
+    },
+    {
+      "tok": "BTR",
+      "d0": "2026-08-26",
+      "compose_first": "2026-07-28",
+      "trigger": "H1-ramp",
+      "conf_v2_old": "MED (2/3; N/A: med30_vol)",
+      "conf_v2p1_new": "MED (2/4; N/A: -)",
+      "level_change": "same",
+      "lead_days": 29,
+      "status": "PASS"
+    },
+    {
+      "tok": "BTW",
+      "d0": "2026-08-03",
+      "compose_first": "2026-07-27",
+      "trigger": "H1-step",
+      "conf_v2_old": "LOW (1/4; N/A: -)",
+      "conf_v2p1_new": "LOW (1/4; N/A: -)",
+      "level_change": "same",
+      "lead_days": 7,
+      "status": "PASS"
+    },
+    {
+      "tok": "CAP",
+      "d0": "2026-07-30",
+      "compose_first": "2026-07-12",
+      "trigger": "H1-step",
+      "conf_v2_old": "LOW (0/3; N/A: med30_vol)",
+      "conf_v2p1_new": "LOW (1/4; N/A: -)",
+      "level_change": "same",
+      "lead_days": 18,
+      "status": "PASS"
+    },
+    {
+      "tok": "CYS",
+      "d0": "2026-08-04",
+      "compose_first": "2026-07-12",
+      "trigger": "H2",
+      "conf_v2_old": "MED (2/4; N/A: -)",
+      "conf_v2p1_new": "MED (2/4; N/A: -)",
+      "level_change": "same",
+      "lead_days": 23,
+      "status": "PASS"
+    },
+    {
+      "tok": "HEMI",
+      "d0": "2026-08-15",
+      "compose_first": "2026-07-16",
+      "trigger": "H2",
+      "conf_v2_old": "MED (3/3; N/A: med30_vol)",
+      "conf_v2p1_new": "HIGH (4/4; N/A: -)",
+      "level_change": "MED→HIGH",
+      "lead_days": 30,
+      "status": "PASS"
+    },
+    {
+      "tok": "ON",
+      "d0": "2026-07-19",
+      "compose_first": "2026-07-14",
+      "trigger": "H1-step",
+      "conf_v2_old": "MED (2/3; N/A: med30_vol)",
+      "conf_v2p1_new": "MED (2/4; N/A: -)",
+      "level_change": "same",
+      "lead_days": 5,
+      "status": "PASS"
+    },
+    {
+      "tok": "TUT",
+      "d0": "2026-07-09",
+      "compose_first": null,
+      "trigger": null,
+      "conf_v2_old": "—",
+      "conf_v2p1_new": "—",
+      "level_change": "same",
+      "lead_days": null,
+      "status": "NO-FIRE"
+    }
+  ]
+}

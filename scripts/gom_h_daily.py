@@ -28,7 +28,7 @@ Usage:
   python scripts/gom_h_daily.py --date auto           # yesterday UTC
 """
 from __future__ import annotations
-import sys, io, argparse, hashlib
+import sys, io, argparse, hashlib, math
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from statistics import median
@@ -52,7 +52,9 @@ WARMUP_H2_OI_N = 30
 WARMUP_H3_VOL_N = 14
 WARMUP_T01_FUNDING_N = 14
 WARMUP_T01_OI_N = 30
-WARMUP_T01_VOL_MED30_N = 30
+# [rev4 CONF-FIX KÝ 27/08] obs_min=14 chung mọi rolling-vế (was 30 hardcode)
+# Vol window vẫn 30d rolling, obs_min=14 để evaluable sớm giống funding/oi vế.
+WARMUP_T01_VOL_MED30_N = 14
 
 
 def _md5(p: Path) -> str:
@@ -507,16 +509,25 @@ def main():
         # h2_raw_gn: H2 raw regardless of T0.1
         h2_raw_gn = (h2_status == "T")
 
-        # T0.1 conf mapping: count sub-vé pass on evaluable subset (skip N/A)
+        # T0.1 conf mapping: count sub-vé pass on evaluable subset (skip N/A).
+        # [rev4 CONF-FIX KÝ 27/08] Sub-check trả None khi upstream giá trị None/NaN
+        # (was: `(v is not None and v<=thr)` returns False for missing → fake-eval).
+        # Đúng semantic: value missing/NaN → sub = None (N/A), không counted vào n_eval.
         def _conf_label(t01_detail):
+            def _sub(val, thr):
+                # Coerce to Python bool: numpy float64 <= X returns numpy.bool_,
+                # which fails `v is True` check → n_eval undercount (rev4 diag).
+                if val is None: return None
+                try:
+                    if math.isnan(val): return None
+                except (TypeError, ValueError): pass
+                return bool(val <= thr)
+            c = gom_h_cfg["t0_1"]
             subs = {
                 "funding_pin": t01_detail.get("fund_pinned"),
-                "oi_min30":    (t01_detail.get("oi_ratio") is not None and
-                                 t01_detail.get("oi_ratio") <= gom_h_cfg["t0_1"]["oi_over_min30_max"]),
-                "ret14":       (t01_detail.get("ret14") is not None and
-                                 t01_detail.get("ret14") <= gom_h_cfg["t0_1"]["ret14_abs_max"]),
-                "med30_vol":   (t01_detail.get("vol_med7_med30_ratio") is not None and
-                                 t01_detail.get("vol_med7_med30_ratio") <= gom_h_cfg["t0_1"]["vol_med7_over_med30_max"]),
+                "oi_min30":    _sub(t01_detail.get("oi_ratio"),              c["oi_over_min30_max"]),
+                "ret14":       _sub(t01_detail.get("ret14"),                 c["ret14_abs_max"]),
+                "med30_vol":   _sub(t01_detail.get("vol_med7_med30_ratio"),  c["vol_med7_over_med30_max"]),
             }
             na_list = [k for k, v in subs.items() if v is None]
             eval_pass = [k for k, v in subs.items() if v is True]
@@ -527,7 +538,8 @@ def main():
             elif n_pass >= 2: level = "MED"
             else: level = "LOW"
             na_str = ",".join(na_list) if na_list else "-"
-            # Fix: return WITHOUT "conf=" prefix (caller adds it, avoid double)
+            if n_eval == 0:
+                return f"{level} (0/0; N/A: {len(na_list)} vế [{na_str}])"
             return f"{level} ({n_pass}/{n_eval}; N/A: {na_str})"
 
         # Per-lane cooldown check (KEEP V④-RT semantic)
