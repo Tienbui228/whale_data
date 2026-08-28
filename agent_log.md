@@ -8336,3 +8336,19 @@ Không có pipeline tự động → khi build muộn > 0 ngày phải chạy fe
 - build_case.py cần ghi LSR khi tạo CASE mới (hiện tại bỏ sót) — case sau APR nên check
 - freshwatch_symbols.txt không có ở local path (chỉ trên VPS) — probe [C] bị FileNotFoundError (không ảnh hưởng fix)
 
+
+---
+
+## 2026-09-01 · SPOT-CVD backfill + D3 backtest + BUNDLE-FIX (SPOTCVD-20260901)
+
+**Việc:**
+- (0) COST-ERRATA: sửa verdict M0 15-30k call → **51 call thực** (limit=1000/call · max 596 nến < 1000 · 19,503 nến tổng).
+- (1) BACKFILL LOCAL one-shot: api.binance.com/api/v3/klines · 51 token map s6 · venue=binance_spot · **53 call thực** (51 + 2 retry EDEN/ZKP) · 19,452 rows · taker non-NaN 100% · TUT 519 bars 2025-03-27→2026-08-27.
+- (2) NỢ AMENDMENT thi hành: bot-signals gom_detect_spec §1-H SPOT-CVD-SHADOW block + AMENDMENT-APPEND 2 đoạn verbatim (① phân vai chiều dấu · ② falsifier D3) + changelog SPOTCVD-20260901. yaml bot-signals + whale_data BUNDLE-FIX 5 sống (MA-shadow → SPOT-SHADOW-PAIR).
+- (3) D3 BACKTEST-CSV: `docs/reports/spot_cvd_d3_backtest_20260828.csv` md5 `7154bcd0806248ba1687d08391b415b9` wc=18052. FALSIFIER TUT bản-② FAIL — 0 cửa sổ 3-chân trong 06-09/2026 (chân px giết đúng: TUT best-imb window 2026-08-07 imb=+0.0742 · pos_days=70% · **px_min30=3.670 fail ≤1.3**). Nguyên văn: "khả năng chân px đang giết đúng hiện tượng — xử ở bàn (KHÔNG nới số)". DEV-đề-cử negative-token: **HYPERUSDT** (med|imb|=0.00709 · n=464 · 3-leg_pass=0).
+- (4) Health note (không mở việc): **alpha-collection dừng 08-03** (25d stale) — collect_alpha_daily.py cron chưa fire hoặc broken. Alpha taker vốn ABSTAIN nên không chặn spot-cvd (taker chỉ đọc binance_spot venue).
+
+**Số:**
+- Backfill total calls: 53 (51 + 2 retry) · rows: 19,452 · symbols OK: 51/51 (100%)
+- Distribution 17,973 valid records · 3-leg pass rate 0.70% (125/17973) — rule chọn pre-move phase rất chọn lọc
+- imb median -0.0113 · pos_days median 36.67% · px_min30 median 1.09
