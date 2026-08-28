@@ -254,25 +254,23 @@ goi_nhe:
     stress_ret_max:    -0.08           # ret1d ≤ -8%
     stress_combine:    "OR"            # (vol ≥ 5× ∨ ret ≤ -8%)
     precedence:        "stress > 2x2"  # BROAD-STRESS override CONCENTRATED/BROAD-QUIET
-  # [H4 v1 KÝ 30/08 · DOM-LEVEL · thay H4.1-v0 GATE-FAILED · proposal md5 77cbcda0470b7bab89301c356676b462]
-  # gom_detect_spec §1-H4 v1 merged upstream (bot-signals) · yaml §3 GHI ĐÈ (không có key v0)
+  # [H4 v1 CLOSED-BY-PRINCIPLE 01/09 · ANALYSIS verdict trên survey nansen_v2 md5 fa55cf7c]
+  # Chẩn đoán nguyên lý: holder-composition metric mù loài captive-nội-sàn (TUT-type).
+  # Rule chết trước phép thử → forward-falsifier + credit + operational thresholds XÓA.
+  # Provenance keys (signed/source/status/evidence) giữ làm mốc lịch sử.
+  # Ref: gom_detect_spec changelog H4V1-CLOSED-20260901 (bot-signals) · proposal 77cbcda0 IMMUTABLE exhibit.
   h4:
     signed:                 true
-    source:                 "operator ký 30/08 — H4 v1 DOM-LEVEL"
-    provisional_unsigned:   true    # ngưỡng [ ] chờ control-gate 27/09; credit đã ký
-    dom:                    0.80    # top100_dom ≥ 0.80 → DOM-HIGH
-    dom_rise_pp:            3       # ≥+3pp giữa 2 snap → DOM-RISING
-    t01_min:                2       # ≥2 vế T0.1 → compression-gate trigger
-    resnap_days:            14      # chưa snapshot trong 14d mới re-call
-    credit_cap_daily:       2       # cap 2 call/ngày (đã ký chat 30/08)
-    replay_budget_once:     10      # one-shot 10 call cho replay TUT+BTW
-    # Amendment (a) — nhánh G3 KÝ 27/08 (/tgm/holders KHÔNG historical date-param):
-    falsifier:              "tracker-niêm TUT 83% · BTW 96% (§10 findings rev9 7019a5d3) + forward-verify khi hai con vào trigger"
-    # Amendment (b) — top100_dom BA THƯỚC + field-note (KÝ 27/08 · thước operative chờ 27/09):
-    top100_dom_measures:    ["raw", "ex-exchange", "ex-structural"]
-    top100_dom_operative:   ""      # chờ survey-verdict 27/09
-    field_note:             "ownership_percentage = fraction 0-1 (verified Σ top-10 = 0.9027 TUT 27/08 cap 2/2)"
-  # [D4 KÝ 27/08 · Review-bundle 27/09 = 6 món SỐNG · V③-cutpoint hồ-sơ-đóng]
+    source:                 "operator ký 30/08 → CLOSED-BY-PRINCIPLE 01/09"
+    status:                 "CLOSED-BY-PRINCIPLE-20260901"
+    close_reason:           "holder-composition metric mù loài captive-nội-sàn (kho nằm TRONG ví sàn — TUT −36pp sau loại-sàn)"
+    survey_evidence_md5:    "fa55cf7c14aa177fca57561b21c7e58b"
+    changelog_ref:          "H4V1-CLOSED-20260901 (gom_detect_spec bot-signals)"
+    # D3-registry: forward-falsifier TUT/BTW HỦY — rule chết trước phép thử.
+    # dom + dom_rise_pp + t01_min + resnap_days + credit_cap_daily + replay_budget_once +
+    #   top100_dom_measures + top100_dom_operative + provisional_unsigned + field_note: XÓA (thước+[0.80] chờ-survey).
+  # [D4 KÝ 27/08 → reshape 01/09 · Review-bundle 27/09 = 5 sống + 3 hồ-sơ-đóng + conf-kiểm-định]
+  # Reshape reason: H4-v1 CLOSED-BY-PRINCIPLE 01/09 → rút khỏi items sống, chuyển hồ-sơ-đóng-trình-đọc.
   review_bundle_20260927:
     scheduled_date:    "2026-09-27"
     items:
@@ -281,10 +279,13 @@ goi_nhe:
       - "walletset_2x2: {50% · 5 abs · 5× ∨ -8% OR} · distribution tighten review"
       - "AKE-row2: via-ramp PROVISIONAL-30d · fixture Row-2 · auto_revert nếu ramp khai tử"
       - "MA-shadow: [PENDING-DEF] chờ operator drop spec"
-      - "H4-v1-thước+[0.80]: holders lane (M2 feasibility 130/139 tokens ≥30d) + falsifier ≥0.80 gate · chờ M1 diff"
     hồ_sơ_đóng_trình_đọc:
-      - "V③-cutpoint: Tiên nhìn, KHÔNG ký số (research đóng · closed-no-change per ANALYSIS 31/08)"
-    dependency: "operator ký M1 diff + rev9 findings trước khi wire D1/D3"
+      - "V③-cutpoint: Tiên nhìn, KHÔNG ký số (research đóng · closed-no-change per ANALYSIS 31/08 · changelog V3-CLOSED-20260831)"
+      - "E2-tripwire: trạng thái [TRIP] tại review (rate=0.428 vượt 0.4 cap grades-v4 md5 8fdd0a74 · Resolution (b) yaml single-source · changelog E2-METRIC-B-20260831)"
+      - "H4-CLOSED: holder-composition metric mù loài captive-nội-sàn (survey fa55cf7c ba thước KHÔNG tách · changelog H4V1-CLOSED-20260901 · KNOWN-GAP ghi sổ)"
+    conf_kiem_dinh:
+      - "conf-labeler audit: obs_min=14 canonical (rev4-FINAL) · WALLETSET 2x2 tag emission · ramp sống lần đầu trên cron từ 2026-08-28 — review FP-load 30d"
+    dependency: "H4 wire D1/D3 → CANCELLED (H4-CLOSED); ramp review cần cron ≥30d fires (2026-09-27 đủ 30d)"
 
   # E-R7 acceptance
   acceptance_max_pct: 0.25 # tổng events ≤ 25% universe (loãng if vượt)

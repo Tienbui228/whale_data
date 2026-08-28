@@ -1,10 +1,20 @@
 """lib/h4_flow.py — H4 DOM-LEVEL flow · KÝ 30/08 · REPORT-ONLY
+[DORMANT · H4-v1 CLOSED-BY-PRINCIPLE 01/09 — no consumer, N2-interface reusable]
+
+STATUS: no consumer — H4 closed by ANALYSIS verdict 01/09 (survey nansen_v2 md5 fa55cf7c
+ba thước KHÔNG tách B vs C∪D; chẩn đoán nguyên lý: holder-composition metric mù loài
+captive-nội-sàn TUT-type). Runner (gom_h_daily.py) KHÔNG BAO GIỜ import module này.
+h4_bot_cycle.py CANCELLED — chưa từng tạo. Module giữ LOCAL làm N2-interface tái sử
+dụng (trigger + snapshot IO + lane render + sentinel pattern) cho mắt tương lai nếu có.
+
+Ref: gom_detect_spec changelog H4V1-CLOSED-20260901 · screen_thresholds.yaml goi_nhe.h4
+     status=CLOSED-BY-PRINCIPLE-20260901 · proposal md5 77cbcda0 IMMUTABLE exhibit.
 
 Trigger + snapshot IO + lane render per gom_detect_spec §1-H4 v1 (proposal md5 77cbcda0).
 
 Single-caller enforced (per operator ky · CLAUDE.md HUMAN §1):
-  · runner (gom_h_daily.py) → CHỈ ĐỌC snapshot + WRITE trigger requests
-  · bot cycle (h4_bot_cycle.py) → ONLY caller of Nansen /tgm/holders + APPEND snapshots
+  · runner (gom_h_daily.py) → CHỈ ĐỌC snapshot + WRITE trigger requests [CANCELLED 01/09]
+  · bot cycle (h4_bot_cycle.py) → ONLY caller of Nansen /tgm/holders + APPEND snapshots [CANCELLED 01/09 — never created]
   · agent (this repo) → cả 2 phía chỉ đọc/ghi FILE, KHÔNG call API
 
 Files:
