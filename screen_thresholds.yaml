@@ -280,7 +280,7 @@ goi_nhe:
       - "verify_walletset [50%]: min_abs_delta 0.50 · anchor SOPH · DELIST-MIGRATION vs MARKET-REAL grade"
       - "walletset_2x2: {50% · 5 abs · 5× ∨ -8% OR} · distribution tighten review"
       - "AKE-row2: via-ramp PROVISIONAL-30d · fixture Row-2 · auto_revert nếu ramp khai tử"
-      - "MA-only (3 ô): vol_spot ≥[1.0]×med14 ∧ |ret| ≤[3%] ∧ taker_spot ≤[45%] · store spot-51 tài sản (backfill 19452 rows · MA consumer đầu tiên) · backtest-phân-bố review"
+      - "MA-only (3 ô): vol_spot ≥[1.0]×med14 ∧ |ret| ≤[3%] ∧ taker_spot ≤[45%] · store spot-51 tài sản (backfill 19452 rows · MA consumer đầu tiên) · backtest-phân-bố review · gói-ký docs/proposals/spot_shadow_pair_goi_ky_20260927.md md5 b90e722b (đề cử canonical N10k: taker 45 · vol 1.5 · CI cạnh số)"
     hồ_sơ_đóng_trình_đọc:
       - "V③-cutpoint: Tiên nhìn, KHÔNG ký số (research đóng · closed-no-change per ANALYSIS 31/08 · changelog V3-CLOSED-20260831)"
       - "E2-tripwire: trạng thái [TRIP] tại review (rate=0.428 vượt 0.4 cap grades-v4 md5 8fdd0a74 · Resolution (b) yaml single-source · changelog E2-METRIC-B-20260831)"
