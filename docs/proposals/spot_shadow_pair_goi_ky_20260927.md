@@ -26,6 +26,8 @@
 ### Đề cử vận hành
 **`taker=45 · vol=1.5 = ô robust duy nhất qua re-draw độc lập N=10k`** — CI_5% > 1 cả with-SOPH (1.13×) LẪN ex-SOPH (1.16×). `vol=1.0` mấp mé CI_5% (0.91×-0.99×) cả hai bản → chọn 1.5 an toàn qua noise MC.
 
+**`taker=42.5 loại tại screening`** (lift 1.12-1.17× N=1000, gap −0.5× vs nấc 45 > 3× MC-noise ±0.2×) — không cần bản canonical; ô điền thực chất là xác nhận 45.
+
 ### Note vùng-mỏng (từ grid v2 exhibit)
 `vol_x=1.5, taker=40%` → lift 0.76× · CI [0.00, 2.24] (11 uncens · **thua ở 40-mỏng** · không đủ sample). Đề cử 1.5/45 vì thắng vùng dao, tránh vùng-mỏng.
 
