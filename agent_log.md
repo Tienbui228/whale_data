@@ -8352,3 +8352,18 @@ Không có pipeline tự động → khi build muộn > 0 ngày phải chạy fe
 - Backfill total calls: 53 (51 + 2 retry) · rows: 19,452 · symbols OK: 51/51 (100%)
 - Distribution 17,973 valid records · 3-leg pass rate 0.70% (125/17973) — rule chọn pre-move phase rất chọn lọc
 - imb median -0.0113 · pos_days median 36.67% · px_min30 median 1.09
+
+## 2026-09-01 · ANNEX-125 + FIX SỔ bundle pointer
+
+**ANNEX-125 (SPOTCVD-20260901 · zero-call):**
+- CSV: `docs/reports/spot_cvd_annex125_20260828.csv` md5 `d3a2ea79758278582e77539bba3b50b7` wc=163
+- 125 pass-windows từ D3 · 8 tokens (concentration: ATUSDT n=45 = 36% · 1000CHEEMSUSDT n=27 · HUMAUSDT n=18 · OPENUSDT n=14 · ENSOUSDT n=11 · HOMEUSDT n=4 · TUTUSDT n=4 · SIGNUSDT n=2)
+- fwd_ret_30d: median +14.36% · p75 +30.90% · %≥+50% = **4.84%**
+- fwd_ret_60d: median +20.31% · p75 +35.36% · %≥+50% = 12.90%
+- **BASE-RATE control** ALL 30d windows uncens: fwd≥+50% = 2027/17922 = **11.31%**
+- **UNCENSORED COMPARE**: pass-window uncens 6/83 = **7.23%** · base 11.31% · **lift −4.08% (0.64×)** — pass-windows UNDER-PERFORM random
+- KHÔNG kết luận · bảng quyết-định cho ANALYSIS
+
+**FIX SỔ bundle pointer (canonical MỘT nhà):**
+- whale_data yaml goi_nhe.review_bundle_20260927 = canonical
+- bot-signals yaml review_bundle_20260927 XÓA (16 lines) · thay pointer-comment 5 lines
