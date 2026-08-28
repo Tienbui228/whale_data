@@ -1,0 +1,88 @@
+# SURVEY-V2 RE-PARSE · KÝ 31/08 · 0-call re-parse from raw JSON
+# CEX list curated [CURATED-LIST-20260831]: data/ref/cex_addresses_bsc.txt md5 0983fb5f8a190872ac2b904798b3cbf7
+#   22 exchange addresses (Binance/OKX/Bybit/Gate/MEXC/Bitget/HTX/Kraken/Kucoin)
+# Source raw: data/state/nansen_raw_survey/*.json (33 files)
+#
+# 3 thước v2:
+#   dom_raw               = Σ top10 ownership_percentage
+#   dom_ex_exchange_v2   = trừ ví KHỚP-ADDRESS trong CEX list (NOT keyword)
+#   dom_ex_structural     = trừ thêm burn/dead pattern (0x000.../....dead) + label keyword
+# INSTRUMENT COL: tracker-top100 (nhóm A) vs nansen-top10 (nhóm B/C/D)
+#
+# BẢNG-CẶP A1 v2 (L-51 · tracker vs Nansen · sau CEX-list filter):
+#   TUT    tracker=0.830  Nansen-raw=0.9020  ex-exchange-v2=0.5421  chênh=+0.0720  n_ex=3  labels=Binance 8(0.209) | Binance 15(0.113) | G
+#   BTW    tracker=0.960  Nansen-raw=N/A  ex-exchange-v2=N/A  chênh=N/A  n_ex=0  labels=—
+#   AKE    tracker=0.860  Nansen-raw=0.5070  ex-exchange-v2=0.5070  chênh=-0.3530  n_ex=0  labels=—
+#
+# BẢNG TÓM v2 · phép chính ★B vs C∪D same-instrument★:
+#                      A ×                dom_raw [MIXED]: n=7/9 med=0.810 p25=0.510 p75=0.860 ≥0.80=4 (57.1%)
+#                      A ×     dom_ex_exchange_v2 [MIXED]: n=0/9 med=— p25=— p75=— ≥0.80=0 (—)
+#                      A ×      dom_ex_structural [MIXED]: n=0/9 med=— p25=— p75=— ≥0.80=0 (—)
+#                      B ×                dom_raw [nansen-top10]: n=10/11 med=0.894 p25=0.873 p75=0.923 ≥0.80=10 (100.0%)
+#                      B ×     dom_ex_exchange_v2 [nansen-top10]: n=10/11 med=0.804 p25=0.542 p75=0.873 ≥0.80=5 (50.0%)
+#                      B ×      dom_ex_structural [nansen-top10]: n=10/11 med=0.754 p25=0.374 p75=0.859 ≥0.80=4 (40.0%)
+#                      C ×                dom_raw [nansen-top10]: n=13/15 med=0.935 p25=0.761 p75=0.950 ≥0.80=9 (69.2%)
+#                      C ×     dom_ex_exchange_v2 [nansen-top10]: n=13/15 med=0.739 p25=0.593 p75=0.917 ≥0.80=5 (38.5%)
+#                      C ×      dom_ex_structural [nansen-top10]: n=13/15 med=0.739 p25=0.584 p75=0.917 ≥0.80=5 (38.5%)
+#                      D ×                dom_raw [nansen-top10]: n=9/10 med=0.890 p25=0.745 p75=0.952 ≥0.80=6 (66.7%)
+#                      D ×     dom_ex_exchange_v2 [nansen-top10]: n=9/10 med=0.890 p25=0.682 p75=0.918 ≥0.80=5 (55.6%)
+#                      D ×      dom_ex_structural [nansen-top10]: n=9/10 med=0.836 p25=0.682 p75=0.910 ≥0.80=5 (55.6%)
+#        A1∪B[MIXED-CTX] ×                dom_raw [MIXED]: n=13/14 med=0.890 p25=— p75=— ≥0.80=13 (100.0%)
+#        A1∪B[MIXED-CTX] ×     dom_ex_exchange_v2 [MIXED]: n=10/14 med=0.804 p25=— p75=— ≥0.80=5 (50.0%)
+#        A1∪B[MIXED-CTX] ×      dom_ex_structural [MIXED]: n=10/14 med=0.754 p25=— p75=— ≥0.80=4 (40.0%)
+#        ★B(same-instr)★ ×                dom_raw [nansen-top10]: n=10/11 med=0.894 p25=— p75=— ≥0.80=10 (100.0%)
+#      ★C∪D(same-instr)★ ×                dom_raw [nansen-top10]: n=22/25 med=0.918 p25=— p75=— ≥0.80=15 (68.2%)
+#        ★B(same-instr)★ ×     dom_ex_exchange_v2 [nansen-top10]: n=10/11 med=0.804 p25=— p75=— ≥0.80=5 (50.0%)
+#      ★C∪D(same-instr)★ ×     dom_ex_exchange_v2 [nansen-top10]: n=22/25 med=0.747 p25=— p75=— ≥0.80=10 (45.5%)
+#        ★B(same-instr)★ ×      dom_ex_structural [nansen-top10]: n=10/11 med=0.754 p25=— p75=— ≥0.80=4 (40.0%)
+#      ★C∪D(same-instr)★ ×      dom_ex_structural [nansen-top10]: n=22/25 med=0.744 p25=— p75=— ≥0.80=10 (45.5%)
+#
+# NGƯỠNG PHỦ: B=10/11 · C=13/15
+# KHÔNG kết luận — luật đọc (i)-(iv) ANALYSIS
+#
+nhom,nhom_con,token,instrument,contract,chain,source,dom_raw,n_loai_exchange,dom_ex_exchange_v2,n_loai_structural,dom_ex_structural,supply_used,source_supply,exchange_labels,structural_labels,n_records_fetched,status,note
+A,A2,BANK,tracker-top100,0x3aee7602b612de36088f3ffed8c8f10e86ebf2bf,bsc,tracker-§10-rev9,0.510,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,—,—,TRACKER-OK,§10 tracker 0.51
+A,A1,TUT,tracker-top100,0xcaae2a2f939f51d97cdfa9a86e79e3f085b799f3,bsc,tracker-§10-rev9,0.830,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,—,—,TRACKER-OK,§10 tracker 0.83
+A,A2,CYS,tracker-top100,0x0c69199c1562233640e0db5ce2c399a88eb507c7,bsc,tracker-§10-rev9,0.810,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,—,—,TRACKER-OK,§10 tracker 0.81
+A,A1,AKE,tracker-top100,0x2c3a8ee94ddd97244a93bc48298f97d2c412f7db,bsc,tracker-§10-rev9,0.860,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,—,—,TRACKER-OK,§10 tracker 0.86
+A,A1,BTW,tracker-top100,,unknown,tracker-§10-rev9,0.960,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,—,—,TRACKER-OK,§10 tracker 0.96
+A,A2,HEMI,tracker-top100,0x5ffd0eadc186af9512542d0d5e5eafc65d5afc5b,bsc,tracker-§10-rev9,0.788,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,—,—,TRACKER-OK,§10 tracker 0.788
+A,A2,ON,tracker-top100,0x0e4f6209ed984b21edea43ace6e09559ed051d48,bsc,tracker-§10-rev9,N/A-SOURCE-TRACKER,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,—,—,N/A-SOURCE-TRACKER,§10 tracker N/A
+A,A2,CAP,tracker-top100,0x99991c6aabba5a096f24f250b73580f5179b9999,bsc,tracker-§10-rev9,0.170,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,—,—,TRACKER-OK,§10 tracker 0.17
+A,A2,BTR,tracker-top100,0xfed13d0c40790220fbde712987079eda1ed75c51,bsc,tracker-§10-rev9,N/A-SOURCE-TRACKER,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,—,—,N/A-SOURCE-TRACKER,§10 tracker N/A
+B,B,ACU,nansen-top10,0x6ef2ffb38d64afe18ce782da280b300e358cfeaf,bsc,nansen-/tgm/holders,0.9234,2,0.7272,0,0.7272,"26,135,051",nansen-derived (token_amount/op),Gate.io hot(0.160) | MEXC BSC hot(0.036),—,10,OK,top1_op=0.3260
+B,B,ARIA,nansen-top10,0x5d3a12c42e5372b2cc3264ab3cdcf660a1555238,bsc,nansen-/tgm/holders,0.8591,1,0.8369,0,0.8369,"1,000,000,000",nansen-derived (token_amount/op),Gate.io hot(0.022),—,10,OK,top1_op=0.3358
+B,B,ENSO,nansen-top10,0xfeb339236d25d3e415f280189bc7c2fbab6ae9ef,bsc,nansen-/tgm/holders,0.9436,5,0.2799,0,0.2799,"3,311,394",nansen-derived (token_amount/op),Binance 8(0.297) | Bybit BSC(0.253) | MEXC BSC hot(0.058) | Bitget BSC(0.037) | Binance 15(0.019),—,10,OK,top1_op=0.2971
+B,B,FF,nansen-top10,,unknown,nansen-/tgm/holders,N/A-NO-DATA,—,N/A-NO-DATA,—,N/A-NO-DATA,—,nansen-derived (token_amount/op),—,—,0,N/A-NO-DATA,N/A
+B,B,FHE,nansen-top10,0xd55c9fb62e176a8eb6968f32958fefdd0962727e,bsc,nansen-/tgm/holders,0.8075,1,0.7706,1,0.7474,"758,152,131",nansen-derived (token_amount/op),Gate.io hot(0.037),label_liquidity pool(0.023),10,OK,top1_op=0.1814
+B,B,LIGHT,nansen-top10,0x477c2c0459004e3354ba427fa285d7c053203c0e,bsc,nansen-/tgm/holders,0.9294,1,0.9128,1,0.9001,"420,003,872",nansen-derived (token_amount/op),Gate.io hot(0.017),label_liquidity pool(0.013),10,OK,top1_op=0.5853
+B,B,MUBARAK,nansen-top10,0x5c85d6c6825ab4032337f11ee92a72df936b46f6,bsc,nansen-/tgm/holders,0.8729,4,0.1726,1,0.1453,"1,000,005,019",nansen-derived (token_amount/op),Binance 8(0.362) | Bitget BSC(0.295) | Binance 15(0.023) | Gate.io hot(0.020),burn_0x00000000(0.027),10,OK,top1_op=0.3620
+B,B,SQD,nansen-top10,0xe50e3d1a46070444f44df911359033f2937fcc13,bsc,nansen-/tgm/holders,0.8898,0,0.8898,1,0.7615,"44,127,802",nansen-derived (token_amount/op),—,label_liquidity pool(0.128),10,OK,top1_op=0.3776
+B,B,TRADOOR,nansen-top10,0x9123400446a56176eb1b6be9ee5cf703e409f492,bsc,nansen-/tgm/holders,0.8970,1,0.8704,1,0.8585,"60,000,680",nansen-derived (token_amount/op),Gate.io hot(0.027),label_liquidity pool(0.012),10,OK,top1_op=0.5792
+B,B,TUT,nansen-top10,0xcaae2a2f939f51d97cdfa9a86e79e3f085b799f3,bsc,nansen-/tgm/holders,0.9020,3,0.5421,1,0.3736,"1,000,002,020",nansen-derived (token_amount/op),Binance 8(0.209) | Binance 15(0.113) | Gate.io hot(0.038),burn_0x00000000(0.169),10,OK,top1_op=0.2192
+B,B,XNY,nansen-top10,0xe3225e11cab122f1a126a28997788e5230838ab9,bsc,nansen-/tgm/holders,0.8903,1,0.8734,1,0.8634,"10,000,016,431",nansen-derived (token_amount/op),Gate.io hot(0.017),label_liquidity pool(0.010),10,OK,top1_op=0.7500
+C,C,RAVE,nansen-top10,0x97693439ea2f0ecdeb9135881e49f354656a911c,bsc,nansen-/tgm/holders,0.9174,0,0.9174,0,0.9174,"34,708,343",nansen-derived (token_amount/op),—,—,10,OK,top1_op=0.2625
+C,C,BARD,nansen-top10,0xd23a186a78c0b3b805505e5f8ea4083295ef9f3a,bsc,nansen-/tgm/holders,0.9913,2,0.3469,0,0.3469,"8,831,278",nansen-derived (token_amount/op),Binance 15(0.633) | MEXC BSC hot(0.011),—,10,OK,top1_op=0.6330
+C,C,4,nansen-top10,0x0a43fc31a73013089df59194872ecae4cae14444,bsc,nansen-/tgm/holders,0.6374,1,0.5926,0,0.5926,"1,000,065,121",nansen-derived (token_amount/op),MEXC BSC hot(0.045),—,10,OK,top1_op=0.3071
+C,C,STAR,nansen-top10,,unknown,nansen-/tgm/holders,N/A-NO-DATA,—,N/A-NO-DATA,—,N/A-NO-DATA,—,nansen-derived (token_amount/op),—,—,0,N/A-NO-DATA,N/A
+C,C,EDEN,nansen-top10,0x235b6fe22b4642ada16d311855c49ce7de260841,bsc,nansen-/tgm/holders,0.9495,5,0.2793,0,0.2793,"76,748,866",nansen-derived (token_amount/op),Bitget BSC(0.380) | Binance 8(0.250) | Binance 15(0.018) | Gate.io hot(0.014) | MEXC BSC hot(0.008),—,10,OK,top1_op=0.3798
+C,C,COOKIE,nansen-top10,0xc0041ef357b183448b235a8ea73ce4e4ec8c265f,bsc,nansen-/tgm/holders,0.6057,2,0.3866,0,0.3866,"736,802,348",nansen-derived (token_amount/op),Binance 8(0.181) | Bitget BSC(0.038),—,10,OK,top1_op=0.1809
+C,C,CLO,nansen-top10,0x81d3a238b02827f62b9f390f947d36d4a5bf89d2,bsc,nansen-/tgm/holders,0.6221,0,0.6221,0,0.6221,"223,521,470",nansen-derived (token_amount/op),—,—,10,OK,top1_op=0.0778
+C,C,BILL,nansen-top10,0xdf24f8c21cb404b3031a450d8e049d6e39fc1fa5,bsc,nansen-/tgm/holders,0.9179,1,0.8765,0,0.8765,"175,335,186",nansen-derived (token_amount/op),MEXC BSC hot(0.041),—,10,OK,top1_op=0.4717
+C,C,B2,nansen-top10,0x783c3f003f172c6ac5ac700218a357d2d66ee2a2,bsc,nansen-/tgm/holders,0.7611,1,0.7386,0,0.7386,"207,455,750",nansen-derived (token_amount/op),Gate.io hot(0.022),—,10,OK,top1_op=0.2151
+C,C,SHELL,nansen-top10,0xf2c88757f8d03634671208935974b60a2a28bdb3,bsc,nansen-/tgm/holders,0.9663,2,0.7551,1,0.7493,"496,422,871",nansen-derived (token_amount/op),Binance 8(0.143) | Bitget BSC(0.068),label_liquidity pool(0.006),10,OK,top1_op=0.3243
+C,C,ZEST,nansen-top10,0x5506599c722389a60580b5213ea1da60d64754a1,bsc,nansen-/tgm/holders,0.9468,1,0.9385,0,0.9385,"1,000,000,000",nansen-derived (token_amount/op),Gate.io hot(0.008),—,10,OK,top1_op=0.7947
+C,C,OPEN,nansen-top10,0xa227cc36938f0c9e09ce0e64dfab226cad739447,bsc,nansen-/tgm/holders,0.9347,3,0.6075,1,0.5835,"64,231,194",nansen-derived (token_amount/op),Bitget BSC(0.160) | Binance 8(0.123) | Gate.io hot(0.044),label_liquidity pool(0.024),10,OK,top1_op=0.3584
+C,C,ARX,nansen-top10,,unknown,nansen-/tgm/holders,N/A-NO-DATA,—,N/A-NO-DATA,—,N/A-NO-DATA,—,nansen-derived (token_amount/op),—,—,0,N/A-NO-DATA,N/A
+C,C,PLAY,nansen-top10,0xf86089b30f30285d492b0527c37b9c2225bfcf8c,bsc,nansen-/tgm/holders,0.9660,0,0.9660,0,0.9660,"1,000,000,000",nansen-derived (token_amount/op),—,—,10,OK,top1_op=0.7484
+C,C,INX,nansen-top10,0x45f55b46689402583073ff227b6ac20520052a24,bsc,nansen-/tgm/holders,0.9436,1,0.9380,0,0.9380,"198,002,695",nansen-derived (token_amount/op),MEXC BSC hot(0.006),—,10,OK,top1_op=0.6345
+D,D,AIA,nansen-top10,0x53ec33cd4fa46b9eced9ca3f6db626c5ffcd55cc,bsc,nansen-/tgm/holders,0.9515,1,0.9367,1,0.9103,"200,004,416",nansen-derived (token_amount/op),Gate.io hot(0.015),label_liquidity pool(0.026),10,OK,top1_op=0.5999
+D,D,AGT,nansen-top10,0x5dbde81fce337ff4bcaaee4ca3466c00aecae274,bsc,nansen-/tgm/holders,0.5443,0,0.5443,0,0.5443,"5,000,003,376",nansen-derived (token_amount/op),—,—,10,OK,top1_op=0.0743
+D,D,BAS,nansen-top10,0x0f0df6cb17ee5e883eddfef9153fc6036bdb4e37,bsc,nansen-/tgm/holders,0.9180,0,0.9180,0,0.9180,"10,000,065,540",nansen-derived (token_amount/op),—,—,10,OK,top1_op=0.3200
+D,D,DOOD,nansen-top10,0x722294f6c97102fb0ddb5b907c8d16bdeab3f6d9,bsc,nansen-/tgm/holders,0.9549,1,0.9033,1,0.8355,"882,637,556",nansen-derived (token_amount/op),Binance 15(0.052),label_liquidity pool(0.068),10,OK,top1_op=0.5093
+D,D,ESPORTS,nansen-top10,0xf39e4b21c84e737df08e2c3b32541d856f508e48,bsc,nansen-/tgm/holders,0.7451,1,0.7227,0,0.7227,"900,001,323",nansen-derived (token_amount/op),Gate.io hot(0.022),—,10,OK,top1_op=0.1589
+D,D,PIEVERSE,nansen-top10,,unknown,nansen-/tgm/holders,N/A-NO-DATA,—,N/A-NO-DATA,—,N/A-NO-DATA,—,nansen-derived (token_amount/op),—,—,0,N/A-NO-DATA,N/A
+D,D,SLX,nansen-top10,0x02bcc4c181b83a8c0a342bc003389cbecb4bc54d,bsc,nansen-/tgm/holders,0.7028,1,0.6824,0,0.6824,"33,604,212",nansen-derived (token_amount/op),Bybit BSC(0.020),—,10,OK,top1_op=0.5049
+D,D,RIVER,nansen-top10,0xda7ad9dea9397cffddae2f8a052b82f1484252b3,bsc,nansen-/tgm/holders,0.8904,0,0.8904,0,0.8904,"42,157,498",nansen-derived (token_amount/op),—,—,10,OK,top1_op=0.6291
+D,D,CROSS,nansen-top10,0x6bf62ca91e397b5a7d1d6bce97d9092065d7a510,bsc,nansen-/tgm/holders,0.9816,1,0.9747,2,0.9553,"1,000,005,199",nansen-derived (token_amount/op),Gate.io hot(0.007),burn_0x00000000(0.015) | label_liquidity pool(0.005),10,OK,top1_op=0.8954
+D,D,TST,nansen-top10,0x86bb94ddd16efc8bc58e6b056e8df71d9e666429,bsc,nansen-/tgm/holders,0.8772,5,0.1552,2,0.0635,"1,000,037,842",nansen-derived (token_amount/op),Binance 8(0.610) | Bitget BSC(0.070) | Gate.io hot(0.022) | Binance 15(0.012) | MEXC BSC hot(0.008),burn_0x00000000(0.063) | label_liquidity pool(0.029),10,OK,top1_op=0.6105

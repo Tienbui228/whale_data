@@ -1,0 +1,36 @@
+# CEX Exchange Addresses BSC (BNB Chain) — CURATED
+# Cờ: [CURATED-LIST-20260831] · Ký DEV per operator KÝ 31/08
+# Format: address<TAB>name<TAB>source
+# Source: BscScan public labels (public knowledge from bscscan.com/labels) + operator anchor
+#
+# Binance
+0xf977814e90da44bfa03b6295a0616a897441acec	Binance 8	BscScan/Etherscan public label · operator anchor 31/08
+0x8894e0a0c962cb723c1976a4421c95949be2d4e3	Binance 15	BscScan public label
+0xdcccf4c47ff014cf7fefb2a25f4a4b78f6f5cb96	Binance 20	BscScan public label
+0x6262998ced04146fa42253a5c0af90ca02dfd2a3	Binance BSC hot	BscScan public label
+0x28c6c06298d514db089934071355e5743bf21d60	Binance 14	Etherscan (multi-chain hot wallet)
+0x21a31ee1afc51d94c2efccaa2092ad1028285549	Binance cold	BscScan public label
+0x9696f59e4d72e237be84ffd425dcad154bf96976	Binance 4 cold	BscScan public label
+0x3c783c21a0383057d128bae431894a5c19f9cf06	Binance BSC hot 2	BscScan public label
+0x515b72ed8a97f42c568d6a143232775018f133c8	Binance BSC hot 3	BscScan public label
+0xd1d8b2aae2ebb2af7c8f2a5eb92b48769fc4b28d	Binance staking (BSC)	BscScan public label
+# OKX
+0x98ec059dc3adfbdd63429454aeb0c990fba4a128	OKX BSC	BscScan public label
+0x2c8fbb630289363ac80705a1a61273f76fd5a161	OKX BSC hot	BscScan public label
+# Bybit
+0xf89d7b9c864f589bbf53a82105107622b35eaa40	Bybit BSC	BscScan public label
+0x8103683202aa8da10536036edef04cdbb8b34c8b	Bybit hot BSC	BscScan public label
+# Gate.io
+0x0d0707963952f2fba59dd06f2b425ace40b492fe	Gate.io hot	BscScan public label
+0x7793cd85c11a924478d358d49b05b37e91b5810f	Gate.io BSC	BscScan public label
+# MEXC
+0x9642b23ed1e01df1092b92641051881a322f5d4e	MEXC BSC	BscScan public label
+0x4982085c9e2f89f2ecb8131eca71afad896e89cb	MEXC BSC hot	BscScan public label
+# Bitget
+0x5a52e96bacdabb82fd05763e25335261b270efcb	Bitget BSC	BscScan public label
+# Kucoin
+0xd6216fc19db775df9774a6e33526131da7d19a2c	Kucoin	Etherscan public label (multi-chain)
+# HTX (formerly Huobi)
+0xd8b6da2bfec71d684d3e2a3fc0a3d7a1fcbf6c34	HTX BSC	BscScan public label
+# Kraken
+0xa910f92acdaf488fa6ef02174fb86208ad7722ba	Kraken BSC	BscScan public label
