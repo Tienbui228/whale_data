@@ -1,0 +1,86 @@
+# SURVEY-NANSEN one-shot · KÝ 31/08 · budget ≤45 call
+# Source: Nansen /tgm/holders page-1 rpp-10 (cùng-máy-đo H4 production)
+# Ledger riêng: D:\Check onchain fresh wallets\..\Data back test\whale_data\data\state\nansen_survey_oneshot_ledger.log
+# Etherscan $49 wrapper: HỦY per operator 31/08 (survey_path_a_setup SUPERSEDED)
+# Tokens called: 38 · ok=33 · fail=0 · credits=165
+#
+# 3 thước:
+#   dom_raw           = Σ top10 ownership_percentage
+#   dom_ex_exchange   = trừ label chứa exchange/Binance/Gate/Bitget/... (n_loại)
+#   dom_ex_structural = trừ thêm burn/dead/lock/vesting/LP/treasury/pool/reserve/team/foundation
+# cờ [UNVERIFIED-SURVEY]: label heuristic từ Nansen · chưa cross-verify với bapi/dexscreener
+#
+# BẢNG-CẶP A1 (L-51 nghi thức trước [0.80] ký):
+#   TUT    tracker§10=0.830  Nansen-raw=0.9020  ex-exchange=0.9020  chênh(N-t)=+0.0720
+#   BTW    tracker§10=0.960  Nansen-raw=N/A  ex-exchange=N/A  chênh(N-t)=N/A
+#   AKE    tracker§10=0.860  Nansen-raw=0.5070  ex-exchange=0.5070  chênh(N-t)=-0.3530
+#
+# BẢNG TÓM · median · p25-p75 × nhóm × thước · ≥0.80:
+#        A ×                dom_raw: n=7/9 med=0.810 p25=0.510 p75=0.860 ≥0.80=4
+#        A ×        dom_ex_exchange: n=0/9 med=— p25=— p75=— ≥0.80=0
+#        A ×      dom_ex_structural: n=0/9 med=— p25=— p75=— ≥0.80=0
+#        B ×                dom_raw: n=10/11 med=0.894 p25=0.873 p75=0.923 ≥0.80=10
+#        B ×        dom_ex_exchange: n=10/11 med=0.894 p25=0.873 p75=0.923 ≥0.80=10
+#        B ×      dom_ex_structural: n=10/11 med=0.870 p25=0.784 p75=0.917 ≥0.80=7
+#        C ×                dom_raw: n=13/15 med=0.935 p25=0.761 p75=0.950 ≥0.80=9
+#        C ×        dom_ex_exchange: n=13/15 med=0.935 p25=0.761 p75=0.950 ≥0.80=9
+#        C ×      dom_ex_structural: n=13/15 med=0.918 p25=0.761 p75=0.950 ≥0.80=9
+#        D ×                dom_raw: n=9/10 med=0.890 p25=0.745 p75=0.952 ≥0.80=6
+#        D ×        dom_ex_exchange: n=9/10 med=0.890 p25=0.745 p75=0.952 ≥0.80=6
+#        D ×      dom_ex_structural: n=9/10 med=0.887 p25=0.745 p75=0.918 ≥0.80=5
+#     A1∪B ×                dom_raw: n=13/14 med=0.890 p25=— p75=— ≥0.80=13
+#      C∪D ×                dom_raw: n=22/25 med=0.918 p25=— p75=— ≥0.80=15
+#     A1∪B ×        dom_ex_exchange: n=10/14 med=0.894 p25=— p75=— ≥0.80=10
+#      C∪D ×        dom_ex_exchange: n=22/25 med=0.918 p25=— p75=— ≥0.80=15
+#     A1∪B ×      dom_ex_structural: n=10/14 med=0.870 p25=— p75=— ≥0.80=7
+#      C∪D ×      dom_ex_structural: n=22/25 med=0.914 p25=— p75=— ≥0.80=14
+#
+# NGƯỠNG PHỦ (per operator): B≥7/11 · C≥10/15 (Nansen phủ được là qua ngưỡng dễ)
+# KHÔNG kết luận · luật đọc (i)-(iv) ANALYSIS
+#
+nhom,nhom_con,token,contract,chain,source,dom_raw,n_loai_exchange,dom_ex_exchange,n_loai_structural,dom_ex_structural,supply_used,source_supply,n_records_fetched,status,note
+A,A2,BANK,—,unknown,tracker-§10-rev9,0.510,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,TRACKER-OK,§10 tracker 0.51
+A,A1,TUT,0xcaae2a2f939f51d97cdfa9a86e79e3f085b799f3,bsc,tracker-§10-rev9,0.830,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,TRACKER-OK,§10 tracker 0.83
+A,A2,CYS,—,unknown,tracker-§10-rev9,0.810,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,TRACKER-OK,§10 tracker 0.81
+A,A1,AKE,0x2c3a8ee94ddd97244a93bc48298f97d2c412f7db,bsc,tracker-§10-rev9,0.860,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,TRACKER-OK,§10 tracker 0.86
+A,A1,BTW,—,unknown,tracker-§10-rev9,0.960,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,TRACKER-OK,§10 tracker 0.96
+A,A2,HEMI,—,unknown,tracker-§10-rev9,0.788,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,TRACKER-OK,§10 tracker 0.788
+A,A2,ON,—,unknown,tracker-§10-rev9,N/A-SOURCE-TRACKER,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,N/A-SOURCE-TRACKER,§10 tracker N/A
+A,A2,CAP,—,unknown,tracker-§10-rev9,0.170,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,TRACKER-OK,§10 tracker 0.17
+A,A2,BTR,—,unknown,tracker-§10-rev9,N/A-SOURCE-TRACKER,—,N/A-TRACKER-NO-BREAKDOWN,—,N/A-TRACKER-NO-BREAKDOWN,—,tracker-derived[UNVERIFIED-SURVEY],—,N/A-SOURCE-TRACKER,§10 tracker N/A
+B,B,ACU,0x6ef2ffb38d64afe18ce782da280b300e358cfeaf,bsc,nansen-/tgm/holders,0.9234,0,0.9234,0,0.9234,"26,135,051",nansen-derived (token_amount/op),10,OK,top1_op=0.3260
+B,B,ARIA,0x5d3a12c42e5372b2cc3264ab3cdcf660a1555238,bsc,nansen-/tgm/holders,0.8591,0,0.8591,0,0.8591,"1,000,000,000",nansen-derived (token_amount/op),10,OK,top1_op=0.3358
+B,B,ENSO,0xfeb339236d25d3e415f280189bc7c2fbab6ae9ef,bsc,nansen-/tgm/holders,0.9436,0,0.9436,0,0.9436,"3,311,394",nansen-derived (token_amount/op),10,OK,top1_op=0.2971
+B,B,FF,—,unknown,nansen-/tgm/holders,N/A,—,N/A,—,N/A,—,nansen-derived (token_amount/op),0,NO-CONTRACT,N/A
+B,B,FHE,0xd55c9fb62e176a8eb6968f32958fefdd0962727e,bsc,nansen-/tgm/holders,0.8075,0,0.8075,1,0.7842,"758,152,131",nansen-derived (token_amount/op),10,OK,top1_op=0.1814
+B,B,LIGHT,0x477c2c0459004e3354ba427fa285d7c053203c0e,bsc,nansen-/tgm/holders,0.9294,0,0.9294,1,0.9168,"420,003,872",nansen-derived (token_amount/op),10,OK,top1_op=0.5853
+B,B,MUBARAK,0x5c85d6c6825ab4032337f11ee92a72df936b46f6,bsc,nansen-/tgm/holders,0.8729,0,0.8729,1,0.8456,"1,000,005,019",nansen-derived (token_amount/op),10,OK,top1_op=0.3620
+B,B,SQD,0xe50e3d1a46070444f44df911359033f2937fcc13,bsc,nansen-/tgm/holders,0.8898,0,0.8898,1,0.7615,"44,127,802",nansen-derived (token_amount/op),10,OK,top1_op=0.3776
+B,B,TRADOOR,0x9123400446a56176eb1b6be9ee5cf703e409f492,bsc,nansen-/tgm/holders,0.8970,0,0.8970,1,0.8850,"60,000,680",nansen-derived (token_amount/op),10,OK,top1_op=0.5792
+B,B,TUT,0xcaae2a2f939f51d97cdfa9a86e79e3f085b799f3,bsc,nansen-/tgm/holders,0.9020,0,0.9020,1,0.7335,"1,000,002,020",nansen-derived (token_amount/op),10,OK,top1_op=0.2192
+B,B,XNY,0xe3225e11cab122f1a126a28997788e5230838ab9,bsc,nansen-/tgm/holders,0.8903,0,0.8903,1,0.8802,"10,000,016,431",nansen-derived (token_amount/op),10,OK,top1_op=0.7500
+C,C,RAVE,0x97693439ea2f0ecdeb9135881e49f354656a911c,bsc,nansen-/tgm/holders,0.9174,0,0.9174,0,0.9174,"34,708,343",nansen-derived (token_amount/op),10,OK,top1_op=0.2625
+C,C,BARD,0xd23a186a78c0b3b805505e5f8ea4083295ef9f3a,bsc,nansen-/tgm/holders,0.9913,0,0.9913,0,0.9913,"8,831,278",nansen-derived (token_amount/op),10,OK,top1_op=0.6330
+C,C,4,0x0a43fc31a73013089df59194872ecae4cae14444,bsc,nansen-/tgm/holders,0.6374,0,0.6374,0,0.6374,"1,000,065,121",nansen-derived (token_amount/op),10,OK,top1_op=0.3071
+C,C,STAR,—,unknown,nansen-/tgm/holders,N/A,—,N/A,—,N/A,—,nansen-derived (token_amount/op),0,NO-CONTRACT,N/A
+C,C,EDEN,0x235b6fe22b4642ada16d311855c49ce7de260841,bsc,nansen-/tgm/holders,0.9495,0,0.9495,0,0.9495,"76,748,866",nansen-derived (token_amount/op),10,OK,top1_op=0.3798
+C,C,COOKIE,0xc0041ef357b183448b235a8ea73ce4e4ec8c265f,bsc,nansen-/tgm/holders,0.6057,0,0.6057,0,0.6057,"736,802,348",nansen-derived (token_amount/op),10,OK,top1_op=0.1809
+C,C,CLO,0x81d3a238b02827f62b9f390f947d36d4a5bf89d2,bsc,nansen-/tgm/holders,0.6221,0,0.6221,0,0.6221,"223,521,470",nansen-derived (token_amount/op),10,OK,top1_op=0.0778
+C,C,BILL,0xdf24f8c21cb404b3031a450d8e049d6e39fc1fa5,bsc,nansen-/tgm/holders,0.9179,0,0.9179,0,0.9179,"175,335,186",nansen-derived (token_amount/op),10,OK,top1_op=0.4717
+C,C,B2,0x783c3f003f172c6ac5ac700218a357d2d66ee2a2,bsc,nansen-/tgm/holders,0.7611,0,0.7611,0,0.7611,"207,455,750",nansen-derived (token_amount/op),10,OK,top1_op=0.2151
+C,C,SHELL,0xf2c88757f8d03634671208935974b60a2a28bdb3,bsc,nansen-/tgm/holders,0.9663,0,0.9663,1,0.9606,"496,422,871",nansen-derived (token_amount/op),10,OK,top1_op=0.3243
+C,C,ZEST,0x5506599c722389a60580b5213ea1da60d64754a1,bsc,nansen-/tgm/holders,0.9468,0,0.9468,0,0.9468,"1,000,000,000",nansen-derived (token_amount/op),10,OK,top1_op=0.7947
+C,C,OPEN,0xa227cc36938f0c9e09ce0e64dfab226cad739447,bsc,nansen-/tgm/holders,0.9347,0,0.9347,1,0.9107,"64,231,194",nansen-derived (token_amount/op),10,OK,top1_op=0.3584
+C,C,ARX,—,unknown,nansen-/tgm/holders,N/A,—,N/A,—,N/A,—,nansen-derived (token_amount/op),0,NO-CONTRACT,N/A
+C,C,PLAY,0xf86089b30f30285d492b0527c37b9c2225bfcf8c,bsc,nansen-/tgm/holders,0.9660,0,0.9660,0,0.9660,"1,000,000,000",nansen-derived (token_amount/op),10,OK,top1_op=0.7484
+C,C,INX,0x45f55b46689402583073ff227b6ac20520052a24,bsc,nansen-/tgm/holders,0.9436,0,0.9436,0,0.9436,"198,002,695",nansen-derived (token_amount/op),10,OK,top1_op=0.6345
+D,D,AIA,0x53ec33cd4fa46b9eced9ca3f6db626c5ffcd55cc,bsc,nansen-/tgm/holders,0.9515,0,0.9515,1,0.9252,"200,004,416",nansen-derived (token_amount/op),10,OK,top1_op=0.5999
+D,D,AGT,0x5dbde81fce337ff4bcaaee4ca3466c00aecae274,bsc,nansen-/tgm/holders,0.5443,0,0.5443,0,0.5443,"5,000,003,376",nansen-derived (token_amount/op),10,OK,top1_op=0.0743
+D,D,BAS,0x0f0df6cb17ee5e883eddfef9153fc6036bdb4e37,bsc,nansen-/tgm/holders,0.9180,0,0.9180,0,0.9180,"10,000,065,540",nansen-derived (token_amount/op),10,OK,top1_op=0.3200
+D,D,DOOD,0x722294f6c97102fb0ddb5b907c8d16bdeab3f6d9,bsc,nansen-/tgm/holders,0.9549,0,0.9549,1,0.8871,"882,637,556",nansen-derived (token_amount/op),10,OK,top1_op=0.5093
+D,D,ESPORTS,0xf39e4b21c84e737df08e2c3b32541d856f508e48,bsc,nansen-/tgm/holders,0.7451,0,0.7451,0,0.7451,"900,001,323",nansen-derived (token_amount/op),10,OK,top1_op=0.1589
+D,D,PIEVERSE,—,unknown,nansen-/tgm/holders,N/A,—,N/A,—,N/A,—,nansen-derived (token_amount/op),0,NO-CONTRACT,N/A
+D,D,SLX,0x02bcc4c181b83a8c0a342bc003389cbecb4bc54d,bsc,nansen-/tgm/holders,0.7028,0,0.7028,0,0.7028,"33,604,212",nansen-derived (token_amount/op),10,OK,top1_op=0.5049
+D,D,RIVER,0xda7ad9dea9397cffddae2f8a052b82f1484252b3,bsc,nansen-/tgm/holders,0.8904,0,0.8904,0,0.8904,"42,157,498",nansen-derived (token_amount/op),10,OK,top1_op=0.6291
+D,D,CROSS,0x6bf62ca91e397b5a7d1d6bce97d9092065d7a510,bsc,nansen-/tgm/holders,0.9816,0,0.9816,2,0.9622,"1,000,005,199",nansen-derived (token_amount/op),10,OK,top1_op=0.8954
+D,D,TST,0x86bb94ddd16efc8bc58e6b056e8df71d9e666429,bsc,nansen-/tgm/holders,0.8772,0,0.8772,2,0.7855,"1,000,037,842",nansen-derived (token_amount/op),10,OK,top1_op=0.6105
