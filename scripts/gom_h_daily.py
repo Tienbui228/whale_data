@@ -532,7 +532,10 @@ def main():
                 if val is None: return None
                 try:
                     if math.isnan(val): return None
-                except (TypeError, ValueError): pass
+                except (TypeError, ValueError) as _exc:
+                    # [L-66 sentinel] val không numeric (str/bool/None edge) → treat as None
+                    print(f"[gom_h_daily N/A-ERROR:CONF-NUM-COERCE] _sub(val={val!r}, thr={thr}): {type(_exc).__name__}", file=sys.stderr)
+                    return None
                 return bool(val <= thr)
             c = gom_h_cfg["t0_1"]
             subs = {
@@ -645,8 +648,11 @@ def main():
                         if _row is not None:
                             _h = _row.get("exchange_holders")
                             if _h is not None:
-                                try: _holders[_key] = int(_h)
-                                except (TypeError, ValueError): pass
+                                try:
+                                    _holders[_key] = int(_h)
+                                except (TypeError, ValueError) as _exc:
+                                    # [L-66 sentinel] holders count không parse được → giữ None + emit
+                                    print(f"[gom_h_daily N/A-ERROR:HOLDERS-PARSE] {token_bare} {_key} val={_h!r}: {type(_exc).__name__}", file=sys.stderr)
                 if _holders["now"] is not None and _holders["prev"] is not None:
                     ws_delta_holders = _holders["now"] - _holders["prev"]
                 # Compute (iii) stress vol/med14 + ret1d — use last row from store

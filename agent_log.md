@@ -8544,3 +8544,34 @@ CANONICAL results (thay N=1000 [MC-screening] cho 2 ô dao):
 - §2 DQ-DELIST bảng giá update N10k (Δlift +0.11× / +0.05×)
 - §3 văn bia GỘP sửa chữ: "(a)/(c)" → "tín-hiệu-có-hình / mẫu-không-nuôi-nổi-nhãn"
 - Grid v2 + micro-table N=1000 đánh dấu [MC-screening, superseded cho 2 ô dao]
+
+## 2026-09-01 · AUDIT-FIX đợt 1 (chặn-SCP · LOCAL)
+
+**(1) tripwire_e2_v2.py sạch trọn** — md5 mới `f95a3df6a980f00f38adafd88689c449`:
+- (a) 3 except:pass → sentinel N/A-ERROR:READ-GRADED-AT · DATE-PARSE · WINDOW-PARSE (log stderr + không nuốt)
+- (b) return-None → `UNREGISTERED-GRADES-FILE` status (md5-gate NÓI: `check_grades_registration` + `load_registered_generations` yaml single-source)
+- (c) fixture rewrite dùng đúng API (`read_grades_breakdown` + `compute_rate` + `check_tripwire` yaml-integrated) — SELF-CHECK KÉP 0.428 + 43/7/35 PASS ✓
+- (d) DRY-RUN e2e với `override_generation_config` cho sim files: SIM-A n_FP=44 rate=0.4377 → [TRIP] flag WRITE ✓; SIM-B n_FP=40 rate=0.3979 → [OK] flag REMOVE + auto-untrip log ✓; UNREGISTERED guard verified (SIM-A không override → status=UNREGISTERED-GRADES-FILE) ✓
+
+**(2) gom_h_daily.py sentinel L-66** — md5 mới `ce01f8e14629833f22020196ba66b76d`:
+- Line 535: except → sentinel `[N/A-ERROR:CONF-NUM-COERCE]` + return None
+- Line 649: except → sentinel `[N/A-ERROR:HOLDERS-PARSE]` + không đổi state
+
+**(3) A1(e) walletset smoke** = PROBE-only (scripts/archive/) · pctl helper thêm 5 lines · full run PASS (n_vol=1530 · buckets emit + đề xuất ngưỡng)
+
+**(3) A1(b) compose self-check fixture** thường trực `scripts/archive/_test_compose_self_check_20260901.py` · 3/3 PASS:
+- BANANAS31 DQ-SERIAL block: yaml top-level dq_serial.members=[BANANAS31] · không có row census (block chặn trước emit) ✓
+- TAG 3 H1-step rows in census (07-15 TP · 07-29 PENDING · 08-14 PENDING) ✓
+- CGPT 07-12 H2 = FP ✓
+
+**(4) A6(ii) sort law triage:** `scanner/tg_render.py:123-125` chỉ sort by conf, thiếu RIPE bucket. Spec §0 "RIPE trước, rồi conf" là chữ đã ký → spec thắng. Fix nằm tg_render.py (phase_tag deploy path) → xếp SCP-SAU cùng phase_tag re-deploy.
+
+**(5) A5 hardcodes** (phase_tag 1.15/1.5/0.25 · WARMUP 14/30) → SCP-SAU checklist. Không chen đêm nay.
+
+**(6) SCP-PLAN 2 phương án** đăng ký:
+- BATCH-3 (safe): adapter_h1_nansen + yaml + tripwire_e2_v2
+- BATCH-4 (recommended): + gom_h_daily sentinel diff (silent-fail họ cắn prod 3 lần)
+- Diff sentinel nguyên văn paste vào plan doc
+- Operator ky BATCH-3 hoặc BATCH-4 lúc "ok scp"
+
+Fixtures verify all PASS post-fix: tripwire 6/6 · h4_flow 6/6 · 3d-best 4/4 · compose 3/3 · walletset probe emit đủ.

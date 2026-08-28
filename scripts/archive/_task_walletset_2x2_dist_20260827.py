@@ -181,11 +181,19 @@ for tok in tokens:
             ret = (closes_per_day[d_str] - closes_per_day[d_prev]) / closes_per_day[d_prev]
             ret_1d.append(ret * 100)  # store as %
 
+def pctl(vals, p):
+    """Percentile helper (missing in probe · added 01/09 audit-fix)."""
+    if not vals: return 0.0
+    idx = int(len(vals) * p / 100)
+    idx = min(idx, len(vals) - 1)
+    return vals[idx]
+
+
 print(f"\n═══ (iii) STRESS distribution — vol/med14 + ret1d, fw-{len(tokens)} × {WINDOW_DAYS}d ═══")
 print(f"n_vol_samples: {len(vol_ratios)} · n_ret_samples: {len(ret_1d)}")
 if vol_ratios:
     vr = sorted(vol_ratios)
-    print(f"  vol/med14 percentiles: p50={pctl(vr,50):.2f}× · p75={pctl(vr,75):.2f}× · p90={pctl(vr,90):.2f}× · p95={pctl(vr,95):.2f}× · p99={pctl(vr,99):.2f}× · max={vr[-1]:.2f}×")
+    print(f"  vol/med14 percentiles: p50={pctl(vr,50):.2f}x · p75={pctl(vr,75):.2f}x · p90={pctl(vr,90):.2f}x · p95={pctl(vr,95):.2f}x · p99={pctl(vr,99):.2f}x · max={vr[-1]:.2f}x")
     # Bucket
     buckets_v = [(0,1),(1,2),(2,3),(3,5),(5,10),(10,20),(20,100)]
     print(f"  bucket counts (vol/med14):")

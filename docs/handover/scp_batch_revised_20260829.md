@@ -1,7 +1,55 @@
-# SCP-BATCH REVISED · sau đêm-3 freeze (2026-08-29 01:45 UTC)
+# SCP-BATCH REVISED · sau đêm-3 freeze (2026-08-29 01:45 UTC) · KÝ 01/09 audit-fix
 
-**Trigger:** ANALYSIS verdict 01/09 rút h4_flow + runner-integration H4 khỏi scope. Scope còn 3 file.
+**Trigger:** ANALYSIS verdict 01/09 rút h4_flow + runner-integration H4 khỏi scope.
+**Post-audit AUDIT-FIX 01/09:** tripwire_e2_v2.py làm sạch (sentinel L-66 + UNREGISTERED-GRADES-FILE guard) → md5 mới. gom_h_daily.py 2 except:pass sentinel-fix → operator chọn batch-3 vs batch-4.
 **Status:** DỪNG-PASTE-trước-SCP — plan đăng ký, operator ky trước khi thi hành.
+
+## 2 PHƯƠNG ÁN BATCH
+
+### BATCH-3 (safe · đợt-1 gốc)
+| # | file | LOCAL md5 hiện hành | ghi chú |
+|---|---|---|---|
+| 1 | `scripts/adapter_h1_nansen.py` | `b6ac341ab74bff29a98dd23a1dc44144` | 3d-best canonical · conformance 4/4 PASS |
+| 2 | `screen_thresholds.yaml` | `2f0502631c4a6d9ba3a688f7179f4f03` | drift đầy đủ (h4-CLOSED · walletset_2x2 · tripwire_e2 census_generations · SPOT-CVD closed-gộp · bundle) |
+| 3 | `lib/tripwire_e2_v2.py` | `f95a3df6a980f00f38adafd88689c449` | REAL-RUN PASS + audit-fix 01/09: sentinel L-66 (3 spots) + UNREGISTERED-GRADES-FILE guard + fixture rewrite PASS + e2e DRY-RUN PASS |
+
+### BATCH-4 (recommended · +gom_h_daily sentinel diff)
+Bao gồm BATCH-3 + file thứ 4:
+| # | file | LOCAL md5 | ghi chú |
+|---|---|---|---|
+| 4 | `scripts/gom_h_daily.py` | `ce01f8e14629833f22020196ba66b76d` | + sentinel L-66 fix (2 spots: line 535 CONF-NUM-COERCE · line 649 HOLDERS-PARSE) · họ silent-fail đã cắn prod 3 lần |
+
+**Đề xuất DEV:** **BATCH-4**. Lý do:
+- Silent-fail họ này đã cắn prod 3 lần (dẫn đến undercount subs conf + holders count None câm)
+- Sentinel-only diff vài dòng · KHÔNG đổi logic (bit-identical output)
+- Chờ đợt sau = 30d silent-fail tiếp
+
+**Nếu operator chọn BATCH-3:** gom_h_daily sentinel-diff xếp SCP-SAU cùng phase_tag re-deploy.
+
+## Diff sentinel BATCH-4 nguyên văn (gom_h_daily.py 2 spots)
+
+```python
+# scripts/gom_h_daily.py:533-540 (CONF-NUM-COERCE sentinel)
+                if val is None: return None
+                try:
+                    if math.isnan(val): return None
+-                except (TypeError, ValueError): pass
++                except (TypeError, ValueError) as _exc:
++                    # [L-66 sentinel] val không numeric (str/bool/None edge) → treat as None
++                    print(f"[gom_h_daily N/A-ERROR:CONF-NUM-COERCE] _sub(val={val!r}, thr={thr}): {type(_exc).__name__}", file=sys.stderr)
++                    return None
+                return bool(val <= thr)
+
+# scripts/gom_h_daily.py:645-651 (HOLDERS-PARSE sentinel)
+                            if _h is not None:
+-                                try: _holders[_key] = int(_h)
+-                                except (TypeError, ValueError): pass
++                                try:
++                                    _holders[_key] = int(_h)
++                                except (TypeError, ValueError) as _exc:
++                                    # [L-66 sentinel] holders count không parse được → giữ None + emit
++                                    print(f"[gom_h_daily N/A-ERROR:HOLDERS-PARSE] {token_bare} {_key} val={_h!r}: {type(_exc).__name__}", file=sys.stderr)
+```
 
 ## Rút khỏi scope (per H4-CLOSED verdict 01/09)
 
@@ -37,6 +85,12 @@
 
 - Backup VPS-side pre-SCP: `cp scripts/adapter_h1_nansen.py{,.bak_20260829}`; `cp screen_thresholds.yaml{,.bak_20260829}`; `cp lib/tripwire_e2_v2.py{,.bak_20260829}` (nếu tồn tại).
 - Rollback = `mv .bak_20260829 → gốc`, restart cron manually.
+
+## KHÔNG chèn batch đêm nay (SCP-SAU giai đoạn phase_tag)
+
+- `scanner/tg_render.py` — A6(ii) sort law spec-drift: impl chỉ sort by conf (single), spec §0 "RIPE trước, rồi conf" (2-level bucket). Fix bucket-sort chưa đủ đơn giản để chen batch, xếp SCP-SAU cùng phase_tag re-deploy.
+- Hardcodes A5 phase_tag (1.15/1.5/0.25) + WARMUP (14/30) → yaml-move đợt sau.
+- MA-render + DQ-DELIST wire (hậu-ký 27/09).
 
 ## Không SCP (giữ LOCAL)
 

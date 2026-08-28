@@ -13,6 +13,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import sys
 from pathlib import Path
 from datetime import datetime, timezone, date as _date
 from typing import Optional
@@ -23,9 +24,57 @@ GRADES_DIR = REPO / "docs/case_files/census_63_grades"
 STATE_DIR = REPO / "data/state"
 FLAG_PATH = STATE_DIR / "tripwire_e2_v2_TRIPPED.flag"
 UNTRIP_LOG = STATE_DIR / "tripwire_e2_v2_untrip.log"
+YAML_PATH = REPO / "screen_thresholds.yaml"
 
 MAX_RATE_DEFAULT = 0.4
 CONTROL_TOKENS_DEFAULT = 52
+
+
+def _emit_sentinel(where: str, exc: Exception, sentinel_name: str) -> None:
+    """[L-66 sentinel] emit N/A-ERROR:<name> to stderr, không nuốt lỗi."""
+    print(f"[tripwire_e2_v2 N/A-ERROR:{sentinel_name}] {where}: {type(exc).__name__}: {exc}",
+          file=sys.stderr)
+
+
+def load_registered_generations() -> dict:
+    """[UNREGISTERED-GRADES-FILE guard] Load census_generations block từ yaml.
+    Returns {gen_name: {grades_file, md5, exposure_days, window, ...}}.
+    """
+    try:
+        import yaml
+    except ImportError as exc:
+        _emit_sentinel("load_registered_generations", exc, "YAML-IMPORT")
+        return {}
+    if not YAML_PATH.exists(): return {}
+    try:
+        with open(YAML_PATH, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        return (data.get("goi_nhe", {}).get("tripwire_e2", {}).get("census_generations") or {})
+    except Exception as exc:
+        _emit_sentinel("load_registered_generations", exc, "YAML-PARSE")
+        return {}
+
+
+def check_grades_registration(grades_file: Path,
+                               registered: Optional[dict] = None) -> tuple[bool, Optional[str], Optional[dict]]:
+    """[UNREGISTERED-GRADES-FILE guard · md5-gate NÓI] Check if grades_file matches
+    any registered generation (basename + md5 phải khớp).
+
+    Returns (is_registered, generation_name, generation_config).
+    """
+    if registered is None: registered = load_registered_generations()
+    if not registered: return (False, None, None)
+    try:
+        actual_md5 = hashlib.md5(grades_file.read_bytes()).hexdigest()
+    except Exception as exc:
+        _emit_sentinel("check_grades_registration", exc, "MD5-COMPUTE")
+        return (False, None, None)
+    for gen_name, cfg in registered.items():
+        reg_file = (cfg.get("grades_file") or "").strip()
+        reg_md5 = (cfg.get("md5") or "").strip().lower()
+        if grades_file.name == reg_file and actual_md5.lower() == reg_md5:
+            return (True, gen_name, cfg)
+    return (False, None, None)
 
 
 def find_latest_grades_file(grades_dir=GRADES_DIR) -> Optional[Path]:
@@ -43,7 +92,8 @@ def find_latest_grades_file(grades_dir=GRADES_DIR) -> Optional[Path]:
             for row in reader:
                 ga = (row.get("graded_at") or "").strip()
                 if ga: return ga
-        except Exception: pass
+        except Exception as exc:
+            _emit_sentinel(f"_read_graded_at({f.name})", exc, "READ-GRADED-AT")
         return ""
     files_dated = [(f, _read_graded_at(f)) for f in files]
     files_dated.sort(key=lambda x: x[1], reverse=True)
@@ -101,7 +151,8 @@ def read_grades_breakdown(grades_file: Path) -> dict:
         try:
             result["exposure_days"] = (_date.fromisoformat(result["exposure_max"])
                                       - _date.fromisoformat(result["exposure_min"])).days + 1
-        except Exception: pass
+        except Exception as exc:
+            _emit_sentinel("read_grades_breakdown.exposure_days", exc, "DATE-PARSE")
     return result
 
 
@@ -123,7 +174,8 @@ def check_tripwire(grades_file: Path = None, max_rate: float = MAX_RATE_DEFAULT,
                    window_str: str = None,
                    expected_rate: Optional[float] = None,
                    expected_grades_md5: Optional[str] = None,
-                   expected_breakdown: Optional[dict] = None) -> dict:
+                   expected_breakdown: Optional[dict] = None,
+                   override_generation_config: Optional[dict] = None) -> dict:
     """[E2-METRIC-20260831 · Resolution (b) 31/08] rate với EXPOSURE = DECLARED yaml.
 
     chốt-1 EXPOSURE: exposure_days_declared từ yaml single-source (KHÔNG min..max read).
@@ -133,6 +185,10 @@ def check_tripwire(grades_file: Path = None, max_rate: float = MAX_RATE_DEFAULT,
     chốt-2 CÔNG THỨC: rate = n_FP × 30 / (control_tokens × exposure_days_declared)
     SELF-CHECK KÉP: md5 + rate + breakdown khớp expected.
 
+    [UNREGISTERED-GRADES-FILE guard 01/09] Nếu grades_file KHÔNG khớp census_generations
+    yaml (basename + md5) → return status='UNREGISTERED-GRADES-FILE' (không silent None).
+    Bypass check bằng `override_generation_config` (dùng cho DRY-RUN e2e tests).
+
     Returns: dict với full breakdown + rate + status.
     """
     if grades_file is None:
@@ -141,6 +197,51 @@ def check_tripwire(grades_file: Path = None, max_rate: float = MAX_RATE_DEFAULT,
         return {"status": "NO-GRADES-FILE", "trip": False, "context": "grades file not found"}
 
     md5_actual = hashlib.md5(grades_file.read_bytes()).hexdigest()
+
+    # [UNREGISTERED-GRADES-FILE guard] · md5-gate NÓI, không câm
+    if override_generation_config is None:
+        is_reg, gen_name, gen_cfg = check_grades_registration(grades_file)
+        if not is_reg:
+            registered = load_registered_generations()
+            reg_summary = ", ".join(f"{k}:{v.get('grades_file','?')}({(v.get('md5') or '')[:8]})"
+                                    for k, v in registered.items()) or "no registered generations"
+            return {
+                "status": "UNREGISTERED-GRADES-FILE", "grades_file": str(grades_file),
+                "grades_md5_actual": md5_actual, "trip": False,
+                "context": f"file {grades_file.name} md5 {md5_actual[:12]} không khớp census_generations yaml · registered: {reg_summary}",
+            }
+        # Populate declared fields from yaml gen_cfg (yaml-single-source per Resolution b)
+        if exposure_days_declared is None:
+            exposure_days_declared = gen_cfg.get("exposure_days")
+        if window_str is None:
+            window_str = gen_cfg.get("window")
+        if expected_rate is None:
+            expected_rate = gen_cfg.get("expected_rate")
+        if expected_grades_md5 is None:
+            expected_grades_md5 = (gen_cfg.get("md5") or "").lower()
+        if expected_breakdown is None:
+            eb = gen_cfg.get("expected_breakdown") or {}
+            expected_breakdown = {
+                "n_fp": eb.get("n_FP"), "n_tp": eb.get("n_TP"), "n_pending": eb.get("n_PENDING")
+            }
+    else:
+        # Override path (for DRY-RUN e2e): use passed gen_cfg fields
+        gen_cfg = override_generation_config
+        if exposure_days_declared is None:
+            exposure_days_declared = gen_cfg.get("exposure_days")
+        if window_str is None:
+            window_str = gen_cfg.get("window")
+        if expected_rate is None:
+            expected_rate = gen_cfg.get("expected_rate")
+        if expected_grades_md5 is None:
+            expected_grades_md5 = (gen_cfg.get("md5") or "").lower() or None
+        if expected_breakdown is None:
+            eb = gen_cfg.get("expected_breakdown") or {}
+            if eb:
+                expected_breakdown = {
+                    "n_fp": eb.get("n_FP"), "n_tp": eb.get("n_TP"), "n_pending": eb.get("n_PENDING")
+                }
+
     breakdown = read_grades_breakdown(grades_file)
     n_fp = breakdown["n_fp"]
     n_tp = breakdown["n_tp"]
@@ -163,7 +264,8 @@ def check_tripwire(grades_file: Path = None, max_rate: float = MAX_RATE_DEFAULT,
                     "trip": False,
                     "context": f"fire NGOÀI declared window · read {read_min}..{read_max} ⊄ {window_str}",
                 }
-        except Exception: pass
+        except Exception as exc:
+            _emit_sentinel("check_tripwire.window_sanity", exc, "WINDOW-PARSE")
 
     # Use DECLARED exposure (Resolution (b))
     exposure_days = exposure_days_declared
@@ -225,6 +327,10 @@ def format_output_pair(check_result: dict) -> str:
         return "tripwire N/A-NO-GRADES-FILE"
     if status == "MD5-MISMATCH":
         return f"tripwire N/A-MD5-MISMATCH · expected {check_result.get('grades_md5_expected', '')[:8]}"
+    if status == "UNREGISTERED-GRADES-FILE":
+        return f"tripwire N/A-UNREGISTERED-GRADES-FILE · {check_result.get('context', '')}"
+    if status == "OUT-OF-WINDOW":
+        return f"tripwire N/A-OUT-OF-WINDOW · {check_result.get('context', '')}"
     rate = check_result.get("rate", 0)
     trip_flag = "[TRIP]" if check_result.get("trip") else "[OK]"
     context = check_result.get("context", "")
