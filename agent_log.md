@@ -8367,3 +8367,27 @@ Không có pipeline tự động → khi build muộn > 0 ngày phải chạy fe
 **FIX SỔ bundle pointer (canonical MỘT nhà):**
 - whale_data yaml goi_nhe.review_bundle_20260927 = canonical
 - bot-signals yaml review_bundle_20260927 XÓA (16 lines) · thay pointer-comment 5 lines
+
+## 2026-09-01 · ANNEX-125b (zero-call · hai control)
+
+**CSV:** `docs/reports/spot_cvd_annex125b_20260828.csv` md5 `f2019b02d13e9f7bf0e08631e020604d` wc=38
+
+**EPISODE TABLE (luật-4 · gap <14d):** 125 windows → **8 episodes** · uncensored 5/8 · hit-rate per-episode uncens **3/5 = 60%**
+- ENSOUSDT 2026-06-29→07-11 n=11 best_fwd=+52.80% **HIT** uncens
+- HOMEUSDT 2026-05-03→05-09 n=4 best_fwd=**+319.36%** **HIT** uncens
+- OPENUSDT 2026-05-07→05-24 n=14 best_fwd=+57.32% **HIT** uncens
+- 1000CHEEMSUSDT 2025-07-01→07-27 n=27 best_fwd=+9.44% MISS uncens
+- TUTUSDT 2025-08-10→08-14 n=4 best_fwd=+16.16% MISS uncens
+- ATUSDT 2026-07-14→08-27 n=45 best_fwd=+25.45% censored
+- HUMAUSDT 2026-07-20→08-07 n=18 best_fwd=+43.49% censored
+- SIGNUSDT 2026-08-05→08-12 n=2 best_fwd=+24.43% censored
+
+**BA SỐ uncens fwd_30d ≥ +50%:**
+- pass-set (3-leg CVD): 6/83 = **7.23%**
+- quiet-control (px_min30 ≤ 1.3): 1380/13983 = **9.87%**
+- all-control (ALL 30d): 1800/16443 = **10.95%**
+- lift pass vs quiet: **−2.64% (0.73×)** · lift pass vs all: −3.72% (0.66×)
+
+**Đọc-2-lớp:**
+- Per-window: pass-set under-perform quiet-control (autocorrelated windows in same episode).
+- Per-episode: 3/5 uncens hit ≥ +50% (60%) — rule đánh trúng cụm sự kiện, nhưng window-count không phải unit đo đúng. KHÔNG kết luận (bảng cho ANALYSIS).
