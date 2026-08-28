@@ -46,6 +46,23 @@
 - `data/ref/cex_addresses_bsc.txt` (gitignored runtime — canonical đã ở docs/reference/)
 - `data/state/nansen_raw_survey/*.json` (33 raw · evidence exhibit)
 
+## SCP-SAU CHECKLIST (đợt tiếp theo · KHỞI SAU 27/09 signing) — không rơi món
+
+1. **`scripts/collect_spot_daily.py`** (VPS cron ~01:20 UTC · sau adapter 01:00, trước gom_h 01:45)
+   - Currently: LOCAL only, cron chưa wire trên VPS
+   - Requires: SCP `scripts/collect_spot_daily.py` + `whale_collector/storage/paths.py` (nếu chưa có)
+   - Cron line: `20 1 * * * cd /root/... && /root/.../python3 scripts/collect_spot_daily.py >> data/logs/collect_spot.log 2>&1`
+   - Verification: `data/raw/spot_klines_1d/date=<today>/` mới xuất hiện sau 24h
+2. **`binance-bot-signals/screen_thresholds.yaml ma_shadow` render wire** (hậu-ký MA 3 ô ngày 27/09)
+   - Bot deploy update yaml sau operator ký `vol_x=1.5 · taker_max=0.45 · ret_abs=0.03`
+   - Bot render "MA?" shadow line trong Telegram alerts (không compose)
+3. **`DQ-DELIST` wire** (hậu-ký DQ-DELIST khuôn DQ-SERIAL ngày 27/09)
+   - Wire in `binance-bot-signals` render pipeline + `whale_data/scripts/run_phase_tag.py` (khuôn DQ-SERIAL BANANAS31)
+   - Yaml block `goi_nhe.dq_delist: {members: [SOPHUSDT], check_before_emit: true}` — mới thêm sau ký
+   - Verification: SOPHUSDT fires bị chặn với label `[DQ-DELIST]` trong Telegram
+
+**Không món nào rơi giữa 2 đợt SCP:** đợt-1 (29/08) = 3 file gate/adapter/tripwire; đợt-2 (sau 27/09) = collector + render + DQ-wire.
+
 ## Ref
 
 - ANALYSIS verdict: [DEV → AGENT · H4-CLOSED merge 01/09]
