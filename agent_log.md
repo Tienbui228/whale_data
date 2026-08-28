@@ -8455,3 +8455,29 @@ Không có pipeline tự động → khi build muộn > 0 ngày phải chạy fe
   - Dòng SPOT-CVD-CLOSED-THIN → SPOT-CVD-GỘP-KNOWN-GAP-LIGHT (thêm CI numbers)
 
 Vận hành KHÔNG đổi (GÓI ĐÓNG y nguyên · bundle MA-only + D4/HYPER/D5 CANCELLED + store spot-51 giữ). CSV: `docs/reports/spot_cvd_ci_addendum_20260828.csv` md5 `fb990645003ab3b1d08bcad1fb6055f2` wc=55.
+
+## 2026-09-01 · MA-D3-BẢN-ĐỦ (2 món 27/09 · zero-call harness tái dùng)
+
+**(1) DELIST-FLAG COLUMN** — `docs/reports/ma_delist_flag_20260828.csv` md5 `74a70b38bf70fb2f5dcb0b04652bbb07` wc=95
+- Sources OR (3 practical + 1 walletset log): spot status ≠ TRADING (exchangeInfo) · alpha fullyDelisted (bapi) · walletset BROAD-QUIET ≥3 emits (VPS log)
+- 51 tokens · 49/51 flagged=True (96.1%)
+- **Fire-mass mang flag: 308/325 = 94.77%** — DEATH-MIMICRY xác nhận
+- Top-10 flagged (all "alpha_delisted"): SOPH 26 · SIGN 22 · CGPT 13 · BMT 12 · ERA 12 · MITO 12 · AT 11 · BARD 11 · F 10 · COOKIE 9
+- 1 dòng draft DQ-DELIST khuôn DQ-SERIAL đặt trong bundle (KHÔNG wire)
+
+**(2) LIFT-GRID 8 nấc** — `docs/reports/ma_lift_grid_20260828.csv` md5 `81494a70e3e4fb9d4565fd77b105e04e` wc=35
+- taker ∈ {40, 42.5, 45, 47.5} × vol_x ∈ {1.0, 1.5} · ret_abs=3% cố định · seed=42
+- Control mapping (L-64): quiet-regime |ret1d|≤3% TRỪ pass-fires · length-matched bootstrap 1000 · joint CI 10k
+
+| nấc | fires | uncens | rate | matched | lift | CI-90% | %delist |
+|---|---:|---:|---:|---:|---:|:---:|---:|
+| vol1.0_tk40.0 | 70 | 40 | 15.0% | 10.30% | 1.46× | [0.62, 2.46] | 94.3% |
+| vol1.0_tk42.5 | 127 | 77 | 13.0% | 11.60% | 1.12× | [0.59, 1.75] | 94.5% |
+| **vol1.0_tk45.0** | 325 | 175 | 14.9% | 9.00% | **1.65×** | [1.14, 2.26] | 94.8% |
+| vol1.0_tk47.5 | 801 | 322 | 14.3% | 11.30% | 1.26× | [0.95, 1.63] | 95.6% |
+| vol1.5_tk40.0 | 21 | 11 | 9.1% | 12.00% | 0.76× | [0.00, 2.24] | 90.5% |
+| vol1.5_tk42.5 | 38 | 22 | 13.6% | 11.70% | 1.17× | [0.35, 2.30] | 92.1% |
+| **vol1.5_tk45.0** | 104 | 74 | 18.9% | 9.70% | **1.95×** | [1.18, 2.88] | 94.2% |
+| vol1.5_tk47.5 | 314 | 204 | 16.2% | 10.40% | 1.56× | [1.12, 2.08] | 95.9% |
+
+**DEATH-MIMICRY hiện:** %delist mass 90-96% ở MỌI nấc · KHÔNG nấc nào lift ≥ 2× point (best 1.95× vol1.5_tk45.0 · CI upper 2.88 nhưng CI lower 1.18). Nấc default hiện tại (vol_x=1.0/taker=45%) = 1.65× · CI [1.14, 2.26]. KHÔNG kết luận · bảng đặt-dao cho ANALYSIS + Tiên ký 27/09.

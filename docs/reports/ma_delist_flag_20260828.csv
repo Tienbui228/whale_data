@@ -1,0 +1,95 @@
+# MA-D3 DELIST-FLAG column · KÝ 01/09 · zero-call bên trong (2 public API calls trước)
+# Sources (OR):
+#   (1) spot status ≠ TRADING (exchangeInfo · proxy cho deposit-closed L-52a + network-withdrawal L-triage-SOPH)
+#   (2) alpha fullyDelisted (bapi L-48)
+#   (3) walletset BROAD-QUIET persistent (VPS gom_h_daily.log · ≥3 emits)
+# Note: sapi/capital/config/getall requires auth · dùng exchangeInfo status proxy hợp lý
+#
+# ─── L-64 mẫu-số ───
+#   51 tokens (s6 map has_binance_spot=YES)
+#   MA fires source: docs/reports/ma_shadow_backtest_20260828.csv md5 b7e8277c
+#   exchangeInfo symbols fetched: 3685
+#   alpha bapi entries: 646 · fullyDelisted=True: 109
+#   walletset BROAD-QUIET tokens (any emit): 4
+#
+# ─── FIRE-MASS STATS ───
+#   n_total_fires: 325
+#   n_flag_fires : 308
+#   % fire-mass mang delist_flag: 94.77%
+#
+# ─── FLAGGED TOKENS (top by fire-count) ───
+#   SOPHUSDT       fires= 26  (alpha_delisted)
+#   SIGNUSDT       fires= 22  (alpha_delisted)
+#   CGPTUSDT       fires= 13  (alpha_delisted)
+#   BMTUSDT        fires= 12  (alpha_delisted)
+#   ERAUSDT        fires= 12  (alpha_delisted)
+#   MITOUSDT       fires= 12  (alpha_delisted)
+#   ATUSDT         fires= 11  (alpha_delisted)
+#   BARDUSDT       fires= 11  (alpha_delisted)
+#   FUSDT          fires= 10  (alpha_delisted)
+#   COOKIEUSDT     fires=  9  (alpha_delisted)
+#   HOMEUSDT       fires=  9  (alpha_delisted)
+#   PARTIUSDT      fires=  9  (alpha_delisted)
+#   BANANAS31USDT  fires=  8  (alpha_delisted)
+#   FFUSDT         fires=  8  (alpha_delisted)
+#   SAHARAUSDT     fires=  8  (alpha_delisted)
+#
+# ─── DRAFT DQ-DELIST khuôn DQ-SERIAL (KHÔNG wire · chờ Tiên nhìn 27/09) ───
+#   dq_delist:
+#     members: [<auto-populated từ flag_ANY=True where fires ≥ threshold>]
+#     source: "OR 4 sources · draft SPOTCVD-cùng-đợt · chờ Tiên ký 27/09"
+#     check_before_emit: true (same pattern DQ-SERIAL BANANAS31)
+# KHÔNG kết luận — bảng cho ANALYSIS 27/09
+#
+token,n_ma_fires,flag_status,spot_status,flag_alpha_delisted,alpha_status,flag_walletset_quiet,walletset_quiet_n,flag_ANY,sources
+0GUSDT,5,False,TRADING,True,True,False,0,True,alpha_delisted
+1000CHEEMSUSDT,9,False,TRADING,False,,False,0,False,—
+ALLOUSDT,1,False,TRADING,True,True,False,0,True,alpha_delisted
+ATUSDT,11,False,TRADING,True,True,False,0,True,alpha_delisted
+BANANAS31USDT,8,False,TRADING,True,True,False,0,True,alpha_delisted
+BANKUSDT,6,False,TRADING,True,True,False,0,True,alpha_delisted
+BARDUSDT,11,False,TRADING,True,True,False,0,True,alpha_delisted
+BMTUSDT,12,False,TRADING,True,True,False,0,True,alpha_delisted
+BREVUSDT,5,False,TRADING,True,True,False,0,True,alpha_delisted
+CGPTUSDT,13,False,TRADING,True,True,False,0,True,alpha_delisted
+COOKIEUSDT,9,False,TRADING,True,True,False,0,True,alpha_delisted
+CUSDT,4,False,TRADING,True,True,False,0,True,alpha_delisted
+EDENUSDT,5,False,TRADING,True,True,False,0,True,alpha_delisted
+ENSOUSDT,3,False,TRADING,True,True,False,0,True,alpha_delisted
+ERAUSDT,12,False,TRADING,True,True,False,0,True,alpha_delisted
+FFUSDT,8,False,TRADING,True,True,False,0,True,alpha_delisted
+FUSDT,10,False,TRADING,True,True,False,0,True,alpha_delisted
+GENIUSUSDT,1,False,TRADING,True,True,False,0,True,alpha_delisted
+GIGGLEUSDT,0,False,TRADING,True,True,False,0,True,alpha_delisted
+HAEDALUSDT,6,False,TRADING,True,True,False,0,True,alpha_delisted
+HEMIUSDT,4,False,TRADING,True,True,False,1,True,alpha_delisted
+HOLOUSDT,2,False,TRADING,True,True,False,0,True,alpha_delisted
+HOMEUSDT,9,False,TRADING,True,True,False,0,True,alpha_delisted
+HUMAUSDT,5,False,TRADING,True,True,False,0,True,alpha_delisted
+HYPERUSDT,4,False,TRADING,True,True,False,0,True,alpha_delisted
+LAUSDT,7,False,TRADING,True,True,False,1,True,alpha_delisted
+MIRAUSDT,8,False,TRADING,False,False,False,0,False,—
+MITOUSDT,12,False,TRADING,True,True,False,0,True,alpha_delisted
+MUBARAKUSDT,2,False,TRADING,True,True,False,0,True,alpha_delisted
+NEWTUSDT,1,False,TRADING,True,True,False,0,True,alpha_delisted
+OPENUSDT,2,False,TRADING,True,True,False,0,True,alpha_delisted
+OPGUSDT,3,False,TRADING,True,True,False,0,True,alpha_delisted
+OPNUSDT,2,False,TRADING,True,True,False,0,True,alpha_delisted
+PARTIUSDT,9,False,TRADING,True,True,False,0,True,alpha_delisted
+PROVEUSDT,3,False,TRADING,True,True,False,0,True,alpha_delisted
+RESOLVUSDT,3,False,TRADING,True,True,False,0,True,alpha_delisted
+ROBOUSDT,2,False,TRADING,True,True,False,0,True,alpha_delisted
+SAHARAUSDT,8,False,TRADING,True,True,False,1,True,alpha_delisted
+SHELLUSDT,6,False,TRADING,True,True,False,0,True,alpha_delisted
+SIGNUSDT,22,False,TRADING,True,True,False,0,True,alpha_delisted
+SOPHUSDT,26,False,TRADING,True,True,False,0,True,alpha_delisted
+STOUSDT,6,False,TRADING,True,True,False,0,True,alpha_delisted
+TOWNSUSDT,2,False,TRADING,True,True,False,0,True,alpha_delisted
+TSTUSDT,5,False,TRADING,True,True,False,0,True,alpha_delisted
+TURTLEUSDT,7,False,TRADING,True,True,False,0,True,alpha_delisted
+TUTUSDT,8,False,TRADING,True,True,False,0,True,alpha_delisted
+YBUSDT,6,False,TRADING,True,True,False,0,True,alpha_delisted
+ZAMAUSDT,0,False,TRADING,True,True,False,0,True,alpha_delisted
+ZBTUSDT,2,False,TRADING,True,True,False,0,True,alpha_delisted
+ZKCUSDT,4,False,TRADING,True,True,False,0,True,alpha_delisted
+ZKPUSDT,6,False,TRADING,True,True,False,0,True,alpha_delisted
