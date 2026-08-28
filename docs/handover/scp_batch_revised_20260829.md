@@ -7,10 +7,13 @@
 ## 2 PHƯƠNG ÁN BATCH
 
 ### BATCH-3 (safe · đợt-1 gốc)
+
+**⚠ MD5 DISCIPLINE:** Bảng dưới cập nhật 01/09 07:26 UTC — TRƯỚC khi paste đêm-3 phải RE-VERIFY md5 lại (yaml đặc biệt hay drift theo edit doc-fix / bundle-pointer). Operator ký trên số sống, không ký trên số hôm qua.
+
 | # | file | LOCAL md5 hiện hành | ghi chú |
 |---|---|---|---|
 | 1 | `scripts/adapter_h1_nansen.py` | `b6ac341ab74bff29a98dd23a1dc44144` | 3d-best canonical · conformance 4/4 PASS |
-| 2 | `screen_thresholds.yaml` | `2f0502631c4a6d9ba3a688f7179f4f03` | drift đầy đủ (h4-CLOSED · walletset_2x2 · tripwire_e2 census_generations · SPOT-CVD closed-gộp · bundle) |
+| 2 | `screen_thresholds.yaml` | `3d11e572d77a657a2e5638dd6027e3a8` | drift đầy đủ (h4-CLOSED · walletset_2x2 · tripwire_e2 census_generations · SPOT-CVD closed-gộp · bundle H1-ABS + MA-item gói-ký pointer) · **CẬP NHẬT 01/09** (was `2f0502631c4a6d9ba3a688f7179f4f03`) |
 | 3 | `lib/tripwire_e2_v2.py` | `f95a3df6a980f00f38adafd88689c449` | REAL-RUN PASS + audit-fix 01/09: sentinel L-66 (3 spots) + UNREGISTERED-GRADES-FILE guard + fixture rewrite PASS + e2e DRY-RUN PASS |
 
 ### BATCH-4 (recommended · +gom_h_daily sentinel diff)
