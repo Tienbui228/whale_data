@@ -8481,3 +8481,26 @@ Vận hành KHÔNG đổi (GÓI ĐÓNG y nguyên · bundle MA-only + D4/HYPER/D5
 | vol1.5_tk47.5 | 314 | 204 | 16.2% | 10.40% | 1.56× | [1.12, 2.08] | 95.9% |
 
 **DEATH-MIMICRY hiện:** %delist mass 90-96% ở MỌI nấc · KHÔNG nấc nào lift ≥ 2× point (best 1.95× vol1.5_tk45.0 · CI upper 2.88 nhưng CI lower 1.18). Nấc default hiện tại (vol_x=1.0/taker=45%) = 1.65× · CI [1.14, 2.26]. KHÔNG kết luận · bảng đặt-dao cho ANALYSIS + Tiên ký 27/09.
+
+## 2026-09-01 · MA-D3 DELIST-FLAG v2 · ERRATA v1 · re-emit
+
+**ERRATA v1 nguyên văn:** "DEATH-MIMICRY xác nhận 94.77%" RÚT. Alpha-graduation ≠ death trên spot-51 universe (L-48 chỉ hợp lệ trên alpha-only). Zero-discrimination v1: 94.77% ≈ base 96.1%. Họ L-48/L-51 context-inversion ghi sổ.
+
+**Flag v2 sources sửa:**
+- BỎ `alpha_fullyDelisted` (không hợp lệ spot-51)
+- GIỮ `spot_status ≠ TRADING`: **0/51** (all TRADING)
+- GIỮ `network-withdrawal curated`: **SOPHUSDT duy nhất** (BSC network suspend 08-21, cite 3 URLs)
+- `deposit-closed`: **N/A-SOURCE** (sapi/capital cần auth, KHÔNG proxy bừa)
+- `walletset BROAD-QUIET`: **N/A-IMMATURE** (walletset < 3 đêm data)
+
+**CSV v2:** `docs/reports/ma_delist_flag_v2_20260828.csv` md5 `177c9e6c8ffbf913d22c90de1903a640` wc=87
+- 1/51 flagged (SOPHUSDT) · fire-rate 26/443 = **5.87%**
+- Unflagged (50 tokens) fire-rate 299/18295 = **1.63%**
+- **Ratio flagged/unflagged: 3.59×** — DEATH-MIMICRY THẬT (SOPH network migration mimics MM absorption)
+- **%fire-mass v2: 26/325 = 8.00%** (v1: 94.77% RÚT)
+
+**Grid v2 CSV:** `docs/reports/ma_lift_grid_v2_20260828.csv` md5 `655a0b091d4a2302978fc551cf302876` wc=34
+- Lift/CI GIỮ NGUYÊN (độc lập flag)
+- %delist_v2 range 4.5% ~ 23.8% (v1 was flat 90.5-95.9% zero-discrim)
+- Cột MỚI Δlift-vs-nấc-kề: best +0.78 (vol1.0_tk45.0 → vol1.5_tk45.0)
+- SOPH fires per nấc: 5-36 (concentrated in high-fire nấc)
