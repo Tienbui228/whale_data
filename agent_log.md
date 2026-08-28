@@ -8409,3 +8409,27 @@ Không có pipeline tự động → khi build muộn > 0 ngày phải chạy fe
 **LUẬT-2:** hits=3 <[5] → **vùng Nhiễu** (nguyên văn, KHÔNG kết luận cửa (a)/(b) — bàn ANALYSIS)
 
 **CROSS-REF ENSO** (n=1 · ghi sổ, không mở việc): FORMULA-NEAR (U-v3 annex oi 5.6%) ∧ CVD+ episode pre-D_cross · best_fwd_30d=+52.80% · hit=True.
+
+## 2026-09-01 · ANNEX-125d VÒNG CUỐI · SPOTCVD-CLOSED-THIN + GÓI ĐÓNG + MA-shadow consumer
+
+**ANNEX-125d matched-control bootstrap:**
+- CSV: `docs/reports/spot_cvd_annex125d_20260828.csv` md5 `268f5e70f89da3fa5fcdef6324741d45` wc=1037
+- N=1000 draws · seed=42 · pool=quiet-days TRỪ pass-set · L rút từ pass-ep uncens lens [4,4,11,14,27]
+- **matched-rate: 109/1000 = 10.90%** · pass-rate 60% · **lift = 5.50×**
+- Per-L: L=4 9.23% · L=11 9.43% · L=14 14.14% · L=27 12.76%
+- **Cutline: lift 5.50× ≥ 2× → CLOSED-THIN**
+
+**Văn bia CLOSED-THIN VERBATIM merged:**
+- bot-signals gom_detect_spec: changelog SPOTCVD-CLOSED-20260901 + banner IMMUTABLE §1-H
+- bot-signals yaml `spot_cvd`: status=CLOSED-THIN-20260901 · giữ provenance (signed/source/close_reason/evidence_md5/changelog_ref/reopen_condition n≥5) · XÓA operational (window/imb_min/pos_days_min/px_over_min30_max)
+- whale_data yaml bundle: MA-only 3 ô [1.0×]/[3%]/[45%] thay SPOT-SHADOW-PAIR · trình-đọc thêm SPOT-CVD-CLOSED-THIN
+- D4-fixture/HYPER/D5 CANCELLED (render CVD không tồn tại nữa)
+- Store spot-51 GIỮ (tài sản MA + đọc-case · không chết theo CVD)
+
+**MA-shadow backtest-phân-bố (consumer đầu tiên của backfill):**
+- CSV: `docs/reports/ma_shadow_backtest_20260828.csv` md5 `b7e8277c33aa4f495af54b0868f94c0b` wc=18778
+- YAML source (bot-signals canonical): vol_x=1.0 · ret_abs=0.03 · taker_max=0.45 (frac → 45%) · obs_min=14
+- Global MA-fire: **325/18,738 = 1.73%**
+- Top-5 per-symbol: SOPH 26/443=5.87% · SIGN 22/473=4.65% · CGPT 13/581=2.24% · BMT 12/514=2.33% · ERA 12/393=3.05%
+- Fire-day dist: vol_ratio med=1.31 p75=1.64 max=70.89 · |ret| med=1.35% · taker med=43.19%
+- KHÔNG kết luận — phân bố cho ANALYSIS 27/09 (bundle MA-only 3 ô review)
