@@ -86,6 +86,18 @@ Bao gồm BATCH-3 + file thứ 4:
 - Backup VPS-side pre-SCP: `cp scripts/adapter_h1_nansen.py{,.bak_20260829}`; `cp screen_thresholds.yaml{,.bak_20260829}`; `cp lib/tripwire_e2_v2.py{,.bak_20260829}` (nếu tồn tại).
 - Rollback = `mv .bak_20260829 → gốc`, restart cron manually.
 
+## ADDENDUM 01/09 (2 dòng · zero SCP impact)
+
+**(a) ERRATA sort-RIPE — giấy đi trước, màn hình theo sau:**
+- Đêm-3 report + G6 doc mang note giấy NGAY: "render tới nay sort lệch spec §0 — số đúng, thứ tự đổi (impl `scanner/tg_render.py:123-125` chỉ sort by conf; spec `RIPE trước, rồi conf`)"
+- Dòng errata TRONG render + fixture-row sort-order pin **đi cùng tg_render fix ở SCP-SAU** — VPS chưa đổi render thì dòng chưa in được. Giấy đi trước, màn hình theo sau.
+
+**(b) F1/F2 đã đóng LOCAL (bot-yaml không trong batch · zero ảnh hưởng SCP):**
+- **F1 · h4 bot-yaml** → pointer-style mirror {status: `CLOSED-BY-PRINCIPLE-20260901`, changelog_ref, canonical: `whale_data yaml goi_nhe.h4`}. Xóa 10 keys operational · hai nhà một câu chuyện.
+- **F2 · spot_cvd.source clobber** → mồ-côi `source:` line trong bundle-pointer comment (thiếu # prefix) clobber `spot_cvd.source` khi yaml.safe_load. Sửa thành `# source: ...`. Post-fix `spot_cvd.source = "operator ký chat 01/09 → CLOSED-THIN → GỘP KNOWN-GAP-LIGHT (CI-amendment cùng ngày)"` ✓
+- **A11 CONTENT-PARITY** (mục permanent audit-suite mới thêm): 5/5 blocks PASS · hai nhà một câu chuyện.
+- Bot-yaml file KHÔNG trong batch SCP đêm nay (whale_data cron không đọc bot-yaml) · zero ảnh hưởng SCP.
+
 ## KHÔNG chèn batch đêm nay (SCP-SAU giai đoạn phase_tag)
 
 - `scanner/tg_render.py` — A6(ii) sort law spec-drift: impl chỉ sort by conf (single), spec §0 "RIPE trước, rồi conf" (2-level bucket). Fix bucket-sort chưa đủ đơn giản để chen batch, xếp SCP-SAU cùng phase_tag re-deploy.

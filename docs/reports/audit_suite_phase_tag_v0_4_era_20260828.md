@@ -150,6 +150,20 @@ Operator refresh project DEV bằng md5 trên · audit giấy lần sau hết m�
 
 ---
 
+## A11 CONTENT-PARITY (permanent · mới thêm 01/09)
+
+Diff nội dung block trùng tên hai nhà · pointer-style mirror OK · lệch operational = FAIL.
+
+| block | whale | bot | canonical | verdict |
+|---|:---:|:---:|:---:|---|
+| h4 | ✓ | ✓ | whale_data | ✓ BOT-POINTER (mirror OK · post F1) |
+| spot_cvd | — | ✓ | bot-signals | ✓ CANONICAL-BOT only |
+| ma_shadow | — | ✓ | bot-signals | ✓ CANONICAL-BOT only |
+| walletset_2x2 | ✓ | — | whale_data | ✓ CANONICAL-WHALE only |
+| review_bundle_20260927 | ✓ | — | whale_data | ✓ CANONICAL-WHALE only |
+
+**5/5 PASS · all_pass=True** — fixture: [scripts/archive/_test_a11_content_parity_20260901.py](../../scripts/archive/_test_a11_content_parity_20260901.py)
+
 ## SUMMARY
 
 | mục | verdict |
