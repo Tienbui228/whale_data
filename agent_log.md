@@ -8433,3 +8433,25 @@ Không có pipeline tự động → khi build muộn > 0 ngày phải chạy fe
 - Top-5 per-symbol: SOPH 26/443=5.87% · SIGN 22/473=4.65% · CGPT 13/581=2.24% · BMT 12/514=2.33% · ERA 12/393=3.05%
 - Fire-day dist: vol_ratio med=1.31 p75=1.64 max=70.89 · |ret| med=1.35% · taker med=43.19%
 - KHÔNG kết luận — phân bố cho ANALYSIS 27/09 (bundle MA-only 3 ô review)
+
+## 2026-09-01 · CI-ADDENDUM 125d · nhánh cơ học GỘP KNOWN-GAP-LIGHT
+
+**Joint bootstrap:** N=10k · seed=42 · tử resample 5 pass-ep {1,1,1,0,0} · mẫu resample 1000 matched (109 hits · 891 miss)
+- valid lifts: 10000/10000 (0 skipped)
+- point lift: 5.50× · bootstrap median 5.56×
+- IQR (25-75): [3.88×, 7.08×]
+- **CI-90% [5%, 95%]: [1.85×, 8.93×]**
+- **CI_5% = 1.85× < 2.0 → NHÁNH TRÚNG: GỘP KNOWN-GAP-LIGHT** (kỳ vọng operator "nhánh hai")
+
+**Merge:**
+- bot-signals gom_detect_spec:
+  - Thêm entry SPOTCVD-CI-AMEND-20260901 trên SPOTCVD-CLOSED
+  - THAY nội dung SPOTCVD-CLOSED-20260901 từ CLOSED-THIN → GỘP KNOWN-GAP-LIGHT (VERBATIM)
+  - Banner §1-H SPOT-CVD-SHADOW cập nhật
+- bot-signals yaml spot_cvd:
+  - status "CLOSED-THIN-20260901" → "GỘP-KNOWN-GAP-LIGHT-20260901"
+  - Thêm ci_addendum_md5 + verdict_line
+- whale_data yaml bundle trình-đọc:
+  - Dòng SPOT-CVD-CLOSED-THIN → SPOT-CVD-GỘP-KNOWN-GAP-LIGHT (thêm CI numbers)
+
+Vận hành KHÔNG đổi (GÓI ĐÓNG y nguyên · bundle MA-only + D4/HYPER/D5 CANCELLED + store spot-51 giữ). CSV: `docs/reports/spot_cvd_ci_addendum_20260828.csv` md5 `fb990645003ab3b1d08bcad1fb6055f2` wc=55.

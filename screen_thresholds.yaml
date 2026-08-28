@@ -285,7 +285,7 @@ goi_nhe:
       - "V③-cutpoint: Tiên nhìn, KHÔNG ký số (research đóng · closed-no-change per ANALYSIS 31/08 · changelog V3-CLOSED-20260831)"
       - "E2-tripwire: trạng thái [TRIP] tại review (rate=0.428 vượt 0.4 cap grades-v4 md5 8fdd0a74 · Resolution (b) yaml single-source · changelog E2-METRIC-B-20260831)"
       - "H4-CLOSED: holder-composition metric mù loài captive-nội-sàn (survey fa55cf7c ba thước KHÔNG tách · changelog H4V1-CLOSED-20260901 · KNOWN-GAP ghi sổ)"
-      - "SPOT-CVD-CLOSED-THIN: matched-control bootstrap lift 5.50× ≥ 2× · n=3 hits luật-2 vùng Nhiễu · store spot-51 giữ (MA + case) · reopen khi n≥5 hits · changelog SPOTCVD-CLOSED-20260901 · sổ giao-điểm ENSO n=1 (FORMULA-NEAR + CVD+ pre-D_cross)"
+      - "SPOT-CVD-GỘP-KNOWN-GAP-LIGHT: point lift 5.50× · CI-90% [1.85×, 8.93×] joint bootstrap N=10k · CI_5% < 2.0 → hai vế (a) chết-sạch (c) thin-signal cùng khả năng · store spot-51 giữ (MA + case) · reopen khi n≥5 hits · changelog SPOTCVD-CLOSED-20260901 + CI-AMEND-20260901 · sổ giao-điểm ENSO n=1"
     conf_kiem_dinh:
       - "conf-labeler audit: obs_min=14 canonical (rev4-FINAL) · WALLETSET 2x2 tag emission · ramp sống lần đầu trên cron từ 2026-08-28 — review FP-load 30d"
     dependency: "H4 wire D1/D3 CANCELLED (H4-CLOSED); SPOT-CVD D4-fixture/HYPER/D5 CANCELLED (CLOSED-THIN); ramp review cần cron ≥30d fires (2026-09-27 đủ 30d); MA-shadow render đợt SCP SAU (backtest-phân-bố xong)"
