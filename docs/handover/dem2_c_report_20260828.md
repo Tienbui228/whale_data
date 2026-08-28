@@ -5,7 +5,7 @@
 
 ---
 
-## 5 MỐC
+## 5 MỐC + FREEZE-INTEGRITY PAIR
 
 | # | mốc | giá trị |
 |---|---|---|
@@ -14,6 +14,7 @@
 | 3 | GOM-H FIRE count | **8 / 139** (H1-lane 6 · H2-lane 1 · H1+H2 combined 1) |
 | 4 | yaml md5 | `3820b87cc5dd87e251b110f72685c704` |
 | 5 | CSV output md5 | `9cc8ff655d1d2a0cc03368b56bd3c5be` (`scratch/gom_h_daily_2026-08-27.csv`) |
+| 4b | **CODE md5 gom_h_daily.py** [BỔ SUNG HẬU-NỘP 01/09] | `f99ef3c819ef60cb3948e5e5ac0bf6ea` — LOCAL = VPS KHỚP → freeze-integrity cặp (code+yaml) confirmed |
 
 Coverage (n_fire / n_NA / n_eval / total):
 - T0.1 = 3 / 0 / 139 / 139
@@ -87,6 +88,8 @@ Walletset 2×2 tags emit stable, precedence "stress > 2x2" chưa gặp conflict 
 ## Caveat metric-variant
 
 **⑩-B3-TAKER-CANONICAL amendment (24/08):** basis pin `k[10]/k[7]` (quote/quote), CẤM `k[9]/k[7]` (mixed đơn vị). Vế H3 hiện dùng `vol_source=fapi_k7_fresh` (k[7] trực tiếp — SỐNG cho tới khi P0 STORE-VOL-DUP đóng). Cột `taker_source` provenance chưa migrate — residual hai họ trong lúc chưa migrate mang cause-tag `(v)` taker-lineage (không ảnh hưởng lane H3 hôm nay: FIRE=1).
+
+**H1-STEP metric-variant [BỔ SUNG HẬU-NỘP 01/09]:** VPS cron đêm-2 C hiện dùng H1 kho-step **1d-only** (bot `exchange_delta_pct` window=1) — thiếu 3d-best canonical. Fix ĐÃ SẴN LOCAL: `scripts/adapter_h1_nansen.py::_kho_step_3d_best(token, ingest_date, snapshots_dir)` conformance 4/4 PASS (XAN 10.10% · BTR 12.02% · TUT 4.58% · CAP 29.24%) — SCP hậu-freeze 29/08. **Kỳ vọng hậu-SCP:** H1 fires TĂNG (1d cửa sổ thay 3d best-of-window bắt nhiều case rút hơn). Coverage H1 đêm-2 C (0 fire · 8 N/A · 131 eval) → hậu-SCP sẽ shift lên. Tripwire trailing hai kỷ nguyên trộn = đọc với chú thích, không hoảng.
 
 ## Tripwire trailing dòng [TRIP]
 
