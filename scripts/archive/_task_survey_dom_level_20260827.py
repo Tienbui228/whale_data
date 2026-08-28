@@ -29,17 +29,20 @@ SEED = 42
 # Nhóm A — chép §10 tracker rev9 (cấm fetch)
 # Source: docs/proposals/phase_tag_v0_4_proven_case_findings_20260821.md §10
 # ═══════════════════════════════════════════════════════════════════════════════
-# Format: (token, top100_raw_from_tracker, note) · sửa 27/08: đủ 9 dòng per operator
+# Format: (token, top100_pct, top100_tokens, supply, source_supply, sub_group, note)
+# 2 chỉnh ANALYSIS: pct = top100_tokens/supply · nhóm-con A1(TUT/BTW/AKE) / A2(rest)
+# HEMI recalc 78.8% (dưới 0.80) · CAP nguyên trạng ~17% + cờ
 NHOM_A = [
-    ("BANK", 0.51,  "BANK §10 · 51%"),
-    ("TUT",  0.83,  "TUT §10 · 83% (embedded text: 'kho 83% trên sàn, top-100')"),
-    ("CYS",  0.81,  "CYS §10 · 81%"),
-    ("AKE",  0.86,  "AKE §10 · 86% (+50%)"),
-    ("BTW",  0.96,  "BTW §10 · 96%"),
-    ("HEMI", None,  "HEMI §10 · row shows '770M' (raw supply count) — N/A-METRIC-MISMATCH"),
-    ("ON",   None,  "ON §10 · KHÔNG có top-100 số — N/A-SOURCE-TRACKER"),
-    ("CAP",  None,  "CAP §10 · KHÔNG có top-100 số — N/A-SOURCE-TRACKER"),
-    ("BTR",  None,  "BTR §10/§15 · KHÔNG có top-100 số — N/A-SOURCE-TRACKER"),
+    # (token, pct, top100_tokens, supply, source_supply, sub, note)
+    ("BANK", 0.51, None,       None,       "tracker-§10-derived[UNVERIFIED-SURVEY]", "A2", "BANK §10 · 51% (tracker pct)"),
+    ("TUT",  0.83, None,       None,       "tracker-§10-derived[UNVERIFIED-SURVEY]", "A1", "TUT §10 · 83% (kho top-100)"),
+    ("CYS",  0.81, None,       None,       "tracker-§10-derived[UNVERIFIED-SURVEY]", "A2", "CYS §10 · 81%"),
+    ("AKE",  0.86, None,       None,       "tracker-§10-derived[UNVERIFIED-SURVEY]", "A1", "AKE §10 · 86% (+50%)"),
+    ("BTW",  0.96, None,       None,       "tracker-§10-derived[UNVERIFIED-SURVEY]", "A1", "BTW §10 · 96%"),
+    ("HEMI", 0.788, 606_760_000, 770_000_000, "tracker-§10-quy-đổi[UNVERIFIED-SURVEY]", "A2", "HEMI §10 · 770M supply · top100=606.76M quy đổi ≈78.8% (DƯỚI 0.80)"),
+    ("ON",   None, None,       None,       "N/A-SOURCE-TRACKER",                   "A2", "ON §10 · KHÔNG có top-100 số"),
+    ("CAP",  0.17, None,       None,       "tracker-§13-derived[UNVERIFIED-SURVEY]","A2", "CAP §13 nguyên trạng ~17% (thấp — in cờ, không bỏ)"),
+    ("BTR",  None, None,       None,       "N/A-SOURCE-TRACKER",                   "A2", "BTR §10/§15 · KHÔNG có top-100 số"),
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -118,6 +121,61 @@ def fetch_top100_holders_bscscan_free(contract):
         "n_holders_fetched": 0,
     }
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PATH-(A) Etherscan V2 paid tier · ETHERSCAN_V2_KEY env var
+# ═══════════════════════════════════════════════════════════════════════════════
+def fetch_top100_etherscan_v2(contract, chain_id=56):
+    """Etherscan V2 API v3 endpoint · chain-agnostic (chainid=56 for BSC).
+    Requires ETHERSCAN_V2_KEY env var (Lite tier $49/mo minimum).
+    Rate limit: ≤5 calls/sec (Lite) · retry lễ phép (backoff [1,3]s).
+    """
+    import time as _time
+    key = os.getenv("ETHERSCAN_V2_KEY", "")
+    if not key:
+        return {
+            "status": "N/A-KEY-NOT-SET",
+            "reason": "ETHERSCAN_V2_KEY env var chưa set — chờ operator gõ 'key đã đặt'",
+            "top100_raw": None, "top100_ex_exchange": None, "top100_ex_structural": None,
+            "n_holders_fetched": 0,
+        }
+    url = f"https://api.etherscan.io/v2/api?chainid={chain_id}&module=token&action=tokenholderlist&contractaddress={contract}&page=1&offset=100&apikey={key}"
+    backoffs = [1, 3]
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "survey-a/1.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read().decode())
+            if data.get("status") == "1":
+                records = data.get("result", [])
+                # Compute top100_raw = Σ TokenHolderQuantity[0..100] / total_supply
+                # (need supply from another endpoint — TODO when key active)
+                total_top100 = sum(float(r.get("TokenHolderQuantity", 0)) for r in records[:100])
+                return {
+                    "status": "OK",
+                    "top100_raw_tokens": total_top100,
+                    "top100_raw": None,  # pct chờ supply lookup
+                    "top100_ex_exchange": None, "top100_ex_structural": None,
+                    "n_holders_fetched": len(records),
+                }
+            elif "rate limit" in str(data.get("result", "")).lower():
+                if attempt < 2: _time.sleep(backoffs[attempt]); continue
+                return {"status": "N/A-RATE-LIMIT", "reason": str(data)[:200],
+                        "top100_raw": None, "top100_ex_exchange": None, "top100_ex_structural": None, "n_holders_fetched": 0}
+            else:
+                return {"status": "N/A-API-ERR", "reason": str(data)[:200],
+                        "top100_raw": None, "top100_ex_exchange": None, "top100_ex_structural": None, "n_holders_fetched": 0}
+        except urllib.error.HTTPError as e:
+            if attempt < 2: _time.sleep(backoffs[attempt]); continue
+            return {"status": "N/A-HTTP-ERR", "reason": f"HTTP {e.code}",
+                    "top100_raw": None, "top100_ex_exchange": None, "top100_ex_structural": None, "n_holders_fetched": 0}
+        except Exception as e:
+            if attempt < 2: _time.sleep(backoffs[attempt]); continue
+            return {"status": "N/A-EXCEPTION", "reason": f"{type(e).__name__}: {e}",
+                    "top100_raw": None, "top100_ex_exchange": None, "top100_ex_structural": None, "n_holders_fetched": 0}
+    return {"status": "N/A-RETRY-EXHAUSTED",
+            "top100_raw": None, "top100_ex_exchange": None, "top100_ex_structural": None, "n_holders_fetched": 0}
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Assemble rows
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -137,22 +195,26 @@ print(f"Nhóm D tokens: {NHOM_D}")
 print()
 
 rows = []
-# Nhóm A: source=tracker (no fetch)
-for tok, top100_raw, note in NHOM_A:
+# Nhóm A: source=tracker (no fetch) · sửa 27/08 pct + supply + sub-group A1/A2
+for tok, pct, top100_tokens, supply, source_supply, sub_group, note in NHOM_A:
     contract = CONTRACTS.get(tok + "USDT") or CONTRACTS.get(tok, "unknown")
     chain = detect_chain(contract)
     rows.append({
-        "nhom": "A",
-        "token": tok,
-        "contract": contract,
-        "chain": chain,
-        "source": "tracker-§10-rev9",
-        "top100_raw":         f"{top100_raw:.3f}" if top100_raw is not None else "N/A-METRIC",
-        "top100_ex_exchange": "N/A-TRACKER-NO-BREAKDOWN",
+        "nhom":                 "A",
+        "nhom_con":             sub_group,          # A1 (TUT/BTW/AKE) hoặc A2 (rest)
+        "token":                tok,
+        "contract":             contract,
+        "chain":                chain,
+        "source":               "tracker-§10-rev9",
+        "top100_raw":           f"{pct:.3f}" if pct is not None else "N/A-SOURCE-TRACKER",
+        "top100_tokens":        f"{top100_tokens:,}" if top100_tokens else "—",
+        "supply_used":          f"{supply:,}" if supply else "—",
+        "source_supply":        source_supply,
+        "top100_ex_exchange":   "N/A-TRACKER-NO-BREAKDOWN",
         "top100_ex_structural": "N/A-TRACKER-NO-BREAKDOWN",
-        "n_holders_fetched": "—",
-        "status": "TRACKER-OK" if top100_raw else "N/A-METRIC-MISMATCH",
-        "note": note,
+        "n_holders_fetched":    "—",
+        "status":               "TRACKER-OK" if pct is not None else "N/A-SOURCE-TRACKER",
+        "note":                 note,
     })
 
 # Nhóm B/C/D: source=bscscan-free (all blocked)
@@ -168,13 +230,15 @@ for nhom, tokens_list in [("B", NHOM_B), ("C", NHOM_C), ("D", NHOM_D)]:
                 "top100_ex_structural": "N/A-SOURCE-CHAIN", "n_holders_fetched": 0,
                 "status": "N/A-SOURCE-CHAIN-NON-BSC",
                 "note": f"chain={chain} not BSC — BscScan doesn't cover",
+                "nhom_con": nhom, "top100_tokens": "—", "supply_used": "—", "source_supply": "—",
             })
             continue
         result = fetch_top100_holders_bscscan_free(contract)
         rows.append({
-            "nhom": nhom, "token": tok, "contract": contract, "chain": chain,
+            "nhom": nhom, "nhom_con": nhom, "token": tok, "contract": contract, "chain": chain,
             "source": "bscscan-free",
             "top100_raw": result["top100_raw"] or "N/A-SOURCE-FREE-BLOCKED",
+            "top100_tokens": "—", "supply_used": "—", "source_supply": "—",
             "top100_ex_exchange": result["top100_ex_exchange"] or "N/A-SOURCE-FREE-BLOCKED",
             "top100_ex_structural": result["top100_ex_structural"] or "N/A-SOURCE-FREE-BLOCKED",
             "n_holders_fetched": result["n_holders_fetched"],
@@ -191,6 +255,7 @@ def _num(v):
     except: return None
 
 summary = []
+# Base per nhóm
 for nhom in ["A", "B", "C", "D"]:
     grp = [r for r in rows if r["nhom"] == nhom]
     for thuoc in ["top100_raw", "top100_ex_exchange", "top100_ex_structural"]:
@@ -208,6 +273,41 @@ for nhom in ["A", "B", "C", "D"]:
             "p75": f"{p75:.3f}" if p75 is not None else "—",
             "n_ge_0.80": n_ge_80,
         })
+
+# A1 vs A2 sub-groups
+for sub in ["A1", "A2"]:
+    grp = [r for r in rows if r.get("nhom_con") == sub]
+    vals = sorted([_num(r["top100_raw"]) for r in grp if _num(r["top100_raw"]) is not None])
+    n_ge_80 = sum(1 for v in vals if v >= 0.80)
+    n = len(vals)
+    med = median(vals) if vals else None
+    summary.append({
+        "nhom": sub, "thuoc": "top100_raw (sub)",
+        "n_valid": n, "n_total": len(grp),
+        "median": f"{med:.3f}" if med is not None else "—",
+        "p25": "—", "p75": "—",
+        "n_ge_0.80": n_ge_80,
+    })
+
+# Split chính ANALYSIS: A1∪B vs C∪D
+def _split_stats(rows_list, name):
+    vals = sorted([_num(r["top100_raw"]) for r in rows_list if _num(r["top100_raw"]) is not None])
+    n_ge_80 = sum(1 for v in vals if v >= 0.80)
+    n = len(vals)
+    med = median(vals) if vals else None
+    return {
+        "nhom": name, "thuoc": "top100_raw (split)",
+        "n_valid": n, "n_total": len(rows_list),
+        "median": f"{med:.3f}" if med is not None else "—",
+        "p25": "—", "p75": "—",
+        "n_ge_0.80": n_ge_80,
+    }
+a1_rows = [r for r in rows if r.get("nhom_con") == "A1"]
+b_rows = [r for r in rows if r["nhom"] == "B"]
+c_rows = [r for r in rows if r["nhom"] == "C"]
+d_rows = [r for r in rows if r["nhom"] == "D"]
+summary.append(_split_stats(a1_rows + b_rows, "A1∪B"))
+summary.append(_split_stats(c_rows + d_rows, "C∪D"))
 
 # Coverage per chain
 chain_coverage = {}
