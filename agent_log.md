@@ -8504,3 +8504,20 @@ Vận hành KHÔNG đổi (GÓI ĐÓNG y nguyên · bundle MA-only + D4/HYPER/D5
 - %delist_v2 range 4.5% ~ 23.8% (v1 was flat 90.5-95.9% zero-discrim)
 - Cột MỚI Δlift-vs-nấc-kề: best +0.78 (vol1.0_tk45.0 → vol1.5_tk45.0)
 - SOPH fires per nấc: 5-36 (concentrated in high-fire nấc)
+
+## 2026-09-01 · EX-SOPH micro-table + GÓI-KÝ 27/09 lắp sẵn · HYPER rút khỏi bàn
+
+**EX-SOPH micro-table** — `docs/reports/ma_ex_soph_micro_20260828.csv` md5 `5deea6310979d681c9d29e18832c2767` wc=25
+- SOPH per nấc: vol1.0_tk45.0 = 26 fires → 9 eps · vol1.5_tk45.0 = 11 fires → 6 eps
+- SOPH's episodes DO NOT hit ≥+50% at either nấc (hits count unchanged: 26 with-SOPH = 26 ex-SOPH · 14=14)
+- **Δlift = +0.00× (vol1.0_tk45) · +0.20× (vol1.5_tk45)** — DQ-DELIST mua ALERT-CLEANLINESS (299 vs 325 fires · 93 vs 104) hơn lift-boost
+
+**GÓI-KÝ 27/09 lắp sẵn** — `docs/proposals/spot_shadow_pair_goi_ky_20260927.md`
+- §1 MA 3 ô đề cử: taker=[45%] · vol_x=[1.5] · ret=[3%] regime-leg · CI in cạnh từng số
+- §2 DQ-DELIST khuôn DQ-SERIAL: list=[SOPHUSDT] + cite 3 URLs + bảng giá ex-SOPH
+- §3 SPOT-CVD văn bia GỘP merged (ref changelog SPOTCVD-CI-AMEND + CLOSED)
+- §4 sổ giao-điểm: ENSO n=1 + (a) mồ-côi chờ RIDE open register
+
+Format ANALYSIS đã đăng ký (27/09 là đọc-và-ký, không build). Bảng + CI + evidence md5 refs sẵn.
+
+**HYPER rút khỏi bàn** — D4/HYPER/D5 CANCELLED-đã-niêm, không còn fixture cần HYPER negative-pin.

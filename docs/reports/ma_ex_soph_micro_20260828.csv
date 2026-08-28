@@ -1,0 +1,25 @@
+# EX-SOPH micro-table · 2 nấc ứng viên {vol1.0_tk45, vol1.5_tk45} · zero-call · KÝ 01/09
+# Re-run harness LOẠI SOPH khỏi pass-set LẪN control pool · seed=42
+# Matched bootstrap N=1000 · joint CI N=10000
+#
+# ─── SOPH episodes per nấc (n_fires_SOPH / n_eps_SOPH) ───
+#   vol1.0_tk45.0: 26 SOPH fires → 9 SOPH episodes (gap<14d cluster)
+#   vol1.5_tk45.0: 11 SOPH fires → 6 SOPH episodes (gap<14d cluster)
+#
+# ─── COMPARE with-SOPH vs ex-SOPH per nấc ───
+# nấc             set           fires   ep uncens hits   rate   lift CI-90%         
+#   vol1.0_tk45.0   with-SOPH      325  204    175   26  14.9%  1.33x [0.92,1.80]    
+#   vol1.0_tk45.0   ex-SOPH        299  195    167   26  15.6%  1.33x [0.92,1.81]    
+#   vol1.5_tk45.0   with-SOPH      104   87     74   14  18.9%  1.75x [1.06,2.56]    
+#   vol1.5_tk45.0   ex-SOPH         93   81     69   14  20.3%  1.95x [1.20,2.86]    
+#
+# ─── DQ-DELIST mua Δlift = lift(ex-SOPH) − lift(with-SOPH) ───
+#   vol1.0_tk45.0: Δlift = +0.00x (with=1.33x → ex=1.33x)
+#   vol1.5_tk45.0: Δlift = +0.20x (with=1.75x → ex=1.95x)
+# KHÔNG kết luận — bảng cho ANALYSIS + Tiên ký 27/09
+#
+nac,set,n_fires,n_episodes,n_uncens,hits,rate,matched_rate,lift,ci_5,ci_95
+vol1.0_tk45.0,with-SOPH,325,204,175,26,0.1486,0.1120,1.3265,0.9184,1.8045
+vol1.0_tk45.0,ex-SOPH,299,195,167,26,0.1557,0.1170,1.3307,0.9250,1.8115
+vol1.5_tk45.0,with-SOPH,104,87,74,14,0.1892,0.1080,1.7518,1.0618,2.5629
+vol1.5_tk45.0,ex-SOPH,93,81,69,14,0.2029,0.1040,1.9509,1.1966,2.8648
