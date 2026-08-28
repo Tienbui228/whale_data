@@ -8391,3 +8391,21 @@ Không có pipeline tự động → khi build muộn > 0 ngày phải chạy fe
 **Đọc-2-lớp:**
 - Per-window: pass-set under-perform quiet-control (autocorrelated windows in same episode).
 - Per-episode: 3/5 uncens hit ≥ +50% (60%) — rule đánh trúng cụm sự kiện, nhưng window-count không phải unit đo đúng. KHÔNG kết luận (bảng cho ANALYSIS).
+
+## 2026-09-01 · ANNEX-125c (zero-call · control cụm-hóa · bảng cuối)
+
+**CSV:** `docs/reports/spot_cvd_annex125c_20260828.csv` md5 `ec5a6f9b82da9f1e905aa06c2338b851` wc=58
+
+**PASS 3-leg episodized:** n_ep=8 · uncens=5 · hits=3 · rate **60%** · len med=12.5 · p75=27 (all)
+**QUIET-CONTROL episodized:** n_ep=112 · uncens=61 · hits=61 · rate **100%** · len med=108 · p75=187 (all)
+
+**LENGTH-MISMATCH quiet>pass · quiet 8.6× dài hơn pass**: quiet 100% hit rate NHÂN TẠO (episode length quá dài · max fwd_30d across nhiều window). Fair comparison đòi length-normalize hoặc chuyển đơn vị đo.
+
+**BẢNG VERDICT per-episode uncens:**
+- pass 3-leg:         3/5   = 60%
+- quiet-episodized:   61/61 = 100% (inflated by length)
+- lift pass vs quiet: −40% (0.60×)
+
+**LUẬT-2:** hits=3 <[5] → **vùng Nhiễu** (nguyên văn, KHÔNG kết luận cửa (a)/(b) — bàn ANALYSIS)
+
+**CROSS-REF ENSO** (n=1 · ghi sổ, không mở việc): FORMULA-NEAR (U-v3 annex oi 5.6%) ∧ CVD+ episode pre-D_cross · best_fwd_30d=+52.80% · hit=True.
