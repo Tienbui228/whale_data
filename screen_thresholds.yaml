@@ -194,9 +194,30 @@ goi_nhe:
     action_if_trip:      "flag+Telegram+report_only"  # KHÔNG tự tắt (v1) / auto-untrip 04:06 (v2)
     control_universe:    52            # v2 canonical: control-52 hậu-cooldown (không 139)
     metric_version:      "v2-20260831"
-    formula:             "n_FP_graded / 52 / window_days × 30"
-    grades_file_glob:    "scratch/census_63_grades_*.csv"
-    expected_rate_v4:    0.428         # SELF-CHECK gate cho grades-v4
+    # [E2-METRIC-20260831 hai-chốt EXPOSURE · ANALYSIS ký 31/08]
+    # chốt-1 EXPOSURE: cửa-sổ-fire THẾ HỆ census (min..max fire_date từ file), CỐ ĐỊNH
+    # mọi chu kỳ re-grade cùng thế hệ. PENDING ngã → chỉ đổi TỬ số (n_FP); thế hệ mới
+    # mang exposure riêng.
+    # chốt-2 CÔNG THỨC: rate = n_FP × 30 / (52 × exposure_days)
+    formula:             "n_FP × 30 / (52 × exposure_days)"
+    grades_file_glob:    "docs/case_files/census_63_grades/census*grades*.csv"  # canonical dir · sửa 31/08 từ scratch/
+    grades_selector:     "graded_at LATEST"  # chọn file graded_at mới nhất, không mtime
+    # [Resolution (b) 31/08 · ANALYSIS chốt (a)] exposure = DECLARED (yaml single-source)
+    # NOT min..max read from file. Min..max in-file chỉ sanity check phải ⊆ window.
+    # Fire NGOÀI declared window → DỪNG thật.
+    active_generation:   "gen_20260626"
+    census_generations:
+      gen_20260626:
+        window:          "2026-06-26..2026-08-22"
+        exposure_days:   58                                     # DECLARED CANONICAL
+        grades_file:     "census_grades_v4_FULL85_20260831.csv"
+        md5:             "8fdd0a74f0a615023209519996a96402"
+        expected_rate:   0.428
+        expected_breakdown:
+          n_FP:      43
+          n_TP:      7
+          n_PENDING: 35
+    tp_note:             "N TP control-nhiễm (round-trip |ret|<30%) — loại khỏi tử theo E2-metric 31/08"
     auto_untrip_at:      "04:06 UTC"   # chu kỳ re-grade
   # [KÝ 27/08 guard VERIFY-WALLETSET · PROVISIONAL-30d review cùng kho-ramp]
   # Kho out-step |Δ|≥50%/1d → render tag [VERIFY-WALLETSET] (display-only,

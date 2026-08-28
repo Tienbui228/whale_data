@@ -1,0 +1,86 @@
+token,date,trigger,conf,grade,basis,graded_at,data_through,k
+TAG,2026-07-29,H1-step,LOW (1/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,TAG|2026-07-29
+TAG,2026-08-14,H1-step,MED (2/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,TAG|2026-08-14
+GENIUS,2026-07-10,H2,HIGH (4/4; N/A: -),FP,"ret_max=6.4% @D+16, cha=census_ret_63 md5 300a1230, nguong=+50% S5",2026-08-29,2026-08-26,GENIUS|2026-07-10
+GENIUS,2026-08-10,H2,HIGH (4/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,GENIUS|2026-08-10
+ALLO,2026-08-09,H1-ramp,MED (2/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,ALLO|2026-08-09
+O,2026-07-29,H1-ramp,LOW (1/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,O|2026-07-29
+O,2026-08-17,H2,MED (3/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,O|2026-08-17
+USELESS,2026-08-11,H1-ramp,MED (2/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,USELESS|2026-08-11
+APR,2026-08-16,H1-step,LOW (0/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,APR|2026-08-16
+HOLO,2026-08-08,H2,MED (3/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,HOLO|2026-08-08
+TOSHI,2026-08-20,H1-step,MED (3/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,TOSHI|2026-08-20
+0G,2026-08-12,H1-step,MED (3/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,0G|2026-08-12
+PROVE,2026-06-26,H2,HIGH (4/4; N/A: -),FP,"ret_max=8.5% @D+12, cha=census_ret_63 md5 300a1230, nguong=+50% S5",2026-08-29,2026-08-26,PROVE|2026-06-26
+HUMA,2026-06-27,H2,HIGH (4/4; N/A: -),FP,"ret_max=12.1% @D+10, cha=census_ret_63 md5 300a1230, nguong=+50% S5",2026-08-29,2026-08-26,HUMA|2026-06-27
+HUMA,2026-08-03,H2,MED (2/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,HUMA|2026-08-03
+KGEN,2026-08-07,H1-step,LOW (0/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,KGEN|2026-08-07
+OPEN,2026-07-16,H2,HIGH (4/4; N/A: -),FP,"ret_max=44.6% @D+23, cha=census_ret_63 md5 300a1230, nguong=+50% S5",2026-08-29,2026-08-26,OPEN|2026-07-16
+SAHARA,2026-08-02,H2,LOW (1/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,SAHARA|2026-08-02
+STAR,2026-08-14,H1-step,LOW (0/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,STAR|2026-08-14
+COLLECT,2026-08-02,H1-ramp,LOW (0/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,COLLECT|2026-08-02
+XAN,2026-08-04,H1-ramp,LOW (1/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,XAN|2026-08-04
+ZBT,2026-06-26,H2,HIGH (4/4; N/A: -),FP,"ret_max=41.3% @D+5, cha=census_ret_63 md5 300a1230, nguong=+50% S5",2026-08-29,2026-08-26,ZBT|2026-06-26
+ZBT,2026-08-07,H1-step,LOW (1/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,ZBT|2026-08-07
+ZBT,2026-08-21,H1-step,MED (2/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,ZBT|2026-08-21
+MERL,2026-08-15,H1-step,MED (3/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,MERL|2026-08-15
+XPIN,2026-08-18,H1-step,LOW (0/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,XPIN|2026-08-18
+HYPER,2026-07-31,H2,MED (3/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,HYPER|2026-07-31
+B2,2026-08-11,H1-step,MED (2/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,B2|2026-08-11
+SIGN,2026-08-05,H1-step,MED (2/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,SIGN|2026-08-05
+OPG,2026-08-10,H2,HIGH (4/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,OPG|2026-08-10
+CARV,2026-08-01,H2,MED (3/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,CARV|2026-08-01
+BREV,2026-08-04,H2,HIGH (4/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,BREV|2026-08-04
+CGPT,2026-07-12,H2,HIGH (4/4; N/A: -),FP,"ret_max=26.1% @D+28, cha=census_ret_63 md5 300a1230, nguong=+50% S5",2026-08-29,2026-08-26,CGPT|2026-07-12
+SOPH,2026-08-08,H2,LOW (1/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,SOPH|2026-08-08
+BLESS,2026-08-16,H2,LOW (1/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,BLESS|2026-08-16
+POWER,2026-08-06,H1-step,MED (2/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,POWER|2026-08-06
+AIN,2026-08-18,H1-ramp,LOW (1/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,AIN|2026-08-18
+BLUAI,2026-08-10,H2,LOW (1/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,BLUAI|2026-08-10
+PLAY,2026-08-02,H1-ramp,MED (3/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,PLAY|2026-08-02
+INX,2026-08-05,H1-step,LOW (0/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,INX|2026-08-05
+INX,2026-08-19,H1-ramp,LOW (1/4; N/A: -),PENDING,age<30d tai data_through 2026-08-26; tu re-grade khi du tuoi,2026-08-29,2026-08-26,INX|2026-08-19
+TAG,2026-07-15,H1-step,LOW (1/4; N/A: -),TP,"ret_max=70.7% @D+17, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap; GHI CHU: control-nhiem-positive (round-trip qua filter |ret|<30%)",2026-08-31,2026-08-14,
+GENIUS,2026-06-26,H2,MED (2/4; N/A: -),FP,"ret_max=1.2% @D+5, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-07-26,
+ALLO,2026-07-26,H1-step,MED (2/3; N/A: oi_min30),FP,"ret_max=3.6% @D+1, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-25,
+O,2026-07-15,H1-step,LOW (1/3; N/A: med30_vol),FP,"ret_max=12.7% @D+5, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-14,
+UAI,2026-07-16,H1-step,LOW (0/4; N/A: -),FP,"ret_max=49.0% @D+16, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-15,
+COAI,2026-07-22,H1-step,MED (3/4; N/A: -),FP,"ret_max=23.9% @D+19, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-21,
+SOON,2026-07-23,H2,MED (3/4; N/A: -),TP,"ret_max=68.9% @D+5, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap; GHI CHU: control-nhiem-positive (round-trip qua filter |ret|<30%)",2026-08-31,2026-08-22,
+TOSHI,2026-07-15,H1-ramp,MED (3/4; N/A: -),FP,"ret_max=7.0% @D+3, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-14,
+0G,2026-07-06,H1-step,MED (2/4; N/A: -),FP,"ret_max=0.0% @D+0, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-05,
+0G,2026-07-20,H1-ramp,LOW (0/4; N/A: -),FP,"ret_max=5.0% @D+1, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-19,
+FOLKS,2026-07-04,H2,LOW (1/4; N/A: -),FP,"ret_max=16.5% @D+15, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-03,
+SPACE,2026-07-09,H2,"""MED (2/2; N/A: ret14",FP,"ret_max=8.5% @D+16, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-08,
+OPEN,2026-06-26,H2,MED (3/4; N/A: -),FP,"ret_max=6.0% @D+8, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-07-26,
+SAHARA,2026-06-26,H2,MED (2/4; N/A: -),FP,"ret_max=0.3% @D+1, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-07-26,
+SAHARA,2026-07-11,H2,MED (2/4; N/A: -),FP,"ret_max=0.0% @D+0, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-10,
+STAR,2026-06-26,H2,MED (3/4; N/A: -),TP,"ret_max=69.4% @D+21, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap; GHI CHU: control-nhiem-positive (round-trip qua filter |ret|<30%)",2026-08-31,2026-07-26,
+STAR,2026-07-16,H1-step,LOW (0/4; N/A: -),FP,"ret_max=28.4% @D+1, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-15,
+XAN,2026-07-03,H1-step,LOW (1/4; N/A: -),FP,"ret_max=23.5% @D+17, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-02,
+XAN,2026-07-21,H1-step,LOW (0/4; N/A: -),TP,"ret_max=102.9% @D+19, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap; GHI CHU: control-nhiem-positive (round-trip qua filter |ret|<30%)",2026-08-31,2026-08-20,
+ROBO,2026-06-26,H2,MED (3/4; N/A: -),FP,"ret_max=1.8% @D+4, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-07-26,
+ROBO,2026-07-10,H2,MED (2/4; N/A: -),FP,"ret_max=6.3% @D+29, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-09,
+ROBO,2026-07-27,H2,MED (2/4; N/A: -),TP,"ret_max=50.3% @D+18, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap; GHI CHU: control-nhiem-positive (round-trip qua filter |ret|<30%)",2026-08-31,2026-08-26,
+IRYS,2026-06-27,H2,MED (2/4; N/A: -),FP,"ret_max=0.0% @D+0, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-07-27,
+IRYS,2026-07-12,H1-step,MED (3/4; N/A: -),FP,"ret_max=22.1% @D+27, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-11,
+IRYS,2026-07-27,H1-ramp,MED (2/4; N/A: -),FP,"ret_max=18.5% @D+18, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-26,
+ZBT,2026-07-10,H2,MED (3/4; N/A: -),FP,"ret_max=48.1% @D+27, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-09,
+ZBT,2026-07-24,H1-ramp,LOW (0/3; N/A: oi_min30),TP,"ret_max=71.8% @D+13, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap; GHI CHU: control-nhiem-positive (round-trip qua filter |ret|<30%)",2026-08-31,2026-08-23,
+NAORIS,2026-07-23,H2,MED (3/4; N/A: -),FP,"ret_max=2.7% @D+1, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-22,
+B2,2026-07-22,H1-step,MED (2/4; N/A: -),FP,"ret_max=8.8% @D+25, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-21,
+SIGN,2026-06-26,H2,MED (2/4; N/A: -),FP,"ret_max=1.5% @D+15, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-07-26,
+OPG,2026-06-30,H2,MED (2/4; N/A: -),FP,"ret_max=0.0% @D+0, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-07-30,
+OPG,2026-07-27,H2,MED (2/4; N/A: -),FP,"ret_max=12.5% @D+25, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-26,
+BASED,2026-07-26,H1-ramp,MED (2/3; N/A: oi_min30),FP,"ret_max=4.5% @D+26, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-25,
+CARV,2026-07-18,H2,MED (3/4; N/A: -),FP,"ret_max=2.3% @D+22, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-17,
+BREV,2026-07-06,H2,LOW (1/4; N/A: -),FP,"ret_max=0.0% @D+0, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-05,
+CGPT,2026-06-27,H2,MED (2/3; N/A: med30_vol),FP,"ret_max=9.1% @D+7, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-07-27,
+CGPT,2026-07-27,H2,MED (3/4; N/A: -),FP,"ret_max=33.0% @D+13, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-26,
+YB,2026-07-01,H2,MED (2/3; N/A: med30_vol),FP,"ret_max=24.7% @D+18, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-07-31,
+YB,2026-07-28,H2,MED (2/4; N/A: -),FP,"ret_max=47.0% @D+26, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-27,
+SOPH,2026-06-27,H2,MED (2/4; N/A: -),FP,"ret_max=8.0% @D+7, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-07-27,
+SOPH,2026-07-12,H2,MED (3/4; N/A: -),FP,"ret_max=0.0% @D+0, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-11,
+POWER,2026-07-06,H2,MED (2/3; N/A: med30_vol),FP,"ret_max=29.2% @D+2, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-08-05,
+MYX,2026-06-27,H2,LOW (1/4; N/A: -),FP,"ret_max=0.0% @D+0, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap",2026-08-31,2026-07-27,
+BLUAI,2026-07-16,H1-step,LOW (1/3; N/A: med30_vol),TP,"ret_max=192.3% @D+25, window=31d, cha=census_ret_85 md5 5e7e2a4c, nguong=+50% S5; campaign-niem: khong ap; GHI CHU: control-nhiem-positive (round-trip qua filter |ret|<30%)",2026-08-31,2026-08-15,

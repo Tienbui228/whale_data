@@ -18,21 +18,36 @@ from datetime import datetime, timezone, date as _date
 from typing import Optional
 
 REPO = Path(__file__).parent.parent
-SCRATCH_DIR = REPO / "scratch"
+# [E2-METRIC-20260831 update] canonical path per operator KÝ 31/08
+GRADES_DIR = REPO / "docs/case_files/census_63_grades"
 STATE_DIR = REPO / "data/state"
 FLAG_PATH = STATE_DIR / "tripwire_e2_v2_TRIPPED.flag"
 UNTRIP_LOG = STATE_DIR / "tripwire_e2_v2_untrip.log"
 
-TRAILING_DAYS_DEFAULT = 30
 MAX_RATE_DEFAULT = 0.4
 CONTROL_TOKENS_DEFAULT = 52
 
 
-def find_latest_grades_file(scratch_dir=SCRATCH_DIR) -> Optional[Path]:
-    """Return latest census_63_grades_*.csv by mtime."""
-    files = sorted(scratch_dir.glob("census_63_grades_*.csv"),
-                   key=lambda p: p.stat().st_mtime, reverse=True)
-    return files[0] if files else None
+def find_latest_grades_file(grades_dir=GRADES_DIR) -> Optional[Path]:
+    """Return grades CSV with LATEST graded_at (not mtime).
+    Pattern: census*grades*.csv per operator glob update 31/08.
+    """
+    files = list(grades_dir.glob("census*grades*.csv"))
+    if not files: return None
+    # Read graded_at from first data row of each; pick max
+    def _read_graded_at(f):
+        try:
+            with open(f, "r", encoding="utf-8") as fp:
+                content = [line for line in fp if not line.startswith("#")]
+            reader = csv.DictReader(content)
+            for row in reader:
+                ga = (row.get("graded_at") or "").strip()
+                if ga: return ga
+        except Exception: pass
+        return ""
+    files_dated = [(f, _read_graded_at(f)) for f in files]
+    files_dated.sort(key=lambda x: x[1], reverse=True)
+    return files_dated[0][0] if files_dated else None
 
 
 def read_grades_header_md5(grades_file: Path) -> Optional[str]:
@@ -50,107 +65,175 @@ def read_grades_header_md5(grades_file: Path) -> Optional[str]:
     return None
 
 
-def count_fp_from_grades(grades_file: Path) -> tuple[int, int]:
-    """Read grades CSV → (n_FP, n_total_graded).
-    Assumes column 'TP_FP' with values 'TP' | 'FP' | '' (empty/pending).
+def read_grades_breakdown(grades_file: Path) -> dict:
+    """[E2-METRIC-20260831 chốt-1 EXPOSURE] Read grades CSV → full breakdown +
+    exposure window (min..max fire_date).
+
+    Returns: {
+        'n_fp': int, 'n_tp': int, 'n_pending': int, 'n_total': int,
+        'exposure_min': str, 'exposure_max': str, 'exposure_days': int,
+    }
+
+    Schema: 'grade' column (FP/TP/PENDING) · 'date' column (fire_date).
+    Backward-compat: also checks 'TP_FP' column (old v3 schema).
     """
-    if not grades_file.exists(): return 0, 0
-    n_fp = 0; n_total = 0
+    result = {"n_fp": 0, "n_tp": 0, "n_pending": 0, "n_total": 0,
+              "exposure_min": None, "exposure_max": None, "exposure_days": None}
+    if not grades_file.exists(): return result
     with open(grades_file, "r", encoding="utf-8") as f:
-        # Skip comment lines
         content_lines = [line for line in f if not line.startswith("#")]
-    if not content_lines: return 0, 0
+    if not content_lines: return result
     reader = csv.DictReader(content_lines)
+    dates = []
     for row in reader:
-        grade = (row.get("TP_FP") or "").strip().upper()
-        if grade in ("TP", "FP"):
-            n_total += 1
-            if grade == "FP": n_fp += 1
-    return n_fp, n_total
+        # v4 schema uses 'grade'; v3 uses 'TP_FP'
+        g = (row.get("grade") or row.get("TP_FP") or "").strip().upper()
+        result["n_total"] += 1
+        if g == "FP": result["n_fp"] += 1
+        elif g == "TP": result["n_tp"] += 1
+        elif g == "PENDING" or g == "": result["n_pending"] += 1
+        # else: other grade → count total but not breakdown
+        d = (row.get("date") or "").strip()
+        if d: dates.append(d)
+    if dates:
+        result["exposure_min"] = min(dates)
+        result["exposure_max"] = max(dates)
+        try:
+            result["exposure_days"] = (_date.fromisoformat(result["exposure_max"])
+                                      - _date.fromisoformat(result["exposure_min"])).days + 1
+        except Exception: pass
+    return result
 
 
 def compute_rate(n_fp: int, control_tokens: int = CONTROL_TOKENS_DEFAULT,
-                 window_days: int = None) -> float:
-    """rate = n_FP / control_tokens / window_days × 30 (per token per 30d).
-    Nếu window_days=None → 30 (rate directly per 30d)."""
-    if control_tokens <= 0: return 0.0
-    if window_days is None: window_days = 30
-    return n_fp / control_tokens / window_days * 30
+                 exposure_days: int = None) -> float:
+    """[E2-METRIC-20260831 chốt-2] rate = n_FP × 30 / (control_tokens × exposure_days)
+
+    Equivalent: n_fp / control_tokens / exposure_days * 30
+    exposure_days = window fire_date từ census generation (CỐ ĐỊNH mọi chu kỳ re-grade).
+    PENDING → chỉ đổi TỬ số (n_FP), thế hệ mới mang exposure riêng.
+    """
+    if control_tokens <= 0 or exposure_days is None or exposure_days <= 0: return 0.0
+    return n_fp * 30 / (control_tokens * exposure_days)
 
 
 def check_tripwire(grades_file: Path = None, max_rate: float = MAX_RATE_DEFAULT,
                    control_tokens: int = CONTROL_TOKENS_DEFAULT,
-                   window_days: int = 30,
+                   exposure_days_declared: int = None,
+                   window_str: str = None,
                    expected_rate: Optional[float] = None,
-                   expected_grades_md5: Optional[str] = None) -> dict:
-    """Read grades file → compute rate → return status dict.
+                   expected_grades_md5: Optional[str] = None,
+                   expected_breakdown: Optional[dict] = None) -> dict:
+    """[E2-METRIC-20260831 · Resolution (b) 31/08] rate với EXPOSURE = DECLARED yaml.
 
-    SELF-CHECK: nếu expected_rate provided (e.g. 0.428 for grades v4),
-      lệch >0.001 → status='SELFCHECK-FAIL', không paste output.
+    chốt-1 EXPOSURE: exposure_days_declared từ yaml single-source (KHÔNG min..max read).
+      CỐ ĐỊNH mọi chu kỳ re-grade cùng thế hệ.
+      Min..max in-file = sanity check phải ⊆ declared window.
+      Fire NGOÀI declared window → status='OUT-OF-WINDOW' DỪNG thật.
+    chốt-2 CÔNG THỨC: rate = n_FP × 30 / (control_tokens × exposure_days_declared)
+    SELF-CHECK KÉP: md5 + rate + breakdown khớp expected.
 
-    Returns: {
-        'grades_file': str, 'grades_md5': str, 'n_fp': int, 'n_total': int,
-        'rate': float, 'threshold': float, 'trip': bool, 'status': str, 'context': str
-    }
+    Returns: dict với full breakdown + rate + status.
     """
     if grades_file is None:
         grades_file = find_latest_grades_file()
     if grades_file is None or not grades_file.exists():
         return {"status": "NO-GRADES-FILE", "trip": False, "context": "grades file not found"}
 
-    md5 = read_grades_header_md5(grades_file)
-    n_fp, n_total = count_fp_from_grades(grades_file)
-    rate = compute_rate(n_fp, control_tokens, window_days)
+    md5_actual = hashlib.md5(grades_file.read_bytes()).hexdigest()
+    breakdown = read_grades_breakdown(grades_file)
+    n_fp = breakdown["n_fp"]
+    n_tp = breakdown["n_tp"]
+    n_pending = breakdown["n_pending"]
+    n_total = breakdown["n_total"]
+    read_min = breakdown["exposure_min"]
+    read_max = breakdown["exposure_max"]
+    read_days = breakdown["exposure_days"]
+
+    # Sanity check: read range ⊆ declared window
+    if window_str and read_min and read_max:
+        try:
+            w_start, w_end = window_str.split("..")
+            if read_min < w_start or read_max > w_end:
+                return {
+                    "status": "OUT-OF-WINDOW", "grades_file": str(grades_file),
+                    "grades_md5": md5_actual, "breakdown": breakdown,
+                    "read_range": f"{read_min}..{read_max}",
+                    "declared_window": window_str,
+                    "trip": False,
+                    "context": f"fire NGOÀI declared window · read {read_min}..{read_max} ⊄ {window_str}",
+                }
+        except Exception: pass
+
+    # Use DECLARED exposure (Resolution (b))
+    exposure_days = exposure_days_declared
+    rate = compute_rate(n_fp, control_tokens, exposure_days) if exposure_days else 0.0
     trip = rate > max_rate
 
-    # SELF-CHECK
-    if expected_rate is not None:
-        if abs(rate - expected_rate) > 0.001:
-            return {
-                "status": "SELFCHECK-FAIL",
-                "grades_file": str(grades_file),
-                "grades_md5": md5,
-                "n_fp": n_fp, "n_total": n_total,
-                "rate_computed": rate,
-                "rate_expected": expected_rate,
-                "diff": rate - expected_rate,
-                "trip": False,
-                "context": f"SELF-CHECK FAIL: rate {rate:.3f} ≠ expected {expected_rate:.3f} (diff {rate-expected_rate:+.4f})",
-            }
-    if expected_grades_md5 and md5 and md5 != expected_grades_md5:
+    # SELF-CHECK md5
+    if expected_grades_md5 and md5_actual != expected_grades_md5:
         return {
-            "status": "MD5-MISMATCH",
-            "grades_file": str(grades_file),
-            "grades_md5_actual": md5,
-            "grades_md5_expected": expected_grades_md5,
+            "status": "MD5-MISMATCH", "grades_file": str(grades_file),
+            "grades_md5_actual": md5_actual, "grades_md5_expected": expected_grades_md5,
             "trip": False,
-            "context": "grades file md5 mismatch — expected file not available",
+            "context": f"grades md5 mismatch (actual {md5_actual[:12]} ≠ expected {expected_grades_md5[:12]})",
         }
+    # SELF-CHECK rate
+    if expected_rate is not None and abs(rate - expected_rate) > 0.001:
+        return {
+            "status": "SELFCHECK-FAIL-RATE", "grades_file": str(grades_file),
+            "grades_md5": md5_actual,
+            "breakdown": breakdown,
+            "rate_computed": rate, "rate_expected": expected_rate,
+            "diff": rate - expected_rate, "trip": False,
+            "context": f"rate {rate:.4f} ≠ expected {expected_rate:.4f} (diff {rate-expected_rate:+.4f})",
+        }
+    # SELF-CHECK breakdown
+    if expected_breakdown is not None:
+        for k in ["n_fp", "n_tp", "n_pending"]:
+            if expected_breakdown.get(k) is not None and breakdown[k] != expected_breakdown[k]:
+                return {
+                    "status": "SELFCHECK-FAIL-BREAKDOWN", "grades_file": str(grades_file),
+                    "grades_md5": md5_actual,
+                    "breakdown_actual": breakdown, "breakdown_expected": expected_breakdown,
+                    "diff_key": k, "diff_val": f"{breakdown[k]} ≠ {expected_breakdown[k]}",
+                    "trip": False,
+                    "context": f"breakdown {k}: {breakdown[k]} ≠ expected {expected_breakdown[k]}",
+                }
 
     return {
-        "grades_file": str(grades_file),
-        "grades_md5": md5,
-        "n_fp": n_fp, "n_total": n_total,
-        "rate": rate,
-        "threshold": max_rate,
-        "trip": trip,
+        "grades_file": str(grades_file), "grades_md5": md5_actual,
+        "breakdown": breakdown,
+        "n_fp": n_fp, "n_tp": n_tp, "n_pending": n_pending, "n_total": n_total,
+        "exposure_days_declared": exposure_days,
+        "exposure_read_min": read_min, "exposure_read_max": read_max, "exposure_read_days": read_days,
+        "declared_window": window_str,
+        "rate": rate, "threshold": max_rate, "trip": trip,
         "status": "TRIP" if trip else "OK",
-        "context": f"raw=n_FP={n_fp}/n_total={n_total}",
+        "context": f"n_FP={n_fp}/n_TP={n_tp}/n_PEND={n_pending} · exposure={exposure_days}d declared ({window_str}) · read {read_min}..{read_max}={read_days}d",
     }
 
 
 def format_output_pair(check_result: dict) -> str:
-    """Format cặp output đêm: 'tripwire FP-rate=0.428 [TRIP] · raw=<x> (context)'."""
-    if check_result.get("status") == "SELFCHECK-FAIL":
+    """Format cặp output đêm: 'tripwire FP-rate=0.428 [TRIP] · raw=<x> (context)'.
+    TP-note kèm nếu n_TP≥1: "N TP control-nhiễm (round-trip |ret|<30%) — loại khỏi tử"
+    """
+    status = check_result.get("status", "")
+    if status.startswith("SELFCHECK-FAIL"):
         return f"tripwire SELF-CHECK-FAIL · {check_result.get('context', '')}"
-    if check_result.get("status") == "NO-GRADES-FILE":
+    if status == "NO-GRADES-FILE":
         return "tripwire N/A-NO-GRADES-FILE"
-    if check_result.get("status") == "MD5-MISMATCH":
+    if status == "MD5-MISMATCH":
         return f"tripwire N/A-MD5-MISMATCH · expected {check_result.get('grades_md5_expected', '')[:8]}"
     rate = check_result.get("rate", 0)
     trip_flag = "[TRIP]" if check_result.get("trip") else "[OK]"
     context = check_result.get("context", "")
-    return f"tripwire FP-rate={rate:.3f} {trip_flag} · {context}"
+    n_tp = check_result.get("n_tp", 0)
+    n_fp = check_result.get("n_fp", 0)
+    lines = [f"tripwire FP-rate={rate:.3f} {trip_flag} · raw=n_FP={n_fp} ({context})"]
+    if n_tp >= 1:
+        lines.append(f"  ↳ {n_tp} TP control-nhiễm (round-trip |ret|<30%) — loại khỏi tử theo E2-metric 31/08")
+    return "\n".join(lines)
 
 
 def apply_trip_flag(check_result: dict):
