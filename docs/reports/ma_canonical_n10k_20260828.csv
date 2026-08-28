@@ -1,0 +1,37 @@
+# CANONICAL-N10K · 4 cells re-run · zero-call · KÝ 01/09
+# CANONICAL bộ số cho 2 ô dao (grid-v2 + micro-table [MC-N1000 · screening, superseded])
+# Config: N_MATCHED_DRAWS=10000 · N_JOINT_BOOT=10000 · TP=0.5
+# Seed per-cell: BASE=42 + sha256(f'{vol_x}_{taker}_{set_label}')[:8] % 100000
+# Seeds table:
+#   vol1.0_tk45.0   with-SOPH    seed=93266
+#   vol1.0_tk45.0   ex-SOPH      seed=79171
+#   vol1.5_tk45.0   with-SOPH    seed=61381
+#   vol1.5_tk45.0   ex-SOPH      seed=17596
+#
+# ─── L-64 MC-precision ───
+#   N=10,000 draws/cell · MC error co ~3× vs N=1000 (±0.3pp matched → ±~0.05× lift)
+#
+# ─── RESULTS ───
+# nac             set             seed  fires uncens hits    rate  matched   lift CI-90%         
+#   vol1.0_tk45.0   with-SOPH      93266    325    175   26  14.86%   11.48%  1.29x [0.91,1.70]    
+#   vol1.0_tk45.0   ex-SOPH        79171    299    167   26  15.57%   11.09%  1.40x [0.99,1.84]    
+#   vol1.5_tk45.0   with-SOPH      61381    104     74   14  18.92%   10.45%  1.81x [1.13,2.57]    
+#   vol1.5_tk45.0   ex-SOPH        17596     93     69   14  20.29%   10.89%  1.86x [1.16,2.64]    
+#
+# ─── Δlift DQ-DELIST ───
+#   vol1.0_tk45.0: Δlift = +0.11x  (with=1.29x → ex=1.40x)
+#   vol1.5_tk45.0: Δlift = +0.05x  (with=1.81x → ex=1.86x)
+#
+# ─── ROBUST-CHECK (CI_5% > 1 = robust; ≤1 = mấp mé) ───
+#   vol1.0_tk45.0   with-SOPH    CI_5%=0.91x  mấp mé
+#   vol1.0_tk45.0   ex-SOPH      CI_5%=0.99x  mấp mé
+#   vol1.5_tk45.0   with-SOPH    CI_5%=1.13x  ROBUST
+#   vol1.5_tk45.0   ex-SOPH      CI_5%=1.16x  ROBUST
+#
+# KHÔNG kết luận — bộ số CANONICAL cho GÓI-KÝ 27/09 §1-§2 (thay N=1000 [MC-screening])
+#
+nac,set,vol_x,taker,seed,n_fires,n_episodes,n_uncens,hits,rate,matched_rate,lift,ci_5,ci_95,n_matched_draws_used
+vol1.0_tk45.0,with-SOPH,1.0,45.0,93266,325,204,175,26,0.1486,0.1148,1.2942,0.9147,1.6973,10000
+vol1.0_tk45.0,ex-SOPH,1.0,45.0,79171,299,195,167,26,0.1557,0.1109,1.4039,0.9928,1.8433,10000
+vol1.5_tk45.0,with-SOPH,1.5,45.0,61381,104,87,74,14,0.1892,0.1045,1.8104,1.1293,2.5716,10000
+vol1.5_tk45.0,ex-SOPH,1.5,45.0,17596,93,81,69,14,0.2029,0.1089,1.8632,1.1615,2.6350,10000

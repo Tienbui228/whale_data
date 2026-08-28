@@ -8521,3 +8521,26 @@ Vận hành KHÔNG đổi (GÓI ĐÓNG y nguyên · bundle MA-only + D4/HYPER/D5
 Format ANALYSIS đã đăng ký (27/09 là đọc-và-ký, không build). Bảng + CI + evidence md5 refs sẵn.
 
 **HYPER rút khỏi bàn** — D4/HYPER/D5 CANCELLED-đã-niêm, không còn fixture cần HYPER negative-pin.
+
+## 2026-09-01 · CANONICAL-N10K 4 cells + GÓI-KÝ update
+
+**CANONICAL-N10K** — `docs/reports/ma_canonical_n10k_20260828.csv` md5 `dca9457cde0a6b1c33bed8dc96359981` wc=37
+- 4 cells × N=10,000 draws/cell · seed per-cell = 42 + sha256(cell)[:8] % 100000
+- MC error co ~3× vs N=1000 · L-64 MC-precision: ±0.3pp matched → ±~0.05× lift
+
+CANONICAL results (thay N=1000 [MC-screening] cho 2 ô dao):
+| nấc | set | lift | CI-90% | robust CI_5%>1 |
+|---|:---:|:---:|:---:|:---:|
+| vol1.0_tk45.0 | with-SOPH | 1.29× | [0.91, 1.70] | ✗ mấp mé |
+| vol1.0_tk45.0 | ex-SOPH   | 1.40× | [0.99, 1.84] | ✗ mấp mé |
+| **vol1.5_tk45.0** | with-SOPH | **1.81×** | [1.13, 2.57] | **✓ ROBUST** |
+| **vol1.5_tk45.0** | ex-SOPH   | **1.86×** | [1.16, 2.64] | **✓ ROBUST** |
+
+**KỲ VỌNG OPERATOR MATCH:** vol1.5/45 robust cả 2 bản · vol1.0/45 mấp mé cả 2. 
+
+**GÓI-KÝ update** — `docs/proposals/spot_shadow_pair_goi_ky_20260927.md` md5 `8aaebdea34e0ad15c6017646d3367ea8` wc=125
+- §1: replace numbers với N10k canonical + đề cử "taker=45 · vol=1.5 = ô robust duy nhất qua re-draw độc lập"
+- §1 L-64 MC-precision line thêm
+- §2 DQ-DELIST bảng giá update N10k (Δlift +0.11× / +0.05×)
+- §3 văn bia GỘP sửa chữ: "(a)/(c)" → "tín-hiệu-có-hình / mẫu-không-nuôi-nổi-nhãn"
+- Grid v2 + micro-table N=1000 đánh dấu [MC-screening, superseded cho 2 ô dao]
