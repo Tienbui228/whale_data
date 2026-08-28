@@ -1,15 +1,14 @@
-"""[SURVEY-V2 RE-PARSE · 0-call · KÝ 31/08]
+"""[SURVEY-V2 RE-PARSE · 0-call · KÝ 31/08 · rev2 08-31]
 
 Re-parse 33 raw JSON saved từ survey-Nansen (data/state/nansen_raw_survey/)
-dùng CEX-address list curated (docs/reference/cex_addresses_bsc.txt).
+dùng CEX-address list curated (data/ref/cex_addresses_bsc.txt — operator directive;
+canonical đồng-content ở docs/reference/cex_addresses_bsc.txt vì .gitignore chặn data/ref/).
 
-Thay đổi vs v1:
-  · dom_ex_exchange_v2 = Σ top10 loại ví-khớp-ADDRESS (không keyword)
-    (v1 dùng keyword miss "Token Millionaire" = Binance-8 labeled generic)
-  · dom_ex_structural bổ sung burn/dead pattern-match address (0x000...dead...)
-  · CSV cột instrument {tracker-top100 | nansen-top10} mọi dòng
-  · A1∪B split gắn cờ [MIXED-INSTRUMENT — context only]
-  · Phép chính B vs C∪D same-instrument đậm
+Rev2 (08-31) vs rev1:
+  · Đổi tên OUT_CSV → survey_dom_level_nansen_v2_20260827.csv (v1 601984ad giữ mốc)
+  · Cột MỚI Δ_ex = median(dom_raw) − median(dom_ex_exchange_v2) per nhóm
+  · Một dòng so-sánh Δ_B vs Δ_C∪D (chẩn đoán kịch bản #4 "captive-trong-ví-sàn")
+  · Header CSV thêm 3 kết-cục ANALYSIS làm khung đọc (KHÔNG kết luận)
 """
 from __future__ import annotations
 import sys, io, os, json, hashlib, csv
@@ -21,8 +20,12 @@ sys.path.insert(0, str(REPO / "scripts"))
 from gom_h_daily import _md5
 
 RAW_DIR = REPO / "data/state/nansen_raw_survey"
-CEX_LIST_PATH = REPO / "docs/reference/cex_addresses_bsc.txt"
-OUT_CSV = REPO / "docs/reports/survey_dom_level_v2_20260827.csv"
+# CEX list: try data/ref/ (operator directive) → fallback docs/reference/ (committed canonical)
+CEX_LIST_PATH = REPO / "data/ref/cex_addresses_bsc.txt"
+if not CEX_LIST_PATH.exists():
+    CEX_LIST_PATH = REPO / "docs/reference/cex_addresses_bsc.txt"
+CEX_CANONICAL = REPO / "docs/reference/cex_addresses_bsc.txt"
+OUT_CSV = REPO / "docs/reports/survey_dom_level_nansen_v2_20260827.csv"
 
 # ─── Token lists (same as v1 per operator freeze) ───
 NHOM_A_TRACKER = [
@@ -36,15 +39,17 @@ NHOM_D = ['AIA', 'AGT', 'BAS', 'DOOD', 'ESPORTS', 'PIEVERSE', 'SLX', 'RIVER', 'C
 
 # ─── Load CEX curated list ───
 CEX_ADDRESSES = {}  # {addr_lower: name}
-if CEX_LIST_PATH.exists():
-    for line in CEX_LIST_PATH.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"): continue
-        parts = line.split("\t")
-        if len(parts) >= 2:
-            CEX_ADDRESSES[parts[0].lower()] = parts[1]
-print(f"[CEX-LIST] loaded {len(CEX_ADDRESSES)} curated addresses from {CEX_LIST_PATH.name}")
-print(f"           md5={_md5(CEX_LIST_PATH)}")
+for line in CEX_LIST_PATH.read_text(encoding="utf-8").splitlines():
+    line = line.strip()
+    if not line or line.startswith("#"): continue
+    parts = line.split("\t")
+    if len(parts) >= 2:
+        CEX_ADDRESSES[parts[0].lower()] = parts[1]
+CEX_MD5 = _md5(CEX_LIST_PATH)
+print(f"[CEX-LIST] loaded {len(CEX_ADDRESSES)} curated addresses from {CEX_LIST_PATH.relative_to(REPO)}")
+print(f"           md5={CEX_MD5}")
+print(f"[CEX-CANONICAL] committed at docs/reference/cex_addresses_bsc.txt md5={_md5(CEX_CANONICAL)}")
+assert CEX_MD5 == _md5(CEX_CANONICAL), "data/ref vs docs/reference md5 mismatch — please sync"
 
 # ─── Structural address heuristic (pattern-match) ───
 STRUCTURAL_ADDRESSES_EXACT = {
@@ -55,19 +60,15 @@ STRUCTURAL_KEYWORDS = ["burn", "dead", "null", "lock", "vesting", "lp",
                        "treasury", "pool", "reserve", "team", "foundation"]
 
 def classify_holder(record):
-    """Return ('exchange', 'structural', 'other') using ADDRESS list + address heuristic."""
+    """Return ('exchange'|'structural'|'other', name)."""
     addr = (record.get("address") or "").lower()
     label = (record.get("address_label") or "").lower()
-    # Address curated exchange list
     if addr in CEX_ADDRESSES:
         return "exchange", CEX_ADDRESSES[addr]
-    # Structural exact addresses
     if addr in STRUCTURAL_ADDRESSES_EXACT:
         return "structural", f"burn_{addr[:10]}"
-    # Structural pattern: leading zeros pattern (0x00...dead / 0x00...0)
     if addr.startswith("0x00000000") or addr.endswith("dead"):
         return "structural", f"burn_pattern_{addr[:12]}"
-    # Structural label keyword fallback
     if any(k in label for k in STRUCTURAL_KEYWORDS):
         return "structural", f"label_{label[:30]}"
     return "other", label or addr[:12]
@@ -77,10 +78,7 @@ def classify_holder(record):
 raw_files = sorted(RAW_DIR.glob("*_survey_tgm-holders_*.json"))
 print(f"[RAW] loaded {len(raw_files)} JSON files from {RAW_DIR}")
 
-# Extract token symbol from filename or from records (via contract match)
-# Filename pattern: <ts>_survey_tgm-holders_<contract_short>_p1.json
-# Better: read call_meta.token from file
-token_records = {}  # {contract_full: records_list}
+token_records = {}  # {contract_full_lower: records_list}
 for f in raw_files:
     try:
         d = json.loads(f.read_text(encoding="utf-8"))
@@ -88,7 +86,6 @@ for f in raw_files:
         body = d.get("response_body", {})
         recs = body.get("data", []) if isinstance(body, dict) else []
         if contract:
-            # Dedup: keep latest file per contract
             token_records[contract.lower()] = recs
     except Exception as e:
         print(f"  WARN {f.name}: {e}")
@@ -114,7 +111,6 @@ def get_records_for(tok):
 
 # ─── Compute dominance v2 ───
 def compute_dominance_v2(records):
-    """Return dict with all 3 measures + n_loai_exchange + n_loai_structural + supply + labels."""
     if not records:
         return {"dom_raw": None, "dom_ex_exchange_v2": None, "dom_ex_structural": None,
                 "n_loai_exchange": 0, "n_loai_structural": 0,
@@ -155,7 +151,7 @@ def compute_dominance_v2(records):
 # ─── Assemble rows ───
 print("\n[Assembling rows · v2 with instrument col]")
 rows = []
-# Nhóm A: tracker-top100 instrument
+# Nhóm A: tracker-top100 (minh-họa-nguồn-thesis, KHÔNG vào phép tách)
 for tok, pct, sub in NHOM_A_TRACKER:
     contract = CONTRACTS.get(tok, "")
     rows.append({
@@ -199,7 +195,7 @@ for nhom, tokens_list in [("B", NHOM_B), ("C", NHOM_C), ("D", NHOM_D)]:
         })
 
 
-# ─── BẢNG-CẶP A1 v2 ───
+# ─── BẢNG-CẶP A1 v2 (minh họa nguồn thesis, không vào phép tách) ───
 print("\n[BẢNG-CẶP A1 v2 (L-51) · tracker vs Nansen raw vs ex-exchange-v2]")
 print(f"  {'tok':>5} {'tracker§10':>10} {'Nansen-raw':>10} {'ex-exchange-v2':>15} {'chênh(N-t)':>12} {'ex_labels':>40}")
 bang_cap = []
@@ -219,70 +215,97 @@ for tok in ["TUT", "BTW", "AKE"]:
                      "chenh_N_t": chenh, "n_ex": m["n_loai_exchange"], "ex_labels": labels})
 
 
-# ─── BẢNG TÓM v2 ───
-print("\n[BẢNG TÓM v2 · median · p25-p75 · ≥0.80]")
+# ─── BẢNG TÓM v2 · CỘT MỚI Δ_ex ───
+print("\n[BẢNG TÓM v2 · median · p25-p75 · %≥0.80 · Δ_ex]")
 
 def _num(v):
     try: return float(v)
     except: return None
 
-summary = []
-for nhom in ["A", "B", "C", "D"]:
-    grp = [r for r in rows if r["nhom"] == nhom]
+def _stats_full(rows_list):
+    """Return {thuoc: {'median': float, 'p25': float|None, 'p75': float|None, 'n_ge_80': int, 'pct_ge_80': str, 'n_valid': int}}"""
+    result = {}
     for thuoc in ["dom_raw", "dom_ex_exchange_v2", "dom_ex_structural"]:
-        vals = sorted([_num(r[thuoc]) for r in grp if _num(r[thuoc]) is not None])
-        n_ge_80 = sum(1 for v in vals if v >= 0.80)
-        pct_ge_80 = f"{100 * n_ge_80 / len(vals):.1f}%" if vals else "—"
+        vals = sorted([_num(r[thuoc]) for r in rows_list if _num(r[thuoc]) is not None])
         n = len(vals)
+        n_ge_80 = sum(1 for v in vals if v >= 0.80)
+        pct_ge_80 = f"{100 * n_ge_80 / n:.1f}%" if n else "—"
         med = median(vals) if vals else None
         p25 = vals[int(n*0.25)] if n >= 4 else None
         p75 = vals[int(n*0.75)] if n >= 4 else None
-        s = {"nhom": nhom, "thuoc": thuoc, "instrument": "MIXED" if nhom == "A" else "nansen-top10",
-             "n_valid": n, "n_total": len(grp),
-             "median": f"{med:.3f}" if med is not None else "—",
-             "p25": f"{p25:.3f}" if p25 is not None else "—",
-             "p75": f"{p75:.3f}" if p75 is not None else "—",
-             "n_ge_0.80": n_ge_80, "pct_ge_0.80": pct_ge_80}
-        summary.append(s)
+        result[thuoc] = {"median": med, "p25": p25, "p75": p75,
+                         "n_ge_80": n_ge_80, "pct_ge_80": pct_ge_80,
+                         "n_valid": n, "n_total": len(rows_list)}
+    return result
 
-# Split rules per operator v2:
-# A1∪B split gắn cờ [MIXED-INSTRUMENT — context only]
-# Phép chính B vs C∪D same-instrument (nansen-top10) IN ĐẬM
+# A1∪B[MIXED-CTX] · phép chính = B(nansen-top10) vs C∪D(nansen-top10)
 a1_rows = [r for r in rows if r.get("nhom_con") == "A1"]
 b_rows = [r for r in rows if r["nhom"] == "B"]
 c_rows = [r for r in rows if r["nhom"] == "C"]
 d_rows = [r for r in rows if r["nhom"] == "D"]
+cd_rows = c_rows + d_rows
 
-def _stats(rows_list, name, thuoc, instrument):
-    vals = sorted([_num(r[thuoc]) for r in rows_list if _num(r[thuoc]) is not None])
-    n_ge_80 = sum(1 for v in vals if v >= 0.80)
-    pct_ge_80 = f"{100 * n_ge_80 / len(vals):.1f}%" if vals else "—"
-    n = len(vals)
-    med = median(vals) if vals else None
-    return {"nhom": name, "thuoc": thuoc, "instrument": instrument,
-            "n_valid": n, "n_total": len(rows_list),
-            "median": f"{med:.3f}" if med is not None else "—",
-            "p25": "—", "p75": "—",
-            "n_ge_0.80": n_ge_80, "pct_ge_0.80": pct_ge_80}
+# Full per-nhóm stats (A/B/C/D) for baseline table
+stats_by_grp = {}
+for name, grp, instr in [
+    ("A", [r for r in rows if r["nhom"] == "A"], "tracker-top100[MIXED]"),
+    ("B", b_rows, "nansen-top10"),
+    ("C", c_rows, "nansen-top10"),
+    ("D", d_rows, "nansen-top10"),
+    ("A1∪B[MIXED-CTX]", a1_rows + b_rows, "MIXED — context only"),
+    ("★B(same-instr)★", b_rows, "nansen-top10"),
+    ("★C∪D(same-instr)★", cd_rows, "nansen-top10"),
+]:
+    stats_by_grp[name] = {"stats": _stats_full(grp), "instrument": instr, "n_total": len(grp)}
 
-# A1∪B MIXED-INSTRUMENT context only
-for thuoc in ["dom_raw", "dom_ex_exchange_v2", "dom_ex_structural"]:
-    summary.append(_stats(a1_rows + b_rows, "A1∪B[MIXED-CTX]", thuoc, "MIXED"))
-# Phép chính B vs C∪D same-instrument
-for thuoc in ["dom_raw", "dom_ex_exchange_v2", "dom_ex_structural"]:
-    summary.append(_stats(b_rows, "★B(same-instr)★", thuoc, "nansen-top10"))
-    summary.append(_stats(c_rows + d_rows, "★C∪D(same-instr)★", thuoc, "nansen-top10"))
 
-print(f"  {'nhóm':>18} {'thước':>22} {'instr':>16} {'n_v/tot':>8} {'median':>7} {'p25':>7} {'p75':>7} {'%≥0.8':>7}")
-for s in summary:
-    print(f"  {s['nhom']:>18} {s['thuoc']:>22} {s['instrument']:>16} {s['n_valid']:>3}/{s['n_total']:>3} {s['median']:>7} {s['p25']:>7} {s['p75']:>7} {s['pct_ge_0.80']:>7}")
+def _fmt(v, digits=3):
+    if v is None: return "—"
+    return f"{v:.{digits}f}"
+
+
+# Print bảng tóm rich (per-thuoc + Δ_ex derived)
+print(f"  {'nhóm':>20} {'thước':>22} {'instr':>24} {'n_v/tot':>8} {'median':>7} {'p25':>7} {'p75':>7} {'%≥0.8':>7}  {'Δ_ex':>7}")
+for name, meta in stats_by_grp.items():
+    s = meta["stats"]
+    d_raw_med = s["dom_raw"]["median"]
+    d_ex_med = s["dom_ex_exchange_v2"]["median"]
+    delta_ex = (d_raw_med - d_ex_med) if (d_raw_med is not None and d_ex_med is not None) else None
+    for thuoc in ["dom_raw", "dom_ex_exchange_v2", "dom_ex_structural"]:
+        st = s[thuoc]
+        # Δ_ex shown once per nhóm (align with dom_ex_exchange_v2 row)
+        d_str = _fmt(delta_ex, 3) if thuoc == "dom_ex_exchange_v2" else ""
+        print(f"  {name:>20} {thuoc:>22} {meta['instrument']:>24} {st['n_valid']:>3}/{st['n_total']:>3} "
+              f"{_fmt(st['median']):>7} {_fmt(st['p25']):>7} {_fmt(st['p75']):>7} {st['pct_ge_80']:>7}  {d_str:>7}")
+
+
+# ─── DÒNG SO-SÁNH Δ_B vs Δ_C∪D (chẩn đoán kịch bản #4) ───
+b_stats = stats_by_grp["★B(same-instr)★"]["stats"]
+cd_stats = stats_by_grp["★C∪D(same-instr)★"]["stats"]
+delta_B = b_stats["dom_raw"]["median"] - b_stats["dom_ex_exchange_v2"]["median"]
+delta_CD = cd_stats["dom_raw"]["median"] - cd_stats["dom_ex_exchange_v2"]["median"]
+
+print()
+print(f"[Δ SO-SÁNH · chẩn đoán kịch bản #4 captive-trong-ví-sàn]")
+print(f"  Δ_B      = med(raw) − med(ex_exchange_v2) = {b_stats['dom_raw']['median']:.3f} − {b_stats['dom_ex_exchange_v2']['median']:.3f} = {delta_B:+.3f}")
+print(f"  Δ_C∪D    = med(raw) − med(ex_exchange_v2) = {cd_stats['dom_raw']['median']:.3f} − {cd_stats['dom_ex_exchange_v2']['median']:.3f} = {delta_CD:+.3f}")
+if delta_B > delta_CD:
+    diag = "Δ_B > Δ_C∪D → B rớt MẠNH HƠN sau loại-sàn (chỉ dấu kịch bản #4 · KHÔNG kết luận)"
+elif delta_B < delta_CD:
+    diag = "Δ_B < Δ_C∪D → B rớt YẾU HƠN sau loại-sàn (KHÔNG khớp kịch bản #4)"
+else:
+    diag = "Δ_B ≈ Δ_C∪D → sức rớt tương đương"
+print(f"  DIAG    : {diag}")
 
 
 # ─── CSV output ───
 OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
 with open(OUT_CSV, "w", encoding="utf-8", newline="") as f:
-    f.write(f"# SURVEY-V2 RE-PARSE · KÝ 31/08 · 0-call re-parse from raw JSON\n")
-    f.write(f"# CEX list curated [CURATED-LIST-20260831]: docs/reference/cex_addresses_bsc.txt md5 {_md5(CEX_LIST_PATH)}\n")
+    f.write(f"# SURVEY-V2 RE-PARSE · KÝ 31/08 rev2 08-31 · 0-call re-parse from raw JSON\n")
+    f.write(f"# Đợt-1 mốc: docs/reports/survey_dom_level_nansen_20260827.csv md5 601984ad… (giữ nguyên)\n")
+    f.write(f"# CEX list [CURATED-LIST-20260831]:\n")
+    f.write(f"#   operator-path: data/ref/cex_addresses_bsc.txt (gitignored · runtime local)\n")
+    f.write(f"#   canonical    : docs/reference/cex_addresses_bsc.txt (committed · md5 {_md5(CEX_CANONICAL)})\n")
     f.write(f"#   {len(CEX_ADDRESSES)} exchange addresses (Binance/OKX/Bybit/Gate/MEXC/Bitget/HTX/Kraken/Kucoin)\n")
     f.write(f"# Source raw: data/state/nansen_raw_survey/*.json ({len(raw_files)} files)\n")
     f.write(f"#\n")
@@ -292,7 +315,13 @@ with open(OUT_CSV, "w", encoding="utf-8", newline="") as f:
     f.write(f"#   dom_ex_structural     = trừ thêm burn/dead pattern (0x000.../....dead) + label keyword\n")
     f.write(f"# INSTRUMENT COL: tracker-top100 (nhóm A) vs nansen-top10 (nhóm B/C/D)\n")
     f.write(f"#\n")
-    f.write(f"# BẢNG-CẶP A1 v2 (L-51 · tracker vs Nansen · sau CEX-list filter):\n")
+    f.write(f"# ─── 3 KẾT-CỤC ANALYSIS làm khung đọc (KHÔNG kết luận · luật đọc (i)-(iv)) ───\n")
+    f.write(f"#   (α) sống-refined              : ≥1 thước tách được B vs C∪D bền (H4 tồn tại với thước-loại-sàn/loại-cấu-trúc)\n")
+    f.write(f"#   (β) chết-ba-thước [CLOSED-BY-DISTRIBUTION]: cả 3 thước đều KHÔNG tách B vs C∪D (H4 chết vì không phân định)\n")
+    f.write(f"#   (γ) chết-nguyên-lý            : dom_raw B ≥ C∪D nhưng dom_ex_exchange B ≤ C∪D + Δ_B > Δ_C∪D\n")
+    f.write(f"#                                    → \"kho captive nằm TRONG ví sàn\" (H4 chết-nguyên-lý)\n")
+    f.write(f"#\n")
+    f.write(f"# ─── BẢNG-CẶP A1 v2 (L-51 · tracker vs Nansen · minh họa nguồn thesis) ───\n")
     for bc in bang_cap:
         t_str = f"{bc['tracker']:.3f}" if bc['tracker'] is not None else "N/A"
         r_str = f"{bc['nansen_raw']:.4f}" if bc['nansen_raw'] is not None else "N/A"
@@ -300,9 +329,24 @@ with open(OUT_CSV, "w", encoding="utf-8", newline="") as f:
         c_str = f"{bc['chenh_N_t']:+.4f}" if bc['chenh_N_t'] is not None else "N/A"
         f.write(f"#   {bc['tok']:5}  tracker={t_str}  Nansen-raw={r_str}  ex-exchange-v2={e_str}  chênh={c_str}  n_ex={bc['n_ex']}  labels={bc['ex_labels']}\n")
     f.write(f"#\n")
-    f.write(f"# BẢNG TÓM v2 · phép chính ★B vs C∪D same-instrument★:\n")
-    for s in summary:
-        f.write(f"#   {s['nhom']:>20} × {s['thuoc']:>22} [{s['instrument']}]: n={s['n_valid']}/{s['n_total']} med={s['median']} p25={s['p25']} p75={s['p75']} ≥0.80={s['n_ge_0.80']} ({s['pct_ge_0.80']})\n")
+    f.write(f"# ─── BẢNG TÓM v2 · median · p25-p75 · %≥0.80 · Δ_ex per nhóm ───\n")
+    f.write(f"#   {'nhóm':>20} {'thước':>22} {'instr':>24} n_v/tot median  p25    p75    %≥0.8  Δ_ex\n")
+    for name, meta in stats_by_grp.items():
+        s = meta["stats"]
+        d_raw_med = s["dom_raw"]["median"]
+        d_ex_med = s["dom_ex_exchange_v2"]["median"]
+        delta_ex = (d_raw_med - d_ex_med) if (d_raw_med is not None and d_ex_med is not None) else None
+        for thuoc in ["dom_raw", "dom_ex_exchange_v2", "dom_ex_structural"]:
+            st = s[thuoc]
+            d_str = _fmt(delta_ex, 3) if thuoc == "dom_ex_exchange_v2" else ""
+            f.write(f"#   {name:>20} {thuoc:>22} {meta['instrument']:>24} "
+                    f"{st['n_valid']:>3}/{st['n_total']:>3} "
+                    f"{_fmt(st['median']):>7} {_fmt(st['p25']):>7} {_fmt(st['p75']):>7} {st['pct_ge_80']:>7}  {d_str:>6}\n")
+    f.write(f"#\n")
+    f.write(f"# ─── Δ SO-SÁNH (chẩn đoán kịch bản #4 captive-trong-ví-sàn) ───\n")
+    f.write(f"#   Δ_B      = {b_stats['dom_raw']['median']:.3f} − {b_stats['dom_ex_exchange_v2']['median']:.3f} = {delta_B:+.3f}\n")
+    f.write(f"#   Δ_C∪D    = {cd_stats['dom_raw']['median']:.3f} − {cd_stats['dom_ex_exchange_v2']['median']:.3f} = {delta_CD:+.3f}\n")
+    f.write(f"#   DIAG    : {diag}\n")
     f.write(f"#\n")
     f.write(f"# NGƯỠNG PHỦ: B={sum(1 for r in rows if r['nhom']=='B' and r.get('status')=='OK')}/11 · C={sum(1 for r in rows if r['nhom']=='C' and r.get('status')=='OK')}/15\n")
     f.write(f"# KHÔNG kết luận — luật đọc (i)-(iv) ANALYSIS\n")

@@ -1,5 +1,8 @@
-# SURVEY-V2 RE-PARSE · KÝ 31/08 · 0-call re-parse from raw JSON
-# CEX list curated [CURATED-LIST-20260831]: data/ref/cex_addresses_bsc.txt md5 0983fb5f8a190872ac2b904798b3cbf7
+# SURVEY-V2 RE-PARSE · KÝ 31/08 rev2 08-31 · 0-call re-parse from raw JSON
+# Đợt-1 mốc: docs/reports/survey_dom_level_nansen_20260827.csv md5 601984ad… (giữ nguyên)
+# CEX list [CURATED-LIST-20260831]:
+#   operator-path: data/ref/cex_addresses_bsc.txt (gitignored · runtime local)
+#   canonical    : docs/reference/cex_addresses_bsc.txt (committed · md5 0983fb5f8a190872ac2b904798b3cbf7)
 #   22 exchange addresses (Binance/OKX/Bybit/Gate/MEXC/Bitget/HTX/Kraken/Kucoin)
 # Source raw: data/state/nansen_raw_survey/*.json (33 files)
 #
@@ -9,33 +12,45 @@
 #   dom_ex_structural     = trừ thêm burn/dead pattern (0x000.../....dead) + label keyword
 # INSTRUMENT COL: tracker-top100 (nhóm A) vs nansen-top10 (nhóm B/C/D)
 #
-# BẢNG-CẶP A1 v2 (L-51 · tracker vs Nansen · sau CEX-list filter):
+# ─── 3 KẾT-CỤC ANALYSIS làm khung đọc (KHÔNG kết luận · luật đọc (i)-(iv)) ───
+#   (α) sống-refined              : ≥1 thước tách được B vs C∪D bền (H4 tồn tại với thước-loại-sàn/loại-cấu-trúc)
+#   (β) chết-ba-thước [CLOSED-BY-DISTRIBUTION]: cả 3 thước đều KHÔNG tách B vs C∪D (H4 chết vì không phân định)
+#   (γ) chết-nguyên-lý            : dom_raw B ≥ C∪D nhưng dom_ex_exchange B ≤ C∪D + Δ_B > Δ_C∪D
+#                                    → "kho captive nằm TRONG ví sàn" (H4 chết-nguyên-lý)
+#
+# ─── BẢNG-CẶP A1 v2 (L-51 · tracker vs Nansen · minh họa nguồn thesis) ───
 #   TUT    tracker=0.830  Nansen-raw=0.9020  ex-exchange-v2=0.5421  chênh=+0.0720  n_ex=3  labels=Binance 8(0.209) | Binance 15(0.113) | G
 #   BTW    tracker=0.960  Nansen-raw=N/A  ex-exchange-v2=N/A  chênh=N/A  n_ex=0  labels=—
 #   AKE    tracker=0.860  Nansen-raw=0.5070  ex-exchange-v2=0.5070  chênh=-0.3530  n_ex=0  labels=—
 #
-# BẢNG TÓM v2 · phép chính ★B vs C∪D same-instrument★:
-#                      A ×                dom_raw [MIXED]: n=7/9 med=0.810 p25=0.510 p75=0.860 ≥0.80=4 (57.1%)
-#                      A ×     dom_ex_exchange_v2 [MIXED]: n=0/9 med=— p25=— p75=— ≥0.80=0 (—)
-#                      A ×      dom_ex_structural [MIXED]: n=0/9 med=— p25=— p75=— ≥0.80=0 (—)
-#                      B ×                dom_raw [nansen-top10]: n=10/11 med=0.894 p25=0.873 p75=0.923 ≥0.80=10 (100.0%)
-#                      B ×     dom_ex_exchange_v2 [nansen-top10]: n=10/11 med=0.804 p25=0.542 p75=0.873 ≥0.80=5 (50.0%)
-#                      B ×      dom_ex_structural [nansen-top10]: n=10/11 med=0.754 p25=0.374 p75=0.859 ≥0.80=4 (40.0%)
-#                      C ×                dom_raw [nansen-top10]: n=13/15 med=0.935 p25=0.761 p75=0.950 ≥0.80=9 (69.2%)
-#                      C ×     dom_ex_exchange_v2 [nansen-top10]: n=13/15 med=0.739 p25=0.593 p75=0.917 ≥0.80=5 (38.5%)
-#                      C ×      dom_ex_structural [nansen-top10]: n=13/15 med=0.739 p25=0.584 p75=0.917 ≥0.80=5 (38.5%)
-#                      D ×                dom_raw [nansen-top10]: n=9/10 med=0.890 p25=0.745 p75=0.952 ≥0.80=6 (66.7%)
-#                      D ×     dom_ex_exchange_v2 [nansen-top10]: n=9/10 med=0.890 p25=0.682 p75=0.918 ≥0.80=5 (55.6%)
-#                      D ×      dom_ex_structural [nansen-top10]: n=9/10 med=0.836 p25=0.682 p75=0.910 ≥0.80=5 (55.6%)
-#        A1∪B[MIXED-CTX] ×                dom_raw [MIXED]: n=13/14 med=0.890 p25=— p75=— ≥0.80=13 (100.0%)
-#        A1∪B[MIXED-CTX] ×     dom_ex_exchange_v2 [MIXED]: n=10/14 med=0.804 p25=— p75=— ≥0.80=5 (50.0%)
-#        A1∪B[MIXED-CTX] ×      dom_ex_structural [MIXED]: n=10/14 med=0.754 p25=— p75=— ≥0.80=4 (40.0%)
-#        ★B(same-instr)★ ×                dom_raw [nansen-top10]: n=10/11 med=0.894 p25=— p75=— ≥0.80=10 (100.0%)
-#      ★C∪D(same-instr)★ ×                dom_raw [nansen-top10]: n=22/25 med=0.918 p25=— p75=— ≥0.80=15 (68.2%)
-#        ★B(same-instr)★ ×     dom_ex_exchange_v2 [nansen-top10]: n=10/11 med=0.804 p25=— p75=— ≥0.80=5 (50.0%)
-#      ★C∪D(same-instr)★ ×     dom_ex_exchange_v2 [nansen-top10]: n=22/25 med=0.747 p25=— p75=— ≥0.80=10 (45.5%)
-#        ★B(same-instr)★ ×      dom_ex_structural [nansen-top10]: n=10/11 med=0.754 p25=— p75=— ≥0.80=4 (40.0%)
-#      ★C∪D(same-instr)★ ×      dom_ex_structural [nansen-top10]: n=22/25 med=0.744 p25=— p75=— ≥0.80=10 (45.5%)
+# ─── BẢNG TÓM v2 · median · p25-p75 · %≥0.80 · Δ_ex per nhóm ───
+#                   nhóm                  thước                    instr n_v/tot median  p25    p75    %≥0.8  Δ_ex
+#                      A                dom_raw    tracker-top100[MIXED]   7/  9   0.810   0.510   0.860   57.1%        
+#                      A     dom_ex_exchange_v2    tracker-top100[MIXED]   0/  9       —       —       —       —       —
+#                      A      dom_ex_structural    tracker-top100[MIXED]   0/  9       —       —       —       —        
+#                      B                dom_raw             nansen-top10  10/ 11   0.894   0.873   0.923  100.0%        
+#                      B     dom_ex_exchange_v2             nansen-top10  10/ 11   0.804   0.542   0.873   50.0%   0.090
+#                      B      dom_ex_structural             nansen-top10  10/ 11   0.754   0.374   0.859   40.0%        
+#                      C                dom_raw             nansen-top10  13/ 15   0.935   0.761   0.950   69.2%        
+#                      C     dom_ex_exchange_v2             nansen-top10  13/ 15   0.739   0.593   0.917   38.5%   0.196
+#                      C      dom_ex_structural             nansen-top10  13/ 15   0.739   0.584   0.917   38.5%        
+#                      D                dom_raw             nansen-top10   9/ 10   0.890   0.745   0.952   66.7%        
+#                      D     dom_ex_exchange_v2             nansen-top10   9/ 10   0.890   0.682   0.918   55.6%   0.000
+#                      D      dom_ex_structural             nansen-top10   9/ 10   0.836   0.682   0.910   55.6%        
+#        A1∪B[MIXED-CTX]                dom_raw     MIXED — context only  13/ 14   0.890   0.860   0.923  100.0%        
+#        A1∪B[MIXED-CTX]     dom_ex_exchange_v2     MIXED — context only  10/ 14   0.804   0.542   0.873   50.0%   0.087
+#        A1∪B[MIXED-CTX]      dom_ex_structural     MIXED — context only  10/ 14   0.754   0.374   0.859   40.0%        
+#        ★B(same-instr)★                dom_raw             nansen-top10  10/ 11   0.894   0.873   0.923  100.0%        
+#        ★B(same-instr)★     dom_ex_exchange_v2             nansen-top10  10/ 11   0.804   0.542   0.873   50.0%   0.090
+#        ★B(same-instr)★      dom_ex_structural             nansen-top10  10/ 11   0.754   0.374   0.859   40.0%        
+#      ★C∪D(same-instr)★                dom_raw             nansen-top10  22/ 25   0.918   0.745   0.952   68.2%        
+#      ★C∪D(same-instr)★     dom_ex_exchange_v2             nansen-top10  22/ 25   0.747   0.593   0.918   45.5%   0.171
+#      ★C∪D(same-instr)★      dom_ex_structural             nansen-top10  22/ 25   0.744   0.584   0.917   45.5%        
+#
+# ─── Δ SO-SÁNH (chẩn đoán kịch bản #4 captive-trong-ví-sàn) ───
+#   Δ_B      = 0.894 − 0.804 = +0.090
+#   Δ_C∪D    = 0.918 − 0.747 = +0.171
+#   DIAG    : Δ_B < Δ_C∪D → B rớt YẾU HƠN sau loại-sàn (KHÔNG khớp kịch bản #4)
 #
 # NGƯỠNG PHỦ: B=10/11 · C=13/15
 # KHÔNG kết luận — luật đọc (i)-(iv) ANALYSIS
