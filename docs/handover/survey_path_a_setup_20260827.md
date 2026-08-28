@@ -1,6 +1,18 @@
 # PATH-(A) Etherscan V2 Paid Tier · SETUP HƯỚNG DẪN
 
-**Trạng thái:** SURVEY nhóm B/C/D BLOCKED tất cả 3 free paths (V1 deprecated · V2 free BSC không hỗ trợ · web Cloudflare 403). Operator chọn path (a) Etherscan V2 paid tier.
+## 🛑 SUPERSEDED — Operator KÝ 31/08
+
+**Path Etherscan V2 $49/mo HỦY** per operator directive 31/08. Thay thế: **survey-Nansen path** (bỏ ràng buộc 0-Nansen · Nansen credit rẻ $10/10k · budget one-shot ≤45 call).
+
+**Nguồn thực tế:** Nansen `/tgm/holders` page-1 rpp-10 (cùng-máy-đo với H4 production). Ledger riêng `survey_oneshot` (không chạm H4 cap 2/day).
+
+**Ref:** `_task_survey_nansen_20260827.py` (LOCAL) · `core_nansen.py fetch_holders_survey()` · commits `8ed2f32` (whale_data) + `5dcb7be` (bot-signals repo).
+
+Doc này giữ làm exhibit phương pháp — **không phải path đang chạy**.
+
+---
+
+## (Deprecated) SETUP hướng dẫn (không dùng)
 
 ## 3 dòng thiết lập cho operator
 
