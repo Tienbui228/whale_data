@@ -8575,3 +8575,39 @@ CANONICAL results (thay N=1000 [MC-screening] cho 2 ô dao):
 - Operator ky BATCH-3 hoặc BATCH-4 lúc "ok scp"
 
 Fixtures verify all PASS post-fix: tripwire 6/6 · h4_flow 6/6 · 3d-best 4/4 · compose 3/3 · walletset probe emit đủ.
+
+## 2026-08-29 · SCP BATCH-4 thi hành + TG-RELAY interim
+
+**(A) SCP BATCH-4 · 5 file post-Đêm-3:**
+- Backup VPS `.bak_20260829` cho 3 file existing (adapter/yaml/gom_h) · mkdir -p lib
+- SCP 5 file, md5 verify all match LOCAL:
+  - adapter_h1_nansen.py: `b6ac341ab74bff29a98dd23a1dc44144` ✓
+  - screen_thresholds.yaml: `3d11e572d77a657a2e5638dd6027e3a8` ✓
+  - lib/tripwire_e2_v2.py: `f95a3df6a980f00f38adafd88689c449` ✓ (NEW)
+  - gom_h_daily.py: `ce01f8e14629833f22020196ba66b76d` ✓
+  - census_grades_v4_FULL85_20260831.csv: `8fdd0a74f0a615023209519996a96402` ✓
+
+**Smoke run [SMOKE-POST-SCP · target=08-28]:**
+- yaml md5 loaded: 3d11e572 ✓
+- CSV md5: 78b0a074285d2c4866db7f49a53e6c0c (different vs Đêm-3 6c218288 · expected 3d-best)
+- **FIRE count: 4/139** (vs Đêm-3 = 1) — **+3 H1 fires ĐÚNG KỲ VỌNG** (1d→3d-best canonical):
+  - HYPERUSDT [H2] conf=HIGH (existing)
+  - B2USDT [H1] conf=MED (NEW 3d-best) + WALLETSET BROAD-QUIET
+  - JCTUSDT [H1] conf=LOW (NEW) + BROAD-STRESS ret=-12.3%
+  - RIVERUSDT [H1] conf=LOW (NEW) + BROAD-STRESS ret=-9.1%
+- Coverage counter line UNCHANGED (T0.1=3 H1=0 H2=13 H3=2) — legacy sub-metric counter · Telegram FINAL fire count canonical
+- Sentinel L-66 lines: KHÔNG trigger (không data cause error) — OK per rule "nếu có = feature"
+- **Tripwire trailing v2 KHÔNG emit**: gom_h_daily.py wire lib.tripwire_e2 (v1 record_fire API), KHÔNG wire v2 check_tripwire. Integration gap (không phải SCP regression) — v2 file trên VPS clean, cần code-wire follow-up
+- Flag file `data/state/tripwire_e2_v2_TRIPPED.flag`: KHÔNG tồn tại (do v2 chưa được gọi)
+
+**VERDICT SCP-A:** file-level clean · KHÔNG rollback · integration wire v2 tripwire = follow-up task.
+
+**(B) TG-RELAY interim thi hành:**
+- Script: `D:/Check onchain fresh wallets/tg_relay_gom_h.py` per spec f3ad4f10 + 2 guard bổ sung
+  - Guard (a) STALENESS-TARGET: target_date == D-1 ∧ log mtime <30' · sai → send `[RELAY-ERROR: ...]`
+  - Guard (b) relay_time từ config `tg_relay_config.json`, không hardcode
+- **[TEST] send SUCCESS**: HTTP 200 · resp_len=4066 · block Đêm-3 target=08-28 · hash ebbfaf89c01b
+- Task Scheduler `TgRelayGomH` cắm 01:55 UTC daily · State=Ready · NextRun 8/30 08:55 AM VN = 01:55 UTC 30/08
+- Đêm-4 anh em có Telegram GOM-H đầu tiên (~08:55 VN 30/08)
+
+**(C) SHIFT + STALENESS-MAP:** chờ sau Đêm-4 verify (operator điều kiện tiên quyết chống tái án stale-19/08)
