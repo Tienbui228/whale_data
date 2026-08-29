@@ -8738,3 +8738,29 @@ forward_tests:
 **Lịch giữ:** Đêm-4 tối nay v1 nguyên trạng · Đêm-5 SHIFT (STALENESS-MAP) · Đêm-6 render-v2 code+deploy (R3 sort-RIPE gộp) · 6+7 R4 verify.
 
 **Kỷ luật md5-tại-giờ-paste** áp lại cho render-v2 deploy = rev-bump gom_h_daily md5.
+
+## 2026-08-29 · RULING ĐÓNG (MỌI-H3=T · A/B RETIRED L-51) + fixture expected + SCP scope Đêm-6
+
+**AMENDMENT-APPEND VERBATIM merged** vào bot-signals gom_detect_spec §Render (thay ruling-flag pending):
+"Khối 🌊 = MỌI token H3=T hôm nay, kể cả ngoài tập fire/suppressed (nguồn: cột H3 toàn universe, không phải tập alert). F1 sửa: đếm-bảo-toàn = n_v2 ≡ n_v1 + n_(H3=T ngoài tập v1) — không mất, không nhân đôi, phần cộng thêm CHỈ được phép đến từ 🌊. Fixture F1 in cả ba số (n_v1 · n_H3_ngoài · n_v2) để phần cộng tự khai nguồn; pin 28/08: 33 + 1 = 34, con thứ hai nêu đích danh trong expected. Dòng token-🌊-ngoài-tập mang hậu tố '(ngoài tập alert — đang chạy)'."
+
+**L-51 A/B RETIRED**: mọi tham chiếu ruling từ nay bằng NỘI DUNG ("MỌI-H3=T") · chữ cái A/B cấm dùng làm nhãn ruling (án suýt-đảo).
+
+**Fixture expected `docs/proposals/render_v2_fixture_expected_20260829.md`** viết ngay:
+- F1 3-số: n_v1=33 · n_H3_ngoài=1 · n_v2=34
+- 5 pin-rows expected:
+  1. F1 print 3-số
+  2. TAC → khối 4 subgroup ≤1/4+STRESS `(ret=-41% · vol=16.8×)`
+  3. BTR → khối 🌊 với dòng B-P1 từ forward_tests
+  4. MIRA → khối 4 dòng HIGH prefix 🔥 hậu tố `← nợ số 1`
+  5. HUMAUSDT → khối 🌊 hậu tố `(ngoài tập alert — đang chạy)` (MỚI post-ruling)
+- 8 fixture pass criteria (đếm khối · sort verify · split-safe)
+
+**Render-v2 code đọc H3 từ CSV toàn universe** (không chỉ Telegram v1 rows): n_H3_ngoài = coverage[H3][T] − count(H3=T trong v1 output). Verify 28/08: 2 − 1 = 1 = HUMA ✓.
+
+**Đêm-6 SCP scope cập nhật** (pre-spec doc §3.5 mới):
+- gom_h_daily.py (render-v2 + R3 sort-RIPE gộp)
+- screen_thresholds.yaml (LOCAL 7a9d911d · VPS pre-SCP 3d11e572 · drift ride)
+- md5-tại-giờ-paste áp
+
+**Lịch giữ:** Đêm-4 tối nay v1 nguyên trạng · Đêm-5 SHIFT · Đêm-6 render-v2 deploy · 6+7 R4.

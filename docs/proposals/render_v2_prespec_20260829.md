@@ -72,6 +72,23 @@ Cả render-v2 (chủ) + relay (guard) dùng cùng khuôn `[GOM-H k/N]` header p
 
 ---
 
+## §3.5 · ĐÊM-6 SCP SCOPE (cập nhật post-ruling MỌI-H3=T)
+
+**Scope Đêm-6 deploy:**
+1. **`scripts/gom_h_daily.py`** — render-v2 code (thay tg_render logic · 6 khối · sort keys · H3 toàn universe read · split-safe) + R3 sort-RIPE gộp cùng
+2. **`screen_thresholds.yaml`** — drift đã có `forward_tests` block
+   - LOCAL: `7a9d911d4af15d5608893aab62f89baf`
+   - VPS pre-SCP hiện: `3d11e572d77a657a2e5638dd6027e3a8` (post batch-4 SCP đợt-1)
+   - Drift ride Đêm-6 · md5-tại-giờ-paste áp lại (yaml có thể drift thêm trước Đêm-6 nếu operator thả amendment)
+
+**Verification post-SCP Đêm-6:**
+- Fixture F1 4-pin PASS (đếm-bảo-toàn n_v2=34 · TAC · BTR · MIRA · HUMA đích danh)
+- Coverage relabel `[LEGACY-COUNTER]` giữ (đã có từ WIRE-TRIPWIRE-V2)
+- Tripwire trailing 3 dòng ĐÓNG tin cuối · relay `_split_at_line_boundary` GUARD
+- Errata A6ii dòng footer 1 đêm (state file flag tự gỡ)
+
+---
+
 ## §4 · LỊCH đề xuất (một-biến-một-đêm)
 
 | đêm | date | biến | scope |
