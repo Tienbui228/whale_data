@@ -8651,3 +8651,15 @@ Fixtures verify all PASS post-fix: tripwire 6/6 · h4_flow 6/6 · 3d-best 4/4 ·
 **Đêm-4 tự chạy:** cron 30/08 01:45 UTC lần đầu emit đủ trailing [TRIP] + flag → relay 01:55 UTC (chat Make Money With Crypto) → sáng ~08:55 VN Telegram GOM-H THẬT ĐẦU TIÊN đủ dòng tripwire.
 
 **Sau Đêm-4 verify:** STALENESS-MAP + SHIFT decision (per operator điều kiện tiên quyết).
+
+## 2026-08-29 · RELAY-PROOF end-to-end (trước cron thật 01:55 UTC 30/08)
+
+**(1) Extract fix:** rewrite `extract_telegram_block()` end-marker = `═══` (không phải vol_source) · lấy đủ 3 dòng trailing WIRE-V2. Meta: `has_tripwire · has_tp_note · has_flag_action`.
+
+**(2) parse_mode plain-text:** bỏ Markdown (nuốt underscore trong `spec_version/yaml_md5` in bằng chứng [TEST]).
+
+**(3) SMOKE-3 log-append** (state backup/restore .bak_smoke3 md5 6f8ed84e giữ nguyên) · log VPS mới có đủ 3 dòng trailing.
+
+**[TEST-2] SEND:** HTTP 200 · resp_len=4291 · target=08-28 · n_lines=48 · has_tripwire=True · plain-text · hash e2ec7f371943 → chat Make Money With Crypto ✓
+
+**Đường ống end-to-end CHỨNG SỐNG trước giờ thật.** Đêm-4 (01:45 UTC 30/08) cron chạy → 01:55 UTC 30/08 relay POST → sáng ~08:55 VN Telegram GOM-H THẬT ĐẦU TIÊN đủ 3 dòng trailing, plain-text sạch underscore.
