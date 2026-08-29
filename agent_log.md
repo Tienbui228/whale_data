@@ -8663,3 +8663,23 @@ Fixtures verify all PASS post-fix: tripwire 6/6 · h4_flow 6/6 · 3d-best 4/4 ·
 **[TEST-2] SEND:** HTTP 200 · resp_len=4291 · target=08-28 · n_lines=48 · has_tripwire=True · plain-text · hash e2ec7f371943 → chat Make Money With Crypto ✓
 
 **Đường ống end-to-end CHỨNG SỐNG trước giờ thật.** Đêm-4 (01:45 UTC 30/08) cron chạy → 01:55 UTC 30/08 relay POST → sáng ~08:55 VN Telegram GOM-H THẬT ĐẦU TIÊN đủ 3 dòng trailing, plain-text sạch underscore.
+
+## 2026-08-29 · TRUNCATION FIX + [TEST-3] SEND (2 parts, invariant trailing)
+
+**DIAG TEST-2:** full_msg len = 4104 · block=4083 + prefix 21 · > 4000 threshold
+**Truncation branch cũ:** `full_msg = full_msg[:3900] + "\n... [TRUNCATED]"` — CẮT giữa row, mất 204 chars cuối bao gồm 3 dòng trailing.
+Raw resp TEST-2: HTTP 200 resp_len=4291 (Telegram accept, nội dung mất tail).
+
+**FIX:** thay bằng `_split_at_line_boundary()` với 2 tính chất:
+- CẮT tại RANH DÒNG (không cắt giữa row)
+- **BẤT BIẾN**: 3 dòng trailing (tripwire · ↳ 7 TP · # tripwire_v2 flag action) LUÔN trọn vẹn trong tin CUỐI
+- Idempotent-hash tính trên full_text, không per part
+- Numbering `[GOM-H 1/N]` `[GOM-H 2/N]`
+
+**[TEST-3] SEND SUCCESS:**
+- n_parts=2 · hash e2ec7f371943 (giữ hash TEST-2 vì cùng block)
+- Part 1/2: len=3830 · 46 lines · CAMPAIGN-PRE + rows + footer + coverage + vol_source · HTTP 200 resp_len=4196
+- Part 2/2: len=275 · 3 lines · trailing wire · HTTP 200 resp_len=568
+- **INVARIANT verified:** part 2 kết thúc `# tripwire_v2 flag action: TRIP-FLAGGED` ✓
+
+**Đường ống end-to-end CHỨNG THẬT** (đủ đuôi trailing, không chỉ HTTP 200). Đêm-4 (30/08 01:45 UTC cron → 01:55 UTC relay) tự chạy · sáng ~08:55 VN Telegram GOM-H thật đầu tiên đủ 2 tin (nếu >3900) với dòng [TRIP] nguyên vẹn tin cuối.
