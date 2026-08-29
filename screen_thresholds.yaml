@@ -153,6 +153,18 @@ dq_serial:
   source: "b-cứng 14/08, operator ký 29/08"
 
 # ─────────────────────────────────────────────────────────────────────────────
+# [RENDER-V2-20260902 · SIGNED] Forward-tests registry — nguồn khối 3 🌊 + khối 5 👁
+# Canonical: whale_data (runner đọc render-v2 · bot-signals gom_detect_spec §Render bảng D)
+# Add/remove per token = chữ ký operator thường lệ (đăng ký/hết hạn/đã chấm)
+# ─────────────────────────────────────────────────────────────────────────────
+forward_tests:
+  BTR:  "B-P1/P2: đỉnh ≤+60%/0.083 ≤7d rồi −50% ≤14d · kho rút ≥15% = đổi loài"
+  AKE:  "BALANCE-REVERSAL: kho đảo chiều ≥15% → đổi loài"
+  BTW:  "BALANCE-REVERSAL: kho đảo chiều ≥15% → đổi loài"
+  HEMI: "H-P1/P2: đỉnh ≤+30%/0.0102 rồi −50%"
+  CAP:  "C-P1/P2: không chân ≥+50% từ 0.0702"
+
+# ─────────────────────────────────────────────────────────────────────────────
 # [GOI-NHE-20260829 · SIGNED] Compose gói-nhẹ + kho-ramp + tripwire 0.4
 # ─────────────────────────────────────────────────────────────────────────────
 goi_nhe:

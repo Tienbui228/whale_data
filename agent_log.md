@@ -8705,3 +8705,36 @@ Raw resp TEST-2: HTTP 200 resp_len=4291 (Telegram accept, nội dung mất tail)
 **SCP-SAU checklist update:** rm tg_render sort-RIPE line · gộp vào render-v2 commit ref.
 
 **R1 CODE TREO** — không code render-v2 hôm nay · chờ spec-diff.
+
+## 2026-08-29 · RENDER-V2 spec merge + forward_tests yaml + H3=T ruling flag
+
+**Spec drop verify:** `docs/proposals/campaign_pre_render_v2_spec_20260902.md` md5 `b7c3bd3c5c0208e60b9c60344bf4dbd6` ✓ khớp operator.
+
+**(1) MERGE VERBATIM bot-signals gom_detect_spec:**
+- Thêm §Render section VERBATIM (6 khối · sort keys · câu-soi · forward_tests bảng D · ERRATA · fixture 4-pin · split-safe)
+- Changelog RENDER-V2-20260902 top table
+- AMENDMENT-APPEND ruling 🌊-vs-F1 CHỜ ANALYSIS gộp vào cuối §Render
+
+**(2) forward_tests yaml (whale_data canonical · runner đọc):**
+```yaml
+forward_tests:
+  BTR:  "B-P1/P2: đỉnh ≤+60%/0.083 ≤7d rồi −50% ≤14d · kho rút ≥15% = đổi loài"
+  AKE:  "BALANCE-REVERSAL: kho đảo chiều ≥15% → đổi loài"
+  BTW:  "BALANCE-REVERSAL: kho đảo chiều ≥15% → đổi loài"
+  HEMI: "H-P1/P2: đỉnh ≤+30%/0.0102 rồi −50%"
+  CAP:  "C-P1/P2: không chân ≥+50% từ 0.0702"
+```
+
+**(3) A11 CONTENT-PARITY re-verify (thêm forward_tests row): 6/6 PASS ✓** — canonical whale_data · bot-signals bảng D là doc mirror (không phải yaml block bot).
+
+**RULING 🌊-vs-F1 TREO (chờ ANALYSIS A/B):**
+- Con H3=T thứ 2 target=08-28: **HUMAUSDT** (h1_raw=F · h2t01_raw=F · h3_raw=T · vol=11.5× · WALLETSET BROAD-STRESS)
+- KHÔNG fire (compose False) · KHÔNG in Telegram v1 (chỉ BTR H3=T fire được in)
+- Ruling ANALYSIS 1 dòng (A/B) cho khối 3 🌊 render-v2:
+  - (A) chỉ FIRE H3=T rơi khối 🌊 (giữ v1 semantics)
+  - (B) MỌI H3=T rơi khối 🌊 kể cả non-fire (đếm-bảo-toàn = fires+n_H3T_non_fire · nhiều hơn v1)
+- Fixture expected phụ thuộc ruling. Merge kèm amendment-append đúng khuôn spot-cvd.
+
+**Lịch giữ:** Đêm-4 tối nay v1 nguyên trạng · Đêm-5 SHIFT (STALENESS-MAP) · Đêm-6 render-v2 code+deploy (R3 sort-RIPE gộp) · 6+7 R4 verify.
+
+**Kỷ luật md5-tại-giờ-paste** áp lại cho render-v2 deploy = rev-bump gom_h_daily md5.

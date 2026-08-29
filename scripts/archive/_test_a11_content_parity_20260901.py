@@ -29,6 +29,7 @@ BLOCKS = [
     ("ma_shadow",  ["goi_nhe"],               ["ma_shadow"],  "bot-signals"),
     ("walletset_2x2",  ["goi_nhe", "walletset_2x2"], None,   "whale_data"),  # only whale, no bot mirror expected
     ("review_bundle_20260927", ["goi_nhe", "review_bundle_20260927"], None, "whale_data"),
+    ("forward_tests", ["forward_tests"], None, "whale_data"),  # [RENDER-V2-20260902] runner reads · bot-signals bảng D mirror doc
 ]
 
 def _get_nested(d, path):
