@@ -825,11 +825,23 @@ def main():
     print(f"spec_version: {SPEC_VERSION}")
     print(f"amendments_applied: {', '.join(AMENDMENTS)}")
     print(f"cfg-provenance: yaml_md5={yaml_md5[:12]}...")
+    print(f"# [LEGACY-COUNTER · pre-compose sub-metric — Telegram FINAL fire count = canonical] (L-59)")
     for h, cnts in coverage.items():
         total = sum(cnts.values())
         eval_n = cnts['T'] + cnts['F']
         print(f"  coverage {h}: n_fire={cnts['T']} n_NA={cnts['N/A']} n_warmup={cnts['N/A-WARMUP']} n_eval={eval_n} / total={total}")
     print(f"vol_source: {gom_h_cfg['h3']['vol_source']}")
+    # [WIRE-TRIPWIRE-V2-20260829] append trailing FP-rate + flag file write/clear
+    # v1 record_fire giữ song song (không rút · lượt này chỉ thêm v2 emit)
+    try:
+        from lib.tripwire_e2_v2 import check_tripwire, format_output_pair, apply_trip_flag
+        _tw_v2_result = check_tripwire()
+        print(format_output_pair(_tw_v2_result))
+        _tw_v2_action = apply_trip_flag(_tw_v2_result)
+        print(f"# tripwire_v2 flag action: {_tw_v2_action}")
+    except Exception as _tw_v2_exc:
+        # [L-66 sentinel] không được nuốt
+        print(f"[N/A-ERROR:TRIPWIRE-V2-CALL] {type(_tw_v2_exc).__name__}: {_tw_v2_exc}", file=sys.stderr)
     print("═" * 100)
 
     return 0

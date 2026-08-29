@@ -8611,3 +8611,43 @@ Fixtures verify all PASS post-fix: tripwire 6/6 · h4_flow 6/6 · 3d-best 4/4 ·
 - Đêm-4 anh em có Telegram GOM-H đầu tiên (~08:55 VN 30/08)
 
 **(C) SHIFT + STALENESS-MAP:** chờ sau Đêm-4 verify (operator điều kiện tiên quyết chống tái án stale-19/08)
+
+## 2026-08-29 · WIRE-TRIPWIRE-V2 (mảnh cuối batch-4)
+
+**Diff LOCAL applied gom_h_daily.py:**
+- Insert giữa vol_source line và ═══ footer
+- Import + call check_tripwire() + format_output_pair() + apply_trip_flag()
+- Sentinel L-66 wrap try/except
+- Coverage line relabel `[LEGACY-COUNTER · pre-compose sub-metric — Telegram FINAL fire count = canonical] (L-59)`
+- v1 record_fire GIỮ song song (không rút · lượt này chỉ thêm v2 emit)
+
+**md5 gom_h_daily.py:** `ce01f8e1...` (batch-4 initial) → **`ccf504df81c25a41bdcc0a3516a73d5b`** (post-wire · rev-bump)
+
+**LOCAL smoke target=08-27:** trailing in ✓ · flag `data/state/tripwire_e2_v2_TRIPPED.flag` created ✓
+
+**SCP + md5 verify VPS post-SCP:** `ccf504df81c25a41bdcc0a3516a73d5b` ✓ MATCH LOCAL
+
+**Cooldown-state answer (câu operator):** CÓ · smoke [SMOKE-POST-SCP] trước ghi state (mtime Aug 29 02:32 khớp smoke run · B2/JCT/RIVER counter incremented với `2026-08-28`). Phẫu thuật state-readonly: backup VPS state (`tripwire_e2_counter.json.bak_smoke2`) trước SMOKE-2 → restore sau smoke → md5 khớp pre/post `6f8ed84ea964b8e69c7a0005291e05f7`. Kỳ vọng sáng mai target=08-29: **B2/JCT/RIVER `[SUPPRESSED 1/14 lane=kho]`** (counter chỉ nhận 1 fire từ SMOKE-POST-SCP, SMOKE-2 rollback).
+
+**[SMOKE-2 target=08-28 · state-readonly effect]:** trailing in từ VPS ✓ · flag file tồn tại + JSON content:
+```json
+{
+  "tripped_at": "2026-08-29T02:50:42+00:00",
+  "rate": 0.4277188328912467,
+  "threshold": 0.4,
+  "grades_md5": "8fdd0a74f0a615023209519996a96402",
+  "context": "n_FP=43/n_TP=7/n_PEND=35 · exposure=58d declared ..."
+}
+```
+
+**BATCH-4 CHECKLIST XANH TRỌN — đóng sổ SCP:**
+- adapter_h1_nansen.py ✓ (b6ac341a)
+- screen_thresholds.yaml ✓ (3d11e572)
+- lib/tripwire_e2_v2.py ✓ (f95a3df6)
+- **gom_h_daily.py post-wire ✓ (ccf504df · rev-bump)**
+- census_grades_v4 ✓ (8fdd0a74)
+- Backup .bak_20260829 · state backup .bak_smoke2 restored
+
+**Đêm-4 tự chạy:** cron 30/08 01:45 UTC lần đầu emit đủ trailing [TRIP] + flag → relay 01:55 UTC (chat Make Money With Crypto) → sáng ~08:55 VN Telegram GOM-H THẬT ĐẦU TIÊN đủ dòng tripwire.
+
+**Sau Đêm-4 verify:** STALENESS-MAP + SHIFT decision (per operator điều kiện tiên quyết).
