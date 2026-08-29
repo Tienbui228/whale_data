@@ -8683,3 +8683,25 @@ Raw resp TEST-2: HTTP 200 resp_len=4291 (Telegram accept, nội dung mất tail)
 - **INVARIANT verified:** part 2 kết thúc `# tripwire_v2 flag action: TRIP-FLAGGED` ✓
 
 **Đường ống end-to-end CHỨNG THẬT** (đủ đuôi trailing, không chỉ HTTP 200). Đêm-4 (30/08 01:45 UTC cron → 01:55 UTC relay) tự chạy · sáng ~08:55 VN Telegram GOM-H thật đầu tiên đủ 2 tin (nếu >3900) với dòng [TRIP] nguyên vẹn tin cuối.
+
+## 2026-08-29 · RENDER-V2 pre-spec + lịch (zero-code)
+
+**Doc:** `docs/proposals/render_v2_prespec_20260829.md`
+- §1 PIN-ROW pre-stage (chọn row · expected chờ spec):
+  - (a) n_v1 target 28/08 = **33 rows** (mốc đếm-bảo-toàn · verify latest smoke-3 log block)
+  - (b) STRESS ∧ ret<0: **TACUSDT** [vol=16.8× ret=−41%] BROAD-STRESS 2-vế
+  - (c) H3=T-trong-suppressed: **BTRUSDT** [H3=T · suppressed:kho+perp · conf=LOW]
+  - (d) HIGH-trong-suppressed: **MIRAUSDT** [conf=HIGH 4/4 · SUPPRESSED 4/14 lane=perp]
+- §2 SPLIT-OWNERSHIP khai:
+  - Render-v2 = CHỦ split DUY NHẤT (semantic ⏳ blocks)
+  - Relay `_split_at_line_boundary()` hạ xuống GUARD cuối (chỉ khi render lỡ tràn)
+  - BẤT BIẾN trailing-3-dòng-tin-cuối GIỮ NGUYÊN xuyên render-v2
+  - Numbering thống nhất `[GOM-H k/N]` cả 2 nhà
+- §3 R3: errata sort-RIPE + fixture sort-order pin GỘP vào render-v2 commit (chuyển nhà khỏi SCP-SAU checklist)
+- §4 LỊCH: Đêm-4 verify (không đổi) → Đêm-5 SHIFT (zero-code, STALENESS-MAP sau Đêm-4) → Đêm-6 RENDER-V2 deploy · R4 verify 2 đêm (Đêm-6+7)
+  - Mặc định: chuông về 08:26 VN sớm nhất
+  - Đảo (render trước, shift sau): 1 chữ "đảo"
+
+**SCP-SAU checklist update:** rm tg_render sort-RIPE line · gộp vào render-v2 commit ref.
+
+**R1 CODE TREO** — không code render-v2 hôm nay · chờ spec-diff.

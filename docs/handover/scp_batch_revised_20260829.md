@@ -103,7 +103,7 @@ Bao gồm BATCH-3 + file thứ 4:
 
 ## KHÔNG chèn batch đêm nay (SCP-SAU giai đoạn phase_tag)
 
-- `scanner/tg_render.py` — A6(ii) sort law spec-drift: impl chỉ sort by conf (single), spec §0 "RIPE trước, rồi conf" (2-level bucket). Fix bucket-sort chưa đủ đơn giản để chen batch, xếp SCP-SAU cùng phase_tag re-deploy.
+- ~~`scanner/tg_render.py` — A6(ii) sort law spec-drift~~ **→ CHUYỂN NHÀ 29/08:** gộp vào RENDER-V2 deploy commit (Đêm-6 · 01/09). Ref: [docs/proposals/render_v2_prespec_20260829.md §3](../proposals/render_v2_prespec_20260829.md#§3-r3-errata-sort-ripe--fixture-sort-order-pin-gộp-vào-render-v2-commit) · zero điểm merge riêng, đi cùng lượt rewrite tg_render.
 - Hardcodes A5 phase_tag (1.15/1.5/0.25) + WARMUP (14/30) → yaml-move đợt sau.
 - MA-render + DQ-DELIST wire (hậu-ký 27/09).
 
