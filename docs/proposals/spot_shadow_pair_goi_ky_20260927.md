@@ -28,6 +28,9 @@
 
 **`taker=42.5 loại tại screening`** (lift 1.12-1.17× N=1000, gap −0.5× vs nấc 45 > 3× MC-noise ±0.2×) — không cần bản canonical; ô điền thực chất là xác nhận 45.
 
+### Ca-đối-chiếu-sống HUMA (post-ruling MỌI-H3=T · exhibit n=1)
+**HUMAUSDT** top-3 MA-episode (18 cửa sổ · [ma_shadow_backtest_20260828.csv](../reports/ma_shadow_backtest_20260828.csv)) · con 🌊-ngoài-tập đầu tiên post-ruling RENDER-V2 MỌI-H3=T (data 28/08 · h1_raw=F · h2t01=F · h3_raw=T · vol=11.5× · BROAD-STRESS). Exhibit n=1 cho giá trị khối 🌊 + MA-lane cùng bắt một token — bàn 27/09 đọc kèm 3 ô số MA (taker · vol_x · ret_abs).
+
 ### Note vùng-mỏng (từ grid v2 exhibit)
 `vol_x=1.5, taker=40%` → lift 0.76× · CI [0.00, 2.24] (11 uncens · **thua ở 40-mỏng** · không đủ sample). Đề cử 1.5/45 vì thắng vùng dao, tránh vùng-mỏng.
 
