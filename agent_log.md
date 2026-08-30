@@ -8791,3 +8791,27 @@ forward_tests:
 **Đêm-4 report:** docs/handover/dem4_c_report_20260830.md (bổ sung §B post-TEST-VPS)
 
 STALENESS-MAP inline trong report: max input mtime <=01:40 UTC · gom_h slot có thể shift → 01:26 UTC nếu no watchlist deps.
+
+## 2026-08-30 · INTRADAY-LITE one-off + 3 sửa sổ
+
+**INTRADAY-LITE gửi ngay:**
+- 10 tokens (dedupe fires+STRESS+operator explicit)
+- Fetch fapi /ticker/24hr per token · sort |%24h| desc · ⚡ (|%24h|≥5%) · 🔥VOL (≥3× median $22M)
+- HTTP 200 · resp_len=1129
+- Nổi bật: TAC −14.7% $22M ⚡🔥 · PROVE +7.63% ⚡ · MIRA +5.54% ⚡ · JCT +5.43% ⚡ · BTR $473M 🔥 khủng
+- Direct API (bypass relay) · zero state · zero idempotent · one-off theo lệnh
+
+**Sửa sổ 1 · Đêm-4 report wait-state fix:**
+- TG-RELAY-V2 VPS-native LIVE = ĐÊM NAY 30/08 01:55 UTC (không 01/09)
+- Target Đêm-5 = 2026-08-30 (hash mới, không SKIP idempotent target=08-29)
+- Idempotent-skip CHỈ ở nhánh gom_h-fail (STALENESS → [RELAY-ERROR] không im)
+
+**Sửa sổ 2 · PowerShell admin 1-dòng cho nansen_sync_vps:**
+Set-ScheduledTask -TaskName "nansen_sync_vps" -Settings (New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries)
+Cách chạy: chuột phải PowerShell → Run as administrator → paste → Enter (~10s).
+Interim: rsync -a copy CẢ dir (không chỉ file mới) → archive tự lành trễ 1 ngày qua sync hôm sau.
+
+**Sửa sổ 3 · Đêm-5 deps-check format bảng:**
+| input | mtime 3 đêm | gom_h ĐỌC Y/N | cite file:dòng |
+Chỉ hàng Y ràng buộc shift · watchlist kỳ vọng N · blocker thật = max(snapshot 01:01, freshwatch 01:20 nếu Y) → shift 01:26 UTC an toàn hoặc 01:10 aggressive.
+Bảng về Đêm-5 mới chốt số · không shift mù.
