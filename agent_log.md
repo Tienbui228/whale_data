@@ -8764,3 +8764,30 @@ forward_tests:
 - md5-tại-giờ-paste áp
 
 **Lịch giữ:** Đêm-4 tối nay v1 nguyên trạng · Đêm-5 SHIFT · Đêm-6 render-v2 deploy · 6+7 R4.
+
+## 2026-08-30 · CATCH-UP + TG-RELAY-V2 VPS-NATIVE + Đêm-4 report
+
+**(A) CATCH-UP:** Telegram GOM-H target=2026-08-29 gửi lúc 10:57 UTC (6h muộn · laptop tắt 08:00 VN 30/08). Hash 9b1753c6deee marked. Config staleness temp 30→1440min → restore 30min (2 edits · rollback).
+
+**Relay --catch-up flag:** thêm ~7 dòng · idempotent-hash + mark_sent giữ nguyên (all_ok gate) · prefix [CATCH-UP <target>].
+
+**(B) TG-RELAY-V2 VPS-NATIVE:**
+- Token: /root/.env_tg chmod 600 (outside repo · reuse bot Make Money With Crypto)
+- Script: /root/Data_back_test/whale_data/scripts/tg_relay_gom_h.py md5 7b354f079b1c6d034999ffd66917a0fe
+- Cron: 55 1 * * * VPS · installed
+- [TEST-VPS] SUCCESS: target=2026-08-29 · has_tripwire=True · HTTP 200
+- SINGLE-SENDER: Windows Task Scheduler TgRelayGomH DISABLED · script renamed .DISABLED-20260830
+
+**(C) Windows missed-start:**
+- TgRelayGomH ✓ StartWhenAvailable=True (đã bật · giờ Disabled do SINGLE-SENDER)
+- nansen_sync_vps ACCESS DENIED (Set-ScheduledTask · XML re-register cũng denied) — follow-up user re-register OR admin PowerShell · VPS-relay redundancy giải quyết pipe
+
+**(D) LỊCH dời (một-biến-một-đêm):**
+- 30/08 · ops = TG-RELAY-V2 VPS port ✓
+- 01/09 · Đêm-5 SHIFT (dời từ 31/08) · STALENESS-MAP validate · gom_h 01:26 UTC (chờ deps check)
+- 02/09 · Đêm-6 RENDER-V2 deploy (dời từ 01/09) · R3 sort-RIPE gộp · fixture F1 5-pin
+- 02-03/09 · R4 verify 2 đêm
+
+**Đêm-4 report:** docs/handover/dem4_c_report_20260830.md (bổ sung §B post-TEST-VPS)
+
+STALENESS-MAP inline trong report: max input mtime <=01:40 UTC · gom_h slot có thể shift → 01:26 UTC nếu no watchlist deps.
