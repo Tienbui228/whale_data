@@ -739,6 +739,19 @@ def main() -> None:
     fail_part = -1
     for i, msg in enumerate(messages):
         ok = tg_send(msg)
+        # V3.5i [SENT] MARKER CHUẨN (directive REV10 item 4 · L-59 áp mọi sender)
+        import hashlib as _hl
+        _tg_hash = _hl.md5(msg.encode("utf-8")).hexdigest()[:12]
+        print(f"[SENT] gom_daily ok={ok} HTTP {'200' if ok else 'X'} hash={_tg_hash} target={target_date} part={i+1}/{len(messages)}")
+        # [ARTIFACT-DUMP as-sent · V1.4 sentinel]
+        if ok:
+            try:
+                sys.path.insert(0, "/root/Data_back_test/whale_data/scripts")
+                from lib.artifact_dump import dump_as_sent as _das
+                _ok, _det = _das("gom_daily", target_date, msg, channel="old")
+                print(f"[ARTIFACT-DUMP gom_daily] {_ok} · {_det}")
+            except RuntimeError as _de: print(f"[ARTIFACT-DUMP-SENTINEL gom_daily] {_de}", file=sys.stderr)
+            except Exception as _e: print(f"[ARTIFACT-DUMP-ERR gom_daily] {type(_e).__name__}: {_e}", file=sys.stderr)
         if not ok:
             all_ok = False
             fail_part = i + 1

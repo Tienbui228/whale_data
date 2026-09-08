@@ -49,9 +49,9 @@ def _parse_val(s):
     if s in ("true", "True"): return True
     if s in ("false", "False"): return False
     try: return int(s.replace("_", ""))
-    except: pass
+    except: pass  # L-66-OK (benign fallback)
     try: return float(s)
-    except: pass
+    except: pass  # L-66-OK (benign fallback)
     return s.strip("\"'")
 
 def load_config(path=CONFIG_PATH):
@@ -663,14 +663,37 @@ def main():
     if not args.no_telegram:
         tg_out = format_output_tg(snaps_a, snaps_b, target, td=td, prev_snap=prev_snap)
         ok_tg = send_telegram(tg_out)
-        print(f"INFO: Telegram {'OK' if ok_tg else 'FAIL'}", file=sys.stderr)
+        # V3.5i [SENT] MARKER CHUẨN (directive REV10 item 4)
+        import hashlib as _hl
+        _tg_hash = _hl.md5(tg_out.encode("utf-8")).hexdigest()[:12]
+        print(f"[SENT] watchlist ok={ok_tg} HTTP {'200' if ok_tg else 'X'} hash={_tg_hash} target={target}",
+              file=sys.stderr)
+        # V3.5i WATCHLIST WIRE dump_as_sent (directive REV10 item 3 · án lệ #2b claim-✅-giả)
+        if ok_tg:
+            try:
+                sys.path.insert(0, str(Path(__file__).parent))
+                from lib.artifact_dump import dump_as_sent as _das
+                _ok_dmp, _det_dmp = _das("watchlist", target, tg_out, channel="old")
+                print(f"[ARTIFACT-DUMP watchlist] {_ok_dmp} · {_det_dmp}", file=sys.stderr)
+            except RuntimeError as _dmp_exc:
+                # Sentinel [N/A-ERROR:DUMP-HALF-FAIL] · loud, không nuốt
+                print(f"[ARTIFACT-DUMP-SENTINEL watchlist] {_dmp_exc}", file=sys.stderr)
+            except Exception as _dmp_exc:
+                print(f"[ARTIFACT-DUMP-ERR watchlist] {type(_dmp_exc).__name__}: {_dmp_exc}",
+                      file=sys.stderr)
 
     # v1.4: save today's snapshot for tomorrow's diff (always, không phụ thuộc telegram)
     # [W-C 19/08] fix silent-fail — wrap try/except + telegram alert nếu fail
     try:
         save_snapshot(snaps_a, snaps_b, target)
         _snap_path = STATE_DIR / f"hedge_watchlist_{target}.json"
-        print(f"INFO: snapshot SAVED to {_snap_path}", file=sys.stderr)
+        # V3.5d L-66 SENTINEL: post-write assert (path.exists ∧ size > 100b)
+        # Catches write-fail-câm: log claims SAVED but file empty/missing on disk.
+        if (not _snap_path.exists()) or _snap_path.stat().st_size < 100:
+            _sz = _snap_path.stat().st_size if _snap_path.exists() else "ABSENT"
+            raise RuntimeError(f"WRITE-FAIL-CÂM sentinel: {_snap_path} size={_sz}")
+        print(f"INFO: snapshot SAVED to {_snap_path} size={_snap_path.stat().st_size}",
+              file=sys.stderr)
     except Exception as _sn_exc:
         _msg = (f"⚠ WATCHLIST snapshot SAVE FAIL for {target}: "
                 f"{type(_sn_exc).__name__}: {_sn_exc}. "

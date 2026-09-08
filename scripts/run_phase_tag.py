@@ -86,32 +86,31 @@ def main() -> int:
         "và manual invocation."
     )
 
-    # ── [D2] MAP-STALENESS guard — đóng nợ S3 (chống stale-silent) ─────────
-    # CASE_INDEX.xlsx sống ở local Windows; case_state_map.md SCP tay lên VPS.
-    # Nếu operator quên regen+SCP sau khi edit CASE_INDEX → map stale → verdict
-    # ⚠/🔻 route theo state CŨ. Guard HÉT sau 3d nhưng KHÔNG block scan.
+    # ── [L-74 VIEW-AUTO-REGEN enforcement (c) · KÝ 01/09] · consumer đối chiếu md5+age ─────
+    # Was: mtime-only guard 3d (S3 D2). Nâng lên md5-based check per L-74 verbatim ANALYSIS.
+    # Header source_md5 + generated_at in view (lắp bởi enforcement b tại _task_gen).
+    # Consumer đối chiếu · nếu stale → in [VIEW-STALE age=Xd] inline (không block scan).
     _csm_path = REPO / "docs" / "case_files" / "case_state_map.md"
-    STALE_THRESHOLD_DAYS = 3
-    if _csm_path.exists():
-        import time
-        mtime = _csm_path.stat().st_mtime
-        age_days = (time.time() - mtime) / 86400.0
-        if age_days > STALE_THRESHOLD_DAYS:
-            msg = (f"⚠ case_state_map stale {age_days:.1f}d — regen+SCP "
-                   f"(state có thể lệch verdict ký). Sau MỖI edit "
-                   f"CASE_INDEX sheet INDEX: local python "
-                   f"_task_gen_case_state_map_20260818.py + SCP .md → VPS.")
-            print(f"WARNING {msg}", file=sys.stderr)
-            # Telegram alert (không block scan)
+    try:
+        sys.path.insert(0, str(REPO / "scripts"))
+        from lib.view_stale_check import check_view_stale
+        # VPS không có CASE_INDEX.xlsx (sống local Windows) · source_path=None → chỉ check age
+        _stale_note = check_view_stale(view_path=_csm_path, source_path=None, max_age_hours=24)
+        if _stale_note:
+            print(f"WARNING ⚠ {_stale_note} — regen+SCP (state có thể lệch verdict ký).", file=sys.stderr)
             try:
                 from whale_collector.alert import telegram_error
-                telegram_error(msg)
+                telegram_error(f"case_state_map {_stale_note}")
             except Exception as _exc:
                 print(f"  (telegram_error not wired: {_exc})", file=sys.stderr)
-    else:
-        # Map missing entirely — HÉT ngay, không đợi 3d
-        print(f"WARNING ⚠ case_state_map.md MISSING at {_csm_path} — "
-              f"⚠/🔻 blocks sẽ không route đúng. SCP required.", file=sys.stderr)
+    except ImportError as _exc:
+        # L-66 sentinel · fallback to mtime-only if view_stale_check unavailable
+        print(f"[N/A-ERROR:VIEW-STALE-CHECK-IMPORT] {_exc} · fallback mtime-only guard", file=sys.stderr)
+        if _csm_path.exists():
+            import time as _t
+            _age_d = (_t.time() - _csm_path.stat().st_mtime) / 86400.0
+            if _age_d > 3:
+                print(f"WARNING ⚠ [VIEW-STALE mtime-fallback age={_age_d:.1f}d]", file=sys.stderr)
 
     # ── Load state (case_state_map + freshwatch) ───────────────────────────
     # INCREMENTAL: chỉ chạy tag() cho target_date, KHÔNG rebuild history.
@@ -314,6 +313,20 @@ def main() -> int:
         return 0
     # Plain text (no parse_mode) — 5-block emoji render tốt hơn Markdown escape
     ok = tg_send(msg, parse_mode="")
+    _target = args.date if hasattr(args, "date") and args.date else _iso_yesterday_utc()
+    # V3.5i [SENT] MARKER CHUẨN (directive REV10 item 4 · L-59)
+    import hashlib as _hl
+    _tg_hash = _hl.md5(msg.encode("utf-8")).hexdigest()[:12]
+    print(f"[SENT] phase_map ok={ok} HTTP {'200' if ok else 'X'} hash={_tg_hash} target={_target}")
+    # [ARTIFACT-DUMP as-sent · V1.4 sentinel]
+    if ok:
+        try:
+            sys.path.insert(0, "/root/Data_back_test/whale_data/scripts")
+            from lib.artifact_dump import dump_as_sent as _das
+            _ok, _det = _das("phase_map", _target, msg, channel="old")
+            print(f"[ARTIFACT-DUMP phase_map] {_ok} · {_det}")
+        except RuntimeError as _de: print(f"[ARTIFACT-DUMP-SENTINEL phase_map] {_de}", file=sys.stderr)
+        except Exception as _e: print(f"[ARTIFACT-DUMP-ERR phase_map] {type(_e).__name__}: {_e}", file=sys.stderr)
     if not ok:
         print("ERROR: Telegram send failed", file=sys.stderr)
         return 1
