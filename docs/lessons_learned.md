@@ -1,265 +1,107 @@
-# Lessons Learned — FreshWatch
-
-> Auto-generated tu CASE_INDEX.xlsx sheet LESSONS. Khong edit file nay truc tiep.
-> Lan sinh: 2026-08-26 · Tong: 66 bai hoc (L-01 → L-65)
-
-## L-01 [2026-07-30] BR (+BAS,TUT,BANK) — `dinh luat` · DA VAO master plan §1 #9
-OI-floor = so vi the MM: ratio doc tai day OI trong so cao (retail da roi); pos_r nhich tai nen chet = tin hieu som dam; ratio tai OI-peak phai chiet khau
-*Hanh dong tiep: oi_floor_flag (OI<=1.1x min30d) lam he so ranker — chua active, thu bang chung*
-
-## L-02 [2026-07-28] AKE (an PA-B) — `process/rule` · DA VAO GATE dict + §10 (commit b0b4cff4)
-KHONG amend dinh nghia signal de om case ngoai ho cua no — ghi miss + negative assertion. lsr_accum nghieng ho bid-walk, s3_eve ganh ho taker-driven: hai signal BU nhau
-*Hanh dong tiep: ap dung lai khi concentration_shift gap BANK (L-04)*
-
-## L-03 [2026-07-29] BANK (ho so 4 lop) — `thesis` · DA VAO — so do cho R4-TRIGGER (khong lop nao bat buoc)
-Tell som nhat co the nam tron MOT lop don doc 11 ngay (perp) — doi da lop lam dieu kien ARMED se lot ho BANK. Xac nhan da lop chi den DUNG luc no
-*Hanh dong tiep: moi case moi: ghi T-k lan dau >=2 lop nguoc gia vao ho so*
-
-## L-04 [2026-07-29] BANK — `rule` · GHI NHAN — cho test duong tren TUT (CASE-04)
-concentration_shift KHONG ban tren BANK = negative case HOP LE: level-type (div cao tinh) vs delta-type (acc sap pos giu) la HAI ho tin hieu khac nhau, khong va sensor de om ca hai
-*Hanh dong tiep: neu TUT ban dung 10-12/07 -> sensor song, xet vao screen ranker*
-
-## L-05 [2026-07-30] BR + BTW — `dinh luat` · DA CO trong §1 #1 (rule dao dau M2) — BR cung co them
-Withdrawal gan dinh = MOI on-chain (bang chung #2, vong doi 4 thang truy tron: rut-tai-dinh -> phan phoi -> redeposit). Moi withdrawal cua nhom MM-BAIT phai doc ngo toi da
-*Hanh dong tiep: token dinh bai nay vao SO DEN trong MM_BOOK*
-
-## L-06 [2026-07-28] TAG (Gate probe) — `rule` · GHI NHAN — dua vao khung E4/M4 khi cham diem transfer
-Inventory != gom: toan khoi luong (V_venue vs $withdrawal) phan xu duoc 'vua mua' hay 'hang co san'. Book sieu mong = BAI DO — withdrawal khoi bai do = khoa float, khong doc thanh 'chuyen di ban'
-*Hanh dong tiep: nguong nhap: V_14d >= 2x withdrawal moi coi la 'co the gom tren venue'*
-
-## L-07 [2026-07-30] BR (operator) — `thesis` · GHI NHAN — khuon moi, BR la test song
-Pump-to-distribute: kho len san = CHUAN BI DAN, khong xa tai gia hien tai — can leg keo tao hype truoc. Khong long theo khi KHONG co ghe big-long de di cung (div ~1) = vi tri con moi. Dieu kien tien quyet cua leg that: crowd long phai bi rua
-*Hanh dong tiep: neu BR keo that: doi chieu chot 1+2 co bao truoc khong*
-
-## L-08 [2026-07-30] BANK/BTW/ESPORTS/BR — `process` · DA VAO tracker v1.1 (§I + MM_BOOK)
-MM profile la NUA verdict — moi MM danh mot kieu (bid-walk kien nhan / bait-withdrawal / squeeze muc tieu). Gan MM_ID can >=3 van tay trung; gan au te hon khong gan
-*Hanh dong tiep: cross-campaign trung dia chi/van tay = alert cap he thong*
-
-## L-09 [2026-07-29] P1 fire audit — `process` · DA VAO ky luat A4 (mo rong A4.2)
-KHONG tin loi giai thich fire — chi tin bang dieu kien tung dong (an 'vol drop faster than OI' la cau bia; fire dung nhung narrative sai van la doc sai). Moi fire phai tu bao ve bang input series + yaml check
-*Hanh dong tiep: ap cho ca advisor: so tay cua toi dung sai spec cu (1.5x vs 1.3x da ky) — yaml locked la luat*
-
-## L-10 [2026-07-29] BR/TAG pipeline — `process` · DA VAO P1 (funding_n guard) + tracker schema
-Data hong cung phai ghi (data_bad=1, to cam) — lo hong la thong tin; dong non (funding_n thieu) phai bi guard loai khoi moi streak/window
-*Hanh dong tiep: an pipeline MISSING cuoi thang: kiem toan store dinh ky*
-
-## L-11 [2026-07-28] TAG 27-28 (BULLA truoc do) — `thesis` · DA CO tu BULLA — TAG cung co lan 2
-Wash-by-rally: crowd tu roi bang chot loi vao da tang — cu ru bo sung KHONG bat buoc truoc leg. gLSR giam trong ngay gia tang = nhien lieu dang duoc don, doc BULLISH cho campaign
-*Hanh dong tiep: glsr_slope am trong ngay xanh = co xac nhan*
-
-## L-12 [2026-07-30] BR (operator) — `process` · DA VAO tracker v1.1 (§J bat buoc)
-Unlock la dong cung CO LICH — MM biet truoc va danh quanh no (keo truoc unlock de xa vao hype / de truoc unlock de gom re). Case thieu khoi J = mu mot mat
-*Hanh dong tiep: viec tay: tra unlock BR/TAG/BANK — BR truoc*
-
-## L-13 [2026-07-30] ledger vs tracker — `process` · DA DUYET 30/07 — xem sheet PHAN_VAI
-Phan vai: ledger = so cai NGANG (thong ke precision, may doc); tracker = ho so DOC (thesis-check, nguoi doc). Verdict chi song MOT noi (case file), ledger Zone B rut gon state+case_id. Mot chieu du lieu, khong ghi nguoc
-*Hanh dong tiep: them cot case_id vao Zone B (viec tay 1 phut)*
-
-## L-14 [2026-07-30] TAG 08-09/07 + AKE 08-10/07 — `thesis` · DA VAO yaml (crowd_flush cause=crash)
-Dump manh + gLSR SAP >=30%/<=3d = wash-by-crash: mot phat an hai: don chi phi long + nap nhien lieu short (crowd short moi = nhien lieu re cho squeeze). La bien the crowd_flush thu nhat, doi xung L-11 (rally) va L-15 (bait). Phan biet ro voi L-26: gLSR SAP khi gia sap (wash) vs gLSR TANG khi gia sap (wrong-side fuel)
-*Hanh dong tiep: phan biet ro voi L-26 (gLSR TANG khi gia sap = hien tuong nguoc, KHONG phai wash)*
-
-## L-15 [2026-07-30] BANK 02/07 + BASED 01&09/07 + POWER 08-09/07 — `thesis` · DA VAO yaml (crowd_flush cause=bait)
-Vol spike >=8x med14 + gia bi tu choi <=2d = bait-probe: muc dich khong phai markup het ma la DAY crowd short nap nhien lieu squeeze. Sau bait canh gLSR sap trong <=3d lam xac nhan; vol persistence T+1 phan biet bait vs ignition that
-*Hanh dong tiep: tag probe events trong EVENTS log khi thay pattern*
-
-## L-16 [2026-07-30] BR + EVAA + CLO — `thesis` · GHI NHAN
-div_raw truot tu >1 xuong <1 = vi the lon thu hep/dao long bias = chom phan phoi; flag STAND_ASIDE review; khong ARM sau div-flip neu chua co bang chung re-gom. LUU Y THUAT NGU: day KHONG phai 'M2 dao dau' — M2 la module CEX balance flow (xem L-27)
-*Hanh dong tiep: flag div-flip trong DAILY log; ho hang gan voi lsr_dist (da la suppressor yaml)*
-
-## L-17 [2026-07-30] AKE + ESPORTS — `dinh luat` · DA VAO master plan §1 #5 + EXIT_NOW conditions
-Squeeze/markup chet khi nhien lieu chet — hai cua dong an: (a) gLSR hoi ve ~1 (crowd short dau hang), (b) muc tieu cu the goc (TARGETED_SQUEEZE). Dang giu vi the ma mot trong hai bat = EXIT_NOW. [De xuat CHUA CALIB: thao tac hoa bang glsr_slope_5d doi dau — chua test case nao, glsr_slope_5d hien chi la cot hien thi (A5), khong phai gate]
-*Hanh dong tiep: neu muon slope-flip thanh trigger di duong proposal + calib nhu #17*
-
-## L-18 [2026-07-30] u50_verdicts §2 (n=18) — `thesis` · GHI NHAN
-Truoc ARM phai check du 3: (1) pha chu ky (nhin du px7/px14 + oi_cycle_pos, khong chi cua so 28d), (2) crowd structure (gLSR + dao ham — co tinh gan vo dung), (3) OI khong tai PEAK. Thieu 1/3 = low-conviction. KHONG trich dan % precision khi chua do — precedent dem that (n=...), cam noi %
-*Hanh dong tiep: phase_check vao ARM checklist; precision that do bang shadow-mode P2 + alerts_log*
-
-## L-19 [2026-07-30] u50 §2 + CLO/BLUAI/STAR (n=18) — `process` · GHI NHAN — no P2
-Signal fire ban giong nhau o pha gom va pha phan phoi — can phase_tag (ACCUMULATE/MARKUP/DISTRIBUTE/UNKNOWN) tu oi_cycle_pos + div trend + glsr_slope de loc; den khi co phase_tag: moi fire phai kem phase check tay (L-18). Khong trich % false-rate khi chua do
-*Hanh dong tiep: thiet ke phase_tag inference trong P2*
-
-## L-20 [2026-07-30] TAG/BR 28-29/07 — `process` · DA VAO CLAUDE.md (fn=1 rule)
-fn=1 / data_bad=1 / missing >3 ngay trong window / so tu 1 nguon khong kiem chung → low_conf=True; so bi ha cap KHONG lam threshold ARM/FIRE
-*Hanh dong tiep: mo rong tu-ha-cap cho data_bad flag (ngoai fn=1)*
-
-## L-21 [2026-07-30] BR (an 30/07) — `rule` · DA VAO CLAUDE.md
-OI daily canonical = export Binance openInterestHist 00:00 UTC. So intraday (Coinglass/GMGN) chi vao EVENTS kem timestamp, khong vao DAILY. An 30/07: BR 4,634,000 (intraday) vs 3,782,263 (export 00:00) chenh 22%. Rule: mot cot DAILY mot so canonical
-*Hanh dong tiep: khi co so OI: xac nhan nguon + gio chup truoc khi ghi DAILY*
-
-## L-22 [2026-07-30] TAG+BR 28-29/07 — `rule` · DA VAO CLAUDE.md
-fn=1 (native_1d low_conf) khong dung lam so chot ARM/FIRE. Fallback: Zone A aggregate tu ledger_v2.xlsx CAMPAIGNS, ghi ro Zone-A-agg. TAG 29/07: gLSR 1.81 (fn=1 SUSPECT) vs 1.61 (Zone-A-agg) — chenh 0.2 du dao nhan dinh toc do nap crowd
-*Hanh dong tiep: khi fn<6: tu dong dung Zone-A-agg + flag SUSPECT trong handover*
-
-## L-23 [2026-07-30] TAG — `thesis` · GHI NHAN
-Fire margin mong -> fade la kich ban xac suat cao: TAG 28/07 fire bien mong, ret_3d=-9.87%, crowd nap long vao duong gia xuong (gLSR 1.28->1.81). Invalidate som: gia khong confirm T+1/T+2 + gLSR tang tiep = WATCH-ha-nhiet, khong ARM lai som
-*Hanh dong tiep: them T+1/T+2 price-confirm check vao S1 handover (48h khong confirm = WATCH-ha-nhiet)*
-
-## L-24 [2026-07-30] BR/TAG (an 30/07) — `rule` · DA VAO CLAUDE.md (facts da chot)
-oi_vs_med14 Excel != oi_vs_med14 signals.py (window ket thuc ngay khac). Moi so DAILY phai mang nhan: nguon + window cu the. Khong dung Excel calc lam proxy signals.py canonical. Hai nguoi doc hai so khac nhau cung ten = an tranh luan vo ich
-*Hanh dong tiep: moi oi_vs_med14 phai kem (signals.py, window=...) hoac (Excel, col X)*
-
-## L-25 [2026-07-30] BR+TAG (tai pham 30/07) — `rule` · DA VAO CLAUDE.md (KY LUAT)
-Mot-nha-mot-data tai pham x2 trong session 30/07: (1) OI DAILY 2 so tu 2 nguon; (2) gLSR/div dung fn=1 raw thay vi aggregate canonical. Rule: moi cot DAILY mot nguon canonical khai bao tuong minh. >=2 so cung metric -> chon canonical + ghi an vao EVENTS
-*Hanh dong tiep: audit cot DAILY hien tai: co cot nao 2 nguon khong khai bao khong?*
-
-## L-26 [2026-07-30] ESPORTS hau-climax + TAG 29/07 + BLUAI — `thesis` · GHI NHAN
-Gia sap/roi + gLSR TANG = crowd long bat dao = nhien lieu SAI phia — NGUOC han wash-by-crash (L-14: gLSR SAP). He qua: (a) leg-len ke tiep can lua long nay bi rua truoc, (b) con dang SUPPRESSED co pattern nay thi REMAIN, (c) khong doc nham thanh 'co nguoi gom'
-*Hanh dong tiep: dieu kien tien quyet 'crowd flush truoc leg' ghi vao chot canh cac case dinh (TAG, BR, ESPORTS)*
-
-## L-27 [2026-07-30] BTW vs BAS/TAG | AKE/IDOL — `dinh luat` · DA VAO master plan §1 #1 + A1 (R4)
-M2 (CEX balance flow) tu no KHONG mang y dinh — dau cua no do boi canh quyet: vi tri chu ky + funding regime + hanh vi gia. Chay M2 don le la An tron bay BTW. Suppressor o bat ky lop nao phu quyet moi bullish cua ca ba lop
-*Hanh dong tiep: giu ten 'M2' doc quyen cho balance flow — khong dung cho div/ratio (an L-16 rev.1)*
-
-## L-28 [2026-07-30] u50 §6 (AGT / HUMA-AT sync / listing 04-14) — `process` · GHI NHAN — u50 §6 la mau chuan
-Moi narrative dung tren mot nguon phai kiem nguon goc (aggregator != klines; mep cua so = artifact ung vien). Narrative khong con dung duoc → RUT cong khai va GHI SO muc 'da tu ha cap' — de khong tu lua va khong tai sinh. Cu luan diem chi giu phan con dung tren bang chung
-*Hanh dong tiep: moi report lon co muc 'bang chung da tu ha cap' nhu u50*
-
-## L-29 [2026-07-30] OPN + HYPER (u50 §3a, n=2) — `guard` · DA VAO amendment A6 (guard)
-alpha_vol_suspect = vol_spot/vol_perp > 3x → moi metric VOL SPOT cua con do ABSTAIN (khong wash-check, khong #17, khong bang chung dong tien); van dung depth/price/taker. takerBUY spot lech cuc doan (<35% hoac >70%) tren vol khong lo = hinh dang farming. Guard chi ha long tin, khong sinh bullish → ap ngay
-*Hanh dong tiep: cot alpha_vol_suspect vao triage/snapshot khi build spot collector (P1.5)*
-
-## L-30 [2026-07-30] BLUAI + ARX (u50) — `data-bug` · GHI NHAN (no ky thuat u50 #2, muc CAO)
-Token venue_top=bitget: cam so sanh spot-vs-perp cung-ngay cho den khi bug lech ngay duoc xac minh/va; phan tich cross-market phai shift-test truoc. Ghi chu venue vao moi bang so sanh
-*Hanh dong tiep: probe xac minh offset tren 2 token + va tai ingest*
-
-## L-31 [2026-07-30] lessons_learned.md rev.1 — `process` · GHI NHAN
-Tong hop/dien giai tu tai lieu cu = vung rui ro cao: moi entry phai trace ve cau chu nguon (dinh nghia lay tu yaml/reference, khong tu tri nho dien giai); so lieu khong co trong nguon = khong viet; thuat ngu he thong (M1/M2/ten signal) dung dung nghia goc, khong tai dinh nghia. L-09 ap cho ca tai lieu, khong rieng fire
-*Hanh dong tiep: moi consolidation sau nay kem bang trace entry-nguon khi operator yeu cau kiem*
-
-## L-32 [2026-07-30] BANK — `process/rule` · GHI NHAN
-Backfill save nhầm file (_NEW suffix) do file gốc bị lock trong Excel — INDEX vẫn trỏ tên cũ → case_daily ghi vào file cũ (4 dòng) thay vì canonical (35 dòng). Fix: sau bất kỳ backfill nào, verify INDEX trỏ đúng canonical; canonical phải có đúng tên gốc.
-*Hanh dong tiep: thêm bước verify file name + row count vào checklist sau backfill*
-
-## L-33 [2026-07-30] BANK — `rule` · GHI NHAN
-fn=1 fallback (Zone-A-agg) chỉ dành cho cột taker_buy_pct — KHÔNG mượn sang gLSR/pos_r/acc_r. Metric ratio phải đến từ export CSV hoặc để TRỐNG + comment, không ghép chéo metric. Guard bằng assert EXPORT_COL_MAP tại import time trong case_daily.py.
-*Hanh dong tiep: assert đã vào case_daily.py dòng sau FORMULA_COLS*
-
-## L-34 [2026-07-30] CASE_BANK_NEW.xlsx (an 30/07), fix da commit — `process/rule` · DA VAO case_daily.py (L-34 raise, commit 2026-07-30)
-PermissionError khi save xlsx → RAISE RuntimeError ngay, cam silent-save sang ten khac (_NEW suffix). Ten file khac = INDEX tro sai = case_daily ghi nham → data bi pha vo im lang. Fix: close xlsx roi retry
-*Hanh dong tiep: backfill script cung phai RAISE neu gap lock (kiem tra backfill.py)*
-
-## L-35 [2026-07-31] binance-bot-signals P0 regression suite — `process/rule` · GHI NHAN
-Bo calib (12 file _result.txt + GATE dict + replay.py) phai song trong git cung voi code — da dung, ghi nhan de giu. Quy tac: moi repo moi can regression suite commit ngay tu dau, khong de calib file ngoai version control. Loi that nhat la khi calib tach khoi code: code duoc update ma calib cu → false pass / false fail.
-*Hanh dong tiep: moi repo moi commit regression suite cung voi code trong 24h dau — khong phan tach calib khoi git*
-
-## L-36 [2026-07-31] P0 gate session 31/07 (TAG/BTW reconstruct) — `process/rule` · GHI NHAN
-Tai tao data file phai test bang suite nguyen ban (replay.py goc tu git), KHONG tu viet harness moi. Harness tu viet dan den 3 assertion sai: (1) AKE lsr_accum: viet fires_in thay vi never_in; (2) BASED crowd_flush: viet fires_in thay vi never_in; (3) BULLA pos_rerate: dung file tai tao (pos 07-20=1.75) thay vi file goc (1.99). An: bao 40/43 gia, mat thoi gian debug. Fix: dung replay.py goc → 43/43 PASS.
-*Hanh dong tiep: quy trinh tai tao data: viet file → chay replay.py goc tu git → PASS truoc khi commit bat ky thu gi*
-
-## L-37 [2026-07-31] B0 bundle backup 4 repo (31/07) — `rule` · DA VAO — bundle 4 repo len VPS /root/archive/ ngay 31/07
-Repo chi local (khong remote git server) = single point of failure — mot loi o dia hay OneDrive deauth mat het. Giai phap toi thieu: git bundle → SCP len VPS /root/archive/ trong vong 24h tao repo, sau do bundle lai tai moi milestone lon. Da ap 4 repo ngay 31/07: binance-bot-signals, whale_data, Check onchain, Whales_scan. Repo OneDrive them an: file-lock + single-copy = combo sinh an (CASE_BANK_NEW, L-34).
-*Hanh dong tiep: moi repo moi phai co bundle tren VPS trong 24h; nhac lai tai moi milestone lon*
-
-## L-38 [2026-07-31] BULLA 07-20 (B4 probe — 4 nguon 4 so) — `rule` · GHI NHAN — proposals/ratio_daily_canonical_20260731.md cho operator ky
-Mot metric mot ngay ra 4 con so khac nhau (1.75/1.68/1.981/1.99) tu 4 nguon: (1) u50 loose = 1.75 (nguon khong ro, retired); (2) top_pos_1h keep-last 23:00 UTC = 1.6811; (3) derived_1h = 00:00 UTC dau ngay = 1.981; (4) native_1d repo goc = 1.99. Nguyen nhan: quy uoc canonical CHUA TON TAI khi calib duoc viet. He qua: verdict buoc phai chon nguon theo ket luan muon co = vi pham nguyen tac. Fix: quy uoc phai duoc ky TRUOC khi bat ky so nao duoc trich dan vao calib/DAILY. Xem proposals/ratio_daily_canonical_20260731.md cho de xuat keep-last canonical.
-*Hanh dong tiep: ky proposals/ratio_daily_canonical_20260731.md truoc khi chay backfill tu ngay 31/07*
-
-## L-39 [2026-07-31] proposal v2 (31/07) — boundary canonical — `rule` · GHI NHAN — proposal v2 ký 31/07, CLAUDE.md updated
-Quy ước boundary phải TEST bằng đối chiếu nguồn (21/21 diff 0%) trước khi văn bản hóa — proposal v1 hợp lý trên giấy nhưng ngược 180° với thực nghiệm; n=1 suy luận đẹp vẫn phải qua n=21.
-*Hanh dong tiep: trước khi văn bản hóa quy ước metric nào: test >= 21 điểm thực nghiệm đối chiếu nguồn*
-
-## L-40 [2026-08-02] NANSEN_KEY_LOCKED blast-radius (02/08) — bot fresh wallets — `rule` · DA SUA — run_daily_wrapper.py (02/08); FreshWatch task updated
-Chốt chặn cấp máy có blast radius cấp máy — trước khi gạt công tắc dùng chung (env/key/config toàn cục), bắt buộc liệt kê MỌI consumer hợp lệ; ràng buộc nhắm vào agent phải đặt ở tầng hẹp nhất đủ dùng (per-process wrapper), không đặt tầng chung. Bằng chứng: bot fresh wallets chết 3 ngày (gap 31/07–02/08) vì NANSEN_API_KEY rename sang NANSEN_KEY_LOCKED — automated job \FreshWatch không đọc được key.
-*Hanh dong tiep: trước khi rename/remove bất kỳ env/key/config toàn cục: grep MỌI consumer (scheduled task + code), sửa wrapper per-process trước khi rename*
-
-## L-41 [2026-08-03] IDOL/TAG/BR/BANK fn=1 28-31/07 (timing bug) — `rule` · DA SUA — cron + script fixed 03/08; 28-31/07 re-generated
-Job aggregate ngay phai chay SAU khi ngay dong tron. Export mid-day = so non co he thong: tai 00:50 UTC IDOL chi co 1/6 ky funding trong store, 5 ky con lai (04:00/08:00/12:00/16:00/20:00) collect trong ngay nhung export da freeze voi fn=1. Fix: cron export 01:20 UTC D+1 (sau khi D dong + buffer 1h20); loai D khoi default_dates() range; them --force-regen de re-generate khi can.
-*Hanh dong tiep: verify vong tu nhien: export sang 04/08 phai ra fn=6 cho ngay 03/08. Neu PASS → dong an. Quy tac: khong bao gio generate D truoc 00:05 UTC D+1.*
-
-## L-42 [2026-08-04] IDOL/TAG/BANK — kho spot MM: phan loai theo SO HUU truoc khi doc on-chain — `rule` · OPERATOR KY 04/08
-Kho spot cua MM khong tu no la 'hang se xa' — ham muc tieu phu thuoc SO HUU kho. Phan 3 loai TRUOC khi doc bat ky transfer nao: LOAI A (kho MUON tu team — khong gia tri voi MM; P&L 100% o perp; moi deposit/withdrawal la THONG DIEP nhung nguoi doc on-chain, khong phai bang chung; endgame kho round-trip nguyen dai; dong co DAP GIA hau campaign de mua lai tra no kho — canh kho hoi day o day). LOAI B (kho unlock/dau tu — so huu that, cost thap; doanh thu phai hien thuc hoa; neo lich unlock; deposit-len-san <=48h sau ngay unlock = tell hang nhat — BANK 17/07->18/07). LOAI C (tu bo tien mua tai cho — conviction that, cost basis = floor co nghia, khong deadline; loai duy nhat 'di cung thuyen' duoc). Tell phan loai: (1) NGUON kho — deployer/team wallet = nghi A; vesting contract dung lich = B; gom le nhieu nguon dai han = C; (2) nhip voi lich unlock; (3) hanh vi kho HAU DINH — round-trip nguyen = A, ban that = B; (4) do 'dien' cua transfer — chia may deu + Sent=0 trung bay = tin hieu re, nghi A. Bang chung: IDOL 3 man mot dao cu (8% vao 03-05/07 -> rut 273M staging shape 13 vi -> redeposit 102M) trong khi ket that o perp ~$1.2-1.8M; TAG 90B round-trip May->Jul; BANK chan unlock ban that (lai A+B); AKE 'perp vol 70x spot — spot la can gat'.
-*Hanh dong tiep: (a) cot mm_archetype{A/B/C/lai} + kho_nguon cham hoi to 12 case + case song; (b) BR kho 6% trace nguon = viec phan loai dau tien — neu team wallet -> Loai A -> cu flush gLSR 03/08 doc lai duoi anh sang 'dao cu man hai'; (c) moi dong PnL spot chua co sell-side xac nhan ha nhan 'unverified inference' (IDOL 111M, BANK $12-28M); (d) K3 sell-side Pancake IDOL van la test phan xu — PENDING.*
-
-## L-44 [L-44(a) DIEU KIEN KET THUC CAMPAIGN: Loai A (kho-muon) = ghe-roi perp la het. Loai B/C (unlock/tu-mua) = ghe-roi perp la CHUYEN PHA — ket thuc that khi kho/vol ≤10% (Cua A) hoac Cua B kich hoat (short-hedge). TUT: pos_r crash 08-05 (−48%) = GHE-ROI LAN 2 (HARVEST-INTO-STRENGTH), KHONG phai L-26, campaign van tiep tuc.] TUT — `DRAFT` · 
-2026-08-08
-
-## L-45 [L-45(b) DURATION SCALING: Thoi luong campaign ty le thuan voi build_window va kho_size. Tham khao draft n=4: BANK (build ~17d, Loai B) → campaign D+17; IDOL (build ~7d, Loai A partial) → D+11; TUT (build 13d, Loai C) → D+16+ ongoing. CLO TBD. Hypothesis: dai build = dai campaign; chua du n de calib chinh xac.] TUT/BANK/IDOL/CLO — `DRAFT` · 
-2026-08-08
-
-## L-46 [2026-08-09] CASE_BANANAS31 + CASE_HEI — `ARM` · ACTIVE
-Video vs Photo: hai hồ sơ pos_r cao nhưng ý nghĩa khác nhau. "Video" (CASE_HEI) = build thật: pos_r vừa phải, đồng-bộ giá, ít dist_wall. "Photo" (CASE_BANANAS31) = snapshot đẹp nhưng static: pos_r=6.7 RẤT CAO nhưng sign-corr Δpos_r vs ret_1d ~50% (47.7% opposite) — pos_r KHÔNG predict giá. Thêm: dist_wall_day=57/503 (11.3%), knife_crowd=9 ngày — dấu MM đang bán vào pump. Kết luận: pos_r level đơn độc KHÔNG phân biệt được BTW vs phân phối. Cần 3 đạo hàm: level + slope + sync. Xem Phụ lục A.5. Nguồn: CASE_BANANAS31 phân tích 08-09/08/2026 · ký 09/08 · đối chứng: CASE_HEI.xlsx
-*Hanh dong tiep: Khi pos_r >5: check sign-corr Δpos_r vs ret_1d (30d OLS). <55% → Photo → TRACKING-passive. Không vào setup cho đến đồng hồ cụm trigger (xem L-47). Implement: build_case.py đã in OLS slope + sign-corr.*
-
-## L-47 [2026-08-09] CASE_BANANAS31 — `ARM` · ACTIVE
-Đồng hồ cụm: Build-into-weakness không kéo dài vô tận. BANANAS31 pump cluster: Jun/Aug/Oct 2026 [n=3 inference từ vol spikes ≥8×med14]. Build cụm #3 từ 06/2026 → đồng hồ ~60-90 ngày → cụm #4 dự kiến Aug-Oct/26. Nếu không có ignite (gLSR≤0.7 + pos rebuild ≥3d) trong cửa sổ → build failed → MM exit. Hiện tại gLSR=1.20 > ngưỡng ignite 1.1 → block entry (crowd đã long hết). Verdict NO_SETUP — TRACKING-passive. Nguồn: CASE_BANANAS31 · ký 09/08
-*Hanh dong tiep: Mỗi case BTW: ghi ngày dự kiến đồng hồ cụm tiếp theo. Theo dõi: gLSR drop về ≤0.7 (lý tưởng) hoặc ≤0.9 (cảnh báo). Nếu hết cửa sổ không trigger → escalate INVALIDATE check.*
-
-## L-48 [2026-08-09] CASE_BANANAS31 + CASE_IDOL — `DATA` · ACTIVE
-fullyDelisted Alpha → ABSTAIN taker_alpha. Klines[9]==klines[5] trên BAPI khi fullyDelisted=True (taker column = close price, không phải real taker). Đã confirm: IDOL (ALPHA_223, L-43 context) + BANANAS31 (ALPHA_21). Rule chốt: IF offline=True OR offsell=True OR fullyDelisted=True → taker_alpha=NaN, flag=ABSTAIN. Áp dụng ngược cho mọi case đang mở có Alpha token. Nguồn: CASE_BANANAS31 + CASE_IDOL · ký 09/08
-*Hanh dong tiep: Khi collect Alpha mới: check fullyDelisted trước khi parse klines[9]. Script build_case.py đã implement ABSTAIN block. Audit retrospective: CASE_TUT/BR/CLO — check Alpha status.*
-
-## L-49 [2026-08-11] GUARD-CÂM / ALL tokens — `GUARD` · DA VAO gom_scan.py c3d49e1
-save_state() fail-open: ghi state.json không kiểm tra invariants → state corrupt không bị bắt. Sửa: validate_gom_state() wired vào save_state() pre-write (4 invariants: open chain ≤3d gap, không open+cooldown đồng thời, vwap_type hợp lệ, cooldown_end ≥ episode_start). Violation → RuntimeError → exit≠0 → Telegram alert (L-44). Commit c3d49e1.
-*Hanh dong tiep: Verify sau SCP: validator không thay đổi write behavior (md5 re-check post manual run)*
-
-## L-50 [2026-08-11] P0 / FFUSDT 2026-08-01 — `P0` · DONG — md5 PASS 11/08
-P0 root cause: floating-point boundary tại A3 slope_5d = 1.15. FFUSDT 08-01: slope=1.14902 (dist=0.00098 từ ngưỡng). State corrupt xảy ra vì backfill chạy lại trên đoạn đã có chapter, không phải cron viết lại. Incremental mode §8.2 đã xác nhận đúng: md5 closed-chapters IDENTICAL sau cron 01:25 UTC 08-11 (a5a929dcc4ba17f71eb3243146be2314). Vùng-rung probe: A3 có 32 changed-outcome events / 60d / 525 tokens tại ε=0.005. Mốc V4 monitor: MARGINAL-V4 đến 25/08.
-*Hanh dong tiep: V4 monitor: đếm chain oscillation do A2/A3 marginal qua marginal_hits.csv đến 25/08*
-
-## L-51 [2026-08-19] GUA (SUPERFORTUNE án F1-F7 19/08) + toàn hệ — `IDENTITY` · DA VAO — spec + code hoá bắt buộc (đang chờ collector Step-0 assert)
-Step-0 token-identity discipline (một-thứ-hai-tên) — trước khi dùng BẤT KỲ data từ venue nào, phải verify identity bằng 4 bước: (1) Contract canonical PHẢI từ operator-niêm (tracker-relayed 0x + chain) — cấm symbol-string lookup (bài F1 GUA: bapi trả contract khớp SUPERFORTUNE nhưng chưa đảm bảo là token operator target). (2) Bit-level compare bapi/venue contract vs operator contract (lowercase) — identical mới confirmed. (3) Price-band check: klines venue vs klines perp ±20% (tolerance rộng cho illiquid Alpha). Ngoài band = FALSE-VENUE. (4) Van flag deposit/withdraw per chain — LOCKED chain = ISOLATED, không đếm băng-thông xả. Bằng chứng F1-F7: bapi ALPHA_483 SUPERFORTUNE contract 0xa5c8e15... — CẦN operator 0x mới quyết True/False venue. Áp dụng: TRIA (Bybit), STBL (Gate+MEXC+KuCoin+Alpha), HEMI (Gate+MEXC, Alpha delisted), PUMPBTC (MEXC+Gate+Bitget, verified 20/08). Old L-51 content (GOM-C C1 spec drift 11/08) archived in git history — canonical L-51 từ nay = Step-0 identity discipline.
-*Hanh dong tiep: Case-open mọi token mới: Step-0 (contract canonical operator) TRƯỚC data load. Collector code: add contract_canonical field + assert bit-eq trước fetch/store. Amendment cho tất cả CASE files: cột `contract_canonical` (row 7 CASE meta). Ref: docs/reports/_gua_identity_forensics_20260819.md §F6 schema v2.1-ext · ARCHIVE-REF: old L-51 content (GOM-C C1 spec drift 11/08, commit 49f1cd6 và trước) archived in git history — canonical L-51 từ nay = Step-0 identity discipline.*
-
-## L-BUG-STALE-CASE [2026-08-17] CASE — `AINUSDT 20260813 fetch, build chạy 20260817 → thiếu Aug13-16` · 
-build_case.py dùng scratch CSV theo DATE_TAG baked vào lệnh. Khi build chạy muộn (5 ngày sau fetch), data gap âm thầm — không có guard. Fix: thêm STALENESS GUARD: gap > 2d → RAISE. Lesson: scratch CSV là nguồn duy nhất cho build_case; không có pipeline auto-refresh → PHẢI re-fetch trước khi build muộn.
-
-## L-52 [2026-08-19] TRIA + recon 4 case (BTW/GUA/APR/CLO) — `VENUE` · DA VAO — spec §D4-ext + amendment 19/08
-Venue coverage — 'không có spot Binance' ≠ 'không có spot'. Băng thông xả và chân hàng phải tính trên venue spot LỚN NHẤT THỰC TẾ (không phải venue mặc định đầu tiên tra). Trước khi kết luận 'Alpha-only' hay 'perp-only chain': tra spot venues lớn (Bybit · OKX · Gate · KuCoin · MEXC · Bitget) trước, kết luận sau. LAYER COVERAGE mọi report case phải khai `spot-ext: <venue>/N/A/CHƯA-TRA` — quy ước CHƯA-TRA ≠ N/A. Cột canonical CASE schema v2.1: vol_spot_ext_usd (col 51) · spot_ext_venue (col 52) — CẤM ghi Bybit/OKX vào vol_spot_usd (col 31 = Binance api/v3 canonical). Exhibit TRIA 19/08: Bybit turnover Aug18 = $2,304,652 (3× Alpha $770K) — nếu không tra Bybit → mù nguyên một van xả 3×. Recon: GUA có Gate spot đã bỏ sót.
-*Hanh dong tiep: Case-open probe: tra ≥3 venue spot (Bybit + OKX + Gate) tối thiểu trước khi ghi verdict Alpha/perp-only. Identity-check bit-level ≥3 mẫu chống mirror trước khi dùng field mới.*
-
-## L-53 [2026-08-20] CASE_HEMI (autopsy 20/08) — evidence #2 G-committed-long (BTW-July = #1) — `SPECIES` · ACTIVE — vá bằng §E-R Un-hedge Registry v1.0
-Loài captive-kho vùng-giữa — máy perp mù theo CẤU TRÚC, không phải theo ngưỡng. Evidence HEMI 07-08/2026: 4 điểm mù cùng lúc — (1) div_avg3 vùng giữa 0.9-1.1 (pos cao 3.5 bị acc cao 3.9 che → mọi rule so-tương-đối mù) · (2) un-hedge làm 5 tuần trước ignite (episode B1 chết 09/07, ignite 15/08 — ngoài mọi cửa sổ T−2 khuôn ON và ngoài recent_hedge_days=2) · (3) vị thế long ngồi TĨNH từ trước window (không delta → mọi máy đo chuyển động câm) · (4) đòn chính = kho 490M nằm sẵn trên sàn. CẤM chỉnh A1/B1/GOM-E theo HEMI (p-hack). Hai biến thể G-committed-long: BTW div 1.3-1.5, HEMI div 0.9-1.1 + ghế tĩnh. Sensor duy trì duy nhất của loài này = on-chain kho (operator). Máy đúng tầng: PHASE-TAG bắt S3-HARVEST + TEST-BAIT real-time 18/08 — hệ nhiều tầng đúng thiết kế: tầng nền chịu mù, tầng campaign kêu.
-*Hanh dong tiep: Watch-item candidate STATIC-SEAT (PENDING n=1 HEMI, chờ đối chiếu BTW-July + fw-139 screen). Bắt bằng MỨC thay vì DELTA: pos_r ≥2.5-3 bền ≥14d ∧ OI ≤$5M ∧ funding pin ∧ kho lớn.*
-
-## L-54 [2026-08-20] CASE_HEMI — luật entry L-54 củng cố — `ENTRY` · ACTIVE — reinforces existing entry rule
-Phát hiện được ≠ giữ được lệnh. Tín hiệu sớm không có chuỗi xác nhận kế tiếp = tín hiệu không giao dịch được. Evidence HEMI: giả sử hệ HOÀN HẢO bắt cú un-hedge 05-09/07, lệnh mở tại đó phải ngồi qua 5 tuần giá đè phẳng, không tín hiệu trung gian nào (không pos_rerate, không unpin, không vol, không on-chain rút) trước ignite 15/08. Không cấu trúc xác nhận = không cấu trúc giữ = thoát trước màn hoặc gồng mù. Nguyên tắc: giá trị tín hiệu sớm = tín hiệu × chuỗi xác nhận nối được tới ignite. Tín hiệu sớm mồ côi có giá trị INTEL (registry/watchlist) chứ KHÔNG có giá trị ENTRY. Hệ quả: luật hiện hành 'entry duy nhất loài staged = S1-CONFIRMED churn ≥8×' được HEMI CỦNG CỐ chứ không bác. 'Con này không phải của mình' = kết luận đúng, có lời (tiền-không-mất), không phải thất bại hệ.
-*Hanh dong tiep: (1) Tín hiệu sớm không kèm chuỗi xác nhận → xếp INTEL (registry/watchlist), KHÔNG mở entry. (2) Entry chỉ mở khi chuỗi xác nhận nối tới ignite proximate (≤3d default). (3) Verdict 'không phải của mình' = kết luận hợp lệ, cần thời gian ANALYSIS như positive verdict.*
-
-## L-48-AMD [2026-08-19] Amendment L-48 (ref L-48 fullyDelisted) — token Alpha-only cross fw-139 × Binance spot — `AMENDMENT` · DA VAO — 21/08 (nguyên văn operator + N count trả nợ)
-Amendment L-48 (19/08) NGUYÊN VĂN operator: 'phạm vi mở rộng — token Alpha-only (danh sách N token theo probe cross exchangeInfo 18/08): taker_spot_pct và taker_alpha = ABSTAIN-STRUCTURAL (không phải data-gap) · vol_spot_usd = N/A-STRUCTURAL · số Alpha chỉ ở vol_alpha.' N COUNT (nợ 18/08, trả 21/08 probe _probe_alpha_only_N_20260821): N = 88 tokens Alpha-only / fw-139 tổng 139 tokens (51 có Binance spot pair). Danh sách 88 token snapshot 21/08: scratch/alpha_only_fw139_20260821.csv. Bao gồm các case đang mở: AGT, AIN, APR, BR, BTW, CLO, CYS, GUA, HEMI, IDOL, KOMA, ON, PUMPBTC, STBL, TAG, TRIA, XPIN (17/17 case active KHÔNG có Binance spot pair — toàn Alpha-only).
-*Hanh dong tiep: Mọi case Alpha-only từ nay MẶC ĐỊNH tag: vol_spot_usd=N/A-STRUCTURAL · taker_spot_pct/taker_alpha=ABSTAIN-STRUCTURAL · vol chỉ điền vol_alpha (col 35). Universe cross-check chạy lại khi Binance list token mới (delta 51→N reassess). Ref: probe scratch/alpha_only_fw139_20260821.csv, canonical N snapshot 21/08.*
-
-## L-60 [2026-08-17] án E LSR-merge (GUA rebuild 17/08) — schema mismatch silent — `SCHEMA` · DA VAO — 21/08 (renumbered from V1 draft-49)
-SCHEMA-DRIFT-CÂM: schema mismatch giữa producer + consumer = corrupt SILENT (không alert, hệ tin data đúng nhưng đọc sai). Evidence án E LSR-merge autopsy 17/08 (docs/reports/_probe_lsr_merge_20260817.md): fetch script `_probe_gua_apr_rebuild_20260817.py` fetch_lsr() viết CSV với schema Binance raw (`longShortRatio/longAccount/shortAccount`); build_case.py A-0a chỉ nhận `pos_r_raw|pos_r`, `acc_r_raw|acc_r`, `glsr_raw|gLSR|glsr` — schema mismatch → tất cả 30 dates Jul19-Aug17 vào `lsr_by_d` với all-None values, freshwatch loop skip vì dates đã occupied → CASE_GUA.xlsx corrupted (pos_r null 100%). Rule chốt: (1) mọi CSV producer khai schema explicitly ở header + provenance metadata; (2) mọi consumer assert schema-check TRƯỚC compute — mismatch = RAISE + block, không silent None; (3) fetch scripts + consumers cùng amendment cùng chuyến khi schema đổi. Ghi chú: renumbered from V1 draft-49 — va số với chủ cũ L-49 (11/08 GUARD-CÂM state.json), phát hiện 21/08 audit. Nguồn text: proposals/lessons_pending_batch_20260818.md §C.* context + án E report + chat-ký 21/08 operator.
-*Hanh dong tiep: Proposal Fix áp cho build_case.py A-0a: schema-check assert + Fix B nguồn (sửa fetch_lsr() output canonical schema). Ref: án E report §4-§5 fix proposals A/B/C.*
-
-## L-61 [2026-08-17] án E LSR-merge (GUA rebuild 17/08) — XLSX ghi trước guard check — `WRITE-GUARD` · DA VAO — 21/08 (renumbered from V1 draft-50)
-WRITE-BEFORE-GUARD anti-pattern (fix = WRITE-AFTER-GUARD): mọi write persistent (xlsx save, csv commit, DB write) PHẢI SAU khi ALL guards pass — write TRƯỚC guard = corrupt state on-disk khi guard fail. Evidence án E: build_case.py XLSX write ~line 800-856 (wb.save()) TRƯỚC A-0b guard check line 857-868. Khi A-0b raise ValueError (pos_r null > 50%) → exit≠0 nhưng XLSX đã corrupted trên disk (GUA 100% null, APR 75%). Guard fires DID fire correctly (đúng logic), nhưng vô nghĩa vì corrupted state đã persist. Rule chốt: (1) build dataframe fully in-memory; (2) run ALL guards on in-memory df; (3) write to disk CHỈ SAU guards pass; (4) guard fail = discard in-memory + exit không đụng disk. Áp dụng: đã tuân thủ trong GUA refresh 18/08 + TRIA venue backfill 19/08 + STBL/HEMI/PUMPBTC create 19-20/08. Ghi chú: renumbered from V1 draft-50 — va số với chủ cũ L-50 (11/08 FFUSDT P0), phát hiện 21/08 audit. Nguồn text: proposals/lessons_pending_batch_20260818.md §C.* + án E fix proposals + chat-ký 21/08 operator.
-*Hanh dong tiep: Refactor build_case.py: move all guards trước wb.save(). Same rule for any script producing xlsx/csv/db writes. Verification: mọi task từ 18/08+ đã tuân thủ write-after-guard.*
-
-## L-55 [2026-08-21] PHASE-TAG go-live 20/08 · save_snapshot fail-câm · 🎓 badge — `GO-LIVE` · DA VAO — batch V2 21/08
-GO-LIVE ≠ VERIFY: deploy xong chưa phải xong — go-live chỉ ĐÓNG khi verify OUTPUT THẬT trên production (file sinh · đúng schema · đúng giờ cron). Evidence: phase_tag CSV F1 code-đúng-file-không-sinh 3 ngày · save_snapshot fail-câm · 🎓 (badge graduation) sống lần đầu chỉ sau verify 20/08. Rule: mọi go-live commit phải kèm verify checklist (output artifact + schema + timing + integration). Signed batch V2 · operator ký chat 21/08.
-*Hanh dong tiep: Go-live commit template: paste verify output artifact + schema + timing + integration test result.*
-
-## L-56 [2026-08-21] 6 relay-loss/tuần (L-48 số hiệu · GUA contract · E-R4b ≥-drift · handover · lib · va số 49/50) — `GATE-DISCIPLINE` · DA VAO — batch V2 21/08
-MERGE-BEFORE-GATE: amendment ký chat PHẢI merge canonical + paste diff TRƯỚC gate/backfill run. Mọi run gate in `spec_version` + `amendments_applied`. Dòng 'ĐÃ KÝ' trong sổ PHẢI trỏ được về chat-ký commit/URL — không trỏ được = CHỜ-KÝ. Evidence 6 relay-loss/tuần 15-21/08: (1) L-48 số hiệu drift · (2) GUA contract chưa relay verified · (3) E-R4b ≥1.15 vs <1.15 drift · (4) handover ký-không-tồn-tại · (5) lib đổi-nghĩa silent · (6) va số L-49/L-50 chủ cũ vs V1 batch (P3 audit 21/08). Signed batch V2 · operator ký chat 21/08.
-*Hanh dong tiep: Gate/backfill runner: mandatory print(spec_version, amendments_applied). Commit template chat-ký link required.*
-
-## L-57 [2026-08-21] Schema evolution (cols 51-52 v2.1 · ep_len/struct_n · vol_spot/vol_alpha) — `SCHEMA-EVOLUTION` · DA VAO — batch V2 21/08
-SCHEMA-CHANGE-APPEND: thay đổi schema = APPEND-ONLY + changelog + KHÔNG đè cột cũ. Cột đổi NGHĨA phải ĐỔI TÊN (không giữ tên cũ mang nghĩa mới — bài F1 'một-thứ-hai-tên'). Evidence: (1) cols 51-52 v2.1 spot-ext amendment (append canonical, không đè col 31); (2) ep_len vs struct_n (2 tên cho 2 nghĩa khác nhau — không alias); (3) vol_spot vs vol_alpha (col 31 vs col 35, không mix). Signed batch V2 · operator ký chat 21/08.
-*Hanh dong tiep: PR review checklist: schema change = append-only? changelog? tên cột đúng nghĩa mới? Nếu có drift → block merge.*
-
-## L-58 [2026-08-21] E-R7d/e drift incidents + P0 CHECK watchlist inline vs lib (2ba669f) — `CONFORMANCE` · DA VAO — batch V2 21/08 (fixture chưa build)
-CONFORMANCE FIXTURE: pin output MỌI consumer, không-pass-không-merge, đổi ngữ nghĩa = amendment ký riêng, fixture chạy trong mọi gate run. Mỗi consumer (watchlist · registry · phase_tag · gom_scan · downstream analyzers) có fixture file (`tests/fixtures/<consumer>_conformance_<YYYYMMDD>.json`) pin OUTPUT actual (events/episodes/labels/metric values) trên data snapshot cụ thể (freshwatch csv với md5 lock). CI/pre-commit hook check fixture — commit đụng consumer path mà fixture FAIL → block merge. Không exception. Đổi ngữ nghĩa = ký amendment spec + regen fixture + update cùng commit + bump version. Fixture chạy TRƯỚC compute trong mọi gate/backfill — mismatch = STOP. Signed batch V2 · operator ký chat 21/08. Ref: proposals/lessons_pending_batch_V2.md §A.1.
-*Hanh dong tiep: Kickoff phase-2: build fixture files 5 tokens (HEMI/ON/GUA/CARV/ARIA) cho registry+watchlist+phase_tag. Add pre-commit hook + CI script trước phase-2 cron 08:25.*
-
-## L-59 [2026-08-21] Batch V1 20/08 · P0 audit 21/08 (root-cause 'hiểu-nhầm-nhà') — `GOVERNANCE` · DA VAO — batch V2 21/08
-KÝ-KHÔNG-BẰNG-CHỨNG = CHƯA-XONG: lệnh ghi-sổ đã ký ĐÓNG bằng paste bằng-chứng-sau-ghi CÙNG chuyến. Không bằng chứng = việc CHƯA TỒN TẠI, CHẶN bước phụ thuộc. Sổ hai nhà (nguồn + view) khai rõ nguồn/view; view CHẾT >3d khi nguồn SỐNG = ALERT. Evidence #1: batch V1 ký 20/08 — 3 lần đòi không có bằng chứng (L-52/53/54 vào pending_batch nhưng chưa sync sheet), operator tự phát hiện md lessons_learned CHẾT từ 07/08 (14 ngày stale) trong khi sheet đã append đợt sau. Evidence #2: root-cause 'hiểu-nhầm-nhà' 21/08 P3 audit (agent commit pending_batch chờ operator paste tay, operator ký = agent nhập ngay + regen view). Signed batch V2 · operator ký chat 21/08.
-*Hanh dong tiep: Mọi commit ký lesson/spec/amendment: mandatory paste bằng-chứng-sau-ghi (mtime · sheet row · md section · commit sha). Cron alert: staleness check view vs nguồn — view/md mtime lag > 3d = Telegram alert.*
-
-## L-62 [2026-08-27] ERRATA-BAND-20260827 (⑬-CLOSE probe 5b + Scope-A hardcode band mismatch) — `RULE-DISCIPLINE` · SIGNED batch V3 27/08 → sheet 67
-Đường-đọc-thật: số/nhãn/verdict do probe/gate xuất ra CHỈ hợp lệ khi declare đường-đọc-thật của mọi ngưỡng dùng trong tính toán. Không declare = thước tách khỏi số = bảng vô hiệu. Rule bắt buộc header cfg-provenance: Nguồn thresholds (yaml path | hardcode | free-layer) + Giá trị THỰC từng ngưỡng dùng (không dựa comment) + Timestamp yaml mtime nếu source = yaml (staleness detect). Evidence: ERRATA-BAND-20260827 d353dc4 probe hardcode 0.505 vs prod 53.0.
-*Hanh dong tiep: Rà lại hardcode probe/task; thay yaml load + provenance header. Pre-commit hook 'no hardcoded thresholds' pending scope ký.*
-
-## L-63 [2026-08-27] ⑩-AMENDMENT chuỗi 24-26/08 (⑩ stub → 3 vế mở rộng, R4-v2 avg_px scope-miss) — `SCOPE-DISCIPLINE` · SIGNED batch V3 27/08 → sheet 68
-SCOPE-BY-MANIFEST: scope regen/canonicalize/migrate định nghĩa bằng DANH SÁCH BIẾN CANONICAL BỊ ẢNH HƯỞNG (fields cụ thể: taker_buy_pct, avg_px, lsr_pos, ...) và block chứa nó (KLINES/RATIO/OI), KHÔNG bằng tên slice mờ ('taker slice', 'LSR slice'). Manifest bảng per (block, col, source, consumer, canonical, verdict) làm nguồn duy nhất; xung đột → CONFLICT column, DỪNG hỏi. Evidence: ⑩ initial stub → R4-v1 chạm RATIO taker → B3 fail hội tụ do avg_px (KLINES) chưa regen → R4-v2 mở rộng scope. Manifest v1 SIGNED 4cd6ec3.
-*Hanh dong tiep: Mọi ⑥ regen/⑩ migrate/canonicalize ⇒ manifest bảng trước; verdict per col: REGEN / VERIFY-THEN-KEEP / DEPRECATE-RENAME / N/A-BLOCK. Missing col = CONFLICT DỪNG.*
-
-## L-64 [2026-08-27] ERRATA-BAND-20260827 fix 2 probe hardcode — `PROBE-DISCIPLINE` · SIGNED batch V3 27/08 → sheet 69
-cfg-provenance header: mọi probe/gate BẮT BUỘC in header cfg-provenance tại đầu run: [CFG-PROVENANCE <artifact>] Source: <yaml path | hardcode | free-layer> · Method: <load method> · Values ACTUALLY USED: <threshold_name> = <actual_value> [comment: source line]. Kèm assertions fail-loud khi mismatch. Không header = bảng vô hiệu (L-62 companion). Evidence: ERRATA-BAND d353dc4 fix _probe_5b_consumer_diff + _task_backfill_apply.
-*Hanh dong tiep: Template header in gom_scan.load_thresholds() wrapper; probe/task print auto. Lint rule pending scope ký.*
-
-## L-65 [2026-08-27] ERRATA-BAND-20260827 subset check FAIL 8+27 extras + ARIA/STAR spot — `RULE-CORRECTION` · SIGNED batch V3 27/08 → sheet 70
-Flip-set XOR hai chiều (band-change không đơn điệu): rule cũ 'band nới chỉ bớt flip' = GIẢ ĐỊNH SAI (L-28 DEV-instance). Rule ĐÚNG: flip-set dưới band-change là XOR HAI CHIỀU — mọi thay đổi band ⇒ RERUN toàn bộ bằng chứng flip, subset không được giả định. Mechanism: wider band = more 7d-window all-pass cases → flip transition NEW cases không tồn tại narrow band. Evidence: ERRATA subset FAIL (5b 8 extras, Scope-A 27 extras); ARIA 07-30 canonical crosses 0.53 boundary; STAR 06-28 canonical 06-24=0.5304 > 0.53 → PROD flip leg=T can=F. Documentation phải note 'subset không được giả định' cạnh mọi flip-count report.
-*Hanh dong tiep: R6 skeleton vocabulary + E2-backlog note updated. Mọi flip-report post-⑬ dùng rule mới.*
+# LESSONS LEARNED · view sinh từ CASE_INDEX.xlsx sheet LESSONS (L-74)
+# Regen: python _task_apply_rev10_20260908.py
+# CẤM edit md trực tiếp · edit vào sheet · md chỉ regenerate.
+
+# Regenerated: 2026-09-08T04:22:01Z
+
+| id | title | source | body | amendment |
+|---|---|---|---|---|
+| Quy trinh: case khep an (sheet F) -> bai hoc do ve day -> cot trang_thai theo doi duong di: GHI NHAN -> DE XUAT (screen/CONFIRM/dinh luat) -> DA VAO. Bai hoc tu an sai quy ngang bai hoc tu an dung. | - | - | - | - |
+| id | ngay | case_nguon | bai_hoc | - |
+| L-01 | 2026-07-30 | BR (+BAS,TUT,BANK) | OI-floor = so vi the MM: ratio doc tai day OI trong so cao (retail da roi); pos_r nhich tai nen chet = tin hieu som dam; ratio tai OI-peak phai chiet khau | - |
+| L-02 | 2026-07-28 | AKE (an PA-B) | KHONG amend dinh nghia signal de om case ngoai ho cua no — ghi miss + negative assertion. lsr_accum nghieng ho bid-walk, s3_eve ganh ho taker-driven: hai signal BU nhau | - |
+| L-03 | 2026-07-29 | BANK (ho so 4 lop) | Tell som nhat co the nam tron MOT lop don doc 11 ngay (perp) — doi da lop lam dieu kien ARMED se lot ho BANK. Xac nhan da lop chi den DUNG luc no | - |
+| L-04 | 2026-07-29 | BANK | concentration_shift KHONG ban tren BANK = negative case HOP LE: level-type (div cao tinh) vs delta-type (acc sap pos giu) la HAI ho tin hieu khac nhau, khong va sensor de om ca hai | - |
+| L-05 | 2026-07-30 | BR + BTW | Withdrawal gan dinh = MOI on-chain (bang chung #2, vong doi 4 thang truy tron: rut-tai-dinh -> phan phoi -> redeposit). Moi withdrawal cua nhom MM-BAIT phai doc ngo toi da | - |
+| L-06 | 2026-07-28 | TAG (Gate probe) | Inventory != gom: toan khoi luong (V_venue vs $withdrawal) phan xu duoc 'vua mua' hay 'hang co san'. Book sieu mong = BAI DO — withdrawal khoi bai do = khoa float, khong doc thanh 'chuyen di ban' | - |
+| L-07 | 2026-07-30 | BR (operator) | Pump-to-distribute: kho len san = CHUAN BI DAN, khong xa tai gia hien tai — can leg keo tao hype truoc. Khong long theo khi KHONG co ghe big-long de di cung (div ~1) = vi tri con moi. Dieu kien tien quyet cua leg that: crowd long phai bi rua | - |
+| L-08 | 2026-07-30 | BANK/BTW/ESPORTS/BR | MM profile la NUA verdict — moi MM danh mot kieu (bid-walk kien nhan / bait-withdrawal / squeeze muc tieu). Gan MM_ID can >=3 van tay trung; gan au te hon khong gan | - |
+| L-09 | 2026-07-29 | P1 fire audit | KHONG tin loi giai thich fire — chi tin bang dieu kien tung dong (an 'vol drop faster than OI' la cau bia; fire dung nhung narrative sai van la doc sai). Moi fire phai tu bao ve bang input series + yaml check | - |
+| L-10 | 2026-07-29 | BR/TAG pipeline | Data hong cung phai ghi (data_bad=1, to cam) — lo hong la thong tin; dong non (funding_n thieu) phai bi guard loai khoi moi streak/window | - |
+| L-11 | 2026-07-28 | TAG 27-28 (BULLA truoc do) | Wash-by-rally: crowd tu roi bang chot loi vao da tang — cu ru bo sung KHONG bat buoc truoc leg. gLSR giam trong ngay gia tang = nhien lieu dang duoc don, doc BULLISH cho campaign | - |
+| L-12 | 2026-07-30 | BR (operator) | Unlock la dong cung CO LICH — MM biet truoc va danh quanh no (keo truoc unlock de xa vao hype / de truoc unlock de gom re). Case thieu khoi J = mu mot mat | - |
+| L-13 | 2026-07-30 | ledger vs tracker | Phan vai: ledger = so cai NGANG (thong ke precision, may doc); tracker = ho so DOC (thesis-check, nguoi doc). Verdict chi song MOT noi (case file), ledger Zone B rut gon state+case_id. Mot chieu du lieu, khong ghi nguoc | - |
+| L-14 | 2026-07-30 | TAG 08-09/07 + AKE 08-10/07 | Dump manh + gLSR SAP >=30%/<=3d = wash-by-crash: mot phat an hai: don chi phi long + nap nhien lieu short (crowd short moi = nhien lieu re cho squeeze). La bien the crowd_flush thu nhat, doi xung L-11 (rally) va L-15 (bait). Phan biet ro voi L-26: gLSR SAP khi gia sap (wash) vs gLSR TANG khi gia sap | - |
+| L-15 | 2026-07-30 | BANK 02/07 + BASED 01&09/07 + POWER 08-09/07 | Vol spike >=8x med14 + gia bi tu choi <=2d = bait-probe: muc dich khong phai markup het ma la DAY crowd short nap nhien lieu squeeze. Sau bait canh gLSR sap trong <=3d lam xac nhan; vol persistence T+1 phan biet bait vs ignition that | - |
+| L-16 | 2026-07-30 | BR + EVAA + CLO | div_raw truot tu >1 xuong <1 = vi the lon thu hep/dao long bias = chom phan phoi; flag STAND_ASIDE review; khong ARM sau div-flip neu chua co bang chung re-gom. LUU Y THUAT NGU: day KHONG phai 'M2 dao dau' — M2 la module CEX balance flow (xem L-27) | - |
+| L-17 | 2026-07-30 | AKE + ESPORTS | Squeeze/markup chet khi nhien lieu chet — hai cua dong an: (a) gLSR hoi ve ~1 (crowd short dau hang), (b) muc tieu cu the goc (TARGETED_SQUEEZE). Dang giu vi the ma mot trong hai bat = EXIT_NOW. [De xuat CHUA CALIB: thao tac hoa bang glsr_slope_5d doi dau — chua test case nao, glsr_slope_5d hien chi | - |
+| L-18 | 2026-07-30 | u50_verdicts §2 (n=18) | Truoc ARM phai check du 3: (1) pha chu ky (nhin du px7/px14 + oi_cycle_pos, khong chi cua so 28d), (2) crowd structure (gLSR + dao ham — co tinh gan vo dung), (3) OI khong tai PEAK. Thieu 1/3 = low-conviction. KHONG trich dan % precision khi chua do — precedent dem that (n=...), cam noi % | - |
+| L-19 | 2026-07-30 | u50 §2 + CLO/BLUAI/STAR (n=18) | Signal fire ban giong nhau o pha gom va pha phan phoi — can phase_tag (ACCUMULATE/MARKUP/DISTRIBUTE/UNKNOWN) tu oi_cycle_pos + div trend + glsr_slope de loc; den khi co phase_tag: moi fire phai kem phase check tay (L-18). Khong trich % false-rate khi chua do | - |
+| L-20 | 2026-07-30 | TAG/BR 28-29/07 | fn=1 / data_bad=1 / missing >3 ngay trong window / so tu 1 nguon khong kiem chung → low_conf=True; so bi ha cap KHONG lam threshold ARM/FIRE | - |
+| L-21 | 2026-07-30 | BR (an 30/07) | OI daily canonical = export Binance openInterestHist 00:00 UTC. So intraday (Coinglass/GMGN) chi vao EVENTS kem timestamp, khong vao DAILY. An 30/07: BR 4,634,000 (intraday) vs 3,782,263 (export 00:00) chenh 22%. Rule: mot cot DAILY mot so canonical | - |
+| L-22 | 2026-07-30 | TAG+BR 28-29/07 | fn=1 (native_1d low_conf) khong dung lam so chot ARM/FIRE. Fallback: Zone A aggregate tu ledger_v2.xlsx CAMPAIGNS, ghi ro Zone-A-agg. TAG 29/07: gLSR 1.81 (fn=1 SUSPECT) vs 1.61 (Zone-A-agg) — chenh 0.2 du dao nhan dinh toc do nap crowd | - |
+| L-23 | 2026-07-30 | TAG | Fire margin mong -> fade la kich ban xac suat cao: TAG 28/07 fire bien mong, ret_3d=-9.87%, crowd nap long vao duong gia xuong (gLSR 1.28->1.81). Invalidate som: gia khong confirm T+1/T+2 + gLSR tang tiep = WATCH-ha-nhiet, khong ARM lai som | - |
+| L-24 | 2026-07-30 | BR/TAG (an 30/07) | oi_vs_med14 Excel != oi_vs_med14 signals.py (window ket thuc ngay khac). Moi so DAILY phai mang nhan: nguon + window cu the. Khong dung Excel calc lam proxy signals.py canonical. Hai nguoi doc hai so khac nhau cung ten = an tranh luan vo ich | - |
+| L-25 | 2026-07-30 | BR+TAG (tai pham 30/07) | Mot-nha-mot-data tai pham x2 trong session 30/07: (1) OI DAILY 2 so tu 2 nguon; (2) gLSR/div dung fn=1 raw thay vi aggregate canonical. Rule: moi cot DAILY mot nguon canonical khai bao tuong minh. >=2 so cung metric -> chon canonical + ghi an vao EVENTS | - |
+| L-26 | 2026-07-30 | ESPORTS hau-climax + TAG 29/07 + BLUAI | Gia sap/roi + gLSR TANG = crowd long bat dao = nhien lieu SAI phia — NGUOC han wash-by-crash (L-14: gLSR SAP). He qua: (a) leg-len ke tiep can lua long nay bi rua truoc, (b) con dang SUPPRESSED co pattern nay thi REMAIN, (c) khong doc nham thanh 'co nguoi gom' | - |
+| L-27 | 2026-07-30 | BTW vs BAS/TAG | AKE/IDOL | M2 (CEX balance flow) tu no KHONG mang y dinh — dau cua no do boi canh quyet: vi tri chu ky + funding regime + hanh vi gia. Chay M2 don le la An tron bay BTW. Suppressor o bat ky lop nao phu quyet moi bullish cua ca ba lop | - |
+| L-28 | 2026-07-30 | u50 §6 (AGT / HUMA-AT sync / listing 04-14) | Moi narrative dung tren mot nguon phai kiem nguon goc (aggregator != klines; mep cua so = artifact ung vien). Narrative khong con dung duoc → RUT cong khai va GHI SO muc 'da tu ha cap' — de khong tu lua va khong tai sinh. Cu luan diem chi giu phan con dung tren bang chung | - |
+| L-29 | 2026-07-30 | OPN + HYPER (u50 §3a, n=2) | alpha_vol_suspect = vol_spot/vol_perp > 3x → moi metric VOL SPOT cua con do ABSTAIN (khong wash-check, khong #17, khong bang chung dong tien); van dung depth/price/taker. takerBUY spot lech cuc doan (<35% hoac >70%) tren vol khong lo = hinh dang farming. Guard chi ha long tin, khong sinh bullish → a | - |
+| L-30 | 2026-07-30 | BLUAI + ARX (u50) | Token venue_top=bitget: cam so sanh spot-vs-perp cung-ngay cho den khi bug lech ngay duoc xac minh/va; phan tich cross-market phai shift-test truoc. Ghi chu venue vao moi bang so sanh | - |
+| L-31 | 2026-07-30 | lessons_learned.md rev.1 | Tong hop/dien giai tu tai lieu cu = vung rui ro cao: moi entry phai trace ve cau chu nguon (dinh nghia lay tu yaml/reference, khong tu tri nho dien giai); so lieu khong co trong nguon = khong viet; thuat ngu he thong (M1/M2/ten signal) dung dung nghia goc, khong tai dinh nghia. L-09 ap cho ca tai li | - |
+| L-32 | 2026-07-30 | BANK | Backfill save nhầm file (_NEW suffix) do file gốc bị lock trong Excel — INDEX vẫn trỏ tên cũ → case_daily ghi vào file cũ (4 dòng) thay vì canonical (35 dòng). Fix: sau bất kỳ backfill nào, verify INDEX trỏ đúng canonical; canonical phải có đúng tên gốc. | - |
+| L-33 | 2026-07-30 | BANK | fn=1 fallback (Zone-A-agg) chỉ dành cho cột taker_buy_pct — KHÔNG mượn sang gLSR/pos_r/acc_r. Metric ratio phải đến từ export CSV hoặc để TRỐNG + comment, không ghép chéo metric. Guard bằng assert EXPORT_COL_MAP tại import time trong case_daily.py. | - |
+| L-34 | 2026-07-30 | CASE_BANK_NEW.xlsx (an 30/07), fix da commit | PermissionError khi save xlsx → RAISE RuntimeError ngay, cam silent-save sang ten khac (_NEW suffix). Ten file khac = INDEX tro sai = case_daily ghi nham → data bi pha vo im lang. Fix: close xlsx roi retry | - |
+| L-35 | 2026-07-31 | binance-bot-signals P0 regression suite | Bo calib (12 file _result.txt + GATE dict + replay.py) phai song trong git cung voi code — da dung, ghi nhan de giu. Quy tac: moi repo moi can regression suite commit ngay tu dau, khong de calib file ngoai version control. Loi that nhat la khi calib tach khoi code: code duoc update ma calib cu → fal | - |
+| L-36 | 2026-07-31 | P0 gate session 31/07 (TAG/BTW reconstruct) | Tai tao data file phai test bang suite nguyen ban (replay.py goc tu git), KHONG tu viet harness moi. Harness tu viet dan den 3 assertion sai: (1) AKE lsr_accum: viet fires_in thay vi never_in; (2) BASED crowd_flush: viet fires_in thay vi never_in; (3) BULLA pos_rerate: dung file tai tao (pos 07-20=1 | - |
+| L-37 | 2026-07-31 | B0 bundle backup 4 repo (31/07) | Repo chi local (khong remote git server) = single point of failure — mot loi o dia hay OneDrive deauth mat het. Giai phap toi thieu: git bundle → SCP len VPS /root/archive/ trong vong 24h tao repo, sau do bundle lai tai moi milestone lon. Da ap 4 repo ngay 31/07: binance-bot-signals, whale_data, Che | - |
+| L-38 | 2026-07-31 | BULLA 07-20 (B4 probe — 4 nguon 4 so) | Mot metric mot ngay ra 4 con so khac nhau (1.75/1.68/1.981/1.99) tu 4 nguon: (1) u50 loose = 1.75 (nguon khong ro, retired); (2) top_pos_1h keep-last 23:00 UTC = 1.6811; (3) derived_1h = 00:00 UTC dau ngay = 1.981; (4) native_1d repo goc = 1.99. Nguyen nhan: quy uoc canonical CHUA TON TAI khi calib  | - |
+| L-39 | 2026-07-31 | proposal v2 (31/07) — boundary canonical | Quy ước boundary phải TEST bằng đối chiếu nguồn (21/21 diff 0%) trước khi văn bản hóa — proposal v1 hợp lý trên giấy nhưng ngược 180° với thực nghiệm; n=1 suy luận đẹp vẫn phải qua n=21. | - |
+| L-40 | 2026-08-02 | NANSEN_KEY_LOCKED blast-radius (02/08) — bot fresh wallets | Chốt chặn cấp máy có blast radius cấp máy — trước khi gạt công tắc dùng chung (env/key/config toàn cục), bắt buộc liệt kê MỌI consumer hợp lệ; ràng buộc nhắm vào agent phải đặt ở tầng hẹp nhất đủ dùng (per-process wrapper), không đặt tầng chung. Bằng chứng: bot fresh wallets chết 3 ngày (gap 31/07–0 | - |
+| L-41 | 2026-08-03 | IDOL/TAG/BR/BANK fn=1 28-31/07 (timing bug) | Job aggregate ngay phai chay SAU khi ngay dong tron. Export mid-day = so non co he thong: tai 00:50 UTC IDOL chi co 1/6 ky funding trong store, 5 ky con lai (04:00/08:00/12:00/16:00/20:00) collect trong ngay nhung export da freeze voi fn=1. Fix: cron export 01:20 UTC D+1 (sau khi D dong + buffer 1h2 | - |
+| L-42 | 2026-08-04 | IDOL/TAG/BANK — kho spot MM: phan loai theo SO HUU truoc khi doc on-chain | Kho spot cua MM khong tu no la 'hang se xa' — ham muc tieu phu thuoc SO HUU kho. Phan 3 loai TRUOC khi doc bat ky transfer nao: LOAI A (kho MUON tu team — khong gia tri voi MM; P&L 100% o perp; moi deposit/withdrawal la THONG DIEP nhung nguoi doc on-chain, khong phai bang chung; endgame kho round-tr | - |
+| L-44 | L-44(a) DIEU KIEN KET THUC CAMPAIGN: Loai A (kho-muon) = ghe-roi perp la het. Loai B/C (unlock/tu-mua) = ghe-roi perp la CHUYEN PHA — ket thuc that khi kho/vol ≤10% (Cua A) hoac Cua B kich hoat (short-hedge). TUT: pos_r crash 08-05 (−48%) = GHE-ROI LAN 2 (HARVEST-INTO-STRENGTH), KHONG phai L-26, campaign van tiep tuc. | TUT | 2026-08-08 | - |
+| L-45 | L-45(b) DURATION SCALING: Thoi luong campaign ty le thuan voi build_window va kho_size. Tham khao draft n=4: BANK (build ~17d, Loai B) → campaign D+17; IDOL (build ~7d, Loai A partial) → D+11; TUT (build 13d, Loai C) → D+16+ ongoing. CLO TBD. Hypothesis: dai build = dai campaign; chua du n de calib chinh xac. | TUT/BANK/IDOL/CLO | 2026-08-08 | - |
+| L-46 | 2026-08-09 | CASE_BANANAS31 + CASE_HEI | Video vs Photo: hai hồ sơ pos_r cao nhưng ý nghĩa khác nhau. "Video" (CASE_HEI) = build thật: pos_r vừa phải, đồng-bộ giá, ít dist_wall. "Photo" (CASE_BANANAS31) = snapshot đẹp nhưng static: pos_r=6.7 RẤT CAO nhưng sign-corr Δpos_r vs ret_1d ~50% (47.7% opposite) — pos_r KHÔNG predict giá. Thêm: dis | - |
+| L-47 | 2026-08-09 | CASE_BANANAS31 | Đồng hồ cụm: Build-into-weakness không kéo dài vô tận. BANANAS31 pump cluster: Jun/Aug/Oct 2026 [n=3 inference từ vol spikes ≥8×med14]. Build cụm #3 từ 06/2026 → đồng hồ ~60-90 ngày → cụm #4 dự kiến Aug-Oct/26. Nếu không có ignite (gLSR≤0.7 + pos rebuild ≥3d) trong cửa sổ → build failed → MM exit. H | - |
+| L-48 | 2026-08-09 | CASE_BANANAS31 + CASE_IDOL | fullyDelisted Alpha → ABSTAIN taker_alpha. Klines[9]==klines[5] trên BAPI khi fullyDelisted=True (taker column = close price, không phải real taker). Đã confirm: IDOL (ALPHA_223, L-43 context) + BANANAS31 (ALPHA_21). Rule chốt: IF offline=True OR offsell=True OR fullyDelisted=True → taker_alpha=NaN, | - |
+| L-49 | 2026-08-11 | GUARD-CÂM / ALL tokens | save_state() fail-open: ghi state.json không kiểm tra invariants → state corrupt không bị bắt. Sửa: validate_gom_state() wired vào save_state() pre-write (4 invariants: open chain ≤3d gap, không open+cooldown đồng thời, vwap_type hợp lệ, cooldown_end ≥ episode_start). Violation → RuntimeError → exit | - |
+| L-50 | 2026-08-11 | P0 / FFUSDT 2026-08-01 | P0 root cause: floating-point boundary tại A3 slope_5d = 1.15. FFUSDT 08-01: slope=1.14902 (dist=0.00098 từ ngưỡng). State corrupt xảy ra vì backfill chạy lại trên đoạn đã có chapter, không phải cron viết lại. Incremental mode §8.2 đã xác nhận đúng: md5 closed-chapters IDENTICAL sau cron 01:25 UTC 0 | - |
+| L-51 | 2026-08-19 | GUA (SUPERFORTUNE án F1-F7 19/08) + toàn hệ | Step-0 token-identity discipline (một-thứ-hai-tên) — trước khi dùng BẤT KỲ data từ venue nào, phải verify identity bằng 4 bước: (1) Contract canonical PHẢI từ operator-niêm (tracker-relayed 0x + chain) — cấm symbol-string lookup (bài F1 GUA: bapi trả contract khớp SUPERFORTUNE nhưng chưa đảm bảo là  | - |
+| L-BUG-STALE-CASE | 2026-08-17 | CASE | build_case.py dùng scratch CSV theo DATE_TAG baked vào lệnh. Khi build chạy muộn (5 ngày sau fetch), data gap âm thầm — không có guard. Fix: thêm STALENESS GUARD: gap > 2d → RAISE. Lesson: scratch CSV là nguồn duy nhất cho build_case; không có pipeline auto-refresh → PHẢI re-fetch trước khi build mu | - |
+| L-52 | 2026-08-19 | TRIA + recon 4 case (BTW/GUA/APR/CLO) | Venue coverage — 'không có spot Binance' ≠ 'không có spot'. Băng thông xả và chân hàng phải tính trên venue spot LỚN NHẤT THỰC TẾ (không phải venue mặc định đầu tiên tra). Trước khi kết luận 'Alpha-only' hay 'perp-only chain': tra spot venues lớn (Bybit · OKX · Gate · KuCoin · MEXC · Bitget) trước,  | AMENDMENT 21/08/2026: MEXC không được làm venue chính cho cols 51-52 (vol thường ảo). Sweep vẫn liệt kê MEXC, xếp hạng chọn venue loại MEXC ra; MEXC là #1 → lấy #2. MEXC trong spot_ext_venue = 'THÔNG/VOL-UNTRUSTED' cho doctrine #10 (băng thông = venue #2). Áp hồi tố mọi CASE có spot_ext_venue=mexc (BANK 21/08 confirmed). Ref: playbook §IX.3 S0.④ AMENDMENT. || AMENDMENT (b) 21/08/2026: Venue chính cols 51-52 xếp theo MEDIAN vol toàn window (hoặc theo pha nếu sàn dẫn đổi giữa window), KHÔNG theo 24h snapshot. MEXC loại theo (a). Sàn dẫn đổi giữa window → ghi venue_switch + ngày vào CASE meta, cols 51-52 ghi venue đúng từng ngày. Nếu §6 phase file chưa có → dùng median toàn window làm winner default. Ref: playbook §IX.3 S0.④ AMENDMENT (b). || AMENDMENT (c) 27/08/2026: Vũ trụ sweep venue BẮT BUỘC gồm Binance spot, kiểm theo-con qua spot exchangeInfo. ALPHA-DELISTED ⇒ check spot-listing là bước bắt buộc (delist thường = tốt nghiệp lên spot). Binance spot nếu có tham gia xếp hạng median L-52(b) như mọi venue — và là nguồn taker spot canonical khi thắng (k[10]/k[7], basis ⑩). Ref: playbook §IX.3 S0.④ AMENDMENT (c). |
+| L-53 | 2026-08-20 | CASE_HEMI (autopsy 20/08) — evidence #2 G-committed-long (BTW-July = #1) | Loài captive-kho vùng-giữa — máy perp mù theo CẤU TRÚC, không phải theo ngưỡng. Evidence HEMI 07-08/2026: 4 điểm mù cùng lúc — (1) div_avg3 vùng giữa 0.9-1.1 (pos cao 3.5 bị acc cao 3.9 che → mọi rule so-tương-đối mù) · (2) un-hedge làm 5 tuần trước ignite (episode B1 chết 09/07, ignite 15/08 — ngoà | - |
+| L-54 | 2026-08-20 | CASE_HEMI — luật entry L-54 củng cố | Phát hiện được ≠ giữ được lệnh. Tín hiệu sớm không có chuỗi xác nhận kế tiếp = tín hiệu không giao dịch được. Evidence HEMI: giả sử hệ HOÀN HẢO bắt cú un-hedge 05-09/07, lệnh mở tại đó phải ngồi qua 5 tuần giá đè phẳng, không tín hiệu trung gian nào (không pos_rerate, không unpin, không vol, không o | - |
+| L-48-AMD | 2026-08-19 | Amendment L-48 (ref L-48 fullyDelisted) — token Alpha-only cross fw-139 × Binance spot | Amendment L-48 (19/08) NGUYÊN VĂN operator: 'phạm vi mở rộng — token Alpha-only (danh sách N token theo probe cross exchangeInfo 18/08): taker_spot_pct và taker_alpha = ABSTAIN-STRUCTURAL (không phải data-gap) · vol_spot_usd = N/A-STRUCTURAL · số Alpha chỉ ở vol_alpha.' N COUNT (nợ 18/08, trả 21/08  | - |
+| L-60 | 2026-08-17 | án E LSR-merge (GUA rebuild 17/08) — schema mismatch silent | SCHEMA-DRIFT-CÂM: schema mismatch giữa producer + consumer = corrupt SILENT (không alert, hệ tin data đúng nhưng đọc sai). Evidence án E LSR-merge autopsy 17/08 (docs/reports/_probe_lsr_merge_20260817.md): fetch script `_probe_gua_apr_rebuild_20260817.py` fetch_lsr() viết CSV với schema Binance raw  | - |
+| L-61 | 2026-08-17 | án E LSR-merge (GUA rebuild 17/08) — XLSX ghi trước guard check | WRITE-BEFORE-GUARD anti-pattern (fix = WRITE-AFTER-GUARD): mọi write persistent (xlsx save, csv commit, DB write) PHẢI SAU khi ALL guards pass — write TRƯỚC guard = corrupt state on-disk khi guard fail. Evidence án E: build_case.py XLSX write ~line 800-856 (wb.save()) TRƯỚC A-0b guard check line 857 | - |
+| L-55 | 2026-08-21 | PHASE-TAG go-live 20/08 · save_snapshot fail-câm · 🎓 badge | GO-LIVE ≠ VERIFY: deploy xong chưa phải xong — go-live chỉ ĐÓNG khi verify OUTPUT THẬT trên production (file sinh · đúng schema · đúng giờ cron). Evidence: phase_tag CSV F1 code-đúng-file-không-sinh 3 ngày · save_snapshot fail-câm · 🎓 (badge graduation) sống lần đầu chỉ sau verify 20/08. Rule: mọi g | - |
+| L-56 | 2026-08-21 | 6 relay-loss/tuần (L-48 số hiệu · GUA contract · E-R4b ≥-drift · handover · lib · va số 49/50) | MERGE-BEFORE-GATE: amendment ký chat PHẢI merge canonical + paste diff TRƯỚC gate/backfill run. Mọi run gate in `spec_version` + `amendments_applied`. Dòng 'ĐÃ KÝ' trong sổ PHẢI trỏ được về chat-ký commit/URL — không trỏ được = CHỜ-KÝ. Evidence 6 relay-loss/tuần 15-21/08: (1) L-48 số hiệu drift · (2 | - |
+| L-57 | 2026-08-21 | Schema evolution (cols 51-52 v2.1 · ep_len/struct_n · vol_spot/vol_alpha) | SCHEMA-CHANGE-APPEND: thay đổi schema = APPEND-ONLY + changelog + KHÔNG đè cột cũ. Cột đổi NGHĨA phải ĐỔI TÊN (không giữ tên cũ mang nghĩa mới — bài F1 'một-thứ-hai-tên'). Evidence: (1) cols 51-52 v2.1 spot-ext amendment (append canonical, không đè col 31); (2) ep_len vs struct_n (2 tên cho 2 nghĩa  | - |
+| L-58 | 2026-08-21 | E-R7d/e drift incidents + P0 CHECK watchlist inline vs lib (2ba669f) | CONFORMANCE FIXTURE: pin output MỌI consumer, không-pass-không-merge, đổi ngữ nghĩa = amendment ký riêng, fixture chạy trong mọi gate run. Mỗi consumer (watchlist · registry · phase_tag · gom_scan · downstream analyzers) có fixture file (`tests/fixtures/<consumer>_conformance_<YYYYMMDD>.json`) pin O | - |
+| L-59 | 2026-08-21 | Batch V1 20/08 · P0 audit 21/08 (root-cause 'hiểu-nhầm-nhà') | KÝ-KHÔNG-BẰNG-CHỨNG = CHƯA-XONG: lệnh ghi-sổ đã ký ĐÓNG bằng paste bằng-chứng-sau-ghi CÙNG chuyến. Không bằng chứng = việc CHƯA TỒN TẠI, CHẶN bước phụ thuộc. Sổ hai nhà (nguồn + view) khai rõ nguồn/view; view CHẾT >3d khi nguồn SỐNG = ALERT. Evidence #1: batch V1 ký 20/08 — 3 lần đòi không có bằng c | - |
+| L-62 | 2026-08-27 | ERRATA-BAND-20260827 (⑬-CLOSE probe 5b + Scope-A hardcode band mismatch) | Đường-đọc-thật: số/nhãn/verdict do probe/gate xuất ra CHỈ hợp lệ khi declare đường-đọc-thật của mọi ngưỡng dùng trong tính toán. Không declare = thước tách khỏi số = bảng vô hiệu. Rule bắt buộc header cfg-provenance: Nguồn thresholds (yaml path \| hardcode \| free-layer) + Giá trị THỰC từng ngưỡng d | - |
+| L-63 | 2026-08-27 | ⑩-AMENDMENT chuỗi 24-26/08 (⑩ stub → 3 vế mở rộng, R4-v2 avg_px scope-miss) | SCOPE-BY-MANIFEST: scope regen/canonicalize/migrate định nghĩa bằng DANH SÁCH BIẾN CANONICAL BỊ ẢNH HƯỞNG (fields cụ thể: taker_buy_pct, avg_px, lsr_pos, ...) và block chứa nó (KLINES/RATIO/OI), KHÔNG bằng tên slice mờ ('taker slice', 'LSR slice'). Manifest bảng per (block, col, source, consumer, ca | - |
+| L-64 | 2026-08-27 | ERRATA-BAND-20260827 fix 2 probe hardcode | cfg-provenance header: mọi probe/gate BẮT BUỘC in header cfg-provenance tại đầu run: [CFG-PROVENANCE <artifact>] Source: <yaml path \| hardcode \| free-layer> · Method: <load method> · Values ACTUALLY USED: <threshold_name> = <actual_value> [comment: source line]. Kèm assertions fail-loud khi mismat | - |
+| L-65 | 2026-08-27 | ERRATA-BAND-20260827 subset check FAIL 8+27 extras + ARIA/STAR spot | Flip-set XOR hai chiều (band-change không đơn điệu): rule cũ 'band nới chỉ bớt flip' = GIẢ ĐỊNH SAI (L-28 DEV-instance). Rule ĐÚNG: flip-set dưới band-change là XOR HAI CHIỀU — mọi thay đổi band ⇒ RERUN toàn bộ bằng chứng flip, subset không được giả định. Mechanism: wider band = more 7d-window all-p | - |
+| L-66 | 2026-08-31 | batch_lessons_202609 (md5=28fe5a43) · A1 · SILENT-FAIL FAMILY | L-66 SILENT-FAIL FAMILY (hợp nhất + taxonomy B1-B4): Cấm `except: pass` trần trên mọi đường tính signal/alert. Mọi exception nuốt phải phát sentinel `N/A-ERROR:<tên>` vào output — máy được phép hỏng, không được phép hỏng câm. Sentinel áp cả provenance-fields (header/md5/version-string), không chỉ si | - |
+| L-67 | 2026-08-31 | batch_lessons_202609 (md5=28fe5a43) · A2 · FIXTURE-IMMUTABILITY | L-67 FIXTURE-IMMUTABILITY: Pin/expected của fixture là VĂN BẢN KÝ — chỉ operator được thêm/bớt/sửa qua amendment có diff. Agent/DEV tự đổi pin/bỏ row/viết điều kiện mới né ca đang fail = **vi phạm loại-1** (ngang tự-ký verdict): mọi 'PASS' sinh sau vô hiệu toàn bộ. Enforcement máy: (a) fixture file  | - |
+| L-51-AMD-BRIDGE | 2026-08-31 | batch_lessons_202609 (md5=28fe5a43) · A3 · BRIDGE-INJECT hai-đường-chạy · Nansen 31/08 | L-51 amendment BRIDGE-INJECT hai-đường-chạy (bản-rev · bless từ evidence 31/08): Định danh dùng chung phải có MỘT getter · mọi đường (cron/manual/probe/one-off/emergency-run) qua CÙNG cửa. Đường không-cầu = hai-nguồn-sự-thật runtime · SILENT cho tới khi bỏ cầu. Án lệ: Nansen key-migration 09/2026 —  | - |
+| L-68 | 2026-08-31 | batch_lessons_202609 (md5=28fe5a43) · A4 · SIGNATURE-FROM-CANONICAL · án lệ A10-RERATE | L-68 SIGNATURE-FROM-CANONICAL: Mọi rule mới trình ký phải kèm bảng số evidence-case tính TỪ FILE CANONICAL bằng ĐÚNG công thức operationalization — fixture-check TRƯỚC chữ ký, không phải sau. Án lệ: A10-RERATE (ngưỡng đặt từ đọc-mắt ảnh UI, chết ngay lượt fixture-prep). | - |
+| L-69 | 2026-08-31 | batch_lessons_202609 (md5=28fe5a43) · A5 · AMENDMENT-VERBATIM · án lệ A/B khối-🌊 | L-69 AMENDMENT-VERBATIM / CHỮ-CÁI-RETIRED: Amendment/ruling relay mang NỘI DUNG nguyên văn, không mang con trỏ (A/B, option-1/2) — nhãn tham chiếu chết khi rời ngữ cảnh sinh ra nó. Án lệ: suýt-đảo A/B khối-🌊 (agent tự dựng bảng ngược chiều). Bổ trợ luật cũ 'request verbatim text, do not reconstruct  | - |
+| L-70 | 2026-08-31 | batch_lessons_202609 (md5=28fe5a43) · A6 · EXPECTED-TARGET-DATE · án lệ suýt-chấm-nhầm-đêm | L-70 EXPECTED-TARGET-DATE (enforcement lắp cùng batch): Mọi bảng expected của dao-trôi/verify phải mang cột `target_date`; runner đối chiếu `target_date ≡ render_date` TRƯỚC khi so giá trị — lệch = FAIL-ENGINE, không vào so số. Án lệ: expected 08-30 suýt chấm đêm 08-31. Họ fixture_md5: trọng tài phả | - |
+| L-71 | 2026-08-31 | batch_lessons_202609 (md5=28fe5a43) · A7 · BỘ LUẬT ĐỌC-BẢNG hợp nhất | L-71 BỘ LUẬT ĐỌC-BẢNG (niêm gộp): (1) Vùng-dao: chữ ký tham số chỉ có giá trị trong vùng dao nó sẽ sống; thắng-thua ngoài vùng in kèm trung thực, không tham gia verdict. (2) ±MC: điểm-ước-lượng từ bootstrap/MC phải khai phương-sai-máy-đo; số chưa kèm ±MC chưa phải số ký; claim vắt ranh bắt buộc re-d | - |
+| L-51-AMD-FIELD | 2026-09-01 | batch_lessons_202609 · L-51 amendment · Alpha klines taker mirror (GUA/TRIA) | L-51 amendment TẦNG FIELD (bless từ ANALYSIS 2026-09-01): Kỷ luật identity áp cả tầng field — field/cột tồn tại ≠ field có nghĩa. Trước khi tiêu thụ field từ venue/API: verify semantics native (không mirror/placeholder/echo — test bất-biến kiểu k[9]≡k[5]). Án lệ: Alpha klines taker mirror volume → t | - |
+| L-72 | 2026-09-03 | lessons_duoi_batch_20260901 (chuyến-5 · kế thừa & đóng đuôi-batch-3 01/09) · TOOL-REVIVAL | Dụng cụ của một rule đã CLOSED... chặn tay (01/09). | - |
+| L-73 | 2026-09-03 | lessons_duoi_batch_20260901 (chuyến-5 · kế thừa & đóng đuôi-batch-3 01/09) · CEX-LIST one-source · án 02/09 | Holder-endpoint (/tgm/holders) = CASE-SUPPORT THEO LỆNH OPERATOR ĐÍCH DANH duy nhất — không máy nào tự tiêu thụ làm signal (H4-detector CLOSED vĩnh viễn). Mọi bảng holder in cột is_cex từ MỘT nguồn `data/ref/cex_addresses_bsc.txt` (md5 0983fb5f8a190872ac2b904798b3cbf7 · reconcile chốt 02/09 · Option | - |
+| L-74 | 2026-09-03 | lessons_duoi_batch_20260901 (chuyến-5 · kế thừa & đóng đuôi-batch-3 01/09) · VIEW-AUTO-REGEN · án case_state_map 6.2d | (a) tự regen ≤24h · (b) header source_md5+generated_at · (c) consumer đối chiếu → [VIEW-STALE age=Xd] · án lệ case_state_map 6.2d. | - |
+| L-75 | 2026-09-03 | lessons_duoi_batch_20260901 (chuyến-5 · kế thừa & đóng đuôi-batch-3 01/09) · MIGRATION-MORNING-PROTOCOL · thành luật | MIGRATION-MORNING-PROTOCOL (drop -draft suffix per operator 02/09 · thành luật): audit-kép forensics (evidence trước · verdict sau) · ba-tầng-vá kết dính (mtime + stderr + getter-fail-loud) · snapshot ledger contract-document mọi anomaly · cấm skip verdict khi evidence dở dang · migration nào cũng c | - |
+| L-76 | 2026-09-03 | lessons_duoi_batch_20260901 (chuyến-5 · kế thừa & đóng đuôi-batch-3 01/09) · SMOKE-KHÔNG-ĐƯỢC-VIẾT-PROD · án CSV 09-01 LOST | SMOKE-KHÔNG-ĐƯỢC-VIẾT-PROD (verbatim): smoke ghi prod-path = phẫu-thuật-không-chữ-ký. Án lệ: CSV 09-01 LOST (md5-pre≡post lộ vụ · byte gốc mất vì smoke verification overwrite trước state-surgery chữ ký). Enforcement: default = SANDBOX (env-less) · SIGNED mode explicit qua GOM_H_MODE=SIGNED · banner  | - |
+| L-77 | 2026-09-07 | lessons_duoi_batch_20260907 (đuôi L-77/L-78 · ANALYSIS niêm) · PORT-PARITY | PORT-PARITY: mọi PORT (chuyển 1 renderer/sender/detector từ máy A sang máy B) PHẢI kèm golden-master diff trước khi B thay A. Diff bắt buộc: {snapshot cố định} + {A render capture} + {B render capture} + {bảng 4 cột deviation} + {phân loại per-dòng SIGNED (cite chữ) vs DRIFT (revert to A verbatim)}. | - |
+| L-78 | 2026-09-07 | lessons_duoi_batch_20260907 (đuôi L-77/L-78 · ANALYSIS niêm) · SEAL-KHÔNG-PHẢI-GƯƠNG bản BA-VẾ (ANALYSIS cuối) | SEAL-KHÔNG-PHẢI-GƯƠNG · bản BA-VẾ (ANALYSIS chốt-cuối): (1) HAI VẾ SAI PHẢI ĐỘC LẬP — không thể sai cùng lúc bởi cùng nguyên nhân. (2) KHÔNG CÙNG-MỘT-OBJECT — hai vế đọc từ nguồn khác nhau, không chỉ khác đường code đọc (cùng in-memory object đọc bằng 2 fn khác nhau = vẫn cùng-object · KHÔNG PHẢI ĐỘ | - |
+| L-79 | BLOCKER-BỊA + DEMO-RUỘT | REV10-e171c341 | Placeholder PENDING-<x> khi source artifact sẵn = bịa. Demo-ruột: preview phải kiểm ruột trước trình. | REV10-APPLY |
+| L-78-append | vế-tồn-tại (EMPTY-GUARD) | REV10-e171c341 | Bốn-vế: (1) độc-lập · (2) không cùng-object · (3) đẳng-thức bất-biến · (4) vế-tồn-tại (empty-guard). | REV10-APPLY |
+| án-lệ-✓-suy | phái sinh L-79 | REV10-e171c341 | Nhãn chưa seal → in [UNVERIFIED] · CẤM ✓ suy. | REV10-APPLY |
+| §B-v1.8 | cộng dồn V3.1-V3.5i | REV10-e171c341 | SỔ-ĂN-SỰ-KIỆN · SENT-anchor · FRESH-Δ-only · EPISODE×COVERAGE · WATERFALL · strict-139/[NGOÀI-SỔ]/[≥3×]-đề-cử · LATTICE max-severity · STICKY-đích-danh · first-seed-any-axis · READ-BACK VERIFY · anchor-139. | REV10-APPLY |
+| p14-DẢI-KÉP | PROVISIONAL control-27/09 | REV10-e171c341 | chân-a n_PRE∈[4,6] · chân-b n_treo≤15 ∧ coverage-sạch(all ≥15/31) · sort dải-a=star_birth DESC · sort dải-b=last-signal ASC · coverage thủng → CAVEAT án-ở-ống. | REV10-APPLY |
+| p15-semantics | UNIVERSE-BOUND FAIL-ENGINE with NAMES | REV10-e171c341 | n_unique mọi trục ≤ \|universe\|=139 · vi phạm = FAIL-ENGINE treo verdict · in ĐÍCH DANH oob syms · CẤM silent-drop · universe cite = file+md5. | REV10-APPLY |
+| PIN-TUYỂN-DỤNG | 14 pin distinct · 17 sabotage rows | REV10-e171c341 | Mỗi pin ≥1 mutate thật · 4-field log (pin·mutate·verdict·revert-sha) · nhánh luật-chết viết lại trước · p2-p6 FAIL-VACUOUS · p15 FAIL-ENGINE-NAMED · sweep prefix-match. | REV10-APPLY |
+| KHÓA-ĐÍCH-DANH | sticky tag in-message | REV10-e171c341 | Sticky-source chỉ match {🔴-block · WASH-CRASH · S4/S5} · CẤM ¹-generic · tag `STICKY-XẢ vì <src>-<DD/MM>` in trên dòng ⭐. | REV10-APPLY |
+| WL-án-lệ | 18≡18 verbatim | REV10-e171c341 | 18≡18 đối-chứng-hai-nguồn · 44-unique · List-B[23,44]avg34.6 · thác 157→16 · thay vĩnh viễn mọi trích tiền-REV4. | REV10-APPLY |
+| star_birth-def | trục-thứ-hai tới | REV10-e171c341 | star_birth(token) := min{d : \|{trục có event ≤ d}\| ≥ 2}. | REV10-APPLY |
+| ⭐-01-entry#1 | COLLECT bảng-chấm-⭐ | REV10-e171c341 | COLLECT direction=POST-DUMP · ret=-40.0% · dd=-53.6% · sổ chấm: 'máy fire trước sóng (TP-recall) · ledger gán chiều sai 4 ngày (FP-direction)'. | REV10-APPLY |
+| L-80-DRAFT | regex block-scoped enforcement | REV10-e171c341 | 'Regex đọc log đa-target PHẢI block-scoped (anchor target → next-target/EOF); DOTALL-span = phantom-đếm.' Án lệ kép: forensic-25-phantom 07/09 · extractor-watchlist 62≠30. DRAFT-KHÔNG-KÍCH-HOẠT. | REV10-APPLY |
+| LABEL-CLAIMS-LINT | án lệ #2 + #2b | REV10-e171c341 | Grep nhãn CLAIM {sorted·sort:·✓·checked·verified·OK·PASS·đã-*} · hợp lệ khi bán kính k=5 có phép-kiểm hoặc cite [per <seal-id>]. Án lệ #2: '5/5 WIRED ✅' không biên lai orphan. Án lệ #2b: claim-✅-giả toàn phần (watchlist wire 0 dump_as_sent). | REV10-APPLY |
+| SỔ-ĐỌC-ENFORCEMENT | regex đa-target block-scoped | REV10-e171c341 | Regex đọc log đa-target = block-scoped. Fix wired _wl_sent_by_target. | REV10-APPLY |
+| DOS-PACKAGE | ghế 27/09 | REV10-e171c341 | Câu kiến trúc: 'exposure-declared-theo-thế-hệ tầng universe — đổi mẫu số tại ranh thế hệ'. DOS 4×/30d ĐỀ-CỬ-UNIVERSE bất động 27/09. BEAT/ONE/B đếm tiếp. | REV10-APPLY |
+| [SENT]-marker-chuẩn | L-59 áp mọi sender | REV10-e171c341 | Mọi sender in `[SENT] <kênh> ok=<bool> HTTP <code> hash=<h>`. Wired: gom_daily · phase_map · watchlist. | REV10-APPLY |

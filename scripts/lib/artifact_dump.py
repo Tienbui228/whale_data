@@ -1,4 +1,4 @@
-"""ARTIFACT-DUMP · as-sent · V1.4 V3.5i UNIVERSE-ANCHOR filter.
+"""ARTIFACT-DUMP · as-sent · V1.4 V3.5i UNIVERSE-ANCHOR filter · V3.5j patches.
 
 V1.4 CHANGES (V3.5i · directive REV10-APPLY item 5):
   · TOKEN-FILTER anchor = universe-139 ∪ ngoai_so_set (bất biến kim-chỉ)
@@ -6,9 +6,20 @@ V1.4 CHANGES (V3.5i · directive REV10-APPLY item 5):
   · Regex vẫn nới rộng 3 format (SYMUSDT · $SYM · BARE) nhưng ONLY emit symbol nếu ∈ anchor
   · READ-BACK VERIFY + sentinel DUMP-HALF-FAIL giữ nguyên (V1.3)
 
+V3.5j PATCHES:
+  · 1-char stem support (F, B): strip USDT if len(s) > len(suf) (was > len(suf)+1)
+  · Anchor authoritative: min length 1 (was 2) · anchor filter handles noise
+
+CONTRACT · LAG-1-NGÀY (V3.5j directive item 4):
+  OOB (out-of-universe) first-appearance = TXT-only ngày đầu; JSONL từ ngày sau khi
+  token vào `ngoai_so_candidates.json`. Ngày N phát hiện Δ≥50k out-of-u50 → NGOÀI-SỔ
+  ghi TXT (as-sent verbatim). Anchor không có → JSONL row bỏ qua. Cuối ngày N: nếu
+  operator/task update ngoai_so_candidates.json thêm token → ngày N+1 trở đi JSONL
+  bắt được. Đây là hợp-đồng có-chủ-ý, không silent bug.
+
 Anchor loaded:
   - freshwatch_symbols.txt (139 u50) at import
-  - ngoai_so_state.json (candidates in-flight · DOS/ONE/BEAT/B counter) at import
+  - ngoai_so_candidates.json (rolling · DOS/ONE/BEAT/B counter) at import
 """
 from __future__ import annotations
 import os, re, json
@@ -58,17 +69,18 @@ _ANCHOR = _load_anchor_set()
 
 
 def _extract_symbol(match: re.Match) -> str | None:
-    """Return canonical bare-symbol IF ∈ anchor (universe ∪ ngoai_so) · else None."""
+    """Return canonical bare-symbol IF ∈ anchor (universe ∪ ngoai_so) · else None.
+    V3.5j FIX: allow 1-char stems (F, B) · anchor is authoritative filter."""
     for g in match.groups():
         if not g: continue
         s = g.strip()
-        # Strip trailing USDT/USDC/USD
+        # Strip trailing USDT/USDC/USD if ≥1 char remains (V3.5j: was > +1, dropped F)
         for suf in ("USDT", "USDC", "USD"):
-            if s.endswith(suf) and len(s) > len(suf) + 1:
+            if s.endswith(suf) and len(s) > len(suf):
                 s = s[:-len(suf)]; break
         s = s.upper()
-        if len(s) < 2: return None
-        if s not in _ANCHOR: return None   # POSITIVE ANCHOR filter (V3.5i)
+        if len(s) < 1: return None
+        if s not in _ANCHOR: return None   # POSITIVE ANCHOR filter · authoritative
         return s
     return None
 
