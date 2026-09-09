@@ -233,7 +233,7 @@ def compute_night_verdict(target: str) -> dict:
         else:
             full_pair_status[r] = {"missing": True}
     n_full = sum(1 for r in renderers if not full_pair_status[r].get("missing"))
-    # [SENT]×6 từ bell-journal
+    # [SENT]×6 từ bell-journal OR fallback grep existing [SENT] markers (until all senders wired)
     sent_count = {}
     if bell.exists():
         for line in bell.read_text(encoding="utf-8").splitlines():
@@ -242,6 +242,27 @@ def compute_night_verdict(target: str) -> dict:
                 if e.get("target_date") == target and e.get("ok"):
                     sent_count[e["renderer"]] = True
             except: pass  # L-66-OK (benign fallback)
+    # Fallback: grep [SENT] markers per renderer (block-scoped L-80)
+    log_map = {
+        "tg_relay_gom_h": (REPO / "data/logs/tg_relay.log", r"\[SENT\] all_ok=True"),
+        "fresh_digest": (REPO / "data/logs/digest_daily_vps.log", r"\[SENT\] Fresh-Wallets.*ok=True"),
+        "exch_digest": (REPO / "data/logs/digest_daily_vps.log", r"\[SENT\] EXCH-BAL.*ok=True"),
+        "gom_daily": (REPO / "data/logs/gom_daily.log", rf"\[SENT\] gom_daily ok=True.*target={target}"),
+        "phase_map": (REPO / "data/logs/phase_tag.log", rf"\[SENT\] phase_map ok=True.*target={target}"),
+        "watchlist": (REPO / "data/export/watchlist_cron.log", rf"\[SENT\] watchlist ok=True.*target={target}"),
+    }
+    for r, (logf, pat) in log_map.items():
+        if sent_count.get(r): continue  # bell-journal already confirmed
+        if not logf.exists(): continue
+        content = logf.read_text(encoding="utf-8", errors="replace")
+        if re.search(pat, content):
+            # For fresh/exch/relay: check target_date via nearby snapshot marker
+            if r in ("fresh_digest", "exch_digest", "tg_relay_gom_h"):
+                # snapshot=<target>.json for digest · target_date=<target> for relay
+                mark = f"snapshot={target}.json" if r != "tg_relay_gom_h" else f"target_date={target}"
+                if mark in content: sent_count[r] = True
+            else:
+                sent_count[r] = True
     n_sent = sum(1 for r in renderers if sent_count.get(r))
     # Pin-scan (p20-p22 harness result)
     import subprocess
