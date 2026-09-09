@@ -28,7 +28,7 @@ Verdict-file schema (dem0_lan2_verdict.json · V3.5j):
 }
 """
 from __future__ import annotations
-import os, sys, json, hashlib, subprocess
+import os, sys, json, hashlib, subprocess, re
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
 import urllib.request, urllib.parse
