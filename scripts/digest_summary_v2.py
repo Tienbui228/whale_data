@@ -75,9 +75,18 @@ def _gomh_line(text: str) -> str:
 
 
 def _hedge_line(text: str) -> str:
-    """HEDGE: A=<n> · B-top: <tok +Δdiv (oi_note)> ×2 · 🎓<n hoặc tên> → #hedge"""
+    """HEDGE: A=<n> · B-top: <tok +Δdiv (oi_note)> ×2 · 🎓<n hoặc tên> → #hedge
+    V3.5k B1: sidecar vắng/stale → CẤM MỌI CHỮ SỐ · in 'N/A-ERROR' đúng chuẩn.
+    """
+    # V3.5k B1 · SIDECAR-MISSING guard: if text empty OR no LIST A marker → N/A-ERROR
+    if not text or not text.strip():
+        return "HEDGE: N/A-ERROR (sidecar missing — xem log) → #hedge"
+    if "=== LIST A —" not in text:
+        return "HEDGE: N/A-ERROR (sidecar malformed · no LIST-A marker — xem log) → #hedge"
     m_a = re.search(r"=== LIST A —.*?\((\d+) tokens", text)
-    n_a = int(m_a.group(1)) if m_a else 0
+    if m_a is None:
+        return "HEDGE: N/A-ERROR (sidecar LIST-A count parse fail — xem log) → #hedge"
+    n_a = int(m_a.group(1))
     # B-top × 2: first 2 rows in LIST B section (already sorted by Δdiv DESC per script)
     in_lb = False; top_b = []
     for line in text.split("\n"):
@@ -89,7 +98,6 @@ def _hedge_line(text: str) -> str:
                 bare = m.group(1); delta = m.group(2)
                 note = "short cover" if "short cover" in m.group(3) else ("long mới" if "long mới" in m.group(3) else "OI<$1M")
                 top_b.append(f"{bare} {delta} ({note})")
-    # 🎓 TỐT-NGHIỆP · look for count or names
     m_grad = re.search(r"TỐT[-\s]NGHIỆP\s*(?:\((\d+)|:\s*(\S+))", text)
     grad = "0"
     if m_grad:
@@ -257,8 +265,13 @@ def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str]:
                 dir_by_sym[r["symbol"]] = r
             except: pass  # L-66-OK (json parse fallback)
 
-    stars_sorted = sorted(stars_all, key=lambda x: (-len(x[1]["axes"]), -len(x[1]["events"]), x[0]))
-    pre_lines = []; xa_lines = []; post_lines = []
+    # V3.5k B2 · DISPLAY SORT ⭐-PRE = ngày-tín-hiệu-mới-nhất DESC · tie-break n-trục DESC
+    # (khác p14 sort=star_birth DESC · KHÔNG trộn — trộn = ✓-suy tương lai)
+    def _latest_signal(info):
+        return max(e["target_date"] for e in info["events"])
+    stars_sorted = sorted(stars_all, key=lambda x: (_latest_signal(x[1]), len(x[1]["axes"])), reverse=True)
+    pre_lines = []; xa_lines = []; post_lines = []; watch_lines = []
+    pre_syms_ord = []; xa_syms_ord = []; post_syms_ord = []; watch_syms_ord = []
     for s, info in stars_sorted:
         axes_str = "+".join(sorted(info["axes"]))
         latest_dates = " · ".join([f"{ax[:4]}={e['target_date'][5:]}" for ax, e in info["latest"].items()])
@@ -267,19 +280,23 @@ def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str]:
         direction = dr.get("direction", "PRE")
         flags = dr.get("flags", [])
         px = dr.get("px", {})
-        ret_str = f"ret{px.get('ret_pct',0):+.0f}%" if px.get("ret_pct") is not None else "ret[PX-N/A]"
-        dd_str = f"dd{px.get('dd20_pct',0):+.0f}%" if px.get("dd20_pct") is not None else "dd[PX-N/A]"
+        # V3.5k B3 · PX-N/A(coverage) → direction=WATCH · CẤM PRE/POST/XẢ tới khi px về
+        px_missing = (px.get("px_now") is None) or (px.get("ret_pct") is None)
+        if px_missing:
+            direction = "WATCH"; flags = ["PX-PENDING"]
+            watch_line = f"   ⏸ WATCH [PX-PENDING]: {s} {len(info['axes'])}-trục ({axes_str}) {latest_dates}{new_tag}"
+            watch_lines.append(watch_line); watch_syms_ord.append(s); continue
+        ret_str = f"ret{px.get('ret_pct'):+.0f}%"
+        dd_str = f"dd{px.get('dd20_pct'):+.0f}%" if px.get("dd20_pct") is not None else "dd[PX-N/A]"
         reason_str = f"[{','.join(flags)}]" if flags else ""
         line = f"   {s} {len(info['axes'])}-trục ({axes_str}) {latest_dates} · {ret_str} {dd_str} → {direction}{reason_str}{new_tag}"
-        # V3.5b 3-tầng routing
         if direction == "PRE":
-            pre_lines.append(line)
+            pre_lines.append(line); pre_syms_ord.append(s)
         elif direction in ("XẢ-WATCH", "XẢ"):
-            xa_lines.append(line)
-        else:  # POST-DUMP, POST, POST-FLOOR, 🌊
-            post_lines.append(line)
+            xa_lines.append(line); xa_syms_ord.append(s)
+        else:
+            post_lines.append(line); post_syms_ord.append(s)
 
-    # V3.5 DAO-DEFERRED: check coverage from events (simple counts)
     from datetime import datetime as _dt, timedelta as _td
     end = _dt.strptime(target, "%Y-%m-%d").date()
     perp_days = set(); wl_days = set(); fresh_days = set(); kho_g_days = set(); kho_e_days = set()
@@ -294,19 +311,38 @@ def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str]:
     kho_union = kho_g_days | kho_e_days
     win_n = 31
     fresh_cov = len(fresh_days); kho_cov = len(kho_union); perp_cov = len(perp_union)
-    # DAO-DEFERRED nếu coverage của trục quan trọng thấp; else CLEAR/ANOMALY
-    SOFT_CEILING = 15
-    dao_line = f"[DAO-DEFERRED coverage: fresh {fresh_cov}/{win_n} · kho {kho_cov}/{win_n} · perp {perp_cov}/{win_n}]"
-    body = f"⭐ SỔ ỨNG VIÊN · {dao_line} treo={treo_total_alive}(tổng-sống) · mới={n_new_today}⊆treo"
+    # V3.5k B1 · coverage PER-SRC in trục · khai wl-src status nếu MISSING hôm nay
+    wl_missing_today = target not in wl_days
+    wl_src_note = " [wl-src: MISSING hôm nay]" if wl_missing_today else ""
+    dao_line = (f"[DAO-DEFERRED coverage: fresh {fresh_cov}/{win_n} · kho {kho_cov}/{win_n} · "
+                f"perp {perp_cov}/{win_n}{wl_src_note}]")
+    # V3.5k B4 · DẢI-NỢ line (K=21 provisional_unsigned · ký bàn 27/09)
+    K_TRIP = 21
+    n_pre_all = len(pre_lines); trip_ready = (min(fresh_cov, kho_cov, perp_cov) >= K_TRIP)
+    trip_note = " ⚠ TRIP-READY" if trip_ready else ""
+    dai_no_line = f"[DẢI-NỢ: PRE={n_pre_all} vs [4..6] · treo={treo_total_alive} vs [15] — sẽ TRIP khi coverage ≥ [K={K_TRIP}]/31]{trip_note}"
+    body = (f"⭐ SỔ ỨNG VIÊN · {dao_line} treo={treo_total_alive}(tổng-sống) · mới={n_new_today}⊆treo\n"
+            f"{dai_no_line}")
 
-    # V3.5j RENDER 3 TẦNG · in ĐỦ tên (cấm "(+N more)" · dải-b trần 15)
+    # V3.5k B2 · header-n ≡ số dòng in · gọn = top-k + đuôi "(+k nữa: TÊN·TÊN·TÊN)"
+    TOP_K = 6
+    def _render_block(header_prefix, lines, syms):
+        n = len(lines)
+        if n <= TOP_K:
+            return f"\n\n{header_prefix} ({n}):\n" + "\n".join(lines)
+        shown = lines[:TOP_K]
+        rest_syms = syms[TOP_K:]
+        tail = f"(+{len(rest_syms)} nữa: " + "·".join(rest_syms) + ")"
+        return f"\n\n{header_prefix} ({n}):\n" + "\n".join(shown) + f"\n   {tail}"
+
     if pre_lines:
-        body += f"\n\n⭐-PRE ({len(pre_lines)}):\n" + "\n".join(pre_lines)
+        body += _render_block("⭐-PRE", pre_lines, pre_syms_ord)
     if xa_lines:
-        body += (f"\n\n🔻 XẢ-WATCH+XẢ ({len(xa_lines)}) [bộ câu-soi: rút về đâu? "
-                 f"ai nhận trong dump? dính CEX-list?]:\n" + "\n".join(xa_lines))
+        body += _render_block("🔻 XẢ-WATCH+XẢ [bộ câu-soi]", xa_lines, xa_syms_ord)
     if post_lines:
-        body += f"\n\nPOST-DUMP+🌊 ({len(post_lines)}):\n" + "\n".join(post_lines)
+        body += _render_block("POST-DUMP+🌊", post_lines, post_syms_ord)
+    if watch_lines:
+        body += _render_block("⏸ WATCH-PX-PENDING", watch_lines, watch_syms_ord)
     return (body, "active", [s for s, _ in stars_all], view_md5)
 
 

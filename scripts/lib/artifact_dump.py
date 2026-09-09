@@ -164,3 +164,45 @@ def dump_as_sent(renderer: str, target_date: str, sent_text: str,
         raise  # propagate sentinel (không nuốt câm)
     except Exception as e:
         return (False, f"[N/A-ERROR:DUMP-FAIL] {type(e).__name__}: {e}")
+
+
+# V3.5k directive item 6b · BELL-JOURNAL raw-save vô điều kiện mọi tg_send
+_BELL_JOURNAL = REPO / "data/logs/bell_journal.jsonl"
+
+
+def log_bell(renderer: str, target_date: str, channel: str, ok: bool,
+             http_code: int | None, message_id: int | str | None, body: str) -> None:
+    """Append bell-journal entry {ts·renderer·target·channel·ok·http·message_id·body_md5}.
+    Called by every tg_send in every sender (vô điều kiện · idempotency guard = message_id + body_md5).
+    """
+    import hashlib as _h
+    entry = {
+        "ts_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "renderer": renderer,
+        "target_date": target_date,
+        "channel": channel,
+        "ok": bool(ok),
+        "http_code": http_code,
+        "message_id": message_id,
+        "body_md5": _h.md5(body.encode("utf-8")).hexdigest(),
+    }
+    _BELL_JOURNAL.parent.mkdir(parents=True, exist_ok=True)
+    with _BELL_JOURNAL.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def bell_check(renderer: str, target_date: str, channel: str = "old") -> dict | None:
+    """V3.5k (c) IDEMPOTENT source-of-truth: check bell-journal for existing SENT
+    for (channel · target · renderer). Returns last entry if found, else None.
+    Callers use this to decide skip (--resend flag required to override).
+    """
+    if not _BELL_JOURNAL.exists(): return None
+    last = None
+    for line in _BELL_JOURNAL.read_text(encoding="utf-8").splitlines():
+        try:
+            e = json.loads(line)
+            if (e.get("renderer") == renderer and e.get("target_date") == target_date
+                and e.get("channel") == channel and e.get("ok")):
+                last = e
+        except: pass  # L-66-OK (benign fallback)
+    return last

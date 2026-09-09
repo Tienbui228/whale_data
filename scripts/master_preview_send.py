@@ -215,8 +215,79 @@ def send_telegram(text: str) -> tuple[bool, str]:
         return (False, f"{type(e).__name__}: {e}")
 
 
+# V3.5k directive item 6a · compute_night_verdict · máy tự tính+ghi
+def compute_night_verdict(target: str) -> dict:
+    """Compute verdict {6/6 full-pair · [SENT]×6 từ bell-journal · pin-scan gồm p20-22
+    · zero sentinel ngoài khai}. Ghi verdict-file. Chạy đầu pipeline 01:46."""
+    art_dir = REPO / "data/artifacts"
+    bell = REPO / "data/logs/bell_journal.jsonl"
+    renderers = ["tg_relay_gom_h", "fresh_digest", "exch_digest", "gom_daily", "phase_map", "watchlist"]
+    # 6/6 full-pair check
+    full_pair_status = {}
+    for r in renderers:
+        txt = art_dir / f"tg_final_{r}_{target}.txt"
+        jsonl = art_dir / f"tg_final_{r}_{target}.jsonl"
+        if txt.exists() and jsonl.exists():
+            n_rows = sum(1 for _ in open(jsonl, encoding="utf-8"))
+            full_pair_status[r] = {"txt": txt.stat().st_size, "jsonl_rows": n_rows}
+        else:
+            full_pair_status[r] = {"missing": True}
+    n_full = sum(1 for r in renderers if not full_pair_status[r].get("missing"))
+    # [SENT]×6 từ bell-journal
+    sent_count = {}
+    if bell.exists():
+        for line in bell.read_text(encoding="utf-8").splitlines():
+            try:
+                e = json.loads(line)
+                if e.get("target_date") == target and e.get("ok"):
+                    sent_count[e["renderer"]] = True
+            except: pass  # L-66-OK (benign fallback)
+    n_sent = sum(1 for r in renderers if sent_count.get(r))
+    # Pin-scan (p20-p22 harness result)
+    import subprocess
+    pin_result = None
+    try:
+        r = subprocess.run([sys.executable, str(REPO / "tests/harness/harness_p20_p22_v3_5k.py")],
+                          capture_output=True, text=True, timeout=60)
+        pin_result = "PASS" if r.returncode == 0 else "FAIL"
+    except Exception as e:
+        pin_result = f"ERR:{e}"
+    # Sentinel scan (grep [N/A-ERROR:*] outside declared list)
+    declared_sentinels = {"N/A-ERROR:DUMP-HALF-FAIL", "N/A-ERROR:DUMP-FAIL",
+                          "N/A-ERROR:STANDING", "N/A-ERROR:VETO"}
+    unknown_sentinels = []
+    for logf in [REPO / "data/logs/master_preview.log", bell]:
+        if not logf.exists(): continue
+        content = logf.read_text(encoding="utf-8", errors="replace")
+        for m in re.finditer(r"\[N/A-ERROR:([A-Z0-9\-_/]+)\]", content):
+            tag = f"N/A-ERROR:{m.group(1)}"
+            if not any(tag.startswith(d) for d in declared_sentinels):
+                unknown_sentinels.append(tag)
+    # Verdict
+    if n_full == 6 and n_sent == 6 and pin_result == "PASS" and not unknown_sentinels:
+        verdict = "KHÔNG-KÍCH"
+    else:
+        verdict = "KÍCH"
+    result = {
+        "verdict": verdict,
+        "evidence_pointer": f"bell_journal + artifacts · computed at {datetime.now(timezone.utc).isoformat()}",
+        "date": target,
+        "n_full_pair": f"{n_full}/6",
+        "n_sent": f"{n_sent}/6",
+        "pin_scan_p20_p22": pin_result,
+        "unknown_sentinels": unknown_sentinels[:10],
+        "full_pair_detail": full_pair_status,
+    }
+    (STATE / "dem0_lan2_verdict.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    _log(f"[COMPUTE-VERDICT] {verdict} · full={n_full}/6 · sent={n_sent}/6 · pin={pin_result} · unk_sent={len(unknown_sentinels)}")
+    return result
+
+
 def main():
-    _log("─── master_preview_send V3.5j pipeline start ───")
+    _log("─── master_preview_send V3.5k pipeline start ───")
+    # V3.5k 6a · compute_night_verdict TRƯỚC standing check (máy tự tính+ghi)
+    yesterday = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
+    compute_night_verdict(yesterday)
     ok_standing, reason = check_standing()
     _log(f"standing: ok={ok_standing} · {reason}")
     if not ok_standing:
