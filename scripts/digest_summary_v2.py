@@ -26,6 +26,80 @@ REPO = Path("/root/Data_back_test/whale_data") if os.name != "nt" else Path(r"D:
 ART_DIR = REPO / "data/artifacts"
 LEDGER_DIR = REPO / "data/logs/event_ledger"
 FIXTURE_DIR = REPO / "tests/fixtures/parity"
+STATE_DIR = REPO / "data/state"
+EXPORT_DIR = REPO / "data/export"
+
+
+# V3.5l · GOM-E subtag source: watchlist LIST-A (registry) + freshwatch_daily (div, gLSR)
+_GOME_DIV_CAGED = 0.5  # provisional_unsigned · ký bàn 27/09
+
+
+def _gome_subtag_map(target: str) -> tuple[dict, str]:
+    """Return {sym → subtag_str} + source_status.
+    subtag_str examples:
+      "PRE-CAGED [div=0.247·gLSR=4.35]"  (registry ∧ div ≤ 0.5)
+      "PRE-OPEN"                          (not registry OR div > 0.5)
+      None                                (source missing · caller renders [GOME-SRC-MISSING])
+    source_status: "ok" | "missing-watchlist" | "missing-freshwatch"
+    """
+    # Watchlist state (registry = LIST-A)
+    wl_p = STATE_DIR / f"hedge_watchlist_{target}.json"
+    if not wl_p.exists():
+        return ({}, "missing-watchlist")
+    try:
+        wl = json.loads(wl_p.read_text(encoding="utf-8"))
+    except Exception:
+        return ({}, "missing-watchlist")
+    la = wl.get("list_a_tokens", [])
+    registry = set()
+    if isinstance(la, list):
+        for t in la:
+            if isinstance(t, str):
+                registry.add(t.replace("USDT", "") if t.endswith("USDT") else t)
+    elif isinstance(la, dict):
+        for k in la.keys():
+            registry.add(k.replace("USDT","") if k.endswith("USDT") else k)
+    # Freshwatch daily (div_avg3 · gLSR)
+    yyyy_mm = target[:7]
+    fw_p = EXPORT_DIR / f"freshwatch_daily_{yyyy_mm}.csv"
+    if not fw_p.exists():
+        return ({}, "missing-freshwatch")
+    import csv as _csv
+    from statistics import mean as _mean
+    fw_rows = {}
+    with open(fw_p, encoding="utf-8") as f:
+        for row in _csv.DictReader(f):
+            sym = row.get("symbol", "")
+            try:
+                pos = float(row.get("lsr_pos_r", "nan"))
+                acc = float(row.get("lsr_acc_r", "nan"))
+                glsr = float(row.get("lsr_global_r", "nan"))
+            except: continue
+            fw_rows.setdefault(sym, []).append({"date": row["date"], "pos": pos, "acc": acc, "glsr": glsr})
+    for sym in fw_rows: fw_rows[sym].sort(key=lambda r: r["date"])
+    # avg3 helper
+    def _div_glsr(sym_usdt: str, target_d: str) -> tuple[float | None, float | None]:
+        rows = fw_rows.get(sym_usdt, [])
+        idx = next((i for i, r in enumerate(rows) if r["date"] == target_d), None)
+        if idx is None: return (None, None)
+        pos_vals = [rows[j]["pos"] for j in range(max(0, idx - 2), idx + 1) if rows[j]["pos"] == rows[j]["pos"]]
+        acc_vals = [rows[j]["acc"] for j in range(max(0, idx - 2), idx + 1) if rows[j]["acc"] == rows[j]["acc"]]
+        if not pos_vals or not acc_vals: return (None, None)
+        div = _mean(pos_vals) / _mean(acc_vals) if _mean(acc_vals) else None
+        glsr = rows[idx]["glsr"] if rows[idx]["glsr"] == rows[idx]["glsr"] else None
+        return (div, glsr)
+    # Build map for stars (called with subset from caller)
+    result = {}
+    for sym in registry | set(k.replace("USDT","") for k in fw_rows.keys() if k.endswith("USDT")):
+        sym_usdt = f"{sym}USDT"
+        div, glsr = _div_glsr(sym_usdt, target)
+        in_reg = sym in registry
+        if in_reg and div is not None and div <= _GOME_DIV_CAGED:
+            div_s = f"{div:.3f}"; glsr_s = f"{glsr:.2f}" if glsr is not None else "N/A"
+            result[sym] = f"PRE-CAGED [div={div_s}·gLSR={glsr_s}]"
+        else:
+            result[sym] = "PRE-OPEN"
+    return (result, "ok")
 
 
 def _load_artifact(renderer: str, target: str) -> tuple[str, str]:
@@ -266,12 +340,14 @@ def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str]:
             except: pass  # L-66-OK (json parse fallback)
 
     # V3.5k B2 · DISPLAY SORT ⭐-PRE = ngày-tín-hiệu-mới-nhất DESC · tie-break n-trục DESC
-    # (khác p14 sort=star_birth DESC · KHÔNG trộn — trộn = ✓-suy tương lai)
     def _latest_signal(info):
         return max(e["target_date"] for e in info["events"])
     stars_sorted = sorted(stars_all, key=lambda x: (_latest_signal(x[1]), len(x[1]["axes"])), reverse=True)
+    # V3.5l · GOM-E subtag map + status (S2: OPEN trước CAGED · trong nhóm giữ last-signal DESC)
+    gome_map, gome_status = _gome_subtag_map(target)
     pre_lines = []; xa_lines = []; post_lines = []; watch_lines = []
     pre_syms_ord = []; xa_syms_ord = []; post_syms_ord = []; watch_syms_ord = []
+    pre_records = []  # for S2 re-sort · [(sym, subtag, line)]
     for s, info in stars_sorted:
         axes_str = "+".join(sorted(info["axes"]))
         latest_dates = " · ".join([f"{ax[:4]}={e['target_date'][5:]}" for ax, e in info["latest"].items()])
@@ -291,11 +367,28 @@ def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str]:
         reason_str = f"[{','.join(flags)}]" if flags else ""
         line = f"   {s} {len(info['axes'])}-trục ({axes_str}) {latest_dates} · {ret_str} {dd_str} → {direction}{reason_str}{new_tag}"
         if direction == "PRE":
-            pre_lines.append(line); pre_syms_ord.append(s)
+            # V3.5l · PRE-SUBTAG · CẤM mặc-định-OPEN-khi-mù
+            if gome_status != "ok":
+                subtag = None  # rendered as [GOME-SRC-MISSING] · no subtag
+                line_pre = f"   {s} {len(info['axes'])}-trục ({axes_str}) {latest_dates} · {ret_str} {dd_str} → PRE [GOME-SRC-MISSING]{new_tag}"
+            else:
+                subtag = gome_map.get(s, "PRE-OPEN")  # default OPEN if not in registry AND not in freshwatch
+                line_pre = f"   {s} {len(info['axes'])}-trục ({axes_str}) {latest_dates} · {ret_str} {dd_str} → {subtag}{new_tag}"
+            pre_records.append((s, subtag or "MISSING", line_pre))
         elif direction in ("XẢ-WATCH", "XẢ"):
             xa_lines.append(line); xa_syms_ord.append(s)
         else:
             post_lines.append(line); post_syms_ord.append(s)
+
+    # V3.5l S2 · sort OPEN trước CAGED, trong nhóm giữ last-signal DESC
+    def _open_sort_key(rec):
+        sym, subtag, _ = rec
+        is_caged = "CAGED" in subtag
+        return (is_caged, )  # False (OPEN) sorts first
+    # pre_records already in last-signal DESC · Python sort is stable → preserves within-group order
+    pre_records.sort(key=_open_sort_key)
+    for sym, _st, ln in pre_records:
+        pre_lines.append(ln); pre_syms_ord.append(sym)
 
     from datetime import datetime as _dt, timedelta as _td
     end = _dt.strptime(target, "%Y-%m-%d").date()

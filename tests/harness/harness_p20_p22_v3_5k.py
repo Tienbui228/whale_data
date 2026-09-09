@@ -74,27 +74,43 @@ def p21_px_na_watch():
     return ("PASS" if ok else "FAIL", detail)
 
 
-# ═════ p22 COUNT ≡ PRINTED ═════
+# ═════ p22 COUNT ≡ PRINTED (V3.5l parser fix) ═════
 def p22_count_printed():
-    """Verify ⭐-PRE header-N matches number of lines printed (with tail names if >TOP_K)."""
+    """Verify ⭐-PRE header-N matches printed lines + tail names if >TOP_K.
+    V3.5l fix: proper block extraction stops at next section marker (⭐-PRE ends
+    when 🔻/POST-DUMP/⏸/📒/🚪/━━ appears · not on double-newline).
+    """
     sys.path.insert(0, str(REPO / "scripts"))
     from digest_summary_v2 import build_v2_digest
     body = build_v2_digest("2026-09-08")
-    m = re.search(r"⭐-PRE\s+\((\d+)\):\n((?:\s+.*\n?)+?)(?=\n\n|$)", body)
-    if not m:
+    lines = body.split("\n")
+    # Find ⭐-PRE header line
+    header_idx = None; header_n = None
+    for i, l in enumerate(lines):
+        m = re.match(r"⭐-PRE\s+\((\d+)\):", l)
+        if m: header_idx = i; header_n = int(m.group(1)); break
+    if header_idx is None:
         return ("N/A", "no ⭐-PRE block found")
-    header_n = int(m.group(1))
-    block_content = m.group(2)
-    # Count star lines (indented with symbol)
-    star_lines = [l for l in block_content.split("\n") if l.strip() and not l.lstrip().startswith("(+")]
+    # Collect block until next section marker OR blank-then-new-section
+    SECTION_MARKERS = ("🔻", "POST-DUMP", "⏸", "📒", "🚪", "━━", "GOM-H:", "HEDGE:", "KHO:", "FRESH:", "RÒNG:", "👁")
+    star_lines = []; tail_syms = []; tail_n = 0
+    for l in lines[header_idx+1:]:
+        stripped = l.strip()
+        if not stripped: continue  # skip blank
+        # Next section marker → block ended
+        if any(stripped.startswith(m) for m in SECTION_MARKERS): break
+        # Tail line "(+N nữa: SYM·SYM·SYM)"
+        m_tail = re.match(r"\(\+(\d+) nữa:\s+([^)]+)\)", stripped)
+        if m_tail:
+            tail_n = int(m_tail.group(1))
+            tail_syms = m_tail.group(2).split("·")
+            continue
+        # Otherwise a star line (has symbol at start of stripped)
+        star_lines.append(stripped)
     printed_n = len(star_lines)
-    # If header > TOP_K=6, tail should exist with (+N nữa: ...)
     TOP_K = 6
-    tail_match = re.search(r"\(\+(\d+) nữa:\s+([^)]+)\)", block_content)
-    tail_n = int(tail_match.group(1)) if tail_match else 0
-    tail_syms = tail_match.group(2).split("·") if tail_match else []
     if header_n <= TOP_K:
-        ok = (printed_n == header_n)
+        ok = (printed_n == header_n) and (tail_n == 0)
         detail = f"header={header_n} printed={printed_n} · no-tail (≤{TOP_K}) · match={ok}"
     else:
         ok = (printed_n == TOP_K) and (tail_n == header_n - TOP_K) and (len(tail_syms) == tail_n)
