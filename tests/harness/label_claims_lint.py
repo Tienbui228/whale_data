@@ -1,21 +1,22 @@
-"""LABEL-CLAIMS-LINT · V3.5f enforcement-trước-chữ · V3.5j corpus updated.
+"""LABEL-CLAIMS-LINT · V3.5f→V3.5m enforcement-trước-chữ.
 
 Grep tầng render/report các nhãn CLAIM:
   {sorted · sort: · ✓ · checked · verified · OK · PASS · đã-*}
 
 Hợp lệ chỉ khi trong bán kính [k=5] dòng có PHÉP-KIỂM-IN-ĐƯỢC hoặc CITE [per <seal-id>].
 
-L-79 EXHIBITS in corpus:
-  #1 (V3.5f): "pointer-integrity: OK" mồ côi
-  #2 (V3.5i): "5/5 WIRED ✅" không biên lai
-  #2b (V3.5i): claim-✅-giả toàn phần (watchlist wire 0 dump_as_sent)
-  #3 (V3.5j · NEW): grep-sai-file phantom-blocker
-     "grep -c TG_CHAT_ID_DAILY .env = 0" → agent tuyên "env not set" · KHÔNG
-     grep /root/.env_tg (nơi thật · chmod 600 · sitting since 03/09).
-     Bịa blocker vì grep sai chỗ = L-79 bản gốc.
+L-79 EXHIBITS in corpus (V3.5m renumber E1-E4 · directive item 5):
+  E1 (V3.5f): "pointer-integrity: OK" mồ côi
+  E2 (V3.5i): "5/5 WIRED ✅" không biên lai
+  E2b (V3.5i): claim-✅-giả toàn phần (watchlist wire 0 dump_as_sent)
+  E3 (V3.5j): grep-sai-file phantom-blocker
+     Bịa blocker vì grep sai file (.env vs /root/.env_tg)
+  E4 (V3.5m NEW): "chờ operator" blocker-shift KHÔNG cite
+     Ví dụ SAI: "chờ operator xác định 'registry'" (không cite gì)
+     Ví dụ ĐÚNG: "chờ operator · evidence: grep LIST-A hedge_watchlist_09-08.json AIO=miss GIGGLE=miss"
+     Luật-con V3.5m item 5: "Mọi mục 'Chờ operator' PHẢI cite bằng-chứng-tường {lệnh/path · hit/miss}"
 
-TUYỂN-DỤNG: chạy trên corpus demo-4 (dòng "pointer-integrity: OK" mồ côi) →
-PHẢI bắt được orphan → 4-field log.
+TUYỂN-DỤNG: chạy trên corpus demo-4 → PHẢI bắt được orphan → 4-field log.
 """
 from __future__ import annotations
 import argparse, hashlib, os, re, sys

@@ -743,6 +743,10 @@ def main() -> None:
         import hashlib as _hl
         _tg_hash = _hl.md5(msg.encode("utf-8")).hexdigest()[:12]
         print(f"[SENT] gom_daily ok={ok} HTTP {'200' if ok else 'X'} hash={_tg_hash} target={target_date} part={i+1}/{len(messages)}")
+        from lib.artifact_dump import log_bell
+        try:
+            log_bell("gom_daily", target_date, "old", ok, 200 if ok else 0, None, msg)
+        except Exception as _e: print(f"[N/A-ERROR:LOG-BELL] {_e}")
         # [ARTIFACT-DUMP as-sent · V1.4 sentinel]
         if ok:
             try:

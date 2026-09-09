@@ -367,28 +367,14 @@ def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str]:
         reason_str = f"[{','.join(flags)}]" if flags else ""
         line = f"   {s} {len(info['axes'])}-trục ({axes_str}) {latest_dates} · {ret_str} {dd_str} → {direction}{reason_str}{new_tag}"
         if direction == "PRE":
-            # V3.5l · PRE-SUBTAG · CẤM mặc-định-OPEN-khi-mù
-            if gome_status != "ok":
-                subtag = None  # rendered as [GOME-SRC-MISSING] · no subtag
-                line_pre = f"   {s} {len(info['axes'])}-trục ({axes_str}) {latest_dates} · {ret_str} {dd_str} → PRE [GOME-SRC-MISSING]{new_tag}"
-            else:
-                subtag = gome_map.get(s, "PRE-OPEN")  # default OPEN if not in registry AND not in freshwatch
-                line_pre = f"   {s} {len(info['axes'])}-trục ({axes_str}) {latest_dates} · {ret_str} {dd_str} → {subtag}{new_tag}"
-            pre_records.append((s, subtag or "MISSING", line_pre))
+            # V3.5m · ROLLBACK: proxy subtag OFF · in PRE trần + SUBTAG-PENDING banner ở đầu block
+            # (proxy LIST-A/CSV bị bác vì AIO/GIGGLE lệch spec · chờ ANALYSIS xác định 'registry')
+            line_pre = f"   {s} {len(info['axes'])}-trục ({axes_str}) {latest_dates} · {ret_str} {dd_str} → PRE{new_tag}"
+            pre_lines.append(line_pre); pre_syms_ord.append(s)
         elif direction in ("XẢ-WATCH", "XẢ"):
             xa_lines.append(line); xa_syms_ord.append(s)
         else:
             post_lines.append(line); post_syms_ord.append(s)
-
-    # V3.5l S2 · sort OPEN trước CAGED, trong nhóm giữ last-signal DESC
-    def _open_sort_key(rec):
-        sym, subtag, _ = rec
-        is_caged = "CAGED" in subtag
-        return (is_caged, )  # False (OPEN) sorts first
-    # pre_records already in last-signal DESC · Python sort is stable → preserves within-group order
-    pre_records.sort(key=_open_sort_key)
-    for sym, _st, ln in pre_records:
-        pre_lines.append(ln); pre_syms_ord.append(sym)
 
     from datetime import datetime as _dt, timedelta as _td
     end = _dt.strptime(target, "%Y-%m-%d").date()
@@ -429,6 +415,10 @@ def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str]:
         return f"\n\n{header_prefix} ({n}):\n" + "\n".join(shown) + f"\n   {tail}"
 
     if pre_lines:
+        # V3.5m · SUBTAG-PENDING banner (proxy OFF · chờ ANALYSIS niêm nguồn GOM-E)
+        subtag_banner = ("[SUBTAG-PENDING: nguồn GOM-E chưa niêm — "
+                         "proxy LIST-A/CSV bị bác (AIO·GIGGLE lệch spec)]")
+        body += f"\n\n{subtag_banner}"
         body += _render_block("⭐-PRE", pre_lines, pre_syms_ord)
     if xa_lines:
         body += _render_block("🔻 XẢ-WATCH+XẢ [bộ câu-soi]", xa_lines, xa_syms_ord)

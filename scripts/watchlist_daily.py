@@ -668,6 +668,10 @@ def main():
         _tg_hash = _hl.md5(tg_out.encode("utf-8")).hexdigest()[:12]
         print(f"[SENT] watchlist ok={ok_tg} HTTP {'200' if ok_tg else 'X'} hash={_tg_hash} target={target}",
               file=sys.stderr)
+        try:
+            from lib.artifact_dump import log_bell as _lb
+            _lb("watchlist", target, "old", ok_tg, 200 if ok_tg else 0, None, tg_out)
+        except Exception as _lbe: print(f"[N/A-ERROR:LOG-BELL] {_lbe}", file=sys.stderr)
         # V3.5i WATCHLIST WIRE dump_as_sent (directive REV10 item 3 · án lệ #2b claim-✅-giả)
         if ok_tg:
             try:
