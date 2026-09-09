@@ -1,15 +1,18 @@
-"""LABEL-CLAIMS-LINT · V3.5f enforcement-trước-chữ.
+"""LABEL-CLAIMS-LINT · V3.5f enforcement-trước-chữ · V3.5j corpus updated.
 
 Grep tầng render/report các nhãn CLAIM:
   {sorted · sort: · ✓ · checked · verified · OK · PASS · đã-*}
 
 Hợp lệ chỉ khi trong bán kính [k=5] dòng có PHÉP-KIỂM-IN-ĐƯỢC hoặc CITE [per <seal-id>].
-Phép-kiểm-in-được = một trong:
-  - key=value cite (md5=<hex> · file=<path> · n=<int>)
-  - regex/expr biểu diễn (`X == Y` · `n=X ≤ ceiling=Y`)
-  - `[per <seal-id>]` cite khối khác
 
-Nhãn MỒ CÔI (orphan) = không có bằng chứng gần → lint-FAIL cửa merge.
+L-79 EXHIBITS in corpus:
+  #1 (V3.5f): "pointer-integrity: OK" mồ côi
+  #2 (V3.5i): "5/5 WIRED ✅" không biên lai
+  #2b (V3.5i): claim-✅-giả toàn phần (watchlist wire 0 dump_as_sent)
+  #3 (V3.5j · NEW): grep-sai-file phantom-blocker
+     "grep -c TG_CHAT_ID_DAILY .env = 0" → agent tuyên "env not set" · KHÔNG
+     grep /root/.env_tg (nơi thật · chmod 600 · sitting since 03/09).
+     Bịa blocker vì grep sai chỗ = L-79 bản gốc.
 
 TUYỂN-DỤNG: chạy trên corpus demo-4 (dòng "pointer-integrity: OK" mồ côi) →
 PHẢI bắt được orphan → 4-field log.
@@ -102,6 +105,10 @@ def build_demo4_corpus():
         "",
         "Section D: claim with [per <seal-id>]",
         "verdict: PASS [per harness_sabotage_20260907]",   # <-- OK cite
+        "",
+        "Section E: L-79 exhibit #3 (V3.5j) · grep-sai-file phantom-blocker",
+        "env checked: TG_CHAT_ID_DAILY not set (grep -c .env = 0)",   # <-- ORPHAN 'checked' (phantom)
+        "TRUE cite would need /root/.env_tg not .env · file path missing",
     ]
     corpus.write_text("\n".join(lines), encoding="utf-8")
     return corpus

@@ -313,7 +313,7 @@ def main() -> int:
         return 0
     # Plain text (no parse_mode) — 5-block emoji render tốt hơn Markdown escape
     ok = tg_send(msg, parse_mode="")
-    _target = args.date if hasattr(args, "date") and args.date else _iso_yesterday_utc()
+    _target = target_date
     # V3.5i [SENT] MARKER CHUẨN (directive REV10 item 4 · L-59)
     import hashlib as _hl
     _tg_hash = _hl.md5(msg.encode("utf-8")).hexdigest()[:12]

@@ -299,14 +299,14 @@ def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str]:
     dao_line = f"[DAO-DEFERRED coverage: fresh {fresh_cov}/{win_n} · kho {kho_cov}/{win_n} · perp {perp_cov}/{win_n}]"
     body = f"⭐ SỔ ỨNG VIÊN · {dao_line} treo={treo_total_alive}(tổng-sống) · mới={n_new_today}⊆treo"
 
-    # V3.5b RENDER 3 TẦNG
+    # V3.5j RENDER 3 TẦNG · in ĐỦ tên (cấm "(+N more)" · dải-b trần 15)
     if pre_lines:
-        body += f"\n\n⭐-PRE ({len(pre_lines)}):\n" + "\n".join(pre_lines[:8])
+        body += f"\n\n⭐-PRE ({len(pre_lines)}):\n" + "\n".join(pre_lines)
     if xa_lines:
         body += (f"\n\n🔻 XẢ-WATCH+XẢ ({len(xa_lines)}) [bộ câu-soi: rút về đâu? "
-                 f"ai nhận trong dump? dính CEX-list?]:\n" + "\n".join(xa_lines[:8]))
+                 f"ai nhận trong dump? dính CEX-list?]:\n" + "\n".join(xa_lines))
     if post_lines:
-        body += f"\n\nPOST-DUMP+🌊 ({len(post_lines)}):\n" + "\n".join(post_lines[:8])
+        body += f"\n\nPOST-DUMP+🌊 ({len(post_lines)}):\n" + "\n".join(post_lines)
     return (body, "active", [s for s, _ in stars_all], view_md5)
 
 

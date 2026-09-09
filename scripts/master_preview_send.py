@@ -37,6 +37,15 @@ REPO = Path("/root/Data_back_test/whale_data") if os.name != "nt" else Path(r"D:
 STATE = REPO / "data/state"
 LOG_P = REPO / "data/logs/master_preview.log"
 
+# V3.5j directive item 1: load /root/.env_tg (chmod 600 · outside repo · same as tg_relay)
+_ENV_TG = Path("/root/.env_tg")
+if _ENV_TG.exists():
+    for _line in _ENV_TG.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _, _v = _line.partition("=")
+            os.environ.setdefault(_k.strip(), _v.strip())
+
 STANDING_FILES = {
     "dem0_verdict": STATE / "dem0_lan2_verdict.json",
     "demo5_marker": STATE / "demo5_sent.marker",
@@ -56,30 +65,44 @@ def _log(msg):
 
 
 def check_standing() -> tuple[bool, str]:
-    """V3.5j: once standing_active exists, only check veto. Else full 3-condition check."""
+    """V3.5j directive item 5 FIX: parse VALUE (verdict==KHÔNG-KÍCH ∧ target đúng đêm)
+    · KHÔNG dùng file-exists (kẻo verdict đỏ file tồn tại → tự mở nhầm).
+    """
     if STANDING_FILES["veto_marker"].exists():
         return (False, "[N/A-ERROR:VETO] operator dừng preview")
     if STANDING_FILES["standing_active"].exists():
         return (True, "standing already active (pipeline mỗi-đêm)")
-    # First-time open · check 3 markers
+    # First-time open · PARSE VALUE (not exists-only)
     if not STANDING_FILES["dem0_verdict"].exists():
         return (False, "[N/A-ERROR:STANDING] dem0_lan2_verdict.json chưa có")
     try:
         v = json.loads(STANDING_FILES["dem0_verdict"].read_text(encoding="utf-8"))
-        if v.get("verdict") != "KHÔNG-KÍCH":
-            return (False, f"[N/A-ERROR:STANDING] verdict={v.get('verdict')} · cần KHÔNG-KÍCH")
-        if not v.get("evidence_pointer"):
-            return (False, f"[N/A-ERROR:STANDING] verdict-file thiếu evidence_pointer")
     except Exception as e:
         return (False, f"[N/A-ERROR:STANDING] verdict parse: {e}")
+    if v.get("verdict") != "KHÔNG-KÍCH":
+        return (False, f"[N/A-ERROR:STANDING-VERDICT] verdict='{v.get('verdict')}' · cần KHÔNG-KÍCH")
+    if not v.get("evidence_pointer"):
+        return (False, f"[N/A-ERROR:STANDING-EVIDENCE] verdict-file thiếu evidence_pointer")
+    # Target date sanity: verdict must be for "recent" đêm (within past 2 days)
+    verdict_date = v.get("date", "")
+    try:
+        vd = datetime.strptime(verdict_date, "%Y-%m-%d").date()
+        today = datetime.now(timezone.utc).date()
+        if (today - vd).days > 2:
+            return (False, f"[N/A-ERROR:STANDING-STALE] verdict date={verdict_date} > 2d old vs today={today}")
+    except Exception as e:
+        return (False, f"[N/A-ERROR:STANDING-DATE] parse fail: {e}")
+    # 2 other markers
     if not STANDING_FILES["demo5_marker"].exists():
         return (False, "[N/A-ERROR:STANDING] demo5_sent.marker chưa có")
     if not STANDING_FILES["harness_lint_marker"].exists():
         return (False, "[N/A-ERROR:STANDING] harness_labellint.marker chưa có")
     # OPEN STANDING · create active marker
     STANDING_FILES["standing_active"].write_text(
-        f"opened_at={datetime.now(timezone.utc).isoformat()}\n", encoding="utf-8")
-    return (True, "standing FIRST-OPEN · 3 markers đạt · standing_active created")
+        f"opened_at={datetime.now(timezone.utc).isoformat()}\n"
+        f"verdict_date={verdict_date}\n"
+        f"verdict={v.get('verdict')}\n", encoding="utf-8")
+    return (True, f"standing FIRST-OPEN · verdict={v.get('verdict')} date={verdict_date} · markers 2/2 · standing_active created")
 
 
 def _load_counter():
@@ -171,20 +194,25 @@ def step_concat_seal(body: str) -> tuple[bool, str]:
     return (True, body_sealed)
 
 
-def send_telegram(text: str) -> bool:
+def send_telegram(text: str) -> tuple[bool, str]:
     bot = os.getenv("TG_BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN")
     chat = os.getenv("TG_CHAT_ID_DAILY")
     if not bot or not chat:
         _log(f"[N/A-ERROR:SEND] missing TG_BOT_TOKEN or TG_CHAT_ID_DAILY env")
-        return False
+        return (False, "env-missing")
     url = f"https://api.telegram.org/bot{bot}/sendMessage"
-    data = urllib.parse.urlencode({"chat_id": chat, "text": text, "parse_mode": "HTML"}).encode()
+    data = urllib.parse.urlencode({
+        "chat_id": chat, "text": text, "parse_mode": "HTML",
+        "disable_web_page_preview": "true",
+    }).encode()
     try:
         with urllib.request.urlopen(urllib.request.Request(url, data=data), timeout=15) as r:
-            return r.status == 200
+            resp = json.loads(r.read().decode())
+            mid = resp.get("result", {}).get("message_id")
+            return (r.status == 200 and resp.get("ok"), f"HTTP {r.status} · message_id={mid}")
     except Exception as e:
         _log(f"[N/A-ERROR:SEND] {type(e).__name__}: {e}")
-        return False
+        return (False, f"{type(e).__name__}: {e}")
 
 
 def main():
@@ -220,9 +248,13 @@ def main():
     prefix = f"[MASTER-PREVIEW đêm {n}/{total}]\n"
     full_msg = prefix + body_sealed
     _log(f"[STEP 5/5 send] night={n}/{total} · body_size={len(full_msg)}")
-    ok_send = send_telegram(full_msg)
+    ok_send, det = send_telegram(full_msg)
     hash12 = hashlib.md5(full_msg.encode()).hexdigest()[:12]
-    _log(f"[SENT] master_preview ok={ok_send} HTTP {'200' if ok_send else 'X'} hash={hash12} night={n}/{total} target={target}")
+    _log(f"[SENT] master_preview ok={ok_send} {det} hash={hash12} night={n}/{total} target={target}")
+    # V3.5j directive item 6: write demo5_sent.marker sau khi send OK (idempotent per target)
+    if ok_send:
+        marker = STATE / "demo5_sent.marker"
+        marker.write_text(f"target={target}\nsent_at={datetime.now(timezone.utc).isoformat()}\nhash={hash12}\nnight={n}/{total}\n", encoding="utf-8")
     return 0 if ok_send else 1
 
 

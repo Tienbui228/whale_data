@@ -68,6 +68,13 @@ def _load_anchor_set() -> frozenset[str]:
 _ANCHOR = _load_anchor_set()
 
 
+def _idem_hash(channel: str, target_date: str, renderer: str, body: str) -> str:
+    """Idempotency key: hash of (channel · target · renderer · body) for skip-check."""
+    import hashlib as _h
+    key = f"{channel}::{target_date}::{renderer}::{body}"
+    return _h.md5(key.encode("utf-8")).hexdigest()
+
+
 def _extract_symbol(match: re.Match) -> str | None:
     """Return canonical bare-symbol IF ∈ anchor (universe ∪ ngoai_so) · else None.
     V3.5j FIX: allow 1-char stems (F, B) · anchor is authoritative filter."""
@@ -87,20 +94,31 @@ def _extract_symbol(match: re.Match) -> str | None:
 
 def dump_as_sent(renderer: str, target_date: str, sent_text: str,
                  channel: str = "old") -> tuple[bool, str]:
-    """Persist as-sent artifact + parsed JSONL · V1.3 READ-BACK VERIFY.
+    """Persist as-sent artifact + parsed JSONL · V1.3 READ-BACK VERIFY · V3.5j IDEMPOTENT.
+
+    V3.5j directive item 2: idempotent per (channel · target · renderer) key:
+      - If artifact for same key already exists with same body-hash → skip write, return OK
+      - Prevents duplicate dumps from CATCH-UP re-runs (bell rung once)
 
     Returns (ok, msg).
-    ok=False if:
-      - Write threw exception
-      - READ-BACK VERIFY fails (txt empty OR jsonl empty despite text having token lines)
-    Msg format: `txt=X · jsonl=Y · n_rows=N` on success · `[N/A-ERROR:...]` on fail.
     """
     txt_p = ART_DIR / f"tg_final_{renderer}_{target_date}.txt"
     jsonl_p = ART_DIR / f"tg_final_{renderer}_{target_date}.jsonl"
+    # V3.5j IDEMPOTENT check: same (channel, target, renderer) with same body → skip
+    if txt_p.exists() and jsonl_p.exists():
+        try:
+            existing = txt_p.read_text(encoding="utf-8")
+            body_hash_new = _idem_hash(channel, target_date, renderer, sent_text)
+            if f"body_hash={body_hash_new}" in existing:
+                n_rows = sum(1 for _ in open(jsonl_p, encoding="utf-8"))
+                return (True, f"[IDEMPOTENT] key=({channel}·{target_date}·{renderer}) hash={body_hash_new[:12]} skip · n_rows={n_rows}")
+        except: pass  # L-66-OK (idempotent check fallback → normal write)
     try:
-        # .txt · exact sent text with provenance header
+        # .txt · exact sent text with provenance header + idempotent hash
+        body_hash = _idem_hash(channel, target_date, renderer, sent_text)
         header = (f"[PROVENANCE=as-sent] artifact_dump.py · renderer={renderer}"
                   f" · channel={channel} · target={target_date}"
+                  f" · body_hash={body_hash}"
                   f" · sent_at={datetime.now(timezone.utc).isoformat()}")
         txt_p.write_text(header + "\n\n" + sent_text, encoding="utf-8")
 

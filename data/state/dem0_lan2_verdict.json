@@ -1,0 +1,44 @@
+{
+  "verdict": "KÍCH",
+  "evidence_pointer": "data/logs/phase_tag.log:337 NameError args + data/export/watchlist_cron.log:[ARTIFACT-DUMP-ERR watchlist NameError Path]",
+  "date": "2026-09-09",
+  "n_pin_fail_ngoai_khai": 2,
+  "n_sent_full_pair": "3/6",
+  "pin_fail_list": [
+    {
+      "id": "V3.5i-phase_map-args-bug",
+      "site": "scripts/run_phase_tag.py:316",
+      "error": "NameError: name 'args' is not defined",
+      "root_cause": "V3.5i edit REV10-APPLY commit ffdae9b · added `args.date` reference but file uses manual argv/target_date, no argparse args scope",
+      "fix": "sed replace `args.date` → `target_date` (already applied on VPS 2026-09-09T02:27)",
+      "impact": "phase_map SENT ok= but script crashed post-send · no [SENT] marker · no artifact-dump"
+    },
+    {
+      "id": "V3.5i-watchlist-Path-bug",
+      "site": "scripts/watchlist_daily.py:674",
+      "error": "NameError: name 'Path' is not defined",
+      "root_cause": "V3.5i edit REV10-APPLY commit ffdae9b · added `Path(__file__).parent` but file imports pathlib (not `from pathlib import Path`)",
+      "fix": "sed replace `Path(__file__)` → `pathlib.Path(__file__)` (already applied on VPS 2026-09-09T02:27)",
+      "impact": "watchlist [SENT] marker printed OK · artifact-dump crashed · watchlist jsonl 0-day (no artifact_dump call succeeded)"
+    }
+  ],
+  "n_sent_marker_seen": {
+    "tg_relay_gom_h": true,
+    "fresh_digest": true,
+    "exch_digest": true,
+    "gom_daily": true,
+    "watchlist": true,
+    "phase_map": false
+  },
+  "full_pair_txt_jsonl": {
+    "tg_relay_gom_h": "txt=4070B jsonl=60rows",
+    "fresh_digest": "txt=1132B jsonl=18rows",
+    "exch_digest": "txt=1100B jsonl=9rows",
+    "gom_daily": "txt=2111B jsonl=20rows",
+    "watchlist": "MISSING (Path bug crashed dump)",
+    "phase_map": "MISSING (args bug crashed before dump)"
+  },
+  "verdict_definition_applied": "KHÔNG-KÍCH = zero pin-FAIL mới ngoài khai · zero [NGOÀI-SỔ] loài mới bùng · seed-counts thường · p14 dải-a=feature. KÍCH = bất thường CHƯA khai. Hai NameError above = pin-FAIL mới CHƯA khai → verdict KÍCH.",
+  "next_action": "đêm-0 lần-3 tối nay 09→10 · fixes deployed · cron sẽ chạy với patched scripts · sáng mai re-verdict",
+  "note": "Fix đã deploy VPS immediately (không chờ commit) · sáng mai cron chạy sạch"
+}

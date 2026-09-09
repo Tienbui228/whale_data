@@ -671,7 +671,7 @@ def main():
         # V3.5i WATCHLIST WIRE dump_as_sent (directive REV10 item 3 · án lệ #2b claim-✅-giả)
         if ok_tg:
             try:
-                sys.path.insert(0, str(Path(__file__).parent))
+                sys.path.insert(0, str(pathlib.Path(__file__).parent))
                 from lib.artifact_dump import dump_as_sent as _das
                 _ok_dmp, _det_dmp = _das("watchlist", target, tg_out, channel="old")
                 print(f"[ARTIFACT-DUMP watchlist] {_ok_dmp} · {_det_dmp}", file=sys.stderr)
