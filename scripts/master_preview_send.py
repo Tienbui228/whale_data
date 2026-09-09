@@ -215,10 +215,23 @@ def send_telegram(text: str) -> tuple[bool, str]:
         return (False, f"{type(e).__name__}: {e}")
 
 
-# V3.5k directive item 6a · compute_night_verdict · máy tự tính+ghi
+# V3.5n · SENT-LEG evidence sources per leg
+SENT_LEG_FORMAT = {
+    "tg_relay_gom_h": "native: [SENT] all_ok=True + target_date=<T>",
+    "fresh_digest": "native: [SENT] Fresh-Wallets ok=True + snapshot=<T>.json",
+    "exch_digest": "native: [SENT] EXCH-BAL ok=True + snapshot=<T>.json",
+    "gom_daily": "V3.5i: [SENT] gom_daily ok=True target=<T>",
+    "phase_map": "V3.5i: [SENT] phase_map ok=True target=<T>",
+    "watchlist": "V3.5i: [SENT] watchlist ok=True target=<T>",
+}
+
+
 def compute_night_verdict(target: str) -> dict:
-    """Compute verdict {6/6 full-pair · [SENT]×6 từ bell-journal · pin-scan gồm p20-22
-    · zero sentinel ngoài khai}. Ghi verdict-file. Chạy đầu pipeline 01:46."""
+    """V3.5n · compute verdict WITH bảng 6 chân đích danh (source per leg).
+    · BỘ-PIN-ĐÃ-NIÊM p1-p22 (p23-p26 NGOÀI-niêm per fixture V3.5m)
+    · SENT source priority: bell_journal > native-marker > log-fallback
+    · Ghi verdict-file with evidence_pointers per leg.
+    """
     art_dir = REPO / "data/artifacts"
     bell = REPO / "data/logs/bell_journal.jsonl"
     renderers = ["tg_relay_gom_h", "fresh_digest", "exch_digest", "gom_daily", "phase_map", "watchlist"]
@@ -233,37 +246,48 @@ def compute_night_verdict(target: str) -> dict:
         else:
             full_pair_status[r] = {"missing": True}
     n_full = sum(1 for r in renderers if not full_pair_status[r].get("missing"))
-    # [SENT]×6 từ bell-journal OR fallback grep existing [SENT] markers (until all senders wired)
-    sent_count = {}
+    # SENT source per leg · priority: bell_journal > native/log-grep
+    sent_leg = {r: {"ok": False, "source": None, "cite": None} for r in renderers}
+    # 1. bell_journal (V3.5m wired: gom_daily·phase_map·watchlist · fresh/exch/relay use native)
     if bell.exists():
         for line in bell.read_text(encoding="utf-8").splitlines():
             try:
                 e = json.loads(line)
-                if e.get("target_date") == target and e.get("ok"):
-                    sent_count[e["renderer"]] = True
+                if e.get("target_date") == target and e.get("ok") and e.get("renderer") in sent_leg:
+                    sent_leg[e["renderer"]] = {
+                        "ok": True, "source": "bell_journal",
+                        "cite": f"body_md5={e.get('body_md5','')[:12]} msg_id={e.get('message_id')}"
+                    }
             except: pass  # L-66-OK (benign fallback)
-    # Fallback: grep [SENT] markers per renderer (block-scoped L-80)
+    # 2. Native/log-grep fallback
     log_map = {
-        "tg_relay_gom_h": (REPO / "data/logs/tg_relay.log", r"\[SENT\] all_ok=True"),
-        "fresh_digest": (REPO / "data/logs/digest_daily_vps.log", r"\[SENT\] Fresh-Wallets.*ok=True"),
-        "exch_digest": (REPO / "data/logs/digest_daily_vps.log", r"\[SENT\] EXCH-BAL.*ok=True"),
-        "gom_daily": (REPO / "data/logs/gom_daily.log", rf"\[SENT\] gom_daily ok=True.*target={target}"),
-        "phase_map": (REPO / "data/logs/phase_tag.log", rf"\[SENT\] phase_map ok=True.*target={target}"),
-        "watchlist": (REPO / "data/export/watchlist_cron.log", rf"\[SENT\] watchlist ok=True.*target={target}"),
+        "tg_relay_gom_h": (REPO / "data/logs/tg_relay.log", r"\[SENT\] all_ok=True", "target_date"),
+        "fresh_digest": (REPO / "data/logs/digest_daily_vps.log", r"\[SENT\] Fresh-Wallets.*ok=True", "snapshot"),
+        "exch_digest": (REPO / "data/logs/digest_daily_vps.log", r"\[SENT\] EXCH-BAL.*ok=True", "snapshot"),
+        "gom_daily": (REPO / "data/logs/gom_daily.log", rf"\[SENT\] gom_daily ok=True.*target={target}", "target"),
+        "phase_map": (REPO / "data/logs/phase_tag.log", rf"\[SENT\] phase_map ok=True.*target={target}", "target"),
+        "watchlist": (REPO / "data/export/watchlist_cron.log", rf"\[SENT\] watchlist ok=True.*target={target}", "target"),
     }
-    for r, (logf, pat) in log_map.items():
-        if sent_count.get(r): continue  # bell-journal already confirmed
+    for r, (logf, pat, mark_type) in log_map.items():
+        if sent_leg[r]["ok"]: continue
         if not logf.exists(): continue
         content = logf.read_text(encoding="utf-8", errors="replace")
-        if re.search(pat, content):
-            # For fresh/exch/relay: check target_date via nearby snapshot marker
-            if r in ("fresh_digest", "exch_digest", "tg_relay_gom_h"):
-                # snapshot=<target>.json for digest · target_date=<target> for relay
-                mark = f"snapshot={target}.json" if r != "tg_relay_gom_h" else f"target_date={target}"
-                if mark in content: sent_count[r] = True
-            else:
-                sent_count[r] = True
-    n_sent = sum(1 for r in renderers if sent_count.get(r))
+        m = re.search(pat, content)
+        if not m: continue
+        # target_date verify for digest/relay (block-scoped)
+        if mark_type == "snapshot":
+            if f"snapshot={target}.json" not in content: continue
+        elif mark_type == "target_date":
+            if f"target_date={target}" not in content: continue
+        # For gom_daily/phase_map/watchlist: pattern already includes target
+        sent_leg[r] = {
+            "ok": True,
+            "source": "native-marker" if r in ("tg_relay_gom_h","fresh_digest","exch_digest") else "log-grep",
+            "cite": f"{logf.name}: {m.group(0)[:80]}",
+        }
+    n_sent = sum(1 for r in renderers if sent_leg[r]["ok"])
+    # Missing legs (đích danh)
+    missing_legs = [r for r in renderers if not sent_leg[r]["ok"]]
     # Pin-scan (p20-p22 harness result)
     import subprocess
     pin_result = None
@@ -284,31 +308,44 @@ def compute_night_verdict(target: str) -> dict:
             tag = f"N/A-ERROR:{m.group(1)}"
             if not any(tag.startswith(d) for d in declared_sentinels):
                 unknown_sentinels.append(tag)
-    # Verdict
+    # V3.5n Verdict
     if n_full == 6 and n_sent == 6 and pin_result == "PASS" and not unknown_sentinels:
         verdict = "KHÔNG-KÍCH"
     else:
         verdict = "KÍCH"
     result = {
         "verdict": verdict,
-        "evidence_pointer": f"bell_journal + artifacts · computed at {datetime.now(timezone.utc).isoformat()}",
         "date": target,
+        "computed_at": datetime.now(timezone.utc).isoformat(),
+        "evidence_pointer": f"bell_journal + logs · target={target} · {'6/6' if n_full==6 else str(n_full)+'/6-full-pair MISS'}",
         "n_full_pair": f"{n_full}/6",
         "n_sent": f"{n_sent}/6",
-        "pin_scan_p20_p22": pin_result,
+        "sent_leg_detail": sent_leg,        # V3.5n · per-leg source + cite
+        "missing_legs": missing_legs,       # V3.5n · đích danh chân đỏ
+        "pin_scan_p1_p22_bo_niem": pin_result,  # V3.5n · bộ-niêm scope
         "unknown_sentinels": unknown_sentinels[:10],
         "full_pair_detail": full_pair_status,
     }
     (STATE / "dem0_lan2_verdict.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-    _log(f"[COMPUTE-VERDICT] {verdict} · full={n_full}/6 · sent={n_sent}/6 · pin={pin_result} · unk_sent={len(unknown_sentinels)}")
+    # V3.5n directive item 2: verdict-computed IN LOG TRƯỚC standing-check
+    _log(f"[COMPUTE-VERDICT] target={target} · {verdict} · full={n_full}/6 · sent={n_sent}/6 · pin-bộ-niêm={pin_result} · missing_legs={missing_legs} · unk_sent={len(unknown_sentinels)}")
     return result
 
 
 def main():
-    _log("─── master_preview_send V3.5k pipeline start ───")
-    # V3.5k 6a · compute_night_verdict TRƯỚC standing check (máy tự tính+ghi)
-    yesterday = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
-    compute_night_verdict(yesterday)
+    _log("─── master_preview_send V3.5n pipeline start ───")
+    # V3.5n · --target CLI override + T-1 default (T = current UTC date)
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--target", help="Override target date YYYY-MM-DD (default: T-1 UTC)")
+    ap.add_argument("--resend", action="store_true", help="V3.5k idempotent override")
+    args, _ = ap.parse_known_args()
+    if args.target:
+        target = args.target
+    else:
+        target = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
+    # V3.5n item 2: compute_night_verdict runs + logs BEFORE standing check
+    compute_night_verdict(target)
     ok_standing, reason = check_standing()
     _log(f"standing: ok={ok_standing} · {reason}")
     if not ok_standing:

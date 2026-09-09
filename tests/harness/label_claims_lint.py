@@ -5,16 +5,17 @@ Grep tầng render/report các nhãn CLAIM:
 
 Hợp lệ chỉ khi trong bán kính [k=5] dòng có PHÉP-KIỂM-IN-ĐƯỢC hoặc CITE [per <seal-id>].
 
-L-79 EXHIBITS in corpus (V3.5m renumber E1-E4 · directive item 5):
-  E1 (V3.5f): "pointer-integrity: OK" mồ côi
-  E2 (V3.5i): "5/5 WIRED ✅" không biên lai
-  E2b (V3.5i): claim-✅-giả toàn phần (watchlist wire 0 dump_as_sent)
-  E3 (V3.5j): grep-sai-file phantom-blocker
-     Bịa blocker vì grep sai file (.env vs /root/.env_tg)
-  E4 (V3.5m NEW): "chờ operator" blocker-shift KHÔNG cite
-     Ví dụ SAI: "chờ operator xác định 'registry'" (không cite gì)
-     Ví dụ ĐÚNG: "chờ operator · evidence: grep LIST-A hedge_watchlist_09-08.json AIO=miss GIGGLE=miss"
-     Luật-con V3.5m item 5: "Mọi mục 'Chờ operator' PHẢI cite bằng-chứng-tường {lệnh/path · hit/miss}"
+CORPUS-SPLIT (V3.5n directive item 5 · HAI SỔ KHÁC NHAU · không giẫm số):
+  LINT-corpus (this file · nội bộ lint · bắt VĂN BẢN không cite):
+    #1 pointer-integrity OK mồ côi
+    #2 5/5 WIRED ✅ không biên lai
+    #2b claim-✅-giả toàn phần (watchlist wire 0 dump_as_sent)
+    #3 grep-sai-file phantom-blocker (.env vs /root/.env_tg)
+    #4 chờ-operator no-cite blocker-shift
+
+  OPS-corpus (docs/ops_corpus_20260909.md · án lệ vận hành):
+    E1 phantom-grep · E2 catchup-no-bell · E3 claim-wired-vs-cron deadlock
+    · E4 deploy-lag pair · E5 chờ-operator-no-cite (link with LINT #4)
 
 TUYỂN-DỤNG: chạy trên corpus demo-4 → PHẢI bắt được orphan → 4-field log.
 """
