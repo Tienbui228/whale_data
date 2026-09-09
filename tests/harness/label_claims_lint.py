@@ -12,10 +12,12 @@ CORPUS-SPLIT (V3.5n directive item 5 · HAI SỔ KHÁC NHAU · không giẫm s�
     #2b claim-✅-giả toàn phần (watchlist wire 0 dump_as_sent)
     #3 grep-sai-file phantom-blocker (.env vs /root/.env_tg)
     #4 chờ-operator no-cite blocker-shift
+    #5 BEAT-sai-loài (V3.5o): counter cite from raw (nansen_snapshots) vs as-sent (artifact)
 
-  OPS-corpus (docs/ops_corpus_20260909.md · án lệ vận hành):
-    E1 phantom-grep · E2 catchup-no-bell · E3 claim-wired-vs-cron deadlock
-    · E4 deploy-lag pair · E5 chờ-operator-no-cite (link with LINT #4)
+  OPS-corpus (docs/ops_corpus_20260909.md · án lệ vận hành ANALYSIS):
+    E1 phantom-grep · E2 catchup-no-bell
+    E3+E4 cặp deadlock {chờ-chữ-người 07/09 · chờ-phiên-máy 09/09}
+    E5 chờ-operator-no-cite · E6+E7 claim-wired-vs-cron + deploy-lag
 
 TUYỂN-DỤNG: chạy trên corpus demo-4 → PHẢI bắt được orphan → 4-field log.
 """

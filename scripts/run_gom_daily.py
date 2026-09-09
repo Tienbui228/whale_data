@@ -721,7 +721,20 @@ def main() -> None:
             _log(f"gom_e OK lines={gom_e_out.count(chr(10))}")
         # Send Bảng B alerts as additional TG message (Bảng A included for context)
         if gom_e_out.strip():
-            tg_send(gom_e_out[:4000])
+            gome_msg = gom_e_out[:4000]
+            ok_e = tg_send(gome_msg)
+            # V3.5o · GOM-E [SENT] marker + artifact_dump + log_bell (chuẩn chung)
+            import hashlib as _hl_e
+            _hash_e = _hl_e.md5(gome_msg.encode("utf-8")).hexdigest()[:12]
+            print(f"[SENT] gom_e ok={ok_e} HTTP {"200" if ok_e else "X"} hash={_hash_e} target={target_date}")
+            if ok_e:
+                try:
+                    sys.path.insert(0, "/root/Data_back_test/whale_data/scripts")
+                    from lib.artifact_dump import dump_as_sent, log_bell
+                    _ok_d, _det_d = dump_as_sent("gom_e", target_date, gome_msg, channel="old")
+                    print(f"[ARTIFACT-DUMP gom_e] {_ok_d} · {_det_d}")
+                    log_bell("gom_e", target_date, "old", ok_e, 200 if ok_e else 0, None, gome_msg)
+                except Exception as _e_e: print(f"[ARTIFACT-DUMP-ERR gom_e] {_e_e}")
     else:
         _log("WARN: gom_e.py not found — skip")
 

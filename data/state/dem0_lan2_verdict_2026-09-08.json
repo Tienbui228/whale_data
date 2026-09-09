@@ -1,0 +1,73 @@
+{
+  "verdict": "KÍCH",
+  "date": "2026-09-08",
+  "computed_at": "2026-09-09T07:33:44.449520+00:00",
+  "evidence_pointer": "bell_journal + logs · target=2026-09-08 · 6/6",
+  "n_full_pair": "6/6",
+  "n_sent": "5/6",
+  "sent_leg_detail": {
+    "tg_relay_gom_h": {
+      "ok": true,
+      "source": "native-marker",
+      "cite": "tg_relay.log: [SENT] all_ok=True"
+    },
+    "fresh_digest": {
+      "ok": true,
+      "source": "native-marker",
+      "cite": "digest_daily_vps.log: [SENT] Fresh-Wallets · ok=True"
+    },
+    "exch_digest": {
+      "ok": true,
+      "source": "native-marker",
+      "cite": "digest_daily_vps.log: [SENT] EXCH-BAL · ok=True"
+    },
+    "gom_daily": {
+      "ok": true,
+      "source": "log-grep",
+      "cite": "gom_daily.log: [SENT] gom_daily ok=True HTTP 200 hash=f40f2da61ecb target=2026-09-08"
+    },
+    "phase_map": {
+      "ok": false,
+      "source": null,
+      "cite": null
+    },
+    "watchlist": {
+      "ok": true,
+      "source": "log-grep",
+      "cite": "watchlist_cron.log: [SENT] watchlist ok=True HTTP 200 hash=e7dbf44b54e9 target=2026-09-08"
+    }
+  },
+  "missing_legs": [
+    "phase_map"
+  ],
+  "pin_scan_p1_p22_bo_niem": "PASS",
+  "unknown_sentinels": [],
+  "full_pair_detail": {
+    "tg_relay_gom_h": {
+      "txt": 4070,
+      "jsonl_rows": 60
+    },
+    "fresh_digest": {
+      "txt": 1132,
+      "jsonl_rows": 18
+    },
+    "exch_digest": {
+      "txt": 1100,
+      "jsonl_rows": 9
+    },
+    "gom_daily": {
+      "txt": 2111,
+      "jsonl_rows": 20
+    },
+    "phase_map": {
+      "txt": 3178,
+      "jsonl_rows": 60
+    },
+    "watchlist": {
+      "txt": 13698,
+      "jsonl_rows": 41
+    }
+  },
+  "frozen": true,
+  "frozen_note": "V3.5o đóng sổ vĩnh viễn · di chứng phase catch-up-stdout E2"
+}

@@ -80,6 +80,7 @@ def check_standing() -> tuple[bool, str]:
     except Exception as e:
         return (False, f"[N/A-ERROR:STANDING] verdict parse: {e}")
     if v.get("verdict") != "KHÔNG-KÍCH":
+        # V3.5o · CHƯA-THI treated as not-met (không đóng dấu KÍCH)
         return (False, f"[N/A-ERROR:STANDING-VERDICT] verdict='{v.get('verdict')}' · cần KHÔNG-KÍCH")
     if not v.get("evidence_pointer"):
         return (False, f"[N/A-ERROR:STANDING-EVIDENCE] verdict-file thiếu evidence_pointer")
@@ -308,8 +309,21 @@ def compute_night_verdict(target: str) -> dict:
             tag = f"N/A-ERROR:{m.group(1)}"
             if not any(tag.startswith(d) for d in declared_sentinels):
                 unknown_sentinels.append(tag)
-    # V3.5n Verdict
-    if n_full == 6 and n_sent == 6 and pin_result == "PASS" and not unknown_sentinels:
+    # V3.5o · VERDICT enum += CHƯA-THI
+    # target có cửa-cron chưa đóng (now < target+1d 01:46 UTC) ⇒ CHƯA-THI
+    # (cấm đóng dấu KÍCH lên đêm chưa mở đề)
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    try:
+        target_d = _dt.strptime(target, "%Y-%m-%d").date()
+        cron_close = _dt.combine(target_d + _td(days=1),
+                                  _dt.strptime("01:46", "%H:%M").time(),
+                                  tzinfo=_tz.utc)
+        chưa_thi = _dt.now(_tz.utc) < cron_close
+    except Exception:
+        chưa_thi = False
+    if chưa_thi:
+        verdict = "CHƯA-THI"
+    elif n_full == 6 and n_sent == 6 and pin_result == "PASS" and not unknown_sentinels:
         verdict = "KHÔNG-KÍCH"
     else:
         verdict = "KÍCH"

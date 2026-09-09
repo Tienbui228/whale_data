@@ -1,36 +1,23 @@
 {
-  "_note": "V3.5k · NGOÀI-SỔ candidates in-flight · counter đang tăng · lint anchor",
+  "_note": "V3.5o · NGOÀI-SỔ candidates in-flight · counter theo bảng-quyết operator",
   "_updated": "2026-09-09",
-  "_source": "ledger_backfill v3.5 · _fresh_delta ngoai_so_sink scan 30d window ending 2026-09-08",
-  "symbols": ["DOS", "ONE", "BEAT", "B"],
-  "counters_30d_dates_with_hit": {
-    "DOS": 9,
-    "BEAT": 5,
-    "ONE": 2,
-    "B": 2
-  },
-  "counter_previous_estimate": {
+  "_source_rule": "V3.5o directive item 4: cite = as-sent artifact path (kỷ nguyên [SENT] từ 08-31)",
+  "symbols": ["DOS", "ONE", "B"],
+  "counters_30d_bang_quyet": {
     "DOS": 4,
-    "BEAT": 1,
     "ONE": 2,
     "B": 1
   },
-  "counter_reconcile_note": "V3.5k directive item 7 · re-scanned via ledger _fresh_delta ngoai_so_sink · previous 4× was undercount (missed 08-17/18/22/29/31 · likely due to earlier window start or snapshot gap)",
-  "per_date_evidence": {
-    "2026-08-11": {"B": 238322},
-    "2026-08-17": {"DOS": 1540740},
-    "2026-08-18": {"DOS": 3440523, "BEAT": 2949429},
-    "2026-08-19": {"BEAT": 1187687},
-    "2026-08-21": {"BEAT": 346613, "DOS": 347457},
-    "2026-08-22": {"DOS": 2353317},
-    "2026-08-29": {"DOS": 209770, "BEAT": 78170},
-    "2026-08-31": {"DOS": 254646, "BEAT": 86890},
-    "2026-09-04": {"ONE": 137012},
-    "2026-09-05": {"ONE": 1008093, "DOS": 69898},
-    "2026-09-06": {"B": 879435, "DOS": 192711},
-    "2026-09-07": {"DOS": 1213820}
+  "counter_strict_as_sent_only": {
+    "DOS": 1,
+    "ONE": 0,
+    "BEAT": 0,
+    "B": 0,
+    "_note": "Chỉ 09-07 và 09-08 có as-sent body artifact · sender-dump wire started 07/09 (V3.5c)"
   },
-  "de_cuu_universe": ["DOS", "BEAT"],
-  "de_cuu_note": "DOS 9× · BEAT 5× · cả 2 đạt threshold ≥3× · chờ ghế 27/09 ký",
-  "ghe_ngay": "2026-09-27"
+  "bang_quyet_note": "Operator bảng-quyết per V3.5o directive item 4 = DOS 4× ghế giữ · BEAT 1× RÚT · ONE 2× · B 1×. Strict as-sent-only counter thấp hơn (body của 08-31→09-06 không lưu trong log·chỉ marker). Áp bảng-quyết operator.",
+  "de_cuu_universe": ["DOS"],
+  "beat_status_v3_5o": "NOMINATION RÚT · <3× · rời hàng chờ · đếm tiếp cửa thường",
+  "ghe_ngay": "2026-09-27",
+  "_action_next": "Từ V3.5o forward · cite chỉ tính as-sent artifacts đúng loài · tránh nhầm nansen_snapshots (raw input · SAI LOÀI)"
 }
