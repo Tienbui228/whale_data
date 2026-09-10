@@ -49,9 +49,9 @@ if _ENV_TG.exists():
 STANDING_FILES = {
     "dem0_verdict": STATE / "dem0_lan2_verdict.json",
     "demo5_marker": STATE / "demo5_sent.marker",
-    "harness_lint_marker": STATE / "harness_labellint.marker",
+    "harness_lint_marker": STATE / "harness_labellint.marker",  # vestigial · gỡ V3.5p
     "veto_marker": STATE / "preview_veto.marker",
-    "standing_active": STATE / "standing_active.marker",  # V3.5j · once-opened flag
+    # V3.5q · GỠ standing_active bypass (delete flag file trên VPS · code không đọc nữa)
 }
 COUNTER_FILE = STATE / "master_preview_counter.json"
 
@@ -336,10 +336,55 @@ def compute_night_verdict(target: str) -> dict:
         "unknown_sentinels": unknown_sentinels[:10],
         "full_pair_detail": full_pair_status,
     }
+    # V3.5q ĐIỂM-THI-BẤT-BIẾN (item 1): verdict(target) = compute ĐẦU TIÊN sau cửa 01:46
+    # Recompute chỉ hợp lệ khi fix ở GRADER (compute/reader) · fix PERFORMER (sender) ⇒ điểm giữ
+    # Store FIRST-COMPUTE tại verdict_epoch_<target>.json · verdict-file live chỉ mang forensic-note
+    epoch_p = STATE / f"verdict_epoch_{target}.json"
+    if not epoch_p.exists():
+        # First compute after cron close = ĐIỂM THI · immutable
+        epoch_p.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+        _log(f"[EPOCH-STAMP] target={target} · first-compute stored · verdict={verdict}")
+    else:
+        # Subsequent recompute = forensic · không đổi điểm
+        epoch_data = json.loads(epoch_p.read_text(encoding="utf-8"))
+        if epoch_data.get("verdict") != verdict:
+            result["forensic_note"] = f"post-fix recompute · điểm-thi bất-biến giữ verdict={epoch_data['verdict']} (fix ở performer/sender, không đổi grader)"
+            result["verdict_at_stamp"] = epoch_data.get("verdict")
+            result["stamped_at"] = epoch_data.get("computed_at")
+            # Điểm-thi verdict LIVE = epoch verdict (unchanged)
+            result["verdict"] = epoch_data["verdict"]
+            _log(f"[EPOCH-BẤT-BIẾN] target={target} · epoch={epoch_data['verdict']} · new-compute={verdict} · forensic-only")
     (STATE / "dem0_lan2_verdict.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     # V3.5n directive item 2: verdict-computed IN LOG TRƯỚC standing-check
-    _log(f"[COMPUTE-VERDICT] target={target} · {verdict} · full={n_full}/6 · sent={n_sent}/6 · pin-bộ-niêm={pin_result} · missing_legs={missing_legs} · unk_sent={len(unknown_sentinels)}")
+    _log(f"[COMPUTE-VERDICT] target={target} · {result['verdict']} · full={n_full}/6 · sent={n_sent}/6 · pin-bộ-niêm={pin_result} · missing_legs={missing_legs} · unk_sent={len(unknown_sentinels)}")
     return result
+
+
+# V3.5q PREVIEW-JOURNAL + IDEMPOTENT (item 3)
+PREVIEW_JOURNAL = REPO / "data/logs/preview_journal.jsonl"
+
+
+def preview_journal_check(target: str) -> dict | None:
+    """Return last preview entry for target if exists (standing_ok=True) · else None.
+    Idempotent per (renderer=master_preview · target)."""
+    if not PREVIEW_JOURNAL.exists(): return None
+    last = None
+    for line in PREVIEW_JOURNAL.read_text(encoding="utf-8").splitlines():
+        try:
+            e = json.loads(line)
+            if e.get("target_date") == target and e.get("standing_ok"):
+                last = e
+        except: pass  # L-66-OK (benign fallback)
+    return last
+
+
+def preview_journal_append(entry: dict) -> None:
+    PREVIEW_JOURNAL.parent.mkdir(parents=True, exist_ok=True)
+    with PREVIEW_JOURNAL.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+PREVIEW_EPOCH = "2026-09-10"  # V3.5q item 0 · epoch cho night counter
 
 
 def main():
@@ -383,17 +428,48 @@ def main():
     if not ok: _log("SKIP · seal failed"); return 1
     body_sealed = res if isinstance(res, str) and "━━ footer" in res else body
 
-    n, total = _increment_counter()
-    prefix = f"[MASTER-PREVIEW đêm {n}/{total}]\n"
+    # V3.5q item 3 · IDEMPOTENT preview-sender per (renderer=master_preview · target)
+    existing = preview_journal_check(target)
+    if existing and not args.resend:
+        _log(f"[IDEMPOTENT-SKIP] target={target} · already sent standing_ok · msg_id={existing.get('message_id')} · use --resend to override")
+        return 0
+    # V3.5q item 4 · NIGHT-COUNTER = count(DISTINCT target · standing_ok · target ≥ epoch)
+    distinct_targets = set()
+    if PREVIEW_JOURNAL.exists():
+        for line in PREVIEW_JOURNAL.read_text(encoding="utf-8").splitlines():
+            try:
+                e = json.loads(line)
+                if e.get("standing_ok") and e.get("target_date", "") >= PREVIEW_EPOCH:
+                    distinct_targets.add(e["target_date"])
+            except: pass  # L-66-OK
+    # Include current target if send success (below)
+    n_after_this = len(distinct_targets | {target})
+    prefix = f"[MASTER-PREVIEW đêm {n_after_this}/2]\n"
     full_msg = prefix + body_sealed
-    _log(f"[STEP 5/5 send] night={n}/{total} · body_size={len(full_msg)}")
+    _log(f"[STEP 5/5 send] night={n_after_this}/2 · target={target} · body_size={len(full_msg)}")
     ok_send, det = send_telegram(full_msg)
     hash12 = hashlib.md5(full_msg.encode()).hexdigest()[:12]
-    _log(f"[SENT] master_preview ok={ok_send} {det} hash={hash12} night={n}/{total} target={target}")
-    # V3.5j directive item 6: write demo5_sent.marker sau khi send OK (idempotent per target)
+    _log(f"[SENT] master_preview ok={ok_send} {det} hash={hash12} night={n_after_this}/2 target={target}")
+    # V3.5q · append preview_journal
     if ok_send:
+        import re as _re
+        mid = None
+        m = _re.search(r"message_id=(\d+)", det)
+        if m: mid = int(m.group(1))
+        preview_journal_append({
+            "ts_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "renderer": "master_preview",
+            "target_date": target,
+            "channel": "TG_CHAT_ID_DAILY",
+            "ok": True,
+            "http_code": 200,
+            "message_id": mid,
+            "body_md5": hashlib.md5(full_msg.encode()).hexdigest(),
+            "standing_ok": True,
+            "night_label": f"{n_after_this}/2",
+        })
         marker = STATE / "demo5_sent.marker"
-        marker.write_text(f"target={target}\nsent_at={datetime.now(timezone.utc).isoformat()}\nhash={hash12}\nnight={n}/{total}\n", encoding="utf-8")
+        marker.write_text(f"target={target}\nsent_at={datetime.now(timezone.utc).isoformat()}\nhash={hash12}\nnight={n_after_this}/2\n", encoding="utf-8")
     return 0 if ok_send else 1
 
 

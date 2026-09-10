@@ -157,7 +157,10 @@ def _hedge_line(text: str) -> str:
         return "HEDGE: N/A-ERROR (sidecar missing — xem log) → #hedge"
     if "=== LIST A —" not in text:
         return "HEDGE: N/A-ERROR (sidecar malformed · no LIST-A marker — xem log) → #hedge"
-    m_a = re.search(r"=== LIST A —.*?\((\d+) tokens", text)
+    # V3.5q N5 fix: accept BOTH format {(N tokens) · TOP K/N} (N = total denominator)
+    m_a = re.search(r"=== LIST A —.*?\((\d+)\s+tokens", text)
+    if m_a is None:
+        m_a = re.search(r"=== LIST A — TOP\s+\d+/(\d+)", text)
     if m_a is None:
         return "HEDGE: N/A-ERROR (sidecar LIST-A count parse fail — xem log) → #hedge"
     n_a = int(m_a.group(1))

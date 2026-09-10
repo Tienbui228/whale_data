@@ -1,23 +1,19 @@
 {
-  "_note": "V3.5o · NGOÀI-SỔ candidates in-flight · counter theo bảng-quyết operator",
-  "_updated": "2026-09-09",
-  "_source_rule": "V3.5o directive item 4: cite = as-sent artifact path (kỷ nguyên [SENT] từ 08-31)",
-  "symbols": ["DOS", "ONE", "B"],
-  "counters_30d_bang_quyet": {
-    "DOS": 4,
-    "ONE": 2,
-    "B": 1
-  },
-  "counter_strict_as_sent_only": {
+  "_note": "V3.5q · CITE-ONLY STRICT · nansen_snapshots VOID · chỉ as-sent artifact",
+  "_updated": "2026-09-10",
+  "_source_rule": "V3.5q directive item 6: bảng đủ trước khi 1× có hiệu lực · <3× ⇒ NOMINATION RÚT",
+  "symbols": [],
+  "counters_cite_only": {
     "DOS": 1,
     "ONE": 0,
     "BEAT": 0,
-    "B": 0,
-    "_note": "Chỉ 09-07 và 09-08 có as-sent body artifact · sender-dump wire started 07/09 (V3.5c)"
+    "B": 0
   },
-  "bang_quyet_note": "Operator bảng-quyết per V3.5o directive item 4 = DOS 4× ghế giữ · BEAT 1× RÚT · ONE 2× · B 1×. Strict as-sent-only counter thấp hơn (body của 08-31→09-06 không lưu trong log·chỉ marker). Áp bảng-quyết operator.",
-  "de_cuu_universe": ["DOS"],
-  "beat_status_v3_5o": "NOMINATION RÚT · <3× · rời hàng chờ · đếm tiếp cửa thường",
-  "ghe_ngay": "2026-09-27",
-  "_action_next": "Từ V3.5o forward · cite chỉ tính as-sent artifacts đúng loài · tránh nhầm nansen_snapshots (raw input · SAI LOÀI)"
+  "_cite_evidence": {
+    "DOS-2026-09-07": "tg_final_fresh_digest_2026-09-07.txt line: 3. $DOS $1.81M Δ+$1.21M"
+  },
+  "de_cuu_universe": [],
+  "ghe_27_09": "TRỐNG (V3.5q thi hành lạnh · DOS 1× < 3× · rút nốt · đếm tiếp trên kỷ nguyên artifact)",
+  "kỷ_nguyên": "as-sent artifact only · sender-dump wire started 2026-09-07 · body 08-31→09-06 không lưu log",
+  "_next_action": "Đếm tiếp mỗi đêm · đủ 3× artifact ⇒ tự tái đề cử có biên lai"
 }
