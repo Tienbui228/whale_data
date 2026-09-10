@@ -1,0 +1,140 @@
+# AXIS MAP · DRAFT · INACTIVE · KÝ 02/09 · A11 marker (chờ chữ v1.1)
+#
+# Mục đích: đặc tả ánh xạ giữa {axis on-chain} và {consumer downstream}.
+# Nhà: whale_data (renderer chính) · A11 sẽ thêm dòng khi bless spec v1.1.
+#
+# DRAFT INACTIVE: file này KHÔNG được đọc bởi bất kỳ script sống nào trong build round 02/09.
+# Enforcement: cấm import trước khi ANALYSIS ký chữ v1.1 (grep guard: search 'axis_map.yaml' trong scripts/ = 0).
+
+# DẢI n_⭐ SANITY (KÝ 07/09 FIX-ROUND-3b · chờ chữ Tiên)
+# Per ANALYSIS ruling: n_⭐ per target expected in [4, 6] · trần nghi 15
+# > 15 = STAR-ANOMALY (p14 wire: cảnh báo · không tự cắt · GATE-4 diagnosis)
+star_count_sanity:
+  expected_min: 4
+  expected_max: 6
+  soft_ceiling: 15  # p14 STAR-ANOMALY threshold
+  ruling_source: "FIX-ROUND-3b operator directive 07/09 · sau GATE-3 diagnosis"
+  current_at_signing: 14  # n_⭐ from backfill v3 target=09-06 · SENT-verified + FRESH-Δ-only
+  signing_status: "chờ chữ Tiên · khắc yaml + p14 wire"
+
+status: ACTIVE  # ký v1.1 cd9d0c74 · 03/09
+signed_by: operator  # "khớp v1.1 cd9d0c74" 03/09
+signed_at: 2026-09-03
+spec_version: v1.1  # master_report_spec_v1_1_20260903.md md5 cd9d0c745f45de8a0902016cd3c56ebe
+a11_marker: |
+  # A11 · dòng mới ANALYSIS parity (bless v1.1 dưới chữ operator):
+  # axis_map = canonical runtime nhà whale_data theo §F v1.1 · thêm/bớt nguồn = diff yaml có chữ
+  # Dedupe KHO: H1 và EXCH-BAL cùng map về axis KHO, cùng-trục = refresh (§B đã định),
+  # KHÔNG tồn tại đường đếm-đôi để phải chọn cùng-ngày/cùng-episode; zero máy móc thêm.
+
+# Axis registry (canonical · KHÔNG rename một-nhát · L-51)
+axes:
+  fresh_wallets:
+    getter: core_nansen._add_fresh_wallets
+    fields: [usd_1d, delta_usd, prev_usd_1d, delta_hours, delta_days]
+    unit: USD
+    provenance: Nansen /flows label=fresh_wallets
+    consumer: render_fresh_digest
+
+  exchange_balance:
+    getter: core_nansen._add_exchange_balance
+    fields: [exchange_delta_usd, exchange_delta_pct, exchange_delta_tokens,
+             exchange_balance_tokens, exchange_prev_date, exchange_balance_date,
+             exchange_api_failed]
+    unit: USD + tokens
+    provenance: Nansen /flows label=exchange (native window · KHÔNG snapshot-pair)
+    consumer: render_exchange_digest
+
+  smart_trader:
+    getter: core_nansen._add_smart_trader
+    fields: [smart_trader_net_flow_usd, smart_trader_wallet_count]
+    unit: USD
+    provenance: Nansen /flows label=smart_trader
+    consumer: (opt-in ALERT_CONFLUENCE)
+
+  top_pnl:
+    getter: core_nansen._add_top_pnl
+    fields: [top_pnl_net_flow_usd, top_pnl_wallet_count]
+    unit: USD
+    provenance: Nansen /flows label=top_pnl
+    consumer: (opt-in ALERT_CONFLUENCE)
+
+  whale:
+    getter: core_nansen._add_whale
+    fields: [whale_net_flow_usd, whale_wallet_count]
+    unit: USD
+    provenance: Nansen /flows label=whale
+    consumer: (TBD ANALYSIS)
+
+  price_liquidity:
+    getter: core_nansen._add_price_liquidity
+    fields: [price_usd, market_cap, liquidity_usd]
+    unit: USD
+    provenance: DexScreener / GeckoTerminal (per _add_price_liquidity impl)
+    consumer: all_axes (denominator cho %mcap)
+
+# Renderer routing (§B skeleton · ANALYSIS chốt v1.1)
+renderers:
+  fresh_digest:
+    consumes: [fresh_wallets, price_liquidity]
+    file: scripts/digest_daily_vps.py::render_fresh_digest
+    sidecar: sidecar/fresh_digest_<target_date>.jsonl
+
+  exch_digest:
+    consumes: [exchange_balance, price_liquidity]
+    file: scripts/digest_daily_vps.py::render_exchange_digest
+    sidecar: sidecar/exch_digest_<target_date>.jsonl
+
+  gom_h_daily:
+    consumes: [TBD]  # ANALYSIS chốt v1.1
+    file: scripts/gom_h_daily.py::TBD_render_campaign_pre
+    sidecar: sidecar/gom_h_daily_<target_date>.jsonl
+
+  phase_map:
+    consumes: [case_state_map]
+    file: scripts/run_phase_tag.py::TBD_render_phase_scan
+    sidecar: sidecar/phase_map_<target_date>.jsonl
+
+  watchlist:
+    consumes: [hedge_watchlist]
+    file: (TBD)
+    sidecar: sidecar/watchlist_<target_date>.jsonl
+
+  gom_daily:
+    consumes: [gom_h_daily_csv, exchange_balance]
+    file: (TBD)
+    sidecar: sidecar/gom_daily_<target_date>.jsonl
+
+# CẤM enable trước khi ANALYSIS ký v1.1
+# CẤM rename axis một-nhát (L-51 bridge-inject discipline)
+# CẤM consumer đọc axis không khai getter here (L-73 one-source)
+
+# DIRECTION EVAL · V3.5 · PROVISIONAL · control-27/09 (KÝ 07/09)
+# G1-G3 numbers per operator directive V3.5. Constants = directive-verbatim,
+# yaml chỉ mang số. EPISODE_GAP = shared constant across code + G3 sticky window.
+direction_eval:
+  status: PROVISIONAL          # signing_by operator directive V3.5 · control-27/09
+  control_date: 2026-09-27     # revisit + ký chính thức
+  g1_ret_pct_floor: 30         # G1 |ret_since_seed| ≥ 30% → floor POST (cấm PRE)
+  g2_dd20_pct_ceiling: -40     # G2 dd20 ≤ -40% → POST-DUMP + XẢ-watch + câu-soi XẢ
+  g3_sticky_window_days: 14    # = EPISODE_GAP (shared · một số một nghĩa)
+  g3_reversal_stable_days: 7   # X = 7 · giá ổn X ngày ∧ kho đảo = mở lại PRE
+  sticky_sources:              # as-printed (nguồn artifact)
+    - "🔴 block artifact (gom_h_daily.log KHO ĐỘNG GIỮA ĐẠP)"
+    - "walletset WASH-CRASH tag (h3 walletset flag)"
+    - "phase S4/S5 (case_state_map)"
+  ruling_source: "V3.5 directive KÝ 07/09 · control-27/09 revisit"
+
+
+# AMD-07 CONCAT-XÁC-VẬT-LÝ · V3.5p (KÝ 10/09 · operator "ok concat-persist")
+# Luật đối chứng vĩnh viễn:
+#   md5sum(data/artifacts/master_concat_<target>.txt)[:12] ≡ concat-seal in footer cùng target
+# Nghĩa: seal-domain bytes (body TRƯỚC dòng concat-seal) ghi ra file physical
+# → phép thử tương lai chỉ md5 file, KHÔNG reproduce-từ-code (code drift chứng minh vô dụng)
+# Harness p27 CONCAT-XÁC-VẬT-LÝ tự đối đẳng thức mỗi đêm · FAIL in đích danh
+amd_07_concat_persist:
+  status: ACTIVE
+  signed: 2026-09-10
+  file_pattern: "data/artifacts/master_concat_<target>.txt"
+  invariant: "md5sum(file)[:12] ≡ concat-seal in footer"
+  harness_pin: "p27"
