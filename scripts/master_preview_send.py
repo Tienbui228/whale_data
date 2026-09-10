@@ -468,8 +468,9 @@ def main():
             "standing_ok": True,
             "night_label": f"{n_after_this}/2",
         })
-        marker = STATE / "demo5_sent.marker"
-        marker.write_text(f"target={target}\nsent_at={datetime.now(timezone.utc).isoformat()}\nhash={hash12}\nnight={n_after_this}/2\n", encoding="utf-8")
+        # V3.5r · XÓA auto-write demo5_sent.marker · marker = HỒ-SƠ-LỊCH-SỬ bất biến
+        # (meaning-drift: marker ghi quá khứ, không ghi tương lai · preview_journal đủ)
+        pass
     return 0 if ok_send else 1
 
 

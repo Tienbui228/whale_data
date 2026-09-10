@@ -1,4 +1,4 @@
-"""LABEL-CLAIMS-LINT · V3.5f→V3.5m enforcement-trước-chữ.
+"""LABEL-CLAIMS-LINT · V3.5f→V3.5r enforcement-trước-chữ.
 
 Grep tầng render/report các nhãn CLAIM:
   {sorted · sort: · ✓ · checked · verified · OK · PASS · đã-*}
@@ -13,11 +13,17 @@ CORPUS-SPLIT (V3.5n directive item 5 · HAI SỔ KHÁC NHAU · không giẫm s�
     #3 grep-sai-file phantom-blocker (.env vs /root/.env_tg)
     #4 chờ-operator no-cite blocker-shift
     #5 BEAT-sai-loài (V3.5o): counter cite from raw (nansen_snapshots) vs as-sent (artifact)
+    #6 CITE-TYPE-MATCH (V3.5r): claim cite [per pX] nhưng pX.loài ≠ claim.loài
+       Ví dụ mutate [per p22]→[per p7] · p22 loài=count-pointer · p7 loài=seal-integrity
+       ⇒ mismatch ⇒ FAIL (dấu-lạc-loài · không chấp nhận)
 
-  OPS-corpus (docs/ops_corpus_20260909.md · án lệ vận hành ANALYSIS):
+  OPS-corpus (docs/ops_corpus_20260910.md · án lệ vận hành ANALYSIS):
     E1 phantom-grep · E2 catchup-no-bell
     E3+E4 cặp deadlock {chờ-chữ-người 07/09 · chờ-phiên-máy 09/09}
     E5 chờ-operator-no-cite · E6+E7 claim-wired-vs-cron + deploy-lag
+    E8 relay-gap (V3.5r): cite [per pX] không được kiểm loài · ANALYSIS relay không đóng
+        cửa loài-match ⇒ mutate cross-loài lọt xuống render mà không cản.
+        Fix: label_claims_lint._check_cite_type_match() wired (lint #6).
 
 TUYỂN-DỤNG: chạy trên corpus demo-4 → PHẢI bắt được orphan → 4-field log.
 """
@@ -63,6 +69,50 @@ EVIDENCE_RE = re.compile("|".join(EVIDENCE_PATTERNS), re.IGNORECASE)
 
 K_RADIUS = 5  # bán kính dòng để tìm evidence
 
+# V3.5r LINT #6 · CITE-TYPE-MATCH · seal-registry với loài
+SEAL_REGISTRY_PATH = REPO / "data/state/seal_registry.json"
+_CITE_PIN_RE = re.compile(r"\[per\s+(p\d+)\b", re.IGNORECASE)
+
+
+def _load_seal_registry():
+    import json
+    if not SEAL_REGISTRY_PATH.exists(): return None
+    try: return json.loads(SEAL_REGISTRY_PATH.read_text(encoding="utf-8"))
+    except Exception: return None  # L-66-OK (benign fallback)
+
+
+def _infer_claim_loai(window_text: str, registry: dict) -> str | None:
+    """Match claim window against loài hints regex · return first matching loài or None."""
+    hints = registry.get("claim_loai_hints", {})
+    for pattern, loai in hints.items():
+        if re.search(pattern, window_text, re.IGNORECASE):
+            return loai
+    return None
+
+
+def _check_cite_type_match(lines: list[str], k: int, registry: dict) -> list[dict]:
+    """LINT #6: claim cite [per pX] but pX.loài mismatch claim.loài ⇒ FAIL."""
+    findings = []
+    seals = registry.get("seals", {})
+    for i, line in enumerate(lines):
+        cite_m = _CITE_PIN_RE.search(line)
+        if not cite_m: continue
+        pin = cite_m.group(1).lower()
+        if pin not in seals: continue
+        seal_loai = seals[pin].get("loai")
+        lo = max(0, i - k); hi = min(len(lines), i + k + 1)
+        window = "\n".join(lines[lo:hi])
+        claim_loai = _infer_claim_loai(window, registry)
+        if claim_loai is None: continue  # no hint match → không đủ tín hiệu để chấm
+        if claim_loai != seal_loai:
+            findings.append({
+                "line_no": i + 1, "line": line.strip()[:200],
+                "claim": f"cite {pin}[loài={seal_loai}] ↔ claim[loài={claim_loai}]",
+                "orphan": True, "kind": "cite-type-mismatch",
+                "path": "<lines>"
+            })
+    return findings
+
 
 def lint_file(path: Path, k: int = K_RADIUS):
     """Return list of orphan-label findings: {line_no, line, claim, orphan: True}."""
@@ -83,6 +133,13 @@ def lint_file(path: Path, k: int = K_RADIUS):
                 "claim": claim_str, "orphan": True,
                 "path": str(path)
             })
+    # V3.5r LINT #6 · CITE-TYPE-MATCH
+    registry = _load_seal_registry()
+    if registry:
+        ctm = _check_cite_type_match(lines, k, registry)
+        for f in ctm:
+            f["path"] = str(path)
+            findings.append(f)
     return findings
 
 

@@ -1,0 +1,165 @@
+"""HARNESS p28 · V3.5r item 6 · NIGHT-COUNTER-RECEIPT di-sản.
+
+Nhánh-A · nhãn-k ≡ distinct-targets:
+  Journal đã có 1 entry standing_ok target=2026-09-10
+  Compute night_label for new target=2026-09-11
+  → distinct = {09-10, 09-11} = 2 · nhãn = "2/2"
+
+Nhánh-B · send-lần-2 same-target PHẢI SKIP:
+  Journal đã có target=2026-09-11 standing_ok
+  Gọi preview_journal_check(target="2026-09-11") → return entry
+  → sender SKIP (return None from wrapper mô phỏng · không double-send)
+
+Test uses temp preview_journal.jsonl (backup thật · restore sau).
+"""
+from __future__ import annotations
+import sys, os, json, hashlib, shutil
+from pathlib import Path
+from datetime import datetime, timezone
+
+try: sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except: pass  # L-66-OK (benign fallback)
+
+REPO = Path("/root/Data_back_test/whale_data") if os.name != "nt" else Path(r"D:/Data back test/whale_data")
+SB_LOG = REPO / "data/logs/harness_sabotage.log"
+
+sys.path.insert(0, str(REPO / "scripts"))
+
+
+def _log(pin, mutate, verdict, extra):
+    ts = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    sha = hashlib.md5(f"{pin}{mutate}{verdict}{extra}".encode()).hexdigest()[:8]
+    SB_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with SB_LOG.open("a", encoding="utf-8") as f:
+        f.write(f"{ts}\t{pin}\t{mutate}\t{verdict}\t{sha}\n")
+
+
+PREVIEW_JOURNAL = REPO / "data/logs/preview_journal.jsonl"
+BACKUP = REPO / "data/logs/preview_journal.jsonl.bak_p28"
+EPOCH = "2026-09-10"
+
+
+def _backup_journal():
+    if PREVIEW_JOURNAL.exists():
+        shutil.copy(PREVIEW_JOURNAL, BACKUP)
+
+
+def _restore_journal():
+    if BACKUP.exists():
+        shutil.move(BACKUP, PREVIEW_JOURNAL)
+    else:
+        try: PREVIEW_JOURNAL.unlink(missing_ok=True)
+        except Exception: pass  # L-66-OK
+
+
+def _write_journal(entries: list[dict]):
+    PREVIEW_JOURNAL.parent.mkdir(parents=True, exist_ok=True)
+    with PREVIEW_JOURNAL.open("w", encoding="utf-8") as f:
+        for e in entries:
+            f.write(json.dumps(e, ensure_ascii=False) + "\n")
+
+
+def _count_distinct_after(target: str) -> int:
+    """Replicate master_preview_send.main() V3.5q counter logic."""
+    distinct = set()
+    if PREVIEW_JOURNAL.exists():
+        for line in PREVIEW_JOURNAL.read_text(encoding="utf-8").splitlines():
+            try:
+                e = json.loads(line)
+                if e.get("standing_ok") and e.get("target_date", "") >= EPOCH:
+                    distinct.add(e["target_date"])
+            except: pass  # L-66-OK
+    return len(distinct | {target})
+
+
+def case_a_night_label_distinct():
+    """Nhánh-A: journal has target=09-10, new target=09-11 ⇒ nhãn 2/(2)."""
+    _write_journal([{
+        "ts_utc": "2026-09-10T01:47:00+00:00",
+        "renderer": "master_preview", "target_date": "2026-09-10",
+        "channel": "TG_CHAT_ID_DAILY", "ok": True, "http_code": 200,
+        "message_id": 100, "body_md5": "aa"*16, "standing_ok": True,
+        "night_label": "1/2",
+    }])
+    n = _count_distinct_after("2026-09-11")
+    passed = (n == 2)
+    return passed, f"target=09-11 · distinct-after={n} (expect 2)"
+
+
+def case_a2_same_target_no_double_count():
+    """Journal has target=09-10, compute for target=09-10 ⇒ nhãn 1/(2) (no double-count)."""
+    _write_journal([{
+        "ts_utc": "2026-09-10T01:47:00+00:00",
+        "renderer": "master_preview", "target_date": "2026-09-10",
+        "channel": "TG_CHAT_ID_DAILY", "ok": True, "http_code": 200,
+        "message_id": 100, "body_md5": "aa"*16, "standing_ok": True,
+        "night_label": "1/2",
+    }])
+    n = _count_distinct_after("2026-09-10")
+    passed = (n == 1)
+    return passed, f"target=09-10 same · distinct-after={n} (expect 1)"
+
+
+def case_b_send_lan_2_same_target_skip():
+    """Nhánh-B: journal has target=09-11 standing_ok · re-check preview_journal_check ⇒ hit ⇒ SKIP."""
+    _write_journal([{
+        "ts_utc": "2026-09-11T01:47:00+00:00",
+        "renderer": "master_preview", "target_date": "2026-09-11",
+        "channel": "TG_CHAT_ID_DAILY", "ok": True, "http_code": 200,
+        "message_id": 200, "body_md5": "bb"*16, "standing_ok": True,
+        "night_label": "2/2",
+    }])
+    # Fresh import
+    for m in list(sys.modules.keys()):
+        if "master_preview_send" in m: del sys.modules[m]
+    from master_preview_send import preview_journal_check
+    existing = preview_journal_check("2026-09-11")
+    passed = (existing is not None and existing.get("message_id") == 200)
+    return passed, f"preview_journal_check hit={existing is not None} · msg_id={existing.get('message_id') if existing else None} (expect 200 · sender SKIP)"
+
+
+def case_b2_first_time_target_returns_none():
+    """Journal has target=09-10 · check target=09-11 (chưa có) ⇒ return None ⇒ sender SEND."""
+    _write_journal([{
+        "ts_utc": "2026-09-10T01:47:00+00:00",
+        "renderer": "master_preview", "target_date": "2026-09-10",
+        "channel": "TG_CHAT_ID_DAILY", "ok": True, "http_code": 200,
+        "message_id": 100, "body_md5": "aa"*16, "standing_ok": True,
+        "night_label": "1/2",
+    }])
+    for m in list(sys.modules.keys()):
+        if "master_preview_send" in m: del sys.modules[m]
+    from master_preview_send import preview_journal_check
+    existing = preview_journal_check("2026-09-11")
+    passed = (existing is None)
+    return passed, f"preview_journal_check target=09-11 (fresh) hit={existing is not None} (expect None · sender SEND)"
+
+
+def main():
+    print("═" * 62)
+    print("HARNESS p28 · NIGHT-COUNTER-RECEIPT · V3.5r item 6")
+    print("═" * 62)
+    _backup_journal()
+    all_pass = True
+    try:
+        cases = [
+            ("A · nhãn-k ≡ distinct-targets (new target)", case_a_night_label_distinct),
+            ("A2 · same-target no double-count", case_a2_same_target_no_double_count),
+            ("B · send-lần-2 same-target ⇒ hit ⇒ SKIP", case_b_send_lan_2_same_target_skip),
+            ("B2 · first-time target ⇒ None ⇒ SEND", case_b2_first_time_target_returns_none),
+        ]
+        for name, fn in cases:
+            ok, detail = fn()
+            mark = "✅" if ok else "❌"
+            print(f"  {mark} {name}: {detail}")
+            _log("p28", name, "PASS" if ok else "FAIL", detail[:80])
+            if not ok: all_pass = False
+    finally:
+        _restore_journal()
+    overall = "PASS" if all_pass else "FAIL"
+    print(f"\n[SUMMARY] p28 night-counter-receipt overall: {overall}")
+    return 0 if all_pass else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

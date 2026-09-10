@@ -164,17 +164,29 @@ def _hedge_line(text: str) -> str:
     if m_a is None:
         return "HEDGE: N/A-ERROR (sidecar LIST-A count parse fail — xem log) → #hedge"
     n_a = int(m_a.group(1))
-    # B-top × 2: first 2 rows in LIST B section (already sorted by Δdiv DESC per script)
-    in_lb = False; top_b = []
-    for line in text.split("\n"):
-        if "=== LIST B —" in line: in_lb = True; continue
-        if in_lb and (line.startswith("=== ") or line.startswith("INFO: snapshot")): break
-        if in_lb and re.match(r"^\s+\S+USDT?\s+[\d\.]", line):
-            m = re.match(r"^\s+(\S+)USDT?\s+[\d\.]+\s+[\d\.]+\s+([\+\-][\d\.]+)\s+.*?(short cover thật|long mới|OI<\$1M).*", line)
-            if m and len(top_b) < 2:
-                bare = m.group(1); delta = m.group(2)
-                note = "short cover" if "short cover" in m.group(3) else ("long mới" if "long mới" in m.group(3) else "OI<$1M")
-                top_b.append(f"{bare} {delta} ({note})")
+    # B-top: pick 1 top row from each subsection (🅱1 SHORT-COVER + 🅱2 LONG-MỚI) · fallback LIST-B
+    top_b = []
+    # V3.5r · new format 🅱1/🅱2
+    for section_marker, note in [("🅱1 SHORT-COVER", "short cover"),
+                                  ("🅱2 LONG-MỚI", "long mới")]:
+        m_sect = re.search(rf"{re.escape(section_marker)}.*?\n.*?\n─+\n(\s+\S+USDT?\s+[\d\.]+\s+[\+\-][\d\.]+.*)", text)
+        if m_sect:
+            first_row = m_sect.group(1).split("\n")[0]
+            m_row = re.match(r"\s+(\S+?)USDT?\s+[\d\.]+\s+([\+\-][\d\.]+)", first_row)
+            if m_row:
+                top_b.append(f"{m_row.group(1)} {m_row.group(2)} ({note})")
+    # Fallback old format LIST B
+    if not top_b:
+        in_lb = False
+        for line in text.split("\n"):
+            if "=== LIST B —" in line: in_lb = True; continue
+            if in_lb and (line.startswith("=== ") or line.startswith("INFO: snapshot")): break
+            if in_lb and re.match(r"^\s+\S+USDT?\s+[\d\.]", line):
+                m = re.match(r"^\s+(\S+)USDT?\s+[\d\.]+\s+[\d\.]+\s+([\+\-][\d\.]+)\s+.*?(short cover thật|long mới|OI<\$1M).*", line)
+                if m and len(top_b) < 2:
+                    bare = m.group(1); delta = m.group(2)
+                    note = "short cover" if "short cover" in m.group(3) else ("long mới" if "long mới" in m.group(3) else "OI<$1M")
+                    top_b.append(f"{bare} {delta} ({note})")
     m_grad = re.search(r"TỐT[-\s]NGHIỆP\s*(?:\((\d+)|:\s*(\S+))", text)
     grad = "0"
     if m_grad:
