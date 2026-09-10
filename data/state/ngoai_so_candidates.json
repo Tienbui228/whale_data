@@ -1,19 +1,34 @@
 {
-  "_note": "V3.5q · CITE-ONLY STRICT · nansen_snapshots VOID · chỉ as-sent artifact",
+  "_note": "V3.5r · BẢNG ĐỦ · sidecar wire (từ 09-03) là as-sent artifact hợp lệ · CITE-ONLY",
   "_updated": "2026-09-10",
-  "_source_rule": "V3.5q directive item 6: bảng đủ trước khi 1× có hiệu lực · <3× ⇒ NOMINATION RÚT",
+  "_source_rule": "V3.5r directive item 4: raw-save digest từ 01/09 BẮT BUỘC trong search-space · < 3× ⇒ RÚT",
+  "_supersedes": "V3.5q v2 (chỉ tg_final_*.txt · thiếu sidecar) · counter DOS đã điều chỉnh 1→3",
   "symbols": [],
+  "_proposed_nomination_v3_5r": ["DOS (3× ≥ threshold · chờ operator DUYỆT)"],
   "counters_cite_only": {
-    "DOS": 1,
-    "ONE": 0,
-    "BEAT": 0,
-    "B": 0
+    "DOS": 3,
+    "BEAT": 2,
+    "ONE": 2,
+    "B": 1
   },
   "_cite_evidence": {
-    "DOS-2026-09-07": "tg_final_fresh_digest_2026-09-07.txt line: 3. $DOS $1.81M Δ+$1.21M"
+    "DOS-2026-09-05": "sidecar/fresh_digest_2026-09-05.jsonl row_idx=9 (line_asprinted)",
+    "DOS-2026-09-06": "sidecar/fresh_digest_2026-09-06.jsonl row_idx=8 (line_asprinted)",
+    "DOS-2026-09-07": "tg_final_fresh_digest_2026-09-07.txt line 13: 3. $DOS $1.81M Δ+$1.21M · sidecar/fresh_digest_2026-09-07.jsonl row_idx=3",
+    "BEAT-2026-09-04": "sidecar/exch_digest_2026-09-04.jsonl row_idx=7",
+    "BEAT-2026-09-07": "tg_final_exch_digest_2026-09-07.txt line 22: 4. $BEAT -0.65% Δ-$299k bal 136.1M · sidecar/exch_digest_2026-09-07.jsonl row_idx=9",
+    "ONE-2026-09-04": "sidecar/fresh_digest_2026-09-04.jsonl row_idx=4",
+    "ONE-2026-09-05": "sidecar/fresh_digest_2026-09-05.jsonl row_idx=3",
+    "B-2026-09-06": "sidecar/fresh_digest_2026-09-06.jsonl row_idx=3"
   },
+  "_search_space_dates": ["2026-08-31", "2026-09-04", "2026-09-05", "2026-09-06", "2026-09-07"],
+  "_search_space_files_per_date": [
+    "data/artifacts/tg_final_{fresh_digest|gom_daily|watchlist|exch_digest}_<d>.txt",
+    "data/logs/sidecar/{fresh_digest|exch_digest|gom_daily|watchlist}_<d>.jsonl"
+  ],
+  "_missing_dates_no_artifact": "2026-08-31 (before sidecar wire · 0 files present)",
   "de_cuu_universe": [],
-  "ghe_27_09": "TRỐNG (V3.5q thi hành lạnh · DOS 1× < 3× · rút nốt · đếm tiếp trên kỷ nguyên artifact)",
-  "kỷ_nguyên": "as-sent artifact only · sender-dump wire started 2026-09-07 · body 08-31→09-06 không lưu log",
-  "_next_action": "Đếm tiếp mỗi đêm · đủ 3× artifact ⇒ tự tái đề cử có biên lai"
+  "ghe_27_09": "[RE-MEASURE ĐANG CHẠY · V3.5r item 4] proposed=DOS (3×) · chờ operator DUYỆT · BEAT/ONE/B < 3× RÚT",
+  "kỷ_nguyên": "as-sent artifact = {tg_final_*.txt · sidecar/*.jsonl line_asprinted} · V3.5o sidecar wire 09-03 · V3.5r bổ sung sidecar vào search-space",
+  "_next_action": "operator DUYỆT nomination DOS (theo bảng đủ V3.5r) · nếu OK: symbols=['DOS'] · ghế 27/09 có ứng viên"
 }

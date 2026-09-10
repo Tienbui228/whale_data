@@ -1,4 +1,8 @@
-# OPS-CORPUS · V3.5o RENUMBER · KÝ 2026-09-09
+# OPS-CORPUS · V3.5o RENUMBER · KÝ 2026-09-09 · [SUPERSEDED by 20260910.md]
+
+> **SUPERSEDED 2026-09-10 (V3.5r item 7)** — canonical đã chuyển sang [ops_corpus_20260910.md](ops_corpus_20260910.md).
+> File này giữ vết lịch sử (V3.5o E1-E7 · LINT #1-#5). V3.5r bổ sung E8 relay-gap + LINT #6 CITE-TYPE-MATCH ⇒ đọc bản mới.
+> Một-loại-sổ-một-nhà: từ 10-09 chỉ đọc 20260910.md; file này KHÔNG cập nhật thêm.
 
 **V3.5o directive item 7 · renumber khớp dấu ANALYSIS · E1-E7 + LINT-corpus riêng**
 

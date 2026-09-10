@@ -59,11 +59,12 @@ def p20_sidecar_missing():
 
 
 # ═════ p21 PX-NA → WATCH ═════
-def p21_px_na_watch():
-    """Verify APR 09-08 star (px_now=None) → WATCH direction in digest body."""
+def p21_px_na_watch(target: str = "2026-09-08"):
+    """Verify APR (px_now=None) → WATCH direction in digest body for target.
+    V3.5r · accept target arg (was hardcoded 09-08 · di-sản test giữ default)."""
     sys.path.insert(0, str(REPO / "scripts"))
     from digest_summary_v2 import build_v2_digest
-    body = build_v2_digest("2026-09-08")
+    body = build_v2_digest(target)
     # APR should NOT be in ⭐-PRE block · SHOULD be in WATCH-PX-PENDING block
     has_apr_watch = "WATCH-PX-PENDING" in body and "APR" in body
     # Also check no APR line with "→ PRE" in body
@@ -75,14 +76,15 @@ def p21_px_na_watch():
 
 
 # ═════ p22 COUNT ≡ PRINTED (V3.5l parser fix) ═════
-def p22_count_printed():
+def p22_count_printed(target: str = "2026-09-08"):
     """Verify ⭐-PRE header-N matches printed lines + tail names if >TOP_K.
     V3.5l fix: proper block extraction stops at next section marker (⭐-PRE ends
     when 🔻/POST-DUMP/⏸/📒/🚪/━━ appears · not on double-newline).
+    V3.5r · accept target arg (was hardcoded 09-08).
     """
     sys.path.insert(0, str(REPO / "scripts"))
     from digest_summary_v2 import build_v2_digest
-    body = build_v2_digest("2026-09-08")
+    body = build_v2_digest(target)
     lines = body.split("\n")
     # Find ⭐-PRE header line
     header_idx = None; header_n = None
@@ -119,14 +121,19 @@ def p22_count_printed():
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--target", default="2026-09-08",
+                    help="Target date for p21/p22 body build · default 09-08 di-sản")
+    args = ap.parse_args()
     print("═" * 60)
-    print("HARNESS p20-p22 · V3.5k · TUYỂN BẰNG DI-SẢN")
+    print(f"HARNESS p20-p22 · V3.5k+r · TUYỂN BẰNG DI-SẢN · target={args.target}")
     print("═" * 60)
     results = []
     for pin, disan, fn in [
         ("p20", "09-08 watchlist artifact missing (V3.5i Path bug)", p20_sidecar_missing),
-        ("p21", "09-08 APR px_now=None (loài mới không có klines)", p21_px_na_watch),
-        ("p22", "demo-5 header=11 vs printed=8 (slice-[:8])", p22_count_printed),
+        ("p21", f"target={args.target} APR px_now=None → WATCH", lambda: p21_px_na_watch(args.target)),
+        ("p22", f"target={args.target} ⭐-PRE header ≡ printed + tail names", lambda: p22_count_printed(args.target)),
     ]:
         status, detail = fn()
         marker = "✅" if status == "PASS" else ("⚠" if status == "N/A" else "❌")

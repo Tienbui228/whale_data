@@ -285,12 +285,14 @@ def compute_night_verdict(target: str) -> dict:
     n_sent = sum(1 for r in renderers if sent_leg[r]["ok"])
     # Missing legs (đích danh)
     missing_legs = [r for r in renderers if not sent_leg[r]["ok"]]
-    # Pin-scan (p20-p22 harness result)
+    # Pin-scan (p20-p22 harness · V3.5r · pass target LIVE · was hardcoded 09-08)
     import subprocess
     pin_result = None
     try:
-        r = subprocess.run([sys.executable, str(REPO / "tests/harness/harness_p20_p22_v3_5k.py")],
-                          capture_output=True, text=True, timeout=60)
+        r = subprocess.run(
+            [sys.executable, str(REPO / "tests/harness/harness_p20_p22_v3_5k.py"),
+             "--target", target],
+            capture_output=True, text=True, timeout=60)
         pin_result = "PASS" if r.returncode == 0 else "FAIL"
     except Exception as e:
         pin_result = f"ERR:{e}"

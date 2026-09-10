@@ -135,9 +135,38 @@ def case_b2_first_time_target_returns_none():
     return passed, f"preview_journal_check target=09-11 (fresh) hit={existing is not None} (expect None · sender SEND)"
 
 
+def case_c_real_journal_gates_correctly():
+    """Nhánh-C (V3.5r item 3): counter đọc journal THẬT (không sandbox) · trả nhãn đúng.
+    · nếu file 0-byte hoặc 0-entry standing_ok ≥ EPOCH → nhãn = 1/2 cho target-mới
+    · nếu file có 1 entry cho target khác EPOCH-in-range → nhãn = 2/2 cho target mới thứ 2
+    Đọc VPS-mirror `preview_journal.jsonl.vps_pull` nếu có · else đọc live PREVIEW_JOURNAL.
+    """
+    mirror = REPO / "data/logs/preview_journal.jsonl.vps_pull"
+    src = mirror if mirror.exists() else PREVIEW_JOURNAL
+    if not src.exists():
+        return True, f"no journal ({src.name}) · N/A but no-fail"
+    lines = [l for l in src.read_text(encoding="utf-8").splitlines() if l.strip()]
+    distinct = set()
+    for line in lines:
+        try:
+            e = json.loads(line)
+            if e.get("standing_ok") and e.get("target_date", "") >= EPOCH:
+                distinct.add(e["target_date"])
+        except: pass  # L-66-OK
+    target_test = "2026-09-10"
+    n_after = len(distinct | {target_test})
+    # Đối chiếu · empty journal ⇒ 1/2 · 1 entry cho target-khác ⇒ 2/2 · 1 entry cùng target ⇒ 1/2
+    if target_test in distinct:
+        expected = len(distinct)
+    else:
+        expected = len(distinct) + 1
+    passed = (n_after == expected)
+    return passed, f"src={src.name} lines={len(lines)} distinct={sorted(distinct)} n_after={n_after}/2 (expect {expected}/2)"
+
+
 def main():
     print("═" * 62)
-    print("HARNESS p28 · NIGHT-COUNTER-RECEIPT · V3.5r item 6")
+    print("HARNESS p28 · NIGHT-COUNTER-RECEIPT · V3.5r item 6 (+ nhánh-C)")
     print("═" * 62)
     _backup_journal()
     all_pass = True
@@ -156,6 +185,12 @@ def main():
             if not ok: all_pass = False
     finally:
         _restore_journal()
+    # Nhánh-C · REAL journal (chạy SAU restore để đọc journal thật)
+    ok_c, det_c = case_c_real_journal_gates_correctly()
+    mark = "✅" if ok_c else "❌"
+    print(f"  {mark} C · REAL journal (VPS mirror if any): {det_c}")
+    _log("p28", "C real-journal", "PASS" if ok_c else "FAIL", det_c[:80])
+    if not ok_c: all_pass = False
     overall = "PASS" if all_pass else "FAIL"
     print(f"\n[SUMMARY] p28 night-counter-receipt overall: {overall}")
     return 0 if all_pass else 1

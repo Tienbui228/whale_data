@@ -152,7 +152,10 @@ def run_harness(target: str):
     def _p3_hedge():
         n_digest = _extract_n(r"HEDGE:\s+A=(\d+)", digest)
         body, _ = _load_artifact("watchlist", target)
+        # V3.5r · dual regex: accept both "(N tokens)" and "TOP K/N" formats
         n_artifact = _extract_n(r"=== LIST A —.*?\((\d+) tokens", body)
+        if n_artifact is None:
+            n_artifact = _extract_n(r"=== LIST A — TOP\s+\d+/(\d+)", body)
         if n_digest is None or n_artifact is None:
             return (False, f"missing count · digest={n_digest} artifact={n_artifact}")
         return (n_digest == n_artifact, f"digest LIST_A={n_digest} artifact LIST_A={n_artifact}")
