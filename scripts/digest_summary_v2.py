@@ -501,6 +501,13 @@ def build_v2_digest(target: str) -> str:
     # concat-seal
     body = "\n".join(lines)
     seal = hashlib.md5(body.encode()).hexdigest()[:12]
+    # V3.5p CONCAT-PERSIST (operator "ok concat-persist" 10/09) · AMD-07 luật đối chứng
+    # md5sum(master_concat_<target>.txt)[:12] ≡ concat-seal in footer cùng target
+    try:
+        concat_p = ART_DIR / f"master_concat_{target}.txt"
+        concat_p.write_bytes(body.encode("utf-8"))
+    except Exception as _e:
+        print(f"[N/A-ERROR:CONCAT-PERSIST] {type(_e).__name__}: {_e}")
     lines.append(f"concat-seal={seal} · target={target} · built={datetime.now(timezone.utc).isoformat()}")
     return "\n".join(lines)
 
