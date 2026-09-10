@@ -318,7 +318,7 @@ def main() -> int:
     import hashlib as _hl
     _tg_hash = _hl.md5(msg.encode("utf-8")).hexdigest()[:12]
     print(f"[SENT] phase_map ok={ok} HTTP {'200' if ok else 'X'} hash={_tg_hash} target={_target}")
-        from lib.artifact_dump import log_bell
+    from lib.artifact_dump import log_bell
     try:
         log_bell("phase_map", _target, "old", ok, 200 if ok else 0, None, msg)
     except Exception as _e: print(f"[N/A-ERROR:LOG-BELL] {_e}")

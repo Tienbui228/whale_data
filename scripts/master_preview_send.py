@@ -65,13 +65,12 @@ def _log(msg):
 
 
 def check_standing() -> tuple[bool, str]:
-    """V3.5j directive item 5 FIX: parse VALUE (verdict==KHÔNG-KÍCH ∧ target đúng đêm)
-    · KHÔNG dùng file-exists (kẻo verdict đỏ file tồn tại → tự mở nhầm).
+    """V3.5p (item 1) THUẦN MÁY: standing = {verdict==KHÔNG-KÍCH ∧ demo5_sent ∧ ¬veto}
+    · KHÔNG dùng file-exists (kẻo verdict đỏ file tồn tại → tự mở nhầm)
+    · KHÔNG bypass verdict check qua standing_active (verdict check MỖI đêm).
     """
     if STANDING_FILES["veto_marker"].exists():
         return (False, "[N/A-ERROR:VETO] operator dừng preview")
-    if STANDING_FILES["standing_active"].exists():
-        return (True, "standing already active (pipeline mỗi-đêm)")
     # First-time open · PARSE VALUE (not exists-only)
     if not STANDING_FILES["dem0_verdict"].exists():
         return (False, "[N/A-ERROR:STANDING] dem0_lan2_verdict.json chưa có")
@@ -93,17 +92,13 @@ def check_standing() -> tuple[bool, str]:
             return (False, f"[N/A-ERROR:STANDING-STALE] verdict date={verdict_date} > 2d old vs today={today}")
     except Exception as e:
         return (False, f"[N/A-ERROR:STANDING-DATE] parse fail: {e}")
-    # 2 other markers
+    # V3.5p (item 1) · gỡ harness_labellint.marker khỏi standing · vestigial
+    # Lý do: LABEL-LINT đã là cửa-mỗi-đêm trong pipeline V3.5j (step_label_lint) ·
+    # marker duplicate condition. Standing từ nay = {verdict==KHÔNG-KÍCH ∧ demo5_sent ∧ ¬veto}
     if not STANDING_FILES["demo5_marker"].exists():
         return (False, "[N/A-ERROR:STANDING] demo5_sent.marker chưa có")
-    if not STANDING_FILES["harness_lint_marker"].exists():
-        return (False, "[N/A-ERROR:STANDING] harness_labellint.marker chưa có")
-    # OPEN STANDING · create active marker
-    STANDING_FILES["standing_active"].write_text(
-        f"opened_at={datetime.now(timezone.utc).isoformat()}\n"
-        f"verdict_date={verdict_date}\n"
-        f"verdict={v.get('verdict')}\n", encoding="utf-8")
-    return (True, f"standing FIRST-OPEN · verdict={v.get('verdict')} date={verdict_date} · markers 2/2 · standing_active created")
+    # V3.5p · thuần máy · KHÔNG cache standing (verdict check mỗi đêm)
+    return (True, f"standing OK · verdict={v.get('verdict')} date={verdict_date} · demo5-marker present")
 
 
 def _load_counter():
@@ -179,20 +174,21 @@ def step_label_lint(body: str) -> tuple[bool, str]:
 
 
 def step_concat_seal(body: str) -> tuple[bool, str]:
-    """Recompute body md5 + verify footer seal khớp."""
-    body_no_footer = body
-    # Simple check: append recomputed seal to body
-    seal = hashlib.md5(body_no_footer.encode("utf-8")).hexdigest()[:12]
-    if "concat-seal=" in body:
-        # Verify existing seal
-        import re
-        m = re.search(r"concat-seal=([a-f0-9]{12})", body)
-        if m and m.group(1) != seal:
-            return (False, f"[N/A-ERROR:SEAL] mismatch existing={m.group(1)} computed={seal}")
-        return (True, f"seal verify PASS · {seal}")
-    # No footer seal · append one
-    body_sealed = body + f"\n\n━━ footer ━━\nconcat-seal={seal}"
-    return (True, body_sealed)
+    """V3.5p · AMD-07 concat-persist verify.
+    build_v2_digest tự compute + persist seal-domain ra master_concat_<target>.txt.
+    Ở đây verify: md5sum(persist file)[:12] ≡ concat-seal in footer.
+    """
+    m = re.search(r"concat-seal=([a-f0-9]{12}).*target=(\d{4}-\d{2}-\d{2})", body)
+    if not m:
+        return (False, f"[N/A-ERROR:SEAL] concat-seal line missing in body")
+    footer_seal = m.group(1); target = m.group(2)
+    concat_p = REPO / "data/artifacts" / f"master_concat_{target}.txt"
+    if not concat_p.exists():
+        return (False, f"[N/A-ERROR:SEAL-PERSIST-MISSING] {concat_p.name} không tồn tại")
+    file_md5 = hashlib.md5(concat_p.read_bytes()).hexdigest()[:12]
+    if file_md5 != footer_seal:
+        return (False, f"[N/A-ERROR:SEAL-MISMATCH] file={file_md5} · footer={footer_seal} · AMD-07 broken")
+    return (True, f"AMD-07 verify PASS · file[:12]={file_md5} ≡ footer-seal={footer_seal}")
 
 
 def send_telegram(text: str) -> tuple[bool, str]:
