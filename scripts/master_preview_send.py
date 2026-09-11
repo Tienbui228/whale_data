@@ -97,8 +97,29 @@ def check_standing() -> tuple[bool, str]:
     # marker duplicate condition. Standing từ nay = {verdict==KHÔNG-KÍCH ∧ demo5_sent ∧ ¬veto}
     if not STANDING_FILES["demo5_marker"].exists():
         return (False, "[N/A-ERROR:STANDING] demo5_sent.marker chưa có")
+    # V3.5s GATE-D · D4 (F3 · LOG-ONLY): postcheck_ok của target trước T-1 CHỈ LOG
+    # KHÔNG chặn standing · KHÔNG bỏ vế postcheck khỏi NIGHT-COUNTER (D5 giữ)
+    # Lý do F3: postcheck fail đêm trước không nên chặn đêm sau · log để operator quyết
+    prev_pc_note = "n/a"
+    try:
+        prev_date = (vd - timedelta(days=1)).isoformat()
+        if PREVIEW_JOURNAL.exists():
+            for line in PREVIEW_JOURNAL.read_text(encoding="utf-8").splitlines():
+                try:
+                    e = json.loads(line)
+                    if e.get("target_date") == prev_date and "postcheck_ok" in e:
+                        prev_pc = e.get("postcheck_ok")
+                        prev_flag = e.get("postcheck_flag", "")
+                        prev_pc_note = f"prev({prev_date})_postcheck_ok={prev_pc} flag={prev_flag}"
+                        # LOG-ONLY (F3): _log inline · không return False
+                        _log(f"[D4-LOG] {prev_pc_note}")
+                        break
+                except Exception:
+                    continue
+    except Exception:
+        pass  # L-66-OK
     # V3.5p · thuần máy · KHÔNG cache standing (verdict check mỗi đêm)
-    return (True, f"standing OK · verdict={v.get('verdict')} date={verdict_date} · demo5-marker present")
+    return (True, f"standing OK · verdict={v.get('verdict')} date={verdict_date} · demo5-marker present · d4={prev_pc_note}")
 
 
 def _load_counter():
@@ -285,15 +306,20 @@ def compute_night_verdict(target: str) -> dict:
     n_sent = sum(1 for r in renderers if sent_leg[r]["ok"])
     # Missing legs (đích danh)
     missing_legs = [r for r in renderers if not sent_leg[r]["ok"]]
-    # Pin-scan (p20-p22 harness · V3.5r · pass target LIVE · was hardcoded 09-08)
+    # Pin-scan · V3.5s GATE-D · D1: chỉ chạy pre-ledger pins (p20) trong compute_verdict
+    # · post-ledger pins (p21,p22) chuyển sang postcheck sau send · D2: enum rc 0=PASS/1=FAIL/2=N/A
+    # · D8: log stdout+stderr harness vào master_preview.log (đêm trước exit-code nuốt lý do)
     import subprocess
     pin_result = None
     try:
         r = subprocess.run(
             [sys.executable, str(REPO / "tests/harness/harness_p20_p22_v3_5k.py"),
-             "--target", target],
+             "--target", target, "--only", "pre-ledger"],
             capture_output=True, text=True, timeout=60)
-        pin_result = "PASS" if r.returncode == 0 else "FAIL"
+        if r.stdout: _log(f"[PIN-SCAN stdout]\n{r.stdout.rstrip()}")
+        if r.stderr: _log(f"[PIN-SCAN stderr]\n{r.stderr.rstrip()}")
+        pin_result = ("PASS" if r.returncode == 0
+                      else ("N/A" if r.returncode == 2 else "FAIL"))
     except Exception as e:
         pin_result = f"ERR:{e}"
     # Sentinel scan (grep [N/A-ERROR:*] outside declared list)
@@ -319,7 +345,10 @@ def compute_night_verdict(target: str) -> dict:
         chưa_thi = _dt.now(_tz.utc) < cron_close
     except Exception:
         chưa_thi = False
+    # V3.5s GATE-D · D2: N/A pin ⇒ CHƯA-THI (khác FAIL · thiếu chủ thể chấm)
     if chưa_thi:
+        verdict = "CHƯA-THI"
+    elif pin_result == "N/A":
         verdict = "CHƯA-THI"
     elif n_full == 6 and n_sent == 6 and pin_result == "PASS" and not unknown_sentinels:
         verdict = "KHÔNG-KÍCH"
@@ -390,7 +419,8 @@ PREVIEW_EPOCH = "2026-09-10"  # V3.5q item 0 · epoch cho night counter
 
 
 def main():
-    _log("─── master_preview_send V3.5n pipeline start ───")
+    # V3.5s GATE-D · D6: header spec_version + amendments_applied
+    _log("─── master_preview_send V3.5s pipeline start · spec_version=V3.5s · amendments_applied=[GATE-D] ───")
     # V3.5n · --target CLI override + T-1 default (T = current UTC date)
     import argparse
     ap = argparse.ArgumentParser()
@@ -435,13 +465,14 @@ def main():
     if existing and not args.resend:
         _log(f"[IDEMPOTENT-SKIP] target={target} · already sent standing_ok · msg_id={existing.get('message_id')} · use --resend to override")
         return 0
-    # V3.5q item 4 · NIGHT-COUNTER = count(DISTINCT target · standing_ok · target ≥ epoch)
+    # V3.5q + V3.5s D5 · NIGHT-COUNTER = count(DISTINCT target · standing_ok ∧ postcheck_ok · target ≥ epoch)
     distinct_targets = set()
     if PREVIEW_JOURNAL.exists():
         for line in PREVIEW_JOURNAL.read_text(encoding="utf-8").splitlines():
             try:
                 e = json.loads(line)
-                if e.get("standing_ok") and e.get("target_date", "") >= PREVIEW_EPOCH:
+                if (e.get("standing_ok") and e.get("postcheck_ok")
+                        and e.get("target_date", "") >= PREVIEW_EPOCH):
                     distinct_targets.add(e["target_date"])
             except: pass  # L-66-OK
     # Include current target if send success (below)
@@ -458,6 +489,16 @@ def main():
         mid = None
         m = _re.search(r"message_id=(\d+)", det)
         if m: mid = int(m.group(1))
+        # V3.5s GATE-D · D3+D4: chạy postcheck SAU send · đọc artifact ĐÃ GỬI
+        try:
+            sys.path.insert(0, str(REPO / "scripts"))
+            from postcheck_gate_d import postcheck as _postcheck
+            pc = _postcheck(target)
+            _log(f"[POSTCHECK] target={target} · postcheck_ok={pc['postcheck_ok']} · "
+                 f"p21={pc['p21']} p22={pc['p22']} · flag={pc.get('flag','')}")
+        except Exception as _e:
+            _log(f"[POSTCHECK-ERR] {type(_e).__name__}: {_e}")
+            pc = {"postcheck_ok": False, "p21": "ERR", "p22": "ERR", "flag": "[POSTCHECK-FAIL exception]"}
         preview_journal_append({
             "ts_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "renderer": "master_preview",
@@ -468,6 +509,8 @@ def main():
             "message_id": mid,
             "body_md5": hashlib.md5(full_msg.encode()).hexdigest(),
             "standing_ok": True,
+            "postcheck_ok": pc["postcheck_ok"],   # V3.5s D5 · counter filter
+            "postcheck_flag": pc.get("flag", ""),
             "night_label": f"{n_after_this}/2",
         })
         # V3.5r · XÓA auto-write demo5_sent.marker · marker = HỒ-SƠ-LỊCH-SỬ bất biến

@@ -58,21 +58,17 @@ def p20_sidecar_missing():
     return ("FAIL", detail)
 
 
-# ═════ p21 PX-NA → WATCH ═════
+# ═════ p21 PX-NA → WATCH (F1 · block-scope · canonical helper) ═════
 def p21_px_na_watch(target: str = "2026-09-08"):
-    """Verify APR (px_now=None) → WATCH direction in digest body for target.
-    V3.5r · accept target arg (was hardcoded 09-08 · di-sản test giữ default)."""
+    """Verify APR (px_now=None) → WATCH-PX-PENDING block in digest body for target.
+    V3.5r · accept target arg (was hardcoded 09-08 · di-sản test giữ default).
+    V3.5s F1 · block-scope · call CANONICAL helper trong postcheck_gate_d._check_p21_apr_watch.
+    """
     sys.path.insert(0, str(REPO / "scripts"))
     from digest_summary_v2 import build_v2_digest
+    from postcheck_gate_d import _check_p21_apr_watch
     body = build_v2_digest(target)
-    # APR should NOT be in ⭐-PRE block · SHOULD be in WATCH-PX-PENDING block
-    has_apr_watch = "WATCH-PX-PENDING" in body and "APR" in body
-    # Also check no APR line with "→ PRE" in body
-    apr_pre_line = re.search(r"APR.*→\s*PRE\b", body)
-    is_still_pre = apr_pre_line is not None
-    ok = has_apr_watch and not is_still_pre
-    detail = f"APR-in-WATCH-block={has_apr_watch} · APR-still-PRE={is_still_pre}"
-    return ("PASS" if ok else "FAIL", detail)
+    return _check_p21_apr_watch(body)
 
 
 # ═════ p22 COUNT ≡ PRINTED (V3.5l parser fix) ═════
@@ -125,25 +121,35 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--target", default="2026-09-08",
                     help="Target date for p21/p22 body build · default 09-08 di-sản")
+    ap.add_argument("--only", choices=["pre-ledger", "post-ledger", "all"], default="all",
+                    help="V3.5s GATE-D · scope pin: pre-ledger (p20 only) · post-ledger (p21,p22) · all")
     args = ap.parse_args()
+    # V3.5s D7: p20 disan text refresh (bỏ 09-08 · pre-ledger unit không depend target)
+    ALL_PINS = [
+        ("p20", "pre-ledger sidecar-missing unit (V3.5i Path bug fix, no target)", p20_sidecar_missing, "pre-ledger"),
+        ("p21", f"target={args.target} APR px_now=None → WATCH", lambda: p21_px_na_watch(args.target), "post-ledger"),
+        ("p22", f"target={args.target} ⭐-PRE header ≡ printed + tail names", lambda: p22_count_printed(args.target), "post-ledger"),
+    ]
+    if args.only == "all":
+        selected = ALL_PINS
+    else:
+        selected = [p for p in ALL_PINS if p[3] == args.only]
     print("═" * 60)
-    print(f"HARNESS p20-p22 · V3.5k+r · TUYỂN BẰNG DI-SẢN · target={args.target}")
+    print(f"HARNESS p20-p22 · V3.5k+r+s · target={args.target} · scope={args.only} · n_pins={len(selected)}")
     print("═" * 60)
     results = []
-    for pin, disan, fn in [
-        ("p20", "09-08 watchlist artifact missing (V3.5i Path bug)", p20_sidecar_missing),
-        ("p21", f"target={args.target} APR px_now=None → WATCH", lambda: p21_px_na_watch(args.target)),
-        ("p22", f"target={args.target} ⭐-PRE header ≡ printed + tail names", lambda: p22_count_printed(args.target)),
-    ]:
+    for pin, disan, fn, scope in selected:
         status, detail = fn()
         marker = "✅" if status == "PASS" else ("⚠" if status == "N/A" else "❌")
-        print(f"  {marker} {pin} · {disan}")
+        print(f"  {marker} {pin} · [{scope}] · {disan}")
         print(f"      {detail}")
         _log(pin, disan, f"{status}:{detail[:80]}", _sha8(f"{pin}{disan}{status}"))
         results.append((pin, status))
 
     n_pass = sum(1 for _, s in results if s == "PASS")
-    print(f"\n[SUMMARY] {n_pass}/{len(results)} PASS")
+    n_na = sum(1 for _, s in results if s == "N/A")
+    n_fail = sum(1 for _, s in results if s == "FAIL")
+    print(f"\n[SUMMARY] {n_pass}/{len(results)} PASS · {n_na} N/A · {n_fail} FAIL")
 
     # NIÊM fixture_master_md5
     fix_p = REPO / "tests/fixtures/parity/FIXTURE_MASTER_MD5.md"
@@ -174,7 +180,10 @@ This file's md5 = fixture_master · in footer digest as `fixture_master=<md5[:12
         fix_p.write_text(content, encoding="utf-8")
         md5 = hashlib.md5(fix_p.read_bytes()).hexdigest()[:12]
         print(f"[FIXTURE-MASTER CREATED] md5={md5} · path={fix_p}")
-    return 0 if n_pass == len(results) else 1
+    # V3.5s GATE-D: exit-code enum · 0=all PASS · 1=any FAIL · 2=any N/A (no FAIL)
+    if n_fail > 0: return 1
+    if n_na > 0: return 2
+    return 0
 
 
 if __name__ == "__main__":
