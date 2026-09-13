@@ -204,6 +204,16 @@ def _check_p22_star_pre_count(body: str) -> tuple[str, str]:
 
     if fails:
         return ("FAIL", f"V1.3: {len(fails)} block(s) fail: {','.join(fails)} · " + " | ".join(details[:5]))
+
+    # X3 · p22 phải có RĂNG: nếu MỌI khối loài (── X ──) rỗng → trả N/A, KHÔNG PASS
+    # (Rỗng-hết = không có chủ thể chấm, không phải "đúng"). Direction blocks
+    # (⭐-PRE, 🔻, POST-DUMP, ⏸) không tính vào rule này.
+    species_labels = {"── A ──","── B ──","── C ──","── D ──","── E ──","── ? ──","── CHƯA XẾP ──"}
+    species_blocks_all = [(lb, hn) for lb, hn, _ in all_blocks if lb in species_labels]
+    if species_blocks_all and all(hn == 0 for _, hn in species_blocks_all):
+        return ("N/A",
+                f"V1.3: mọi khối loài rỗng ({len(species_blocks_all)} khối header=0) — không có chủ thể chấm")
+
     return ("PASS", f"V1.3: {len(all_blocks)} block(s) all match · " + " | ".join(details[:5]))
 
 

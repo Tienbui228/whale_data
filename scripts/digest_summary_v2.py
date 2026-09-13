@@ -696,13 +696,17 @@ def _v1_3_render_species_body(target: str, token_records: list, dai_no_line: str
             line_p = f"{m.group(1)}{prefix} {m.group(2)}"
         else:
             line_p = f"{prefix} {line}"
+        # X1 FIX: route by SPECIES SCORE (bk), KHÔNG hardcode WATCH → "?"
+        # Rule: `?` CHỈ khi TRỤC CHÍNH mù (đã tính trong _v1_3_route_and_prefix).
+        # Vế phụ mù KHÔNG đẩy vào `?` — direction WATCH (px_now=None) không đồng nghĩa
+        # tất cả trục chính mù (LSR có thể vẫn OK cho A/B).
         if dir_ == "PRE":
             species_blocks[bk].append((sym, line_p))
         elif dir_ in ("XẢ-WATCH", "XẢ"):
             xa_v1_3.append(line_p); xa_syms.append(sym)
         elif dir_ == "WATCH":
-            # V1.3: WATCH-PX-PENDING → ? CHƯA NHÌN ĐƯỢC block (unified)
-            species_blocks["?"].append((sym, line_p))
+            # X1: route theo species score bk (KHÔNG hardcode "?")
+            species_blocks[bk].append((sym, line_p))
         else:
             post_v1_3.append(line_p); post_syms.append(sym)
 
