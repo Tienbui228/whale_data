@@ -647,6 +647,23 @@ def _v1_3_species_score(sym_bare: str, target: str, store: dict) -> dict:
     return out
 
 
+def _v1_3_lint_px_coverage(token_records: list, threshold_pct: float = 50.0) -> list:
+    """R4 · pin p14 · PX-COVERAGE-LOW audit.
+    Nếu tỷ lệ token PX-PENDING > threshold_pct% cohort → in [PX-COVERAGE-LOW n/m].
+    Cohort = len(token_records). Pending = số token có px_now is None.
+    Đen-một-lần: ép 90% pending → kêu · ép 5% → im.
+    """
+    if not token_records:
+        return []
+    n_total = len(token_records)
+    n_pending = sum(1 for r in token_records if r.get("px_now") is None)
+    pct = (n_pending / n_total) * 100.0
+    lines = []
+    if pct > threshold_pct:
+        lines.append(f"[PX-COVERAGE-LOW {n_pending}/{n_total} · {pct:.0f}% > {threshold_pct:.0f}%]")
+    return lines
+
+
 def _v1_3_lint_dead_legs(cohort_scores: list) -> list:
     """Z1 · Lint vé chết trên cohort.
     cohort_scores = list of _v1_3_species_score output (per token)
@@ -754,9 +771,11 @@ def _v1_3_render_species_body(target: str, token_records: list, dai_no_line: str
 
     # Z1 · lint vé chết · emit ra stderr (harness capture vào master_preview.log)
     _lint_lines = _v1_3_lint_dead_legs([sc for _, _, _, sc in scored])
-    if _lint_lines:
+    # R4 · pin p14 · PX-COVERAGE-LOW audit
+    _px_lint = _v1_3_lint_px_coverage(token_records, threshold_pct=50.0)
+    if _lint_lines or _px_lint:
         print(f"[V1.3-LINT · target={target} · cohort={len(scored)}]", file=sys.stderr)
-        for _ll in _lint_lines:
+        for _ll in _lint_lines + _px_lint:
             print(f"  {_ll}", file=sys.stderr)
 
     # Species blocks: only PRE direction tokens go into species blocks A-E-?-CHUA_XEP
