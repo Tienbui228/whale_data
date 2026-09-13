@@ -530,81 +530,153 @@ def _v1_3_species_score(sym_bare: str, target: str, store: dict) -> dict:
     a_m, a_r, a_bl = _st.check_A(rows, target)
     if a_bl:
         # primary axis mù (pos_r None)
-        out["A"] = {"k": 0, "n": 5, "primary_blind": True, "n_hidden": 1}
+        out["A"] = {"k": 0, "n": 5, "primary_blind": True, "n_hidden": 1, "ve_state": {}}
     else:
         # reasons has 1 string with 5 True/False; count True
         reason_str = a_r[0] if a_r else ""
         k = reason_str.count("=True")
-        out["A"] = {"k": k, "n": 5, "primary_blind": False, "n_hidden": 1}  # a5 mù → 1 hidden
+        # Z1 lint · per-vé state map for dead-leg detection
+        ve_state = {
+            "pos_ramp_14d": "pos_ramp_14d=True" in reason_str,
+            "pos_ge_7":     "pos_ge_7=True" in reason_str,
+            "close_low30":  "close_low30=True" in reason_str,
+            "oi_flat":      "oi_flat=True" in reason_str,
+            "funding_pin":  "fund_pin_7d=True" in reason_str,
+        }
+        out["A"] = {"k": k, "n": 5, "primary_blind": False, "n_hidden": 1, "ve_state": ve_state}
 
     # ── [B] · n=6, b5 mù → k/5(?1) ──
     b_m, b_r, b_bl = _st.check_B(rows, target)
     if b_bl:
-        out["B"] = {"k": 0, "n": 5, "primary_blind": True, "n_hidden": 1}
+        out["B"] = {"k": 0, "n": 5, "primary_blind": True, "n_hidden": 1, "ve_state": {}}
     else:
-        k_tagger = (b_r[0].count("=True") if b_r else 0)
+        reason_str = b_r[0] if b_r else ""
+        k_tagger = reason_str.count("=True")
         # Extras (DRAFT): b3 age ≥30d, b4 div-cross (heuristic)
         first_date = rows[0]["date"] if rows else target
         from datetime import datetime as _dt
         try:
             age_days = (_dt.strptime(target, "%Y-%m-%d").date() - _dt.strptime(first_date, "%Y-%m-%d").date()).days
         except: age_days = 0
-        b3_age = 1 if age_days >= 30 else 0
+        b3_age = age_days >= 30
         # b4 div-cross: check if div_avg3 crossed >0.5 within last 14d
         from datetime import timedelta as _td
         td = _dt.strptime(target, "%Y-%m-%d").date()
-        b4_cross = 0
+        b4_cross = False
         for d in range(1, 15):
             dt = (td - _td(days=d)).isoformat()
             dt_prev = (td - _td(days=d+1)).isoformat()
             v = _st._div_avg3(rows, dt); vp = _st._div_avg3(rows, dt_prev)
             if v is not None and vp is not None and vp <= 0.5 and v > 0.5:
-                b4_cross = 1; break
+                b4_cross = True; break
         # b6 U0 W3: skip (needs cross-date) — DRAFT: use b4_cross as proxy for U0 pass
         b6_u0 = b4_cross  # DRAFT proxy
-        k_total = k_tagger + b3_age + b4_cross + b6_u0
-        out["B"] = {"k": k_total, "n": 5, "primary_blind": False, "n_hidden": 1}
+        k_total = k_tagger + int(b3_age) + int(b4_cross) + int(b6_u0)
+        # Z1 lint per-vé
+        ve_state = {
+            "gLSR_or_acc≥2":  "gLSR_or_acc≥2=True" in reason_str,
+            "div_run≤0.5":    "div_run≤0.5×3d_in_30d=True" in reason_str,
+            "b3_age≥30d":     b3_age,
+            "b4_div_cross":   b4_cross,
+            "b6_u0_proxy":    b6_u0,
+        }
+        out["B"] = {"k": k_total, "n": 5, "primary_blind": False, "n_hidden": 1, "ve_state": ve_state}
 
     # ── [C] · n=6 (no mù) ──
     c_m, c_r, c_bl = _st.check_C(rows, target)
     if c_bl:
-        out["C"] = {"k": 0, "n": 6, "primary_blind": True, "n_hidden": 0}
+        out["C"] = {"k": 0, "n": 6, "primary_blind": True, "n_hidden": 0, "ve_state": {}}
     else:
-        # tagger check_C has 4 vé: dump, plateau, lag, pos_hold — parse from reason
-        k_tagger = sum(1 for tok in ["dump=True","plateau=True","lag_ok=True","pos_hold=True"]
-                       if c_r and tok in c_r[0])
-        # Extras: c5 acc↑ (acc_T vs acc_T-7), c6 pin (funding_pin)
+        reason_str = c_r[0] if c_r else ""
+        c_dump    = "dump=True" in reason_str
+        c_plateau = "plateau=True" in reason_str
+        c_lag     = "lag_ok=True" in reason_str
+        c_pos     = "pos_hold=True" in reason_str
         from datetime import datetime as _dt, timedelta as _td
-        td = _dt.strptime(target, "%Y-%m-%d").date()
         acc_T = _st._get(rows, target, "lsr_acc_r")
         acc_7 = _st._at_offset(rows, target, "lsr_acc_r", 7)
-        c5 = 1 if (acc_T is not None and acc_7 is not None and acc_T > acc_7) else 0
+        c5 = (acc_T is not None and acc_7 is not None and acc_T > acc_7)
         fund_7 = _st._values_upto(rows, target, "funding_avg", 7)
-        c6 = 1 if (len(fund_7) >= _st.FUNDING_PIN_MIN_STREAK and
-                   all(abs(f - _st.FUNDING_PIN_VALUE) <= _st.FUNDING_PIN_TOL for f in fund_7[-7:])) else 0
-        out["C"] = {"k": k_tagger + c5 + c6, "n": 6, "primary_blind": False, "n_hidden": 0}
+        c6 = (len(fund_7) >= _st.FUNDING_PIN_MIN_STREAK and
+              all(abs(f - _st.FUNDING_PIN_VALUE) <= _st.FUNDING_PIN_TOL for f in fund_7[-7:]))
+        ve_state = {"c1_dump": c_dump, "c2_plateau": c_plateau, "c3_lag": c_lag,
+                    "c4_pos_hold": c_pos, "c5_acc↑": c5, "c6_pin": c6}
+        out["C"] = {"k": sum(int(v) for v in ve_state.values()), "n": 6,
+                    "primary_blind": False, "n_hidden": 0, "ve_state": ve_state}
 
     # ── [D] · n=5 (no mù) ──
     d_m, d_r, d_bl = _st.check_D(rows, target)
     if d_bl:
-        out["D"] = {"k": 0, "n": 5, "primary_blind": True, "n_hidden": 0}
+        out["D"] = {"k": 0, "n": 5, "primary_blind": True, "n_hidden": 0, "ve_state": {}}
     else:
-        k_tagger = sum(1 for tok in ["oi_x1.5=True","close_band=True","no_div_run=True"]
-                       if d_r and tok in d_r[0])
-        # DRAFT extras: d4 taker<52 skipped (no taker in loaded store cols), d5 bait-45d skipped
-        # Report as k_tagger/3+2 = /5 with 2 unmeasured → count as 0
-        out["D"] = {"k": k_tagger, "n": 5, "primary_blind": False, "n_hidden": 0}
+        reason_str = d_r[0] if d_r else ""
+        d_oi     = "oi_x1.5=True" in reason_str
+        d_close  = "close_band=True" in reason_str
+        d_norun  = "no_div_run=True" in reason_str
+        # DRAFT: d4 taker<52, d5 bait-45d — chưa cài, luôn False (Z3 dead-code)
+        d4_taker = False   # DRAFT-UNINSTALLED (Z3)
+        d5_bait  = False   # DRAFT-UNINSTALLED (Z3)
+        ve_state = {"d1_oi≥1.5x": d_oi, "d2_close_band": d_close, "d3_no_div_run": d_norun,
+                    "d4_taker<52": d4_taker, "d5_bait_45d": d5_bait}
+        out["D"] = {"k": sum(int(v) for v in ve_state.values()), "n": 5,
+                    "primary_blind": False, "n_hidden": 0, "ve_state": ve_state}
 
     # ── [E] · n=5 (no mù) ──
     e_m, e_r, e_bl, e_pend = _st.check_E(rows, target)
     if e_bl:
-        out["E"] = {"k": 0, "n": 5, "primary_blind": True, "n_hidden": 0}
+        out["E"] = {"k": 0, "n": 5, "primary_blind": True, "n_hidden": 0, "ve_state": {}}
     else:
-        k_tagger = sum(1 for tok in ["spike","follow"] if e_r and tok in e_r[0])
-        # DRAFT extras: e3-e5 skipped
-        out["E"] = {"k": k_tagger, "n": 5, "primary_blind": False, "n_hidden": 0}
+        # Rebuild spike/follow directly (parse of e_r fragile)
+        close_T2 = _st._at_offset(rows, target, "px_avg", 2)
+        close_T1 = _st._at_offset(rows, target, "px_avg", 1)
+        close_T  = _st._get(rows, target, "px_avg")
+        e_spike = (close_T2 is not None and close_T1 is not None and close_T2 > 0
+                   and (close_T1/close_T2 - 1) >= _st.E_SPIKE_MIN)
+        e_follow = (close_T is not None and close_T1 is not None and close_T1 > 0
+                    and (close_T/close_T1 - 1) <= _st.E_FOLLOW_MAX)
+        # DRAFT: e3/e4/e5 chưa cài (Z3 dead-code)
+        e3_vol_spike  = False   # DRAFT-UNINSTALLED
+        e4_crowd_flip = False   # DRAFT-UNINSTALLED
+        e5_fresh_NA   = False   # DRAFT-UNINSTALLED
+        ve_state = {"e1_spike": e_spike, "e2_follow": e_follow,
+                    "e3_vol_spike": e3_vol_spike, "e4_crowd_flip": e4_crowd_flip,
+                    "e5_fresh_NA": e5_fresh_NA}
+        out["E"] = {"k": sum(int(v) for v in ve_state.values()), "n": 5,
+                    "primary_blind": False, "n_hidden": 0, "ve_state": ve_state}
 
     return out
+
+
+def _v1_3_lint_dead_legs(cohort_scores: list) -> list:
+    """Z1 · Lint vé chết trên cohort.
+    cohort_scores = list of _v1_3_species_score output (per token)
+    Returns audit lines:
+      [LEG-DEAD: <loài>·<vé> N/N] · vé FALSE trên 100% cohort (evaluable)
+      [LEG-CONST-TRUE: <loài>·<vé> N/N] · vé TRUE trên 100% cohort
+    Cả hai đều vô dụng trong AND-gate · phải lộ ra ngay đêm đầu.
+    """
+    from collections import defaultdict as _dd
+    # Aggregate: {loài → {vé → [n_true, n_false]}}
+    stats = _dd(lambda: _dd(lambda: [0, 0]))
+    for sc in cohort_scores:
+        if "error" in sc: continue
+        for sp in "ABCDE":
+            s = sc.get(sp, {})
+            if s.get("primary_blind"): continue
+            ve_state = s.get("ve_state", {})
+            for ve, val in ve_state.items():
+                if val: stats[sp][ve][0] += 1
+                else:   stats[sp][ve][1] += 1
+    lines = []
+    for sp in "ABCDE":
+        for ve, (n_true, n_false) in sorted(stats[sp].items()):
+            n_total = n_true + n_false
+            if n_total == 0: continue
+            if n_true == 0:
+                lines.append(f"[LEG-DEAD: {sp}·{ve} {n_false}/{n_total}]")
+            elif n_false == 0:
+                lines.append(f"[LEG-CONST-TRUE: {sp}·{ve} {n_true}/{n_total}]")
+    return lines
 
 
 def _v1_3_route_and_prefix(sym: str, score: dict) -> tuple[str, str]:
@@ -679,6 +751,13 @@ def _v1_3_render_species_body(target: str, token_records: list, dai_no_line: str
         sc = _v1_3_species_score(sym, target, store)
         block_key, prefix = _v1_3_route_and_prefix(sym, sc)
         scored.append((rec, block_key, prefix, sc))
+
+    # Z1 · lint vé chết · emit ra stderr (harness capture vào master_preview.log)
+    _lint_lines = _v1_3_lint_dead_legs([sc for _, _, _, sc in scored])
+    if _lint_lines:
+        print(f"[V1.3-LINT · target={target} · cohort={len(scored)}]", file=sys.stderr)
+        for _ll in _lint_lines:
+            print(f"  {_ll}", file=sys.stderr)
 
     # Species blocks: only PRE direction tokens go into species blocks A-E-?-CHUA_XEP
     # XẢ-WATCH · POST-DUMP · WATCH direction tokens stay in their own blocks (with prefix added)
