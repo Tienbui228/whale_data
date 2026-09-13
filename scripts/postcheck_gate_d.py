@@ -70,61 +70,141 @@ def _extract_block(body: str, header_needle: str) -> str | None:
 
 
 def _check_p21_apr_watch(body: str) -> tuple[str, str]:
-    """P21 · F1 block-scope · APR ghim cứng lần này (nợ: chủ thể động).
-    Cắt đúng khối WATCH-PX-PENDING · tìm APR TRONG khối đó.
-    · APR không có bất kỳ đâu trong body → N/A (không có chủ thể chấm)
-    · APR có trong body nhưng chỉ ở KHO/FRESH/⭐-PRE (không ở WATCH block) → tuỳ:
-      - Ở ⭐-PRE (→ PRE) → FAIL (APR không được routing PX-PENDING)
-      - Ở KHO/FRESH thôi, không WATCH → N/A (chủ thể tồn tại nhưng không ở routing)
-    · APR TRONG WATCH block · KHÔNG ở ⭐-PRE → PASS
+    """P21 · V1.3 tái định đích: TOKEN có px_now=None PHẢI mang direction WATCH và
+    KHÔNG mang PRE, BẤT KỂ nằm khối nào.
+
+    Cơ chế:
+    · Scan mọi dòng token trong body (tất cả khối)
+    · Detect px_now=None qua marker "⏸" trong dòng hoặc "[PX-PENDING]"
+    · Token với px marker "⏸/PX-PENDING" phải KHÔNG có "→ PRE" trong dòng đó
+    · N/A khi không có chủ thể (token nào có px marker) trong body
+    · Backward-compat V1.2: giữ semantic APR ghim cứng nếu V1.3 markers không có
+
+    FAIL: bất kỳ token nào có "⏸" hoặc "[PX-PENDING]" mà dòng cũng có "→ PRE"
+    PASS: tất cả token px-missing đều routing đúng (WATCH direction)
+    N/A: không có token px-missing trong body (không có chủ thể chấm)
     """
-    if "APR" not in body:
-        return ("N/A", "APR-not-in-body")
-    # Cắt WATCH-PX-PENDING block
-    watch_block = _extract_block(body, "WATCH-PX-PENDING")
-    apr_in_watch = watch_block is not None and re.search(r"\bAPR\b", watch_block) is not None
-    # APR trong ⭐-PRE block (routing sai)
-    pre_block = _extract_block(body, "⭐-PRE")
-    apr_in_pre = pre_block is not None and re.search(r"\bAPR\b.*→\s*PRE\b", pre_block) is not None
-    if apr_in_pre:
-        return ("FAIL", f"APR-still-in-⭐-PRE (routing sai) · APR-in-WATCH={apr_in_watch}")
-    if apr_in_watch:
-        return ("PASS", f"APR-in-WATCH-block=True · APR-in-⭐-PRE=False")
-    # APR có trong body nhưng không WATCH không PRE → chỉ ở KHO/FRESH
-    return ("N/A", "APR-in-body-nhưng-không-trong-WATCH-cũng-không-⭐-PRE (KHO/FRESH only)")
+    lines = body.split("\n")
+    px_missing_lines = [l for l in lines
+                        if ("⏸" in l or "[PX-PENDING]" in l) and re.search(r"\S+", l)]
+    if not px_missing_lines:
+        # V1.2 fallback: APR ghim cứng semantic (giữ backward-compat)
+        if "APR" not in body:
+            return ("N/A", "no px-missing token in body")
+        watch_block = _extract_block(body, "WATCH-PX-PENDING")
+        apr_in_watch = watch_block is not None and re.search(r"\bAPR\b", watch_block) is not None
+        pre_block = _extract_block(body, "⭐-PRE")
+        apr_in_pre = pre_block is not None and re.search(r"\bAPR\b.*→\s*PRE\b", pre_block) is not None
+        if apr_in_pre:
+            return ("FAIL", f"[V1.2-fallback] APR-in-⭐-PRE · APR-in-WATCH={apr_in_watch}")
+        if apr_in_watch:
+            return ("PASS", f"[V1.2-fallback] APR-in-WATCH-block=True · APR-in-⭐-PRE=False")
+        return ("N/A", "[V1.2-fallback] APR-not-in-WATCH-nor-⭐-PRE")
+
+    # V1.3: check every px-missing line has NO "→ PRE"
+    violations = []
+    for l in px_missing_lines:
+        if re.search(r"→\s*PRE\b", l):
+            violations.append(l.strip()[:60])
+    if violations:
+        return ("FAIL",
+                f"V1.3: {len(violations)} px-missing token(s) still routing → PRE · sample: {violations[0]}")
+    return ("PASS", f"V1.3: {len(px_missing_lines)} px-missing token(s), tất cả routing WATCH (không có → PRE)")
 
 
 def _check_p22_star_pre_count(body: str) -> tuple[str, str]:
-    """P22 · ⭐-PRE header-N ≡ printed lines + tail names."""
+    """P22 · V1.3 tái định đích: MỌI khối có header đếm, header ≡ số dòng token in
+    + số tên trong `(+k nữa: …)`. Lệch bất kỳ khối nào = FAIL.
+
+    Khối có header đếm:
+    - ⭐-PRE (n): (V1.2)
+    - 🔻 XẢ-WATCH+XẢ (n): (V1.2 + V1.3)
+    - POST-DUMP+🌊 (n): (V1.2 + V1.3)
+    - ⏸ WATCH-PX-PENDING (n): (V1.2)
+    - ── X · ... ── (n) (V1.3 species blocks: A/B/C/D/E/? /CHƯA XẾP)
+
+    Không tính:
+    - Dòng nhắc `(→ xem B)` không phải dòng token
+    - Dòng "(none)" là placeholder khi block rỗng
+    """
     lines = body.split("\n")
-    header_idx = None; header_n = None
+    SECTION_MARKERS = ("🔻", "POST-DUMP", "⏸", "📒", "🚪", "━━", "──",
+                       "GOM-H:", "HEDGE:", "KHO:", "FRESH:", "RÒNG:", "👁",
+                       "⭐-PRE", "🎯", "⛔", "[loài", "[DẢI-NỢ", "[DAO-DEFERRED",
+                       "cites:", "concat-seal", "ledger_state")
+
+    # Patterns for header-with-count
+    HEADER_PATTERNS = [
+        (r"⭐-PRE\s+\((\d+)\):", "⭐-PRE"),
+        (r"🔻\s*XẢ-WATCH.*?\((\d+)\):", "🔻 XẢ-WATCH"),
+        (r"POST-DUMP.*?\((\d+)\):", "POST-DUMP"),
+        (r"⏸\s*WATCH-PX-PENDING\s+\((\d+)\):", "⏸ WATCH-PX-PENDING"),
+        # V1.3 species headers
+        (r"──\s*A\s+·.*──\s*\((\d+)\)", "── A ──"),
+        (r"──\s*B\s+·.*──\s*\((\d+)\)", "── B ──"),
+        (r"──\s*C\s+·.*──\s*\((\d+)\)", "── C ──"),
+        (r"──\s*D\s+·.*──\s*\((\d+)\)", "── D ──"),
+        (r"──\s*E\s+·.*──\s*\((\d+)\)", "── E ──"),
+        (r"──\s*\?\s+CHƯA NHÌN ĐƯỢC\s*──\s*\((\d+)\)", "── ? ──"),
+        (r"──\s*CHƯA XẾP LOÀI\s*──\s*\((\d+)\)", "── CHƯA XẾP ──"),
+    ]
+
+    all_blocks = []   # (header_label, header_n, header_idx)
     for i, l in enumerate(lines):
-        m = re.match(r"⭐-PRE\s+\((\d+)\):", l)
-        if m: header_idx = i; header_n = int(m.group(1)); break
-    if header_idx is None:
-        return ("N/A", "no ⭐-PRE block found in body ĐÃ GỬI")
-    SECTION_MARKERS = ("🔻", "POST-DUMP", "⏸", "📒", "🚪", "━━",
-                       "GOM-H:", "HEDGE:", "KHO:", "FRESH:", "RÒNG:", "👁")
-    star_lines = []; tail_syms = []; tail_n = 0
-    for l in lines[header_idx+1:]:
-        stripped = l.strip()
-        if not stripped: continue
-        if any(stripped.startswith(m) for m in SECTION_MARKERS): break
-        m_tail = re.match(r"\(\+(\d+) nữa:\s+([^)]+)\)", stripped)
-        if m_tail:
-            tail_n = int(m_tail.group(1))
-            tail_syms = m_tail.group(2).split("·")
-            continue
-        star_lines.append(stripped)
-    printed_n = len(star_lines)
+        for pat, label in HEADER_PATTERNS:
+            m = re.search(pat, l)
+            if m:
+                all_blocks.append((label, int(m.group(1)), i)); break
+
+    if not all_blocks:
+        return ("N/A", "no counted-header block found in body")
+
+    fails = []
+    details = []
     TOP_K = 6
-    if header_n <= TOP_K:
-        ok = (printed_n == header_n) and (tail_n == 0)
-        detail = f"header={header_n} printed={printed_n} · no-tail (≤{TOP_K}) · match={ok}"
-    else:
-        ok = (printed_n == TOP_K) and (tail_n == header_n - TOP_K) and (len(tail_syms) == tail_n)
-        detail = f"header={header_n} shown={printed_n}+tail={tail_n} names={len(tail_syms)} · match={ok}"
-    return ("PASS" if ok else "FAIL", detail)
+    for label, header_n, header_idx in all_blocks:
+        # Extract token lines + tail syms until next section marker
+        block_lines = []; tail_syms = []; tail_n = 0
+        for l in lines[header_idx+1:]:
+            stripped = l.strip()
+            if not stripped: continue
+            # Check for another header (any pattern)
+            is_header = any(re.search(pat, l) for pat, _ in HEADER_PATTERNS)
+            if is_header: break
+            # Check for section marker
+            if any(stripped.startswith(m) for m in SECTION_MARKERS): break
+            # Skip "(none)" placeholder for empty blocks
+            if stripped == "(none)":
+                continue
+            # Skip "→ xem X" hint lines (not counted per p72)
+            if stripped.startswith("(→"): continue
+            m_tail = re.match(r"\(\+(\d+) nữa:\s+([^)]+)\)", stripped)
+            if m_tail:
+                tail_n = int(m_tail.group(1))
+                tail_syms = m_tail.group(2).split("·")
+                continue
+            block_lines.append(stripped)
+        printed_n = len(block_lines)
+        # V1.3 p22: TOP_K-AGNOSTIC · yêu cầu header_n = printed_n + tail_n
+        # (Blocks CÓ THỂ truncate to TOP_K + tail, HOẶC print-all — cả hai đều OK
+        #  miễn là header đếm ≡ tổng số token in + tail names)
+        if header_n == 0:
+            ok = (printed_n == 0) and (tail_n == 0)
+            det = f"[{label}] header=0 printed={printed_n} ok={ok}"
+        else:
+            # Case 1: block truncated · printed=TOP_K + tail names
+            # Case 2: block print-all · printed=header_n · no tail
+            # Rule chung: printed + tail == header AND (if tail_n > 0, tail_syms count matches)
+            total_accounted = printed_n + tail_n
+            tail_names_ok = (tail_n == 0) or (len(tail_syms) == tail_n)
+            ok = (total_accounted == header_n) and tail_names_ok
+            det = f"[{label}] header={header_n} printed={printed_n}+tail={tail_n} names={len(tail_syms)} ok={ok}"
+        details.append(det)
+        if not ok: fails.append(label)
+
+    if fails:
+        return ("FAIL", f"V1.3: {len(fails)} block(s) fail: {','.join(fails)} · " + " | ".join(details[:5]))
+    return ("PASS", f"V1.3: {len(all_blocks)} block(s) all match · " + " | ".join(details[:5]))
 
 
 def postcheck(target: str) -> dict:

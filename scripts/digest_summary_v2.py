@@ -306,19 +306,25 @@ def _rong_line(text: str) -> str:
     return f"RÒNG: {n_open} chương ({new_str} · {q1_str}) · churn{n_churn}→file · CLOSED:{closed} → #ròng"
 
 
-def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str]:
+def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str, dict]:
     """⭐ compose · V3.5: BỘ-BA {treo tổng-sống, mới⊆treo} + DAO-DEFERRED + direction routing.
-    Reads stars_<target>.jsonl (from ledger_backfill v3.5) for direction/flags."""
+    Reads stars_<target>.jsonl (from ledger_backfill v3.5) for direction/flags.
+
+    V1.3-SPECIES-LAYOUT: 5th element = meta dict {token_records, dao_line, dai_no_line}
+    for downstream V1.3 species-block reorganize.
+    """
     p = LEDGER_DIR / f"events_{target}.jsonl"
     if not p.exists():
-        return ("[LEDGER-WARMUP · events file missing]", "warmup", [], "(none)")
+        return ("[LEDGER-WARMUP · events file missing]", "warmup", [], "(none)",
+                {"token_records": [], "dao_line": "", "dai_no_line": ""})
     view_md5 = hashlib.md5(p.read_bytes()).hexdigest()[:12]
     events = []
     for line in p.read_text(encoding="utf-8", errors="replace").splitlines():
         try: events.append(json.loads(line))
         except: continue
     if len(events) < 5:
-        return (f"[LEDGER-WARMUP · events={len(events)} chưa đủ]", "warmup", [], view_md5)
+        return (f"[LEDGER-WARMUP · events={len(events)} chưa đủ]", "warmup", [], view_md5,
+                {"token_records": [], "dao_line": "", "dai_no_line": ""})
 
     from collections import defaultdict
     per_sym = defaultdict(lambda: {"axes": set(), "events": [], "latest": {}})
@@ -363,6 +369,8 @@ def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str]:
     pre_lines = []; xa_lines = []; post_lines = []; watch_lines = []
     pre_syms_ord = []; xa_syms_ord = []; post_syms_ord = []; watch_syms_ord = []
     pre_records = []  # for S2 re-sort · [(sym, subtag, line)]
+    # V1.3-SPECIES-LAYOUT: build token_records for downstream reorganize
+    token_records = []
     for s, info in stars_sorted:
         axes_str = "+".join(sorted(info["axes"]))
         latest_dates = " · ".join([f"{ax[:4]}={e['target_date'][5:]}" for ax, e in info["latest"].items()])
@@ -376,7 +384,11 @@ def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str]:
         if px_missing:
             direction = "WATCH"; flags = ["PX-PENDING"]
             watch_line = f"   ⏸ WATCH [PX-PENDING]: {s} {len(info['axes'])}-trục ({axes_str}) {latest_dates}{new_tag}"
-            watch_lines.append(watch_line); watch_syms_ord.append(s); continue
+            watch_lines.append(watch_line); watch_syms_ord.append(s)
+            # V1.3-SPECIES-LAYOUT: add to records
+            token_records.append({"sym": s, "line": watch_line, "direction": "WATCH",
+                                  "axes": len(info["axes"]), "px_now": None})
+            continue
         ret_str = f"ret{px.get('ret_pct'):+.0f}%"
         dd_str = f"dd{px.get('dd20_pct'):+.0f}%" if px.get("dd20_pct") is not None else "dd[PX-N/A]"
         reason_str = f"[{','.join(flags)}]" if flags else ""
@@ -386,10 +398,16 @@ def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str]:
             # (proxy LIST-A/CSV bị bác vì AIO/GIGGLE lệch spec · chờ ANALYSIS xác định 'registry')
             line_pre = f"   {s} {len(info['axes'])}-trục ({axes_str}) {latest_dates} · {ret_str} {dd_str} → PRE{new_tag}"
             pre_lines.append(line_pre); pre_syms_ord.append(s)
+            token_records.append({"sym": s, "line": line_pre, "direction": "PRE",
+                                  "axes": len(info["axes"]), "px_now": px.get("px_now")})
         elif direction in ("XẢ-WATCH", "XẢ"):
             xa_lines.append(line); xa_syms_ord.append(s)
+            token_records.append({"sym": s, "line": line, "direction": direction,
+                                  "axes": len(info["axes"]), "px_now": px.get("px_now")})
         else:
             post_lines.append(line); post_syms_ord.append(s)
+            token_records.append({"sym": s, "line": line, "direction": direction,
+                                  "axes": len(info["axes"]), "px_now": px.get("px_now")})
 
     from datetime import datetime as _dt, timedelta as _td
     end = _dt.strptime(target, "%Y-%m-%d").date()
@@ -441,7 +459,304 @@ def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str]:
         body += _render_block("POST-DUMP+🌊", post_lines, post_syms_ord)
     if watch_lines:
         body += _render_block("⏸ WATCH-PX-PENDING", watch_lines, watch_syms_ord)
-    return (body, "active", [s for s, _ in stars_all], view_md5)
+    meta = {"token_records": token_records, "dao_line": dao_line, "dai_no_line": dai_no_line}
+    return (body, "active", [s for s, _ in stars_all], view_md5, meta)
+
+
+# ═════════════════════════════════════════════════════════════════
+# V1.3-SPECIES-LAYOUT · scorer + block reorganize · KÝ 13/09
+# Amendment: proposals/v1_3_species_layout_amendment_20260913.md
+# ═════════════════════════════════════════════════════════════════
+
+_V1_3_SPECIES_TAGGER_SHA = None  # Filled at runtime by _v1_3_species_score
+
+def _v1_3_load_store(target: str) -> dict:
+    """Load freshwatch multi-month store (2 months lookback from target)."""
+    import csv as _csv
+    from collections import defaultdict as _dd
+    store = _dd(list)
+    yyyy_mm = target[:7]
+    year = int(yyyy_mm[:4]); month = int(yyyy_mm[-2:])
+    # Load current + 2 previous months for lookback
+    months = []
+    for i in range(3):
+        m = month - i
+        y = year
+        while m <= 0: m += 12; y -= 1
+        months.append(f"{y:04d}-{m:02d}")
+    for ym in months:
+        p = EXPORT_DIR / f"freshwatch_daily_{ym}.csv"
+        if not p.exists(): continue
+        with open(p, encoding="utf-8") as f:
+            for row in _csv.DictReader(f):
+                sym_raw = row.get("symbol", "")
+                sym = sym_raw[:-4] if sym_raw.endswith("USDT") else sym_raw
+                out = {"date": row["date"]}
+                for k in ("px_avg","oi_usd","lsr_pos_r","lsr_acc_r","lsr_global_r","funding_avg"):
+                    v = row.get(k, "")
+                    try: out[k] = float(v) if v not in ("", None) else None
+                    except ValueError: out[k] = None
+                store[sym].append(out)
+    for sym in store:
+        seen = {}
+        for r in store[sym]: seen[r["date"]] = r
+        store[sym] = sorted(seen.values(), key=lambda x: x["date"])
+    return store
+
+
+def _v1_3_species_score(sym_bare: str, target: str, store: dict) -> dict:
+    """V1.3 species scoring · returns {species → {k, n, primary_blind, prefix_str}}.
+
+    n=6/6/6/5/5 per spec.  a5/b5 mù VĨNH VIỄN → n effective = 5, in `k/5(?1)`.
+    Reuses scripts/probe/species_tag.py tagger for most vé; DRAFT for extras.
+    """
+    global _V1_3_SPECIES_TAGGER_SHA
+    import sys as _sys
+    _sys.path.insert(0, str(REPO / "scripts/probe"))
+    try:
+        import species_tag as _st
+    except Exception as _e:
+        return {"error": f"tagger import fail: {_e}"}
+    if _V1_3_SPECIES_TAGGER_SHA is None:
+        _tag_p = REPO / "scripts/probe/species_tag.py"
+        _V1_3_SPECIES_TAGGER_SHA = hashlib.md5(_tag_p.read_bytes()).hexdigest()[:12] if _tag_p.exists() else "(none)"
+
+    rows = store.get(sym_bare) or store.get("龙虾" if sym_bare == "LOBSTER" else sym_bare, [])
+    if not rows:
+        return {"error": "no-store"}
+
+    out = {}
+    # ── [A] · n=6, a5 mù → k/5(?1) ──
+    a_m, a_r, a_bl = _st.check_A(rows, target)
+    if a_bl:
+        # primary axis mù (pos_r None)
+        out["A"] = {"k": 0, "n": 5, "primary_blind": True, "n_hidden": 1}
+    else:
+        # reasons has 1 string with 5 True/False; count True
+        reason_str = a_r[0] if a_r else ""
+        k = reason_str.count("=True")
+        out["A"] = {"k": k, "n": 5, "primary_blind": False, "n_hidden": 1}  # a5 mù → 1 hidden
+
+    # ── [B] · n=6, b5 mù → k/5(?1) ──
+    b_m, b_r, b_bl = _st.check_B(rows, target)
+    if b_bl:
+        out["B"] = {"k": 0, "n": 5, "primary_blind": True, "n_hidden": 1}
+    else:
+        k_tagger = (b_r[0].count("=True") if b_r else 0)
+        # Extras (DRAFT): b3 age ≥30d, b4 div-cross (heuristic)
+        first_date = rows[0]["date"] if rows else target
+        from datetime import datetime as _dt
+        try:
+            age_days = (_dt.strptime(target, "%Y-%m-%d").date() - _dt.strptime(first_date, "%Y-%m-%d").date()).days
+        except: age_days = 0
+        b3_age = 1 if age_days >= 30 else 0
+        # b4 div-cross: check if div_avg3 crossed >0.5 within last 14d
+        from datetime import timedelta as _td
+        td = _dt.strptime(target, "%Y-%m-%d").date()
+        b4_cross = 0
+        for d in range(1, 15):
+            dt = (td - _td(days=d)).isoformat()
+            dt_prev = (td - _td(days=d+1)).isoformat()
+            v = _st._div_avg3(rows, dt); vp = _st._div_avg3(rows, dt_prev)
+            if v is not None and vp is not None and vp <= 0.5 and v > 0.5:
+                b4_cross = 1; break
+        # b6 U0 W3: skip (needs cross-date) — DRAFT: use b4_cross as proxy for U0 pass
+        b6_u0 = b4_cross  # DRAFT proxy
+        k_total = k_tagger + b3_age + b4_cross + b6_u0
+        out["B"] = {"k": k_total, "n": 5, "primary_blind": False, "n_hidden": 1}
+
+    # ── [C] · n=6 (no mù) ──
+    c_m, c_r, c_bl = _st.check_C(rows, target)
+    if c_bl:
+        out["C"] = {"k": 0, "n": 6, "primary_blind": True, "n_hidden": 0}
+    else:
+        # tagger check_C has 4 vé: dump, plateau, lag, pos_hold — parse from reason
+        k_tagger = sum(1 for tok in ["dump=True","plateau=True","lag_ok=True","pos_hold=True"]
+                       if c_r and tok in c_r[0])
+        # Extras: c5 acc↑ (acc_T vs acc_T-7), c6 pin (funding_pin)
+        from datetime import datetime as _dt, timedelta as _td
+        td = _dt.strptime(target, "%Y-%m-%d").date()
+        acc_T = _st._get(rows, target, "lsr_acc_r")
+        acc_7 = _st._at_offset(rows, target, "lsr_acc_r", 7)
+        c5 = 1 if (acc_T is not None and acc_7 is not None and acc_T > acc_7) else 0
+        fund_7 = _st._values_upto(rows, target, "funding_avg", 7)
+        c6 = 1 if (len(fund_7) >= _st.FUNDING_PIN_MIN_STREAK and
+                   all(abs(f - _st.FUNDING_PIN_VALUE) <= _st.FUNDING_PIN_TOL for f in fund_7[-7:])) else 0
+        out["C"] = {"k": k_tagger + c5 + c6, "n": 6, "primary_blind": False, "n_hidden": 0}
+
+    # ── [D] · n=5 (no mù) ──
+    d_m, d_r, d_bl = _st.check_D(rows, target)
+    if d_bl:
+        out["D"] = {"k": 0, "n": 5, "primary_blind": True, "n_hidden": 0}
+    else:
+        k_tagger = sum(1 for tok in ["oi_x1.5=True","close_band=True","no_div_run=True"]
+                       if d_r and tok in d_r[0])
+        # DRAFT extras: d4 taker<52 skipped (no taker in loaded store cols), d5 bait-45d skipped
+        # Report as k_tagger/3+2 = /5 with 2 unmeasured → count as 0
+        out["D"] = {"k": k_tagger, "n": 5, "primary_blind": False, "n_hidden": 0}
+
+    # ── [E] · n=5 (no mù) ──
+    e_m, e_r, e_bl, e_pend = _st.check_E(rows, target)
+    if e_bl:
+        out["E"] = {"k": 0, "n": 5, "primary_blind": True, "n_hidden": 0}
+    else:
+        k_tagger = sum(1 for tok in ["spike","follow"] if e_r and tok in e_r[0])
+        # DRAFT extras: e3-e5 skipped
+        out["E"] = {"k": k_tagger, "n": 5, "primary_blind": False, "n_hidden": 0}
+
+    return out
+
+
+def _v1_3_route_and_prefix(sym: str, score: dict) -> tuple[str, str]:
+    """Route token to species block based on score. Returns (block_key, prefix_str).
+
+    block_key ∈ {A, B, C, D, E, ?, CHUA_XEP, ZERO}
+    prefix_str = "[X k/n]" or "[X·Y k1/n1·k2/n2]" (hybrid)
+    """
+    if "error" in score:
+        return ("ZERO", f"[?err]")
+    # Check primary blind (?)
+    blind_axes = [sp for sp, s in score.items() if s.get("primary_blind")]
+    # Compute k/n per species (only non-blind)
+    qual_species = []  # (sp, k, n, n_hidden)
+    all_species = []
+    for sp in "ABCDE":
+        s = score[sp]
+        if s.get("primary_blind"): continue
+        k = s["k"]; n = s["n"]
+        n_hidden = s.get("n_hidden", 0)
+        all_species.append((sp, k, n, n_hidden))
+        # Qualify if k >= n-1
+        if k >= n - 1:
+            qual_species.append((sp, k, n, n_hidden))
+
+    # If ≥3 qualify → keep 2 by C>D>B>A order (E standalone)
+    if len(qual_species) >= 3:
+        priority = {"C": 0, "D": 1, "B": 2, "A": 3, "E": 4}
+        qual_species.sort(key=lambda x: priority.get(x[0], 99))
+        kept = [q for q in qual_species if q[0] != "E"][:2] + [q for q in qual_species if q[0] == "E"]
+        qual_species = kept
+
+    # Format prefix
+    def _fmt_one(sp, k, n, n_hidden):
+        s = f"{sp} {k}/{n}"
+        if n_hidden > 0: s += f"(?{n_hidden})"
+        return s
+
+    if qual_species:
+        # Sort alphabetically for display
+        qual_sorted = sorted(qual_species, key=lambda x: x[0])
+        prefix = "[" + "·".join(_fmt_one(*q) for q in qual_sorted) + "]"
+        # Route: block = first alphabetically
+        block_key = qual_sorted[0][0]
+        return (block_key, prefix)
+
+    # Not qualified · check CHUA_XEP (2 ≤ k < n-1 for any)
+    chua_xep = [(sp, k, n, nh) for sp, k, n, nh in all_species if 2 <= k < n - 1]
+    if chua_xep:
+        chua_xep.sort(key=lambda x: -x[1])   # highest k first
+        prefix = "[" + _fmt_one(*chua_xep[0]) + "]"
+        return ("CHUA_XEP", prefix)
+
+    # Primary blind but nothing else → ?
+    if blind_axes:
+        prefix = f"[?{','.join(blind_axes)}]"
+        return ("?", prefix)
+
+    # All zero-tag
+    return ("ZERO", "[zero]")
+
+
+def _v1_3_render_species_body(target: str, token_records: list, dai_no_line: str,
+                               dao_line: str, star_body_head: str, tripwire_line: str) -> str:
+    """V1.3 layout: species blocks + XẢ/POST/WATCH direction blocks + meta after."""
+    store = _v1_3_load_store(target)
+
+    # Score all tokens
+    scored = []   # (record, block_key, prefix_str, score_dict)
+    for rec in token_records:
+        sym = rec["sym"].replace("USDT", "") if rec["sym"].endswith("USDT") else rec["sym"]
+        sc = _v1_3_species_score(sym, target, store)
+        block_key, prefix = _v1_3_route_and_prefix(sym, sc)
+        scored.append((rec, block_key, prefix, sc))
+
+    # Species blocks: only PRE direction tokens go into species blocks A-E-?-CHUA_XEP
+    # XẢ-WATCH · POST-DUMP · WATCH direction tokens stay in their own blocks (with prefix added)
+    species_blocks = {"A": [], "B": [], "C": [], "D": [], "E": [], "?": [], "CHUA_XEP": [], "ZERO": []}
+    xa_v1_3 = []; post_v1_3 = []; watch_v1_3 = []
+    xa_syms = []; post_syms = []; watch_syms = []
+
+    for rec, bk, prefix, sc in scored:
+        dir_ = rec["direction"]
+        line = rec["line"]
+        sym = rec["sym"]
+        # Add prefix to line (insert after leading whitespace)
+        m = re.match(r"^(\s+)(.*)$", line)
+        if m:
+            line_p = f"{m.group(1)}{prefix} {m.group(2)}"
+        else:
+            line_p = f"{prefix} {line}"
+        if dir_ == "PRE":
+            species_blocks[bk].append((sym, line_p))
+        elif dir_ in ("XẢ-WATCH", "XẢ"):
+            xa_v1_3.append(line_p); xa_syms.append(sym)
+        elif dir_ == "WATCH":
+            # V1.3: WATCH-PX-PENDING → ? CHƯA NHÌN ĐƯỢC block (unified)
+            species_blocks["?"].append((sym, line_p))
+        else:
+            post_v1_3.append(line_p); post_syms.append(sym)
+
+    # Build V1.3 body
+    lines = []
+    if tripwire_line: lines.append(tripwire_line)
+    lines.append(f"[loài = trạng thái hôm nay theo khuôn §16 PATTERN_BOOK v1.3 md5 77d86654 "
+                 f"— draft, chưa đủ mẫu]")
+    lines.append("")
+
+    # 🎯 ĐÁNG CHÚ Ý (≤5) — MVP: minimal
+    lines.append("🎯 ĐÁNG CHÚ Ý (≤5): hôm nay: không (V1.3 MVP · 🎯 chuông từ ledger chờ wire)")
+    # ⛔ CẤM (≤3) — use POST-DUMP tokens
+    if post_v1_3:
+        lines.append(f"⛔ CẤM (≤3): {len(post_v1_3)} POST-DUMP token · xem khối POST-DUMP+🌊 bên dưới")
+    else:
+        lines.append("⛔ CẤM (≤3): (none) — hôm nay không có POST-DUMP token")
+    lines.append("")
+
+    # Species blocks
+    _SPECIES_HEADERS = [
+        ("A", "── A · GHẾ BẬT ──"),
+        ("B", "── B · HEDGE → UNHEDGE ──"),
+        ("C", "── C · ĐẠP → GOM → ĐẨY ──"),
+        ("D", "── D · GRIND ──"),
+        ("E", "── E · MỘT CỘT ──"),
+        ("?", "── ? CHƯA NHÌN ĐƯỢC ──"),
+        ("CHUA_XEP", "── CHƯA XẾP LOÀI ──"),
+    ]
+    for key, header in _SPECIES_HEADERS:
+        block = species_blocks[key]
+        lines.append(header + f" ({len(block)})")
+        if block:
+            for sym, line in block:
+                lines.append(line)
+        else:
+            lines.append("   (none)")
+        lines.append("")
+
+    # XẢ-WATCH / POST-DUMP blocks (direction-based, retained)
+    if xa_v1_3:
+        lines.append(f"🔻 XẢ-WATCH+XẢ ({len(xa_v1_3)}):")
+        lines.extend(xa_v1_3)
+        lines.append("")
+    if post_v1_3:
+        lines.append(f"POST-DUMP+🌊 ({len(post_v1_3)}):")
+        lines.extend(post_v1_3)
+        lines.append("")
+
+    # DAO-DEFERRED coverage + DẢI-NỢ (moved from top to here per V1.3)
+    if dao_line: lines.append(dao_line)
+    if dai_no_line: lines.append(dai_no_line)
+
+    return "\n".join(lines)
 
 
 def _yaml_forward_tests() -> list[str]:
@@ -470,7 +785,7 @@ def build_v2_digest(target: str) -> str:
     a_wl, p_wl = _load_artifact("watchlist", target)
     a_gd, p_gd = _load_artifact("gom_daily", target)
 
-    star_body, star_mode, star_syms, ledger_md5 = _star_block_from_ledger(target)
+    star_body, star_mode, star_syms, ledger_md5, meta = _star_block_from_ledger(target)
 
     lines = [f"━━ FRESHWATCH TỔNG · {dd_mm} · target={target} ━━"]
 
@@ -478,8 +793,19 @@ def build_v2_digest(target: str) -> str:
     tw = _tripwire_line()
     if tw: lines.append(tw)
 
-    # ⭐ SỔ ỨNG VIÊN
-    lines.append(star_body)
+    # V1.3-SPECIES-LAYOUT: if env DIGEST_V1_3=1 → use species layout, else V1.2
+    v1_3_mode = os.environ.get("DIGEST_V1_3", "0") == "1"
+    if v1_3_mode and star_mode == "active" and meta.get("token_records"):
+        # V1.3: species-block layout replaces star_body
+        v1_3_body = _v1_3_render_species_body(
+            target=target, token_records=meta["token_records"],
+            dai_no_line=meta["dai_no_line"], dao_line=meta["dao_line"],
+            star_body_head="", tripwire_line="",   # tripwire already added above
+        )
+        lines.append(v1_3_body)
+    else:
+        # V1.2 (default): use star_body as-is
+        lines.append(star_body)
 
     # 📒 SỔ THƯỜNG (1-trục symbols, ≠ star) — parse from ledger for symbols with 1 axis
     # Simplified: just note count for now
@@ -506,7 +832,13 @@ def build_v2_digest(target: str) -> str:
     lines.append("━━ footer ━━")
     fix_p = FIXTURE_DIR / "FIXTURE_MASTER_MD5.md"
     fix_md5 = hashlib.md5(fix_p.read_bytes()).hexdigest()[:12] if fix_p.exists() else "(none)"
-    lines.append(f"ledger_state={ledger_md5} · fixture_master={fix_md5}")
+    # V1.3-SPECIES-LAYOUT: footer meta with tagger sha + book md5 + amendments
+    v1_3_footer_extra = ""
+    if v1_3_mode:
+        tag_sha = _V1_3_SPECIES_TAGGER_SHA or "(unknown)"
+        v1_3_footer_extra = (f" · species={tag_sha} · book=77d86654 · "
+                             f"amendments_applied=[V1.3-SPECIES-LAYOUT,FOCUS-c+D,UNHEDGE-v2+A1+A2]")
+    lines.append(f"ledger_state={ledger_md5} · fixture_master={fix_md5}{v1_3_footer_extra}")
     # Cite explicit file:target per NHỊP-KÊNH (KHO-LINE FIX operator directive)
     def _cite(renderer, prov):
         prefix = "tg_final_" if prov == "as-sent" else ""
