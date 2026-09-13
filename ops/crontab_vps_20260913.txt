@@ -1,0 +1,69 @@
+# Hourly: main 1h data collector (OI, ratios, taker, klines)
+5 * * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/collect_hourly.py >> /root/Data_back_test/whale_data/data/logs/hourly.log 2>&1
+
+# Hourly: premium index (W3, 1 API call)
+7 * * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/collect_premium_1h.py >> /root/Data_back_test/whale_data/data/logs/premium_1h.log 2>&1
+
+# 8h funding: 10 min after Binance settlement (00:00, 08:00, 16:00 UTC)
+10 0,8,16 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/collect_funding.py >> /root/Data_back_test/whale_data/data/logs/funding.log 2>&1
+
+# W2: daily-period metrics (00:35 UTC)
+35 0 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/collect_daily_metrics.py >> /root/Data_back_test/whale_data/data/logs/collect_daily_metrics.log 2>&1
+
+# W4: freshwatch export (01:20 UTC -- sau spot/alpha; L-41)
+10 1 * * * cd /root/Data_back_test/whale_data && scripts/post_export_csv_commit.sh >> /root/Data_back_test/whale_data/data/logs/freshwatch_export.log 2>&1
+
+# Universe refresh (01:30 UTC)
+30 1 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/collect_daily.py >> /root/Data_back_test/whale_data/data/logs/daily.log 2>&1
+
+# Ledger daily (01:00 UTC)
+0 1 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 ledger_daily.py --live --notes >> /root/Data_back_test/whale_data/ledger_daily.log 2>&1
+
+# E3: spot klines daily (01:05 UTC -- sau export 00:50)
+05 01 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/collect_spot_daily.py >> /root/Data_back_test/whale_data/data/logs/collect_spot_daily.log 2>&1
+
+
+# E3-alpha-v2: Alpha klines daily via bapi (01:30 UTC -- sau spot 01:05 +25p buffer, truoc master 01:46; doi 13/09 chua race)
+30 01 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/collect_alpha_daily.py >> /root/Data_back_test/whale_data/data/logs/collect_alpha_daily.log 2>&1
+# repair_gaps: weekly funding backfill (Mon 03:30 UTC, L-44)
+30 3 * * 1 cd /root/Data_back_test/whale_data && .venv/bin/python3 scripts/repair_gaps.py funding_8h --start-date $(date -u -d "8 days ago" +%%Y-%%m-%%d) --end-date $(date -u -d "1 day ago" +%%Y-%%m-%%d) >> data/logs/repair_gaps.log 2>&1 || echo "repair_gaps FAILED exit=$?" >> data/logs/repair_gaps.log
+# Weekly git bundle (Sun 03:00 UTC)
+0 3 * * 0 cd /root/Data_back_test/whale_data && git bundle create /root/archive/whale_data_$(date -u +%%Y%%m%%d).bundle --all >> data/logs/bundle.log 2>&1
+# GOM daily scan (01:25 UTC) — re-enabled 2026-08-10 after P0 fix (incremental mode §8.2)
+25 1 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/run_gom_daily.py >> /root/Data_back_test/whale_data/data/logs/gom_daily.log 2>&1
+40 1 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/watchlist_daily.py >> /root/Data_back_test/whale_data/data/export/watchlist_cron.log 2>&1
+
+# H-texture daily compute (00:20 UTC -- sau collect_hourly :05, đủ 24h bar ngày hôm trước)
+20 0 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/compute_h_daily.py --date $(date -u -d "yesterday" +\%Y-\%m-\%d) >> data/logs/compute_h_daily.log 2>&1 && echo "$(date -u +\%Y-\%m-\%dT\%H:\%M:\%SZ) OK" >> data/logs/compute_h_daily_heartbeat.log || echo "$(date -u +\%Y-\%m-\%dT\%H:\%M:\%SZ) FAIL" >> data/logs/compute_h_daily_heartbeat.log
+
+# PHASE-TAG daily scan (activated 2026-08-18 — [PHASE-TAG-GOLIVE-CRON-20260818])
+# 01:30 UTC = 08:30 VN — SAU freshwatch 01:20 + GOM 01:25 (đọc D-1 fresh)
+# Parallel-run cạnh GOM cũ (25 1) — cutover riêng sau
+30 1 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/run_phase_tag.py >> /root/Data_back_test/whale_data/data/logs/phase_tag.log 2>&1
+15 1 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/vol_guard_daily.py --date $(date -u -d yesterday +\%Y-\%m-\%d) >> /root/Data_back_test/whale_data/data/logs/vol_guard.log 2>&1
+# R5 F5c-ext-20260824 OBSERVE mode 25-27/08 (fixed 2>&1 26/08)
+16 1 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/vol_guard_daily.py --date $(date -u -d yesterday +\%Y-\%m-\%d) --enable-lsr-oi --dry-run >> /root/Data_back_test/whale_data/data/logs/vol_guard_lsr_oi_observe.log 2>&1
+# PHA-D2 GOM-H DAILY runner (report-only, PROVISIONAL-UNSIGNED) — operator ký 27/08
+# 01:45 UTC slot sau adapter 01:00 + freshwatch 01:20 + watchlist 01:40
+15 1 * * * cd /root/Data_back_test/whale_data && GOM_H_MODE=SIGNED /root/Data_back_test/whale_data/.venv/bin/python3 scripts/gom_h_daily.py >> /root/Data_back_test/whale_data/data/logs/gom_h_daily.log 2>&1
+# Registry Phase-2 STUB dry-run (01:50 UTC daily, per proposal 28/08)
+50 1 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/registry_daily.py >> /root/Data_back_test/whale_data/data/logs/registry_daily.log 2>&1
+# Re-grade PENDING census STUB dry-run (04:06 UTC daily, per proposal 28/08)
+06 04 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/regrade_pending_census.py >> /root/Data_back_test/whale_data/data/logs/regrade_pending.log 2>&1
+20 1 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/tg_relay_gom_h.py >> /root/Data_back_test/whale_data/data/logs/tg_relay.log 2>&1
+25 1 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/digest_daily_vps.py >> /root/Data_back_test/whale_data/data/logs/digest_daily_vps.log 2>&1
+
+# P2 · Nansen VPS-native refresh (00:20 UTC = 07:20 VN, before gom_h_daily 01:15 UTC = 60min buffer) · KÝ 03/09
+20 0 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/refresh_nansen_vps.py >> /root/Data_back_test/whale_data/data/logs/refresh_nansen_vps.log 2>&1
+
+# BATCH-KẾ 07/09 · post-hoc sidecar extractor (35 1 * * * UTC = 08:35 VN · sau tất cả sends 01:15-01:40)
+43 1 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/sidecar_extract_post_hoc.py >> /root/Data_back_test/whale_data/data/logs/sidecar_extract.log 2>&1
+
+# MASTER-PREVIEW · V3.5i · REV10 item 2 · slot 01:46 UTC (sau watchlist 01:40 + dump)
+46 1 * * * cd /root/Data_back_test/whale_data && /root/Data_back_test/whale_data/.venv/bin/python3 scripts/master_preview_send.py >> /root/Data_back_test/whale_data/data/logs/master_preview.log 2>&1
+
+
+
+# narrative movers_scan — 00:15 UTC (= 07:15 Asia/Ho_Chi_Minh)
+# 15 min after Binance daily candle closes at 00:00 UTC.
+15 0 * * *  /root/narrative/movers_scan/scripts/daily.sh
