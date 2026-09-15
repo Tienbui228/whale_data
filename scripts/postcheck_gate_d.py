@@ -171,8 +171,10 @@ def _check_p22_star_pre_count(body: str) -> tuple[str, str]:
             # Check for another header (any pattern)
             is_header = any(re.search(pat, l) for pat, _ in HEADER_PATTERNS)
             if is_header: break
-            # Check for section marker
-            if any(stripped.startswith(m) for m in SECTION_MARKERS): break
+            # Section markers ONLY on flush-left lines (LAYOUT-ONLY safety:
+            # WATCH tokens có "⏸" trong content indented, không phải header)
+            if l == l.lstrip() and any(stripped.startswith(m) for m in SECTION_MARKERS):
+                break
             # Skip "(none)" placeholder for empty blocks
             if stripped == "(none)":
                 continue
@@ -217,8 +219,33 @@ def _check_p22_star_pre_count(body: str) -> tuple[str, str]:
     return ("PASS", f"V1.3: {len(all_blocks)} block(s) all match · " + " | ".join(details[:5]))
 
 
+def _check_p27_concat_seal(target: str, body: str) -> tuple[str, str]:
+    """P27 · AMD-07 concat-persist · đọc CẢ artifact LẪN body.
+    · artifact  = master_concat_<target>.txt (body sans seal)
+    · body sent = master_body_<target>.txt (artifact + seal line)
+    · Rule: md5(artifact)[:12] == seal-line-in-body
+
+    FAIL bất kỳ: (a) artifact missing (b) body missing (c) seal lệch md5 artifact
+    """
+    artifact_p = ART_DIR / f"master_concat_{target}.txt"
+    body_p = ART_DIR / f"master_body_{target}.txt"
+    if not artifact_p.exists():
+        return ("FAIL", f"artifact missing: {artifact_p.name}")
+    if not body_p.exists():
+        return ("FAIL", f"body missing: {body_p.name}")
+    body_txt = body_p.read_bytes().decode("utf-8", errors="replace")
+    m = re.search(r"concat-seal=([a-f0-9]{12})", body_txt)
+    if not m:
+        return ("FAIL", f"seal line missing in {body_p.name}")
+    seal_in_body = m.group(1)
+    art_md5 = hashlib.md5(artifact_p.read_bytes()).hexdigest()[:12]
+    if art_md5 == seal_in_body:
+        return ("PASS", f"artifact[:12]={art_md5} ≡ body-seal={seal_in_body}")
+    return ("FAIL", f"artifact[:12]={art_md5} ≠ body-seal={seal_in_body}")
+
+
 def postcheck(target: str) -> dict:
-    """Run p21+p22 postcheck on ART_DIR/master_concat_<target>.txt · return summary dict."""
+    """Run p21+p22+p27 postcheck on ART_DIR/master_concat_<target>.txt · return summary dict."""
     concat_p = ART_DIR / f"master_concat_{target}.txt"
     if not concat_p.exists():
         # V3.5s F2 · artifact vắng (đêm KÍCH không send) = vacuous OK
@@ -227,7 +254,7 @@ def postcheck(target: str) -> dict:
             "postcheck_ok": True,
             "target": target,
             "reason": f"artifact missing (đêm KÍCH/SKIP · không hậu-kiểm được): {concat_p.name}",
-            "p21": "N/A", "p22": "N/A",
+            "p21": "N/A", "p22": "N/A", "p27": "N/A",
             "flag": "[POSTCHECK-N/A artifact-missing]",
         }
     body = concat_p.read_bytes().decode("utf-8", errors="replace")
@@ -235,16 +262,20 @@ def postcheck(target: str) -> dict:
 
     p21_status, p21_detail = _check_p21_apr_watch(body)
     p22_status, p22_detail = _check_p22_star_pre_count(body)
+    p27_status, p27_detail = _check_p27_concat_seal(target, body)
 
     _log_sab("p21-post", f"target={target} · postcheck body ĐÃ GỬI",
              f"{p21_status}:{p21_detail[:80]}", _sha8(f"p21-post-{target}-{p21_status}"))
     _log_sab("p22-post", f"target={target} · postcheck body ĐÃ GỬI",
              f"{p22_status}:{p22_detail[:80]}", _sha8(f"p22-post-{target}-{p22_status}"))
+    _log_sab("p27-post", f"target={target} · concat-seal both-ends",
+             f"{p27_status}:{p27_detail[:80]}", _sha8(f"p27-post-{target}-{p27_status}"))
 
     # V3.5s D3: postcheck_ok = tất cả pin PASS · N/A cũng OK (thiếu chủ thể không phải fail)
     fails = []
     if p21_status == "FAIL": fails.append("p21")
     if p22_status == "FAIL": fails.append("p22")
+    if p27_status == "FAIL": fails.append("p27")
     postcheck_ok = len(fails) == 0
     flag = "" if postcheck_ok else f"[POSTCHECK-FAIL {','.join(fails)}]"
 
@@ -254,6 +285,7 @@ def postcheck(target: str) -> dict:
         "body_md5": body_md5,
         "p21": p21_status, "p21_detail": p21_detail,
         "p22": p22_status, "p22_detail": p22_detail,
+        "p27": p27_status, "p27_detail": p27_detail,
         "flag": flag,
     }
 

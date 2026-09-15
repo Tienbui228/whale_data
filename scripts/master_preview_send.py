@@ -103,19 +103,14 @@ def check_standing() -> tuple[bool, str]:
     prev_pc_note = "n/a"
     try:
         prev_date = (vd - timedelta(days=1)).isoformat()
-        if PREVIEW_JOURNAL.exists():
-            for line in PREVIEW_JOURNAL.read_text(encoding="utf-8").splitlines():
-                try:
-                    e = json.loads(line)
-                    if e.get("target_date") == prev_date and "postcheck_ok" in e:
-                        prev_pc = e.get("postcheck_ok")
-                        prev_flag = e.get("postcheck_flag", "")
-                        prev_pc_note = f"prev({prev_date})_postcheck_ok={prev_pc} flag={prev_flag}"
-                        # LOG-ONLY (F3): _log inline · không return False
-                        _log(f"[D4-LOG] {prev_pc_note}")
-                        break
-                except Exception:
-                    continue
+        for e in _journal_iter():
+            if e.get("target_date") == prev_date and "postcheck_ok" in e:
+                prev_pc = e.get("postcheck_ok")
+                prev_flag = e.get("postcheck_flag", "")
+                prev_pc_note = f"prev({prev_date})_postcheck_ok={prev_pc} flag={prev_flag}"
+                # LOG-ONLY (F3): _log inline · không return False
+                _log(f"[D4-LOG] {prev_pc_note}")
+                break
     except Exception:
         pass  # L-66-OK
     # V3.5p · thuần máy · KHÔNG cache standing (verdict check mỗi đêm)
@@ -392,26 +387,39 @@ def compute_night_verdict(target: str) -> dict:
 
 
 # V3.5q PREVIEW-JOURNAL + IDEMPOTENT (item 3)
+# MASTER-LIVE cutover (KÝ 15/09): preview_journal đóng, master_journal mở từ target ≥ MASTER_LIVE_TARGET.
+# Reads iterate cả hai file (union). Writes vào MASTER_JOURNAL sau cutover, PREVIEW_JOURNAL trước.
+# Fields, seal, ledger_state giữ nguyên schema.
 PREVIEW_JOURNAL = REPO / "data/logs/preview_journal.jsonl"
+MASTER_JOURNAL = REPO / "data/logs/master_journal.jsonl"
+MASTER_LIVE_TARGET = "2026-09-15"    # target đầu tiên chạy master live
+
+
+def _journal_iter():
+    """Iterate entries từ CẢ preview + master journal (union · idempotent-safe)."""
+    for jf in (PREVIEW_JOURNAL, MASTER_JOURNAL):
+        if not jf.exists(): continue
+        for line in jf.read_text(encoding="utf-8").splitlines():
+            try: yield json.loads(line)
+            except: pass  # L-66-OK
 
 
 def preview_journal_check(target: str) -> dict | None:
-    """Return last preview entry for target if exists (standing_ok=True) · else None.
-    Idempotent per (renderer=master_preview · target)."""
-    if not PREVIEW_JOURNAL.exists(): return None
+    """Return last journal entry for target (standing_ok=True) · else None.
+    Reads BOTH preview + master journals · idempotent per (renderer=master_preview · target)."""
     last = None
-    for line in PREVIEW_JOURNAL.read_text(encoding="utf-8").splitlines():
-        try:
-            e = json.loads(line)
-            if e.get("target_date") == target and e.get("standing_ok"):
-                last = e
-        except: pass  # L-66-OK (benign fallback)
+    for e in _journal_iter():
+        if e.get("target_date") == target and e.get("standing_ok"):
+            last = e
     return last
 
 
 def preview_journal_append(entry: dict) -> None:
-    PREVIEW_JOURNAL.parent.mkdir(parents=True, exist_ok=True)
-    with PREVIEW_JOURNAL.open("a", encoding="utf-8") as f:
+    """Append entry · route by target: post-cutover → MASTER_JOURNAL, else PREVIEW_JOURNAL."""
+    target = entry.get("target_date", "")
+    jf = MASTER_JOURNAL if target >= MASTER_LIVE_TARGET else PREVIEW_JOURNAL
+    jf.parent.mkdir(parents=True, exist_ok=True)
+    with jf.open("a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
@@ -446,8 +454,12 @@ def main():
     _log(f"[STEP 1/5 rebuild-ledger] ok={ok} · {msg}")
     if not ok: _log("SKIP · rebuild failed"); return 1
 
+    # MASTER-LIVE cutover (KÝ 15/09): target ≥ 2026-09-15 → DIGEST_V1_3=1 (layout-only default)
+    # target trước cutover: giữ V1.2 để re-render khớp bản đã gửi. Operator có thể override qua env.
+    os.environ.setdefault("DIGEST_V1_3", "1" if target >= MASTER_LIVE_TARGET else "0")
     ok, res = step_render_digest(target)
-    _log(f"[STEP 2/5 render-digest] ok={ok} · {res[:100] if isinstance(res,str) and ok else res}")
+    _log(f"[STEP 2/5 render-digest] ok={ok} · DIGEST_V1_3={os.environ.get('DIGEST_V1_3')} · "
+         f"{res[:100] if isinstance(res,str) and ok else res}")
     if not ok: _log("SKIP · render failed"); return 1
     body = res
 
@@ -466,20 +478,25 @@ def main():
         _log(f"[IDEMPOTENT-SKIP] target={target} · already sent standing_ok · msg_id={existing.get('message_id')} · use --resend to override")
         return 0
     # V3.5q + V3.5s D5 · NIGHT-COUNTER = count(DISTINCT target · standing_ok ∧ postcheck_ok · target ≥ epoch)
+    # (còn dùng cho preview era; post-cutover không in nhãn đếm nữa)
     distinct_targets = set()
-    if PREVIEW_JOURNAL.exists():
-        for line in PREVIEW_JOURNAL.read_text(encoding="utf-8").splitlines():
-            try:
-                e = json.loads(line)
-                if (e.get("standing_ok") and e.get("postcheck_ok")
-                        and e.get("target_date", "") >= PREVIEW_EPOCH):
-                    distinct_targets.add(e["target_date"])
-            except: pass  # L-66-OK
-    # Include current target if send success (below)
+    for e in _journal_iter():
+        if (e.get("standing_ok") and e.get("postcheck_ok")
+                and e.get("target_date", "") >= PREVIEW_EPOCH):
+            distinct_targets.add(e.get("target_date", ""))
     n_after_this = len(distinct_targets | {target})
-    prefix = f"[MASTER-PREVIEW đêm {n_after_this}/2]\n"
+    # MASTER-LIVE cutover label logic (KÝ 15/09):
+    #   target ≥ MASTER_LIVE_TARGET → "[MASTER · live từ 2026-09-15]" (KHÔNG đếm)
+    #   target < cutover, n ≤ 2 → "[MASTER-PREVIEW đêm N/2]"
+    #   target < cutover, n > 2 → "[ĐỦ 2/2 · CHỜ 'ok master live']" (bug counter chặn: KHÔNG in 3/2, 4/2)
+    if target >= MASTER_LIVE_TARGET:
+        prefix = "[MASTER · live từ 2026-09-15]\n"
+    elif n_after_this <= 2:
+        prefix = f"[MASTER-PREVIEW đêm {n_after_this}/2]\n"
+    else:
+        prefix = "[ĐỦ 2/2 · CHỜ \"ok master live\"]\n"
     full_msg = prefix + body_sealed
-    _log(f"[STEP 5/5 send] night={n_after_this}/2 · target={target} · body_size={len(full_msg)}")
+    _log(f"[STEP 5/5 send] label={prefix.strip()} · target={target} · night_index={n_after_this} · body_size={len(full_msg)}")
     ok_send, det = send_telegram(full_msg)
     hash12 = hashlib.md5(full_msg.encode()).hexdigest()[:12]
     _log(f"[SENT] master_preview ok={ok_send} {det} hash={hash12} night={n_after_this}/2 target={target}")
@@ -495,13 +512,14 @@ def main():
             from postcheck_gate_d import postcheck as _postcheck
             pc = _postcheck(target)
             _log(f"[POSTCHECK] target={target} · postcheck_ok={pc['postcheck_ok']} · "
-                 f"p21={pc['p21']} p22={pc['p22']} · flag={pc.get('flag','')}")
+                 f"p21={pc['p21']} p22={pc['p22']} p27={pc.get('p27','?')} · flag={pc.get('flag','')}")
         except Exception as _e:
             _log(f"[POSTCHECK-ERR] {type(_e).__name__}: {_e}")
-            pc = {"postcheck_ok": False, "p21": "ERR", "p22": "ERR", "flag": "[POSTCHECK-FAIL exception]"}
+            pc = {"postcheck_ok": False, "p21": "ERR", "p22": "ERR", "p27": "ERR",
+                  "flag": "[POSTCHECK-FAIL exception]"}
         preview_journal_append({
             "ts_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "renderer": "master_preview",
+            "renderer": "master_preview" if target < MASTER_LIVE_TARGET else "master_live",
             "target_date": target,
             "channel": "TG_CHAT_ID_DAILY",
             "ok": True,
@@ -511,7 +529,7 @@ def main():
             "standing_ok": True,
             "postcheck_ok": pc["postcheck_ok"],   # V3.5s D5 · counter filter
             "postcheck_flag": pc.get("flag", ""),
-            "night_label": f"{n_after_this}/2",
+            "night_label": prefix.strip(),   # đúng nhãn in trên tin (đã handle cutover)
         })
         # V3.5r · XÓA auto-write demo5_sent.marker · marker = HỒ-SƠ-LỊCH-SỬ bất biến
         # (meaning-drift: marker ghi quá khứ, không ghi tương lai · preview_journal đủ)

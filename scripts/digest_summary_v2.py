@@ -512,14 +512,14 @@ def _v1_3_species_score(sym_bare: str, target: str, store: dict) -> dict:
     """
     global _V1_3_SPECIES_TAGGER_SHA
     import sys as _sys
-    _sys.path.insert(0, str(REPO / "scripts/probe"))
+    _sys.path.insert(0, str(REPO / "scripts"))
     try:
         import species_tag as _st
     except Exception as _e:
         return {"error": f"tagger import fail: {_e}"}
     if _V1_3_SPECIES_TAGGER_SHA is None:
-        _tag_p = REPO / "scripts/probe/species_tag.py"
-        _V1_3_SPECIES_TAGGER_SHA = hashlib.md5(_tag_p.read_bytes()).hexdigest()[:12] if _tag_p.exists() else "(none)"
+        _tag_p = REPO / "scripts/species_tag.py"
+        _V1_3_SPECIES_TAGGER_SHA = hashlib.md5(_tag_p.read_bytes()).hexdigest()[:8] if _tag_p.exists() else "(none)"
 
     rows = store.get(sym_bare) or store.get("龙虾" if sym_bare == "LOBSTER" else sym_bare, [])
     if not rows:
@@ -696,136 +696,110 @@ def _v1_3_lint_dead_legs(cohort_scores: list) -> list:
     return lines
 
 
-def _v1_3_route_and_prefix(sym: str, score: dict) -> tuple[str, str]:
-    """Route token to species block based on score. Returns (block_key, prefix_str).
-
-    block_key ∈ {A, B, C, D, E, ?, CHUA_XEP, ZERO}
-    prefix_str = "[X k/n]" or "[X·Y k1/n1·k2/n2]" (hybrid)
+def _v1_3_tag_binary(sym_bare: str, target: str, store: dict) -> dict:
+    """Binary tagger · returns {tags, blind_axes, display} · no k/n.
+    Delegates to scripts/species_tag.py::tag_species.
     """
-    if "error" in score:
-        return ("ZERO", f"[?err]")
-    # Check primary blind (?)
-    blind_axes = [sp for sp, s in score.items() if s.get("primary_blind")]
-    # Compute k/n per species (only non-blind)
-    qual_species = []  # (sp, k, n, n_hidden)
-    all_species = []
-    for sp in "ABCDE":
-        s = score[sp]
-        if s.get("primary_blind"): continue
-        k = s["k"]; n = s["n"]
-        n_hidden = s.get("n_hidden", 0)
-        all_species.append((sp, k, n, n_hidden))
-        # Qualify if k >= n-1
-        if k >= n - 1:
-            qual_species.append((sp, k, n, n_hidden))
+    global _V1_3_SPECIES_TAGGER_SHA
+    import sys as _sys
+    _sys.path.insert(0, str(REPO / "scripts"))
+    try:
+        import species_tag as _st
+    except Exception as _e:
+        return {"tags": [], "blind_axes": [], "display": "", "error": str(_e)}
+    if _V1_3_SPECIES_TAGGER_SHA is None:
+        _tag_p = REPO / "scripts/species_tag.py"
+        _V1_3_SPECIES_TAGGER_SHA = hashlib.md5(_tag_p.read_bytes()).hexdigest()[:8] if _tag_p.exists() else "(none)"
+    rows = store.get(sym_bare, [])
+    if not rows:
+        return {"tags": [], "blind_axes": [], "display": "", "no_store": True}
+    return _st.tag_species(rows, target)
 
-    # If ≥3 qualify → keep 2 by C>D>B>A order (E standalone)
-    if len(qual_species) >= 3:
-        priority = {"C": 0, "D": 1, "B": 2, "A": 3, "E": 4}
-        qual_species.sort(key=lambda x: priority.get(x[0], 99))
-        kept = [q for q in qual_species if q[0] != "E"][:2] + [q for q in qual_species if q[0] == "E"]
-        qual_species = kept
 
-    # Format prefix
-    def _fmt_one(sp, k, n, n_hidden):
-        s = f"{sp} {k}/{n}"
-        if n_hidden > 0: s += f"(?{n_hidden})"
-        return s
+def _v1_3_route_layout_only(tags: list, blind_axes: list) -> tuple[str, str, list]:
+    """Binary routing rule · LAYOUT-ONLY (no k/n).
+    Returns (block_key, prefix_str, hint_blocks).
 
-    if qual_species:
-        # Sort alphabetically for display
-        qual_sorted = sorted(qual_species, key=lambda x: x[0])
-        prefix = "[" + "·".join(_fmt_one(*q) for q in qual_sorted) + "]"
-        # Route: block = first alphabetically
-        block_key = qual_sorted[0][0]
-        return (block_key, prefix)
-
-    # Not qualified · check CHUA_XEP (2 ≤ k < n-1 for any)
-    chua_xep = [(sp, k, n, nh) for sp, k, n, nh in all_species if 2 <= k < n - 1]
-    if chua_xep:
-        chua_xep.sort(key=lambda x: -x[1])   # highest k first
-        prefix = "[" + _fmt_one(*chua_xep[0]) + "]"
-        return ("CHUA_XEP", prefix)
-
-    # Primary blind but nothing else → ?
+    Rules:
+    · ≥1 tag khớp → keep tags (tagger đã trim ≤2 theo C>D>B>A), in theo chữ cái
+    · Hybrid [B·D] → block = chữ cái đầu; block còn lại nhận dòng nhắc (→ xem X)
+    · [?] CHỈ khi không có tag ∧ trục chính mù · vế phụ mù không đẩy vào `?`
+    · Zero-tag không blind → CHƯA XẾP LOÀI · no prefix
+    """
+    if tags:
+        tags_sorted = sorted(tags)
+        prefix = "[" + "·".join(tags_sorted) + "]"
+        block = tags_sorted[0]
+        hints = tags_sorted[1:]
+        return (block, prefix, hints)
     if blind_axes:
-        prefix = f"[?{','.join(blind_axes)}]"
-        return ("?", prefix)
-
-    # All zero-tag
-    return ("ZERO", "[zero]")
+        return ("?", "[?]", [])
+    return ("CHUA_XEP", "", [])
 
 
 def _v1_3_render_species_body(target: str, token_records: list, dai_no_line: str,
                                dao_line: str, star_body_head: str, tripwire_line: str) -> str:
-    """V1.3 layout: species blocks + XẢ/POST/WATCH direction blocks + meta after."""
+    """V1.3 LAYOUT-ONLY body · KÝ 15/09 · binary tagger + block order + collapsed rỗng.
+
+    Layout:
+      [loài = §16 PATTERN_BOOK header line]
+      species blocks A/B/C/D/E/?/CHƯA XẾP LOÀI (empty blocks collapse to one line)
+      🔻 XẢ-WATCH+XẢ
+      POST-DUMP+🌊
+      DẢI-NỢ + DAO-DEFERRED coverage
+
+    Rest (📒/🚪/NHỊP-KÊNH/👁/footer) added by build_v2_digest caller.
+    """
     store = _v1_3_load_store(target)
 
-    # Score all tokens
-    scored = []   # (record, block_key, prefix_str, score_dict)
+    scored = []
     for rec in token_records:
-        sym = rec["sym"].replace("USDT", "") if rec["sym"].endswith("USDT") else rec["sym"]
-        sc = _v1_3_species_score(sym, target, store)
-        block_key, prefix = _v1_3_route_and_prefix(sym, sc)
-        scored.append((rec, block_key, prefix, sc))
+        sym_bare = rec["sym"].replace("USDT", "") if rec["sym"].endswith("USDT") else rec["sym"]
+        result = _v1_3_tag_binary(sym_bare, target, store)
+        tags = result.get("tags", []) or []
+        blind_axes = result.get("blind_axes", []) or []
+        block, prefix, hints = _v1_3_route_layout_only(tags, blind_axes)
+        scored.append((rec, block, prefix, hints, tags, blind_axes))
 
-    # Z1 · lint vé chết · emit ra stderr (harness capture vào master_preview.log)
-    _lint_lines = _v1_3_lint_dead_legs([sc for _, _, _, sc in scored])
-    # R4 · pin p14 · PX-COVERAGE-LOW audit
+    # R4 · p14 · PX-COVERAGE-LOW audit (giữ nguyên · lint dead-legs bỏ vì layout-only)
     _px_lint = _v1_3_lint_px_coverage(token_records, threshold_pct=50.0)
-    if _lint_lines or _px_lint:
+    if _px_lint:
         print(f"[V1.3-LINT · target={target} · cohort={len(scored)}]", file=sys.stderr)
-        for _ll in _lint_lines + _px_lint:
+        for _ll in _px_lint:
             print(f"  {_ll}", file=sys.stderr)
 
-    # Species blocks: only PRE direction tokens go into species blocks A-E-?-CHUA_XEP
-    # XẢ-WATCH · POST-DUMP · WATCH direction tokens stay in their own blocks (with prefix added)
-    species_blocks = {"A": [], "B": [], "C": [], "D": [], "E": [], "?": [], "CHUA_XEP": [], "ZERO": []}
-    xa_v1_3 = []; post_v1_3 = []; watch_v1_3 = []
-    xa_syms = []; post_syms = []; watch_syms = []
+    species_blocks = {"A": [], "B": [], "C": [], "D": [], "E": [], "?": [], "CHUA_XEP": []}
+    xa_lines = []; xa_syms = []
+    post_lines = []; post_syms = []
 
-    for rec, bk, prefix, sc in scored:
+    for rec, block, prefix, hints, tags, blind_axes in scored:
         dir_ = rec["direction"]
         line = rec["line"]
         sym = rec["sym"]
-        # Add prefix to line (insert after leading whitespace)
         m = re.match(r"^(\s+)(.*)$", line)
-        if m:
+        if m and prefix:
             line_p = f"{m.group(1)}{prefix} {m.group(2)}"
+        elif m:
+            line_p = line
         else:
-            line_p = f"{prefix} {line}"
-        # X1 FIX: route by SPECIES SCORE (bk), KHÔNG hardcode WATCH → "?"
-        # Rule: `?` CHỈ khi TRỤC CHÍNH mù (đã tính trong _v1_3_route_and_prefix).
-        # Vế phụ mù KHÔNG đẩy vào `?` — direction WATCH (px_now=None) không đồng nghĩa
-        # tất cả trục chính mù (LSR có thể vẫn OK cho A/B).
-        if dir_ == "PRE":
-            species_blocks[bk].append((sym, line_p))
-        elif dir_ in ("XẢ-WATCH", "XẢ"):
-            xa_v1_3.append(line_p); xa_syms.append(sym)
-        elif dir_ == "WATCH":
-            # X1: route theo species score bk (KHÔNG hardcode "?")
-            species_blocks[bk].append((sym, line_p))
-        else:
-            post_v1_3.append(line_p); post_syms.append(sym)
+            line_p = f"{prefix} {line}" if prefix else line
 
-    # Build V1.3 body
+        if dir_ == "PRE":
+            species_blocks[block].append((sym, line_p, hints))
+        elif dir_ in ("XẢ-WATCH", "XẢ"):
+            xa_lines.append(line_p); xa_syms.append(sym)
+        elif dir_ == "WATCH":
+            species_blocks[block].append((sym, line_p, hints))
+        else:
+            post_lines.append(line_p); post_syms.append(sym)
+
     lines = []
     if tripwire_line: lines.append(tripwire_line)
     lines.append(f"[loài = trạng thái hôm nay theo khuôn §16 PATTERN_BOOK v1.3 md5 77d86654 "
                  f"— draft, chưa đủ mẫu]")
     lines.append("")
 
-    # 🎯 ĐÁNG CHÚ Ý (≤5) — MVP: minimal
-    lines.append("🎯 ĐÁNG CHÚ Ý (≤5): hôm nay: không (V1.3 MVP · 🎯 chuông từ ledger chờ wire)")
-    # ⛔ CẤM (≤3) — use POST-DUMP tokens
-    if post_v1_3:
-        lines.append(f"⛔ CẤM (≤3): {len(post_v1_3)} POST-DUMP token · xem khối POST-DUMP+🌊 bên dưới")
-    else:
-        lines.append("⛔ CẤM (≤3): (none) — hôm nay không có POST-DUMP token")
-    lines.append("")
-
-    # Species blocks
-    _SPECIES_HEADERS = [
+    _SPECIES = [
         ("A", "── A · GHẾ BẬT ──"),
         ("B", "── B · HEDGE → UNHEDGE ──"),
         ("C", "── C · ĐẠP → GOM → ĐẨY ──"),
@@ -834,29 +808,50 @@ def _v1_3_render_species_body(target: str, token_records: list, dai_no_line: str
         ("?", "── ? CHƯA NHÌN ĐƯỢC ──"),
         ("CHUA_XEP", "── CHƯA XẾP LOÀI ──"),
     ]
-    for key, header in _SPECIES_HEADERS:
-        block = species_blocks[key]
-        lines.append(header + f" ({len(block)})")
-        if block:
-            for sym, line in block:
-                lines.append(line)
-        else:
-            lines.append("   (none)")
+
+    # Collect hint lines per block (from other tag of hybrid tokens)
+    from collections import defaultdict as _dd
+    hint_by_block = _dd(list)
+    for key, _ in _SPECIES:
+        if key in ("?", "CHUA_XEP"): continue
+        for sym, line, hints in species_blocks[key]:
+            for h in hints:
+                if h in species_blocks:
+                    hint_by_block[h].append(f"   (→ xem {key}) {sym}")
+
+    # Render species blocks · empty ones collapse into single tail line
+    _EMPTY_LABELS = {"A": "A", "B": "B", "C": "C", "D": "D", "E": "E", "?": "?", "CHUA_XEP": "CHƯA XẾP LOÀI"}
+    empty_collapsed = []
+    for key, header in _SPECIES:
+        block_tokens = species_blocks[key]
+        block_hints = hint_by_block.get(key, [])
+        n = len(block_tokens)
+        if n == 0 and not block_hints:
+            empty_collapsed.append(f"{_EMPTY_LABELS[key]} (0)")
+            continue
+        lines.append(f"{header} ({n})")
+        for sym, line, _ in block_tokens:
+            lines.append(line)
+        for h in block_hints:
+            lines.append(h)
         lines.append("")
 
-    # XẢ-WATCH / POST-DUMP blocks (direction-based, retained)
-    if xa_v1_3:
-        lines.append(f"🔻 XẢ-WATCH+XẢ ({len(xa_v1_3)}):")
-        lines.extend(xa_v1_3)
-        lines.append("")
-    if post_v1_3:
-        lines.append(f"POST-DUMP+🌊 ({len(post_v1_3)}):")
-        lines.extend(post_v1_3)
+    if empty_collapsed:
+        lines.append("── " + " · ".join(empty_collapsed) + " ──")
         lines.append("")
 
-    # DAO-DEFERRED coverage + DẢI-NỢ (moved from top to here per V1.3)
-    if dao_line: lines.append(dao_line)
+    # Direction blocks
+    if xa_lines:
+        lines.append(f"🔻 XẢ-WATCH+XẢ ({len(xa_lines)}):")
+        lines.extend(xa_lines)
+        lines.append("")
+    if post_lines:
+        lines.append(f"POST-DUMP+🌊 ({len(post_lines)}):")
+        lines.extend(post_lines)
+        lines.append("")
+
     if dai_no_line: lines.append(dai_no_line)
+    if dao_line: lines.append(dao_line)
 
     return "\n".join(lines)
 
@@ -934,12 +929,12 @@ def build_v2_digest(target: str) -> str:
     lines.append("━━ footer ━━")
     fix_p = FIXTURE_DIR / "FIXTURE_MASTER_MD5.md"
     fix_md5 = hashlib.md5(fix_p.read_bytes()).hexdigest()[:12] if fix_p.exists() else "(none)"
-    # V1.3-SPECIES-LAYOUT: footer meta with tagger sha + book md5 + amendments
+    # V1.3-SPECIES-LAYOUT-ONLY: footer meta with tagger sha + book md5 + amendments
     v1_3_footer_extra = ""
     if v1_3_mode:
         tag_sha = _V1_3_SPECIES_TAGGER_SHA or "(unknown)"
         v1_3_footer_extra = (f" · species={tag_sha} · book=77d86654 · "
-                             f"amendments_applied=[V1.3-SPECIES-LAYOUT,FOCUS-c+D,UNHEDGE-v2+A1+A2]")
+                             f"amendments_applied=[MASTER-LIVE, V1.3-SPECIES-LAYOUT-ONLY]")
     lines.append(f"ledger_state={ledger_md5} · fixture_master={fix_md5}{v1_3_footer_extra}")
     # Cite explicit file:target per NHỊP-KÊNH (KHO-LINE FIX operator directive)
     def _cite(renderer, prov):
@@ -947,18 +942,25 @@ def build_v2_digest(target: str) -> str:
         return f"{prefix}{renderer}_{target}.txt[{prov}]"
     lines.append(f"cites: gomh={_cite('tg_relay_gom_h', p_gh)} · fresh={_cite('fresh_digest', p_fr)} · "
                  f"exch={_cite('exch_digest', p_ex)} · hedge={_cite('watchlist', p_wl)} · rong={_cite('gom_daily', p_gd)}")
-    # concat-seal
+    # concat-seal · AMD-07 luật đối chứng:
+    #   artifact = body sans seal  → master_concat_<target>.txt · md5[:12] == seal
+    #   body sent = artifact + seal line + built line → master_body_<target>.txt
+    # p27 postcheck đọc CẢ hai: seal-in-body match md5(artifact).
     body = "\n".join(lines)
     seal = hashlib.md5(body.encode()).hexdigest()[:12]
-    # V3.5p CONCAT-PERSIST (operator "ok concat-persist" 10/09) · AMD-07 luật đối chứng
-    # md5sum(master_concat_<target>.txt)[:12] ≡ concat-seal in footer cùng target
     try:
         concat_p = ART_DIR / f"master_concat_{target}.txt"
         concat_p.write_bytes(body.encode("utf-8"))
     except Exception as _e:
         print(f"[N/A-ERROR:CONCAT-PERSIST] {type(_e).__name__}: {_e}")
     lines.append(f"concat-seal={seal} · target={target} · built={datetime.now(timezone.utc).isoformat()}")
-    return "\n".join(lines)
+    full_body = "\n".join(lines)
+    try:
+        body_p = ART_DIR / f"master_body_{target}.txt"
+        body_p.write_bytes(full_body.encode("utf-8"))
+    except Exception as _e:
+        print(f"[N/A-ERROR:BODY-PERSIST] {type(_e).__name__}: {_e}")
+    return full_body
 
 
 def _send(msg: str, prefix: str = "") -> tuple[bool, str]:
