@@ -164,9 +164,84 @@ def case_c_real_journal_gates_correctly():
     return passed, f"src={src.name} lines={len(lines)} distinct={sorted(distinct)} n_after={n_after}/2 (expect {expected}/2)"
 
 
+import re as _re
+
+# V1.3 · MASTER-LIVE cutover (KÝ 15/09): nhãn hợp lệ = CẢ HAI dạng
+#   preview era:      "N/2" (ví dụ "1/2", "2/2")
+#   preview era n>2:  "[ĐỦ 2/2 · CHỜ \"ok master live\"]"
+#   post-cutover:     "[MASTER · live từ YYYY-MM-DD]"
+_LABEL_PATTERNS = [
+    _re.compile(r"^\d+/2$"),                              # preview N/2
+    _re.compile(r'^\[ĐỦ 2/2 · CHỜ "ok master live"\]$'),  # preview era n>2
+    _re.compile(r"^\[MASTER · live từ \d{4}-\d{2}-\d{2}\]$"),  # post-cutover
+]
+
+
+def _valid_label(label: str) -> bool:
+    return any(p.match(label) for p in _LABEL_PATTERNS)
+
+
+def case_d_label_format_valid():
+    """Nhánh-D · nhãn hợp lệ · CẢ HAI dạng · XANH."""
+    cases_xanh = [
+        ("1/2", True),
+        ("2/2", True),
+        ('[ĐỦ 2/2 · CHỜ "ok master live"]', True),
+        ("[MASTER · live từ 2026-09-15]", True),
+        ("[MASTER · live từ 2026-09-16]", True),
+    ]
+    fails = []
+    for lbl, expected in cases_xanh:
+        got = _valid_label(lbl)
+        if got != expected:
+            fails.append(f"{lbl!r}: got={got} expect={expected}")
+    passed = not fails
+    return passed, f"XANH {len(cases_xanh)} nhãn hợp lệ · fails={fails}"
+
+
+def case_e_label_format_rac_dai():
+    """Nhánh-E · ĐEN-một-lần · nhãn rác PHẢI đỏ."""
+    cases_den = [
+        ("abc", False),
+        ("xyz", False),
+        ("3/2", True),   # 3/2 vẫn khớp \d+/2 → hợp lệ; báo NOTE
+        ("[MASTER-PREVIEW đêm 5/2]", False),   # old label bug format · not accepted
+        ("[MASTER live]", False),
+        ("", False),
+        ("[MASTER · live từ 09-15]", False),  # sai format ngày
+    ]
+    fails = []
+    for lbl, expected in cases_den:
+        got = _valid_label(lbl)
+        if got != expected:
+            fails.append(f"{lbl!r}: got={got} expect={expected}")
+    passed = not fails
+    return passed, f"ĐEN {len(cases_den)} nhãn rác · fails={fails}"
+
+
+def case_f_real_journal_all_valid():
+    """Nhánh-F · đọc journal thật (preview + master) · MỌI night_label hợp lệ."""
+    checked = []
+    invalid = []
+    for jf_name in ("preview_journal.jsonl", "master_journal.jsonl"):
+        jf = REPO / "data/logs" / jf_name
+        if not jf.exists(): continue
+        for line in jf.read_text(encoding="utf-8").splitlines():
+            try:
+                e = json.loads(line)
+                lbl = e.get("night_label", "")
+                if lbl:
+                    checked.append((jf_name, e.get("target_date"), lbl))
+                    if not _valid_label(lbl):
+                        invalid.append((jf_name, e.get("target_date"), lbl))
+            except: pass  # L-66-OK
+    passed = len(invalid) == 0
+    return passed, f"checked={len(checked)} entries · invalid={len(invalid)}: {invalid[:5]}"
+
+
 def main():
     print("═" * 62)
-    print("HARNESS p28 · NIGHT-COUNTER-RECEIPT · V3.5r item 6 (+ nhánh-C)")
+    print("HARNESS p28 · NIGHT-COUNTER-RECEIPT · V3.5r + V1.3 MASTER-LIVE")
     print("═" * 62)
     _backup_journal()
     all_pass = True
@@ -176,6 +251,8 @@ def main():
             ("A2 · same-target no double-count", case_a2_same_target_no_double_count),
             ("B · send-lần-2 same-target ⇒ hit ⇒ SKIP", case_b_send_lan_2_same_target_skip),
             ("B2 · first-time target ⇒ None ⇒ SEND", case_b2_first_time_target_returns_none),
+            ("D · nhãn hợp lệ · CẢ HAI dạng XANH", case_d_label_format_valid),
+            ("E · nhãn rác ĐEN-một-lần", case_e_label_format_rac_dai),
         ]
         for name, fn in cases:
             ok, detail = fn()
@@ -191,6 +268,12 @@ def main():
     print(f"  {mark} C · REAL journal (VPS mirror if any): {det_c}")
     _log("p28", "C real-journal", "PASS" if ok_c else "FAIL", det_c[:80])
     if not ok_c: all_pass = False
+    # Nhánh-F · REAL journal · label format check (both preview + master)
+    ok_f, det_f = case_f_real_journal_all_valid()
+    mark = "✅" if ok_f else "❌"
+    print(f"  {mark} F · REAL journal label format: {det_f}")
+    _log("p28", "F label-format-real", "PASS" if ok_f else "FAIL", det_f[:80])
+    if not ok_f: all_pass = False
     overall = "PASS" if all_pass else "FAIL"
     print(f"\n[SUMMARY] p28 night-counter-receipt overall: {overall}")
     return 0 if all_pass else 1
