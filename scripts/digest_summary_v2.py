@@ -468,7 +468,14 @@ def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str, dict
 # Amendment: proposals/v1_3_species_layout_amendment_20260913.md
 # ═════════════════════════════════════════════════════════════════
 
-_V1_3_SPECIES_TAGGER_SHA = None  # Filled at runtime by _v1_3_species_score
+_V1_3_SPECIES_TAGGER_SHA = None  # Filled at runtime by _v1_3_species_score OR module-load
+# Pre-load SHA on module import so warmup-mode footer vẫn ghi đúng species=<sha>
+try:
+    _tag_p_init = REPO / "scripts/species_tag.py"
+    if _tag_p_init.exists():
+        _V1_3_SPECIES_TAGGER_SHA = hashlib.md5(_tag_p_init.read_bytes()).hexdigest()[:8]
+except Exception:
+    pass  # L-66-OK · SHA sẽ được set khi _v1_3_tag_binary chạy
 
 def _v1_3_load_store(target: str) -> dict:
     """Load freshwatch multi-month store (2 months lookback from target)."""
