@@ -28,3 +28,19 @@ lỗi chỉ ở NHÃN nhóm.
 ## Nếu tin đầu bị fail
 
 Không sửa tay artifact. Revert commit cutover, cron chạy V1.2 lại.
+
+## Bản lùi VPS pre-cutover · TRUY THÀNH CÔNG
+
+Bản lùi khả dụng trên VPS `/root/Data_back_test/whale_data/scripts/`:
+
+| file | md5 | nguồn git | tương ứng |
+|------|-----|-----------|-----------|
+| `digest_summary_v2.py.bak_git_34bf173p_20260915` | `d6ec6b1a` | `34bf173^` (fe99d93) | git parent cutover |
+| `digest_summary_v2.py.bak_vps_pre_cutover_1e912396` | `1e912396` | `1cc8fe5` (V3.5r 10/09) | VPS đang chạy trước cutover |
+| `master_preview_send.py.bak_git_34bf173p_20260915` | `02a6c4f7` | `34bf173^` | git + VPS cùng md5 |
+| `postcheck_gate_d.py.bak_git_34bf173p_20260915` | `59d885a2` | `34bf173^` | git parent |
+| `postcheck_gate_d.py.bak_vps_pre_cutover_0cf264a9` | `0cf264a9` | `1b67cec` (GATE-D V3.5s) | VPS đang chạy trước cutover |
+| `probe/species_tag.py.bak_git_34bf173p_20260915` | `388ac36f` | `34bf173^` (đường cũ) | content-preserving qua git-mv |
+
+Rollback command: `cp <file>.bak_vps_pre_cutover_<md5> <file>` (khôi phục đúng VPS state).
+
