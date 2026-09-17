@@ -208,6 +208,13 @@ def step_concat_seal(body: str) -> tuple[bool, str]:
 
 
 def send_telegram(text: str) -> tuple[bool, str]:
+    # D3/17-09 · PRE-CHECK độ dài · TG limit=4096 chars · KHÔNG tự cắt (cắt = mất seal/cites)
+    n_chars = len(text)
+    if n_chars > 4096:
+        _log(f"[N/A-ERROR:BODY-TOO-LONG len={n_chars} limit=4096]")
+        return (False, f"BODY-TOO-LONG len={n_chars}")
+    if n_chars > 3800:
+        _log(f"[WARN:BODY-NEAR-LIMIT len={n_chars}]")
     bot = os.getenv("TG_BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN")
     chat = os.getenv("TG_CHAT_ID_DAILY")
     if not bot or not chat:
@@ -454,9 +461,9 @@ def main():
     _log(f"[STEP 1/5 rebuild-ledger] ok={ok} · {msg}")
     if not ok: _log("SKIP · rebuild failed"); return 1
 
-    # MASTER-LIVE cutover (KÝ 15/09): target ≥ 2026-09-15 → DIGEST_V1_3=1 (layout-only default)
-    # target trước cutover: giữ V1.2 để re-render khớp bản đã gửi. Operator có thể override qua env.
-    os.environ.setdefault("DIGEST_V1_3", "1" if target >= MASTER_LIVE_TARGET else "0")
+    # ROLLBACK 17/09 · V1.3-LO body 6151 chars > TG 4096 · 09-15 send fail HTTP 400
+    # Giữ cutover nhãn [MASTER · live từ 2026-09-15] · chỉ rollback LAYOUT về V1.2 TOP_K=6
+    os.environ["DIGEST_V1_3"] = "0"
     ok, res = step_render_digest(target)
     _log(f"[STEP 2/5 render-digest] ok={ok} · DIGEST_V1_3={os.environ.get('DIGEST_V1_3')} · "
          f"{res[:100] if isinstance(res,str) and ok else res}")
@@ -477,11 +484,13 @@ def main():
     if existing and not args.resend:
         _log(f"[IDEMPOTENT-SKIP] target={target} · already sent standing_ok · msg_id={existing.get('message_id')} · use --resend to override")
         return 0
-    # V3.5q + V3.5s D5 · NIGHT-COUNTER = count(DISTINCT target · standing_ok ∧ postcheck_ok · target ≥ epoch)
-    # (còn dùng cho preview era; post-cutover không in nhãn đếm nữa)
+    # V3.5q + V3.5s D5 + D2/17-09 · NIGHT-COUNTER filter:
+    #   standing_ok ∧ postcheck_ok ∧ sent_ok (mặc định True nếu field vắng · backward-compat)
+    #   → đêm send fail (sent_ok=False) KHÔNG tính distinct target.
     distinct_targets = set()
     for e in _journal_iter():
         if (e.get("standing_ok") and e.get("postcheck_ok")
+                and e.get("sent_ok", True)   # default True cho entries cũ (pre-D2)
                 and e.get("target_date", "") >= PREVIEW_EPOCH):
             distinct_targets.add(e.get("target_date", ""))
     n_after_this = len(distinct_targets | {target})
@@ -500,40 +509,41 @@ def main():
     ok_send, det = send_telegram(full_msg)
     hash12 = hashlib.md5(full_msg.encode()).hexdigest()[:12]
     _log(f"[SENT] master_preview ok={ok_send} {det} hash={hash12} night={n_after_this}/2 target={target}")
-    # V3.5q · append preview_journal
-    if ok_send:
-        import re as _re
-        mid = None
-        m = _re.search(r"message_id=(\d+)", det)
-        if m: mid = int(m.group(1))
-        # V3.5s GATE-D · D3+D4: chạy postcheck SAU send · đọc artifact ĐÃ GỬI
-        try:
-            sys.path.insert(0, str(REPO / "scripts"))
-            from postcheck_gate_d import postcheck as _postcheck
-            pc = _postcheck(target)
-            _log(f"[POSTCHECK] target={target} · postcheck_ok={pc['postcheck_ok']} · "
-                 f"p21={pc['p21']} p22={pc['p22']} p27={pc.get('p27','?')} · flag={pc.get('flag','')}")
-        except Exception as _e:
-            _log(f"[POSTCHECK-ERR] {type(_e).__name__}: {_e}")
-            pc = {"postcheck_ok": False, "p21": "ERR", "p22": "ERR", "p27": "ERR",
-                  "flag": "[POSTCHECK-FAIL exception]"}
-        preview_journal_append({
-            "ts_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "renderer": "master_preview" if target < MASTER_LIVE_TARGET else "master_live",
-            "target_date": target,
-            "channel": "TG_CHAT_ID_DAILY",
-            "ok": True,
-            "http_code": 200,
-            "message_id": mid,
-            "body_md5": hashlib.md5(full_msg.encode()).hexdigest(),
-            "standing_ok": True,
-            "postcheck_ok": pc["postcheck_ok"],   # V3.5s D5 · counter filter
-            "postcheck_flag": pc.get("flag", ""),
-            "night_label": prefix.strip(),   # đúng nhãn in trên tin (đã handle cutover)
-        })
-        # V3.5r · XÓA auto-write demo5_sent.marker · marker = HỒ-SƠ-LỊCH-SỬ bất biến
-        # (meaning-drift: marker ghi quá khứ, không ghi tương lai · preview_journal đủ)
-        pass
+
+    # D2/17-09 · POSTCHECK + JOURNAL_APPEND chạy BẤT KỂ ok_send.
+    # Lỗ cũ: nếu API trả 400 (body >4096) thì postcheck+journal bị bọc `if ok_send`
+    # → verdict niêm nhưng đêm biến mất khỏi sổ, counter không biết. Sửa: luôn ghi
+    # entry với sent_ok + send_error; postcheck vẫn chấm trên artifact có sẵn.
+    import re as _re
+    mid = None
+    m = _re.search(r"message_id=(\d+)", det)
+    if m: mid = int(m.group(1))
+    try:
+        sys.path.insert(0, str(REPO / "scripts"))
+        from postcheck_gate_d import postcheck as _postcheck
+        pc = _postcheck(target)
+        _log(f"[POSTCHECK] target={target} · postcheck_ok={pc['postcheck_ok']} · "
+             f"p21={pc['p21']} p22={pc['p22']} p27={pc.get('p27','?')} · flag={pc.get('flag','')}")
+    except Exception as _e:
+        _log(f"[POSTCHECK-ERR] {type(_e).__name__}: {_e}")
+        pc = {"postcheck_ok": False, "p21": "ERR", "p22": "ERR", "p27": "ERR",
+              "flag": "[POSTCHECK-FAIL exception]"}
+    preview_journal_append({
+        "ts_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "renderer": "master_preview" if target < MASTER_LIVE_TARGET else "master_live",
+        "target_date": target,
+        "channel": "TG_CHAT_ID_DAILY",
+        "ok": ok_send,                # legacy field · giữ tương thích
+        "http_code": 200 if ok_send else 0,
+        "message_id": mid,
+        "body_md5": hashlib.md5(full_msg.encode()).hexdigest(),
+        "standing_ok": True,
+        "postcheck_ok": pc["postcheck_ok"],   # V3.5s D5 · counter filter
+        "postcheck_flag": pc.get("flag", ""),
+        "night_label": prefix.strip(),   # đúng nhãn in trên tin (đã handle cutover)
+        "sent_ok": ok_send,                       # D2/17-09 · counter filter (mới)
+        "send_error": "" if ok_send else str(det)[:200],
+    })
     return 0 if ok_send else 1
 
 
