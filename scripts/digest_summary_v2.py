@@ -1098,8 +1098,10 @@ def build_v2_digest(target: str) -> str:
     lines.append(_fresh_line(a_fr))
     lines.append(_rong_line(a_gd))
 
-    # 👁 forward_tests từ yaml
-    watch = _yaml_forward_tests()
+    # O2/17-09 · L2 · gỡ 👁 forward_tests khỏi thân master V1.3
+    # → chuyển sang tin sáng phase_map (AMD-02 R6, wire riêng trong run_phase_tag.py)
+    # V1.2 giữ 👁 (backward-compat). V1.3 gỡ hẳn, không dòng thay thế.
+    watch = _yaml_forward_tests() if not v1_3_mode else []
     if watch:
         lines.append("")
         for w in watch: lines.append(w)
