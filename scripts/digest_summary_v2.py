@@ -826,7 +826,18 @@ def _v1_3_render_species_body(target: str, token_records: list, dai_no_line: str
                 if h in species_blocks:
                     hint_by_block[h].append(f"   (→ xem {key}) {sym}")
 
-    # Render species blocks · empty ones collapse into single tail line
+    # J1/17-09 · TOP_K=6 per-block cho species loài (A/B/C/D/E/?) + 🔻 + POST-DUMP.
+    # CHƯA XẾP LOÀI để KHÔNG per-block cap · _v1_3_apply_3tier_cap cắt dynamic tại build_v2_digest.
+    TOP_K = 6
+
+    def _cap_block(items):
+        if len(items) <= TOP_K:
+            return [ln for _, ln in items]
+        shown = [ln for _, ln in items[:TOP_K]]
+        rest_names = [s for s, _ in items[TOP_K:]]
+        tail = f"   (+{len(rest_names)} nữa: " + "·".join(rest_names) + ")"
+        return shown + [tail]
+
     _EMPTY_LABELS = {"A": "A", "B": "B", "C": "C", "D": "D", "E": "E", "?": "?", "CHUA_XEP": "CHƯA XẾP LOÀI"}
     empty_collapsed = []
     for key, header in _SPECIES:
@@ -837,30 +848,192 @@ def _v1_3_render_species_body(target: str, token_records: list, dai_no_line: str
             empty_collapsed.append(f"{_EMPTY_LABELS[key]} (0)")
             continue
         lines.append(f"{header} ({n})")
-        for sym, line, _ in block_tokens:
-            lines.append(line)
-        for h in block_hints:
-            lines.append(h)
+        items = [(sym, line) for sym, line, _ in block_tokens]
+        # CHUA XEP · không per-block cap · 3-tier cap tại build_v2_digest xử
+        if key == "CHUA_XEP":
+            for _, ln in items: lines.append(ln)
+        else:
+            for ln in _cap_block(items): lines.append(ln)
+        for h in block_hints: lines.append(h)
         lines.append("")
 
     if empty_collapsed:
         lines.append("── " + " · ".join(empty_collapsed) + " ──")
         lines.append("")
 
-    # Direction blocks
+    # Direction blocks · TOP_K=6 cap
     if xa_lines:
         lines.append(f"🔻 XẢ-WATCH+XẢ ({len(xa_lines)}):")
-        lines.extend(xa_lines)
+        xa_items = list(zip(xa_syms, xa_lines))
+        for ln in _cap_block(xa_items): lines.append(ln)
         lines.append("")
     if post_lines:
         lines.append(f"POST-DUMP+🌊 ({len(post_lines)}):")
-        lines.extend(post_lines)
+        post_items = list(zip(post_syms, post_lines))
+        for ln in _cap_block(post_items): lines.append(ln)
         lines.append("")
 
     if dai_no_line: lines.append(dai_no_line)
     if dao_line: lines.append(dao_line)
 
     return "\n".join(lines)
+
+
+# ═════════════════════════════════════════════════════════════════
+# J1/17-09 · V1.3 body transforms · L1 cites gọn + L3 strip dup + 3-tier cap
+# Áp trên body sau khi _v1_3_render_species_body xong, TRƯỚC khi seal.
+# ═════════════════════════════════════════════════════════════════
+
+def _v1_3_apply_L1_cites(body: str) -> str:
+    """L1 · gọn cites line, giữ pointer-integrity qua template + map."""
+    out = []
+    for l in body.split("\n"):
+        if l.startswith("cites: "):
+            m_target = re.search(r"_(\d{4}-\d{2}-\d{2})\.txt\[", l)
+            target = m_target.group(1) if m_target else "UNKNOWN"
+            cites = []
+            for m in re.finditer(r"(\w+)=(?:tg_final_)?(\w+)_\d{4}-\d{2}-\d{2}\.txt\[([^\]]+)\]", l):
+                cites.append((m.group(1), m.group(2), m.group(3)))
+            if cites:
+                by_src = {}
+                for name, renderer, src in cites:
+                    by_src.setdefault(src, []).append((name, renderer))
+                parts = []
+                for src, items in by_src.items():
+                    names = ",".join(n for n, _ in items)
+                    parts.append(f"[{src}]={names}")
+                compact = f"cites·target={target}·" + "·".join(parts) + "·tmpl=data/artifacts/tg_final_<renderer>_<target>.txt"
+                renderer_map = ",".join(f"{n}={r}" for n, r, _ in cites)
+                compact += f"·map:{renderer_map}"
+                out.append(compact)
+            else:
+                out.append(l)
+        else:
+            out.append(l)
+    return "\n".join(out)
+
+
+def _v1_3_apply_L3_strip_dups(body: str) -> str:
+    """L3 · bỏ số lặp trong ngoặc lý do · giữ cờ, bỏ số đã in ở ret/dd."""
+    out = []
+    for l in body.split("\n"):
+        ret_pre = re.search(r"ret([+-]\d+%)", l)
+        dd_pre = re.search(r"dd([+-]\d+%)", l)
+        if ret_pre and dd_pre:
+            l2 = re.sub(r"POST-DUMP-dd[+-]\d+%", "POST-DUMP", l)
+            l2 = re.sub(r"G1-POST-FLOOR-ret[+-]\d+%", "G1-POST-FLOOR", l2)
+            l2 = re.sub(r",\s*,", ",", l2)
+            out.append(l2)
+        else:
+            out.append(l)
+    return "\n".join(out)
+
+
+_V1_3_HEADER_RE = re.compile(r"^── ([A-Z?].*?) ── \((\d+)\)|^🔻 XẢ-WATCH\+XẢ \((\d+)\):|^POST-DUMP\+🌊 \((\d+)\):|^── CHƯA XẾP LOÀI ── \((\d+)\)")
+_V1_3_TAIL_RE = re.compile(r"\(\+(\d+) nữa:\s+([^)]+)\)")
+_V1_3_TOKEN_RE = re.compile(r"^(\s+)(.*?)(\d)-trục")
+
+
+def _v1_3_apply_3tier_cap(body: str, budget: int = 3800) -> str:
+    """3-tier cap · CHỈ cắt CHƯA XẾP LOÀI · khối loài/🔻/POST-DUMP giữ nguyên.
+    Tầng 0: len ≤ budget → no cut, no audit.
+    Tầng 1: cắt CHUA XEP từ tail tới khi ≤ budget · audit [BUDGET-CAP: cắt N dòng · còn X/BUDGET].
+    Tầng 2: CHUA XEP cạn mà >budget · dừng · audit [BUDGET-EXCEEDED: CHƯA XẾP cạn · thân X/BUDGET].
+    Tầng 3: >4096 → D3 pre-check trong send_telegram chặn.
+    """
+    lines = body.split("\n")
+    # Parse blocks
+    blocks = []
+    cur = None
+    for i, l in enumerate(lines):
+        m = _V1_3_HEADER_RE.match(l)
+        if m:
+            if cur: blocks.append(cur)
+            if "🔻" in l or "XẢ-WATCH" in l: prio, label = 0, "🔻 XẢ-WATCH"
+            elif l.startswith("POST-DUMP"): prio, label = 1, "POST-DUMP"
+            elif "CHƯA XẾP" in l: prio, label = 3, "CHƯA XẾP LOÀI"
+            else:
+                lbl = re.search(r"── (\S+) ·", l)
+                label = f"{lbl.group(1) if lbl else '?'} · loài"
+                prio = 2
+            cur = {"label": label, "header_idx": i, "prio": prio,
+                   "tokens": [], "tail_names": [], "tail_n": 0, "body_indices": []}
+            continue
+        if cur is None: continue
+        t = _V1_3_TAIL_RE.search(l)
+        if t:
+            cur["tail_n"] = int(t.group(1))
+            cur["tail_names"] = [x.strip() for x in t.group(2).split("·")]
+            cur["body_indices"].append(i)
+            continue
+        tm = _V1_3_TOKEN_RE.match(l)
+        if tm:
+            core = tm.group(2).strip()
+            sym_match = re.match(r"^(?:\[[^\]]+\]\s+)?(?:⏸ WATCH \[PX-PENDING\]:\s+)?(\S+)", core)
+            sym = sym_match.group(1) if sym_match else "?"
+            cur["tokens"].append({"sym": sym, "line": l, "idx": i})
+            cur["body_indices"].append(i)
+        else:
+            if l.strip() == "" or l == l.lstrip():
+                if cur: blocks.append(cur); cur = None
+    if cur: blocks.append(cur)
+
+    def _rebuild(cut_flag, audit_line=None):
+        result = []
+        handled = set()
+        for i, l in enumerate(lines):
+            block = None
+            for bi, b in enumerate(blocks):
+                if b["header_idx"] == i: block = (bi, b); break
+            if block:
+                bi, b = block
+                result.append(l)
+                kept = [b["tokens"][ti] for ti in range(len(b["tokens"])) if cut_flag.get((bi, ti), True)]
+                dropped = [b["tokens"][ti] for ti in range(len(b["tokens"])) if not cut_flag.get((bi, ti), True)]
+                new_tail_names = b["tail_names"] + [t["sym"] for t in dropped]
+                new_tail_n = b["tail_n"] + len(dropped)
+                for t in kept: result.append(t["line"])
+                if new_tail_names:
+                    result.append(f"   (+{new_tail_n} nữa: " + "·".join(new_tail_names) + ")")
+                for j in b["body_indices"]: handled.add(j)
+            elif i in handled:
+                continue
+            else:
+                if audit_line and l == "━━ footer ━━":
+                    result.append(audit_line)
+                result.append(l)
+        return "\n".join(result)
+
+    cut_flag = {}
+    for bi, b in enumerate(blocks):
+        for ti in range(len(b["tokens"])):
+            cut_flag[(bi, ti)] = True
+
+    if len(body) <= budget:
+        return body
+
+    # Tầng 1: cắt CHUA XEP từ tail (reverse order)
+    chuaxep = []
+    for bi, b in enumerate(blocks):
+        if b["prio"] == 3:
+            for ti in range(len(b["tokens"])):
+                chuaxep.append((bi, ti))
+    chuaxep.reverse()
+
+    n_cut = 0
+    for bi, ti in chuaxep:
+        cut_flag[(bi, ti)] = False
+        n_cut += 1
+        temp = _rebuild(cut_flag)
+        est_audit = f"[BUDGET-CAP: cắt {n_cut} dòng · còn {len(temp)}/{budget}]"
+        if len(temp) + len(est_audit) + 1 <= budget:
+            audit = f"[BUDGET-CAP: cắt {n_cut} dòng · còn {len(temp)}/{budget}]"
+            return _rebuild(cut_flag, audit_line=audit)
+
+    # Tầng 2: CHUA XEP cạn, vẫn >budget → dừng, audit EXCEEDED
+    temp = _rebuild(cut_flag)
+    audit = f"[BUDGET-EXCEEDED: CHƯA XẾP cạn · thân {len(temp)}/{budget}]"
+    return _rebuild(cut_flag, audit_line=audit)
 
 
 def _yaml_forward_tests() -> list[str]:
@@ -954,12 +1127,24 @@ def build_v2_digest(target: str) -> str:
     #   body sent = artifact + seal line + built line → master_body_<target>.txt
     # p27 postcheck đọc CẢ hai: seal-in-body match md5(artifact).
     body = "\n".join(lines)
+
+    # J1/17-09 · V1.3 chỉ · L1 cites gọn + L3 strip dup + 3-tier cap.
+    # Budget = 3800 - reserved_for_prefix_and_seal:
+    #   full_msg = prefix (~30) + body_after_cap + seal_line (~90) ≤ 3800
+    #   → body_after_cap ≤ 3800 - 30 - 90 = 3680
+    # Recompute seal SAU khi transform · re-persist đồng bộ 2 file (J2 p27 cổng).
+    if v1_3_mode:
+        body = _v1_3_apply_L1_cites(body)
+        body = _v1_3_apply_L3_strip_dups(body)
+        body = _v1_3_apply_3tier_cap(body, budget=3680)
+
     seal = hashlib.md5(body.encode()).hexdigest()[:12]
     try:
         concat_p = ART_DIR / f"master_concat_{target}.txt"
         concat_p.write_bytes(body.encode("utf-8"))
     except Exception as _e:
         print(f"[N/A-ERROR:CONCAT-PERSIST] {type(_e).__name__}: {_e}")
+    lines = body.split("\n")   # rebuild lines list from potentially-transformed body
     lines.append(f"concat-seal={seal} · target={target} · built={datetime.now(timezone.utc).isoformat()}")
     full_body = "\n".join(lines)
     try:

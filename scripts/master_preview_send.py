@@ -461,9 +461,10 @@ def main():
     _log(f"[STEP 1/5 rebuild-ledger] ok={ok} · {msg}")
     if not ok: _log("SKIP · rebuild failed"); return 1
 
-    # ROLLBACK 17/09 · V1.3-LO body 6151 chars > TG 4096 · 09-15 send fail HTTP 400
-    # Giữ cutover nhãn [MASTER · live từ 2026-09-15] · chỉ rollback LAYOUT về V1.2 TOP_K=6
-    os.environ["DIGEST_V1_3"] = "0"
+    # J4/17-09 · BẬT LẠI V1.3 · sau khi wire L1+L3+3-tier cap (budget=3680 body-only)
+    # Full msg ước 3735-3844 chars · dưới 4096 mọi đêm sample · 09-15 T2 EXCEEDED 3844
+    # 3 tầng có audit + D3 pre-check chặn tầng 3 · rollback: cp .bak_v12_run_019276a1
+    os.environ["DIGEST_V1_3"] = "1"
     ok, res = step_render_digest(target)
     _log(f"[STEP 2/5 render-digest] ok={ok} · DIGEST_V1_3={os.environ.get('DIGEST_V1_3')} · "
          f"{res[:100] if isinstance(res,str) and ok else res}")
