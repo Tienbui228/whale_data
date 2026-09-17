@@ -157,6 +157,48 @@ results.append(('XANH add 2', xanh_ok))
 sidecar_after = json.loads(ruw.SIDECAR_PATH.read_text())
 print(f"  Sidecar new entries: {{k:v for k,v in sidecar_after.items() if k in added}}")
 
+# ═════ CASE ĐEN 3 · P3/17-09 · Partial-fetch (60/656 = <80% floor) ═════
+print("\n[ĐEN 3: Alpha trả 60 tokens (< 80% × 656 last-fetch) · sàn 80%]")
+# Seed last_stats với 656 (typical fetch size)
+(SB / 'data/state').mkdir(parents=True, exist_ok=True)
+(SB / 'data/state/refresh_universe_last_stats.json').write_text(
+    json.dumps({"n_alpha": 656, "n_fapi": 900, "n_candidates": 200, "run_ts": "2026-09-10"}),
+    encoding='utf-8'
+)
+initial_md5 = hashlib.md5(ruw.FW_PATH.read_bytes()).hexdigest()
+try:
+    result = subprocess.run([sys.executable, '-c', f'''
+import sys
+sys.path.insert(0, {str(REPO_REAL / "scripts")!r})
+import refresh_universe_weekly as ruw
+from pathlib import Path
+ruw.REPO = Path({str(SB)!r})
+ruw.FW_PATH = ruw.REPO / "data/config/freshwatch_symbols.txt"
+ruw.SIDECAR_PATH = ruw.REPO / "data/config/freshwatch_source.json"
+ruw.LOG_PATH = ruw.REPO / "data/logs/refresh_universe.log"
+ruw.LAST_FETCH_STATS = ruw.REPO / "data/state/refresh_universe_last_stats.json"
+def _fetch_partial(url, name):
+    if "ALPHA" in name.upper():
+        # Return 60 tokens (< 80% × 656 = 524)
+        import time
+        ts_ms = (time.time() - 30*86400) * 1000
+        return [{{"symbol": f"TOK{{i}}", "listingTime": ts_ms}} for i in range(60)]
+    return {{"symbols": [{{"symbol": f"TOK{{i}}USDT", "onboardDate": 1600000000000, "status": "TRADING"}} for i in range(60)]}}
+ruw._fetch = _fetch_partial
+ruw._tg_notify = lambda x: None
+ruw.main()
+'''], capture_output=True, text=True)
+    exit_code = result.returncode
+except SystemExit as e:
+    exit_code = e.code
+
+final_md5 = hashlib.md5(ruw.FW_PATH.read_bytes()).hexdigest()
+den3_ok = (exit_code == 3 and initial_md5 == final_md5)
+print(f"  exit={exit_code} (expect 3 · ALPHA-PARTIAL) · fw md5 changed={initial_md5 != final_md5} (expect False)")
+print(f"  ★ ĐEN 3 {'PASS' if den3_ok else 'FAIL'}")
+results.append(('ĐEN 3 alpha-partial', den3_ok))
+
+
 # ═════ Verdict ═════
 print()
 print("═" * 74)

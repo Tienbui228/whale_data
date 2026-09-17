@@ -39,6 +39,8 @@ REPO = Path("/root/Data_back_test/whale_data") if os.name != "nt" else Path(r"D:
 FW_PATH = REPO / "data/config/freshwatch_symbols.txt"
 SIDECAR_PATH = REPO / "data/config/freshwatch_source.json"
 LOG_PATH = REPO / "data/logs/refresh_universe.log"
+# P3/17-09 · lần fetch trước lưu size ở đây · so ratio để phát hiện partial-fetch
+LAST_FETCH_STATS = REPO / "data/state/refresh_universe_last_stats.json"
 
 ALPHA_URL = "https://www.binance.com/bapi/defi/v1/public/wallet-direct/buw/wallet/cex/alpha/all/token/list"
 FAPI_URL = "https://fapi.binance.com/fapi/v1/exchangeInfo"
@@ -101,6 +103,16 @@ def _tg_notify(text):
         _log(f"[TG-NOTIFY-ERR] {type(e).__name__}: {e}")
 
 
+def _load_last_stats():
+    if not LAST_FETCH_STATS.exists(): return {}
+    try: return json.loads(LAST_FETCH_STATS.read_text(encoding="utf-8"))
+    except: return {}  # L-66-OK · benign
+
+def _save_stats(stats):
+    LAST_FETCH_STATS.parent.mkdir(parents=True, exist_ok=True)
+    LAST_FETCH_STATS.write_text(json.dumps(stats, indent=2), encoding="utf-8")
+
+
 def main():
     _log(f"─── refresh_universe_weekly start · {TODAY} ───")
 
@@ -109,6 +121,14 @@ def main():
     alpha_toks = alpha_data if isinstance(alpha_data, list) else alpha_data.get("data", [])
     if not alpha_toks:
         _log("[N/A-ERROR:ALPHA-EMPTY] token-list empty"); sys.exit(1)
+
+    # P3/17-09 · SÀN 80% · phát hiện partial-fetch · bài học 07-24 sập-không-kêu
+    # Nếu n_alpha < 80% lần trước → FAIL, exit≠0, KHÔNG ghi
+    last_stats = _load_last_stats()
+    last_n_alpha = last_stats.get("n_alpha", 0)
+    if last_n_alpha > 0 and len(alpha_toks) < 0.80 * last_n_alpha:
+        _log(f"[N/A-ERROR:ALPHA-PARTIAL] n={len(alpha_toks)} < 80% × last {last_n_alpha}")
+        sys.exit(3)
 
     alpha_listings = {}   # bare_sym → date
     for t in alpha_toks:
@@ -124,6 +144,12 @@ def main():
     fapi_syms = fapi_data.get("symbols", [])
     if not fapi_syms:
         _log("[N/A-ERROR:FAPI-EMPTY] exchangeInfo empty"); sys.exit(1)
+
+    # P3/17-09 · sàn 80% cho fapi cùng bài học
+    last_n_fapi = last_stats.get("n_fapi", 0)
+    if last_n_fapi > 0 and len(fapi_syms) < 0.80 * last_n_fapi:
+        _log(f"[N/A-ERROR:FAPI-PARTIAL] n={len(fapi_syms)} < 80% × last {last_n_fapi}")
+        sys.exit(3)
 
     fapi_onboard = {}   # perpSymbol → date · e.g. BTCUSDT → 2019-09-08
     fapi_status = {}    # perpSymbol → status
@@ -171,6 +197,10 @@ def main():
 
     # Build new fw text
     new_fw = current_fw + [s for s in added]
+
+    # P3 · save stats mọi run (kể cả no-change) để lần sau có nền so
+    _save_stats({"n_alpha": len(alpha_toks), "n_fapi": len(fapi_syms),
+                 "n_candidates": len(candidates), "run_ts": TODAY.isoformat()})
 
     if not added and not dropped:
         _log(f"[NO-CHANGE] fw={len(current_fw)} · candidates={len(candidates)} · no add/drop")

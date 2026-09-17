@@ -1,0 +1,906 @@
+{
+  "0GUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "1000000BOBUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "1000CHEEMSUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "2ZUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "4USDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ACUUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "AEROUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "AGTUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "AIAUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "AIGENSYNUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "AINUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "AIOTUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "AIOUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "AIXBTUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "AKEUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ALCHUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "ALLOUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "APRUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ARIAUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ARXUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ASTERUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "ATHUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "ATUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "AVAAIUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "AVNTUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "B2USDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BANANAS31USDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BANKUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BARDUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BASEDUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BASUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BEATUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "BIGTIMEUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "BILLUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BIRBUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "BLESSUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BLUAIUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BMTUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BREVUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BRUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BSBUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BTRUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BTWUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BULLAUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "BUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "CAPUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "CARVUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "CFGUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "CGPTUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "CHIPUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "CLANKERUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "CLOUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "COAIUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "COLLECTUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "COOKIEUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "CROSSUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "CTRUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "CUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "CYSUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "DATAIPUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "DOLOUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "DOODUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "DOSUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "DRIFTUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "EDENUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "EDGEUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "ELSAUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "ENSOUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ERAUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ESPORTSUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ESPUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "EULUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "EVAAUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "FFUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "FHEUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "FIGHTUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "FLOCKUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "FLUIDUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "FOGOUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "FOLKSUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "FRAXUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "FUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "GENIUSUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "GIGGLEUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "GOATUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "GPSUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "GRASSUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "GRIFFAINUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "GRVTUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "GUAUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "GUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "GWEIUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "HAEDALUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "HANAUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "HEMIUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "HOLOUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "HOMEUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "HUMAUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "HUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "HYPERUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ICNTUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "IDOLUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "INUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "INXUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "IRYSUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "JCTUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "KATUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "KGENUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "KITEUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "KMNOUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "KOMAUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "LABUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "LAUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "LIGHTUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "LINEAUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "LYNUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "MAGMAUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "MARSCOINUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "MERLUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "METUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "MEWUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "MIRAUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "MITOUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "MMTUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "MOODENGUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "MORPHOUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "MUBARAKUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "MUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "MYXUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "NAORISUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "NEWTUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "NIGHTUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "NXPCUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "ONDOUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "ONUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "OPENUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "OPGUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "OPNUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ORDERUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "OUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "PARTIUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "PHAROSUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "PIEVERSEUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "PLAYUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "PLUMEUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "PONSUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "POPCATUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "POWERUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "PRLUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "PROMPTUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "PROVEUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "PTBUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "PUMPBTCUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "PUMPUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "QUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "RAVEUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "RECALLUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "RESOLVUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "REUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "RIVERUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ROBOUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "SAFEUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "SAHARAUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "SAPIENUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "SENTUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "SHELLUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "SIGNUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "SIRENUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "SKRUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "SKYAIUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "SLXUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "SOMIUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "SOONUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "SOPHUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "SPACEUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "SPKUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "SPXUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "SQDUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "STABLEUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "STARUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "STBLUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "STOUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "SXTUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "SYRUPUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "TACUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "TAGUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "TAIKOUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "TAKEUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "TAUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "TOSHIUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "TOWNSUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "TRADOORUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "TREEUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "TRIAUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "TRUSTUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "TRUTHUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "TSTUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "TURTLEUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "TUTUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "UAIUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "UBUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "USELESSUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "USUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "VELVETUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "VIRTUALUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "VVVUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "WALUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "WETUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "XANUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "XNYUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "XPINUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "XPLUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "YBUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ZAMAUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ZBTUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ZEREBROUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "ZESTUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ZETAUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "ZKCUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ZKPUSDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "ZORAUSDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "哈基米USDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "币安人生USDT": {
+    "date": "2026-09-17",
+    "src": "auto"
+  },
+  "我踏马来了USDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "牛来USDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  },
+  "龙虾USDT": {
+    "date": "<pre-tracking>",
+    "src": "curated"
+  }
+}
