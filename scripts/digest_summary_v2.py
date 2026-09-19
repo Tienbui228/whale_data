@@ -902,7 +902,7 @@ def _v1_3_apply_L1_cites(body: str) -> str:
                 for src, items in by_src.items():
                     names = ",".join(n for n, _ in items)
                     parts.append(f"[{src}]={names}")
-                compact = f"cites·target={target}·" + "·".join(parts) + "·tmpl=data/artifacts/tg_final_<renderer>_<target>.txt"
+                compact = f"cites·target={target}·" + "·".join(parts) + "·tmpl=data/artifacts/tg_final_{renderer}_{target}.txt"
                 renderer_map = ",".join(f"{n}={r}" for n, r, _ in cites)
                 compact += f"·map:{renderer_map}"
                 out.append(compact)
@@ -1069,6 +1069,22 @@ def build_v2_digest(target: str) -> str:
     # ⛔ 1-line
     tw = _tripwire_line()
     if tw: lines.append(tw)
+
+    # AD0-AD1/19-09 · U0-BELL UNHEDGE block · NGAY SAU tripwire · CALIBRATION-ONLY
+    # HOLD-OUT 20/09→20/10: Tiên ĐỌC được, CẤM chỉnh ngưỡng theo cái đọc được
+    #  trước 21/10. Grid 8 ô đã khoá.
+    # AD1 format: tên + Δacc int một dòng · near/blind chỉ đếm (blind LUÔN đếm, không tên · AD1-6 lock)
+    # Toggle via env DIGEST_U0_BELL_BLOCK=1 (default 0 = tắt · khối AB0 audit stderr vẫn chạy)
+    # Fallback cắt bậc thang: DIGEST_U0_DROP_NEAR=1 · DIGEST_U0_DROP_BLIND=1
+    if os.environ.get("DIGEST_U0_BELL_BLOCK", "0") == "1":
+        try:
+            from u0_bell_audit import render_unhedge_block as _u0_render
+            _drop_near = os.environ.get("DIGEST_U0_DROP_NEAR", "0") == "1"
+            _drop_blind = os.environ.get("DIGEST_U0_DROP_BLIND", "0") == "1"
+            _u0_block = _u0_render(target, drop_near=_drop_near, drop_blind=_drop_blind)
+            lines.append(_u0_block)
+        except Exception:
+            pass   # audit-only · fail silent, không chặn body
 
     # V1.3-SPECIES-LAYOUT: if env DIGEST_V1_3=1 → use species layout, else V1.2
     v1_3_mode = os.environ.get("DIGEST_V1_3", "0") == "1"

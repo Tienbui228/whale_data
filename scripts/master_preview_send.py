@@ -207,14 +207,38 @@ def step_concat_seal(body: str) -> tuple[bool, str]:
     return (True, f"AMD-07 verify PASS · file[:12]={file_md5} ≡ footer-seal={footer_seal}")
 
 
+TG_ALLOWED_HTML_TAGS = {"b", "i", "u", "s", "a", "code", "pre", "tg-spoiler", "blockquote"}
+_TG_TAG_RE = re.compile(r"<([^<>]*)>")
+
+
+def _tg_scan_bad_html(text: str):
+    """AB1/U7/18-09 · quét <...> · trả (tag_str, pos) đầu tiên KHÔNG thuộc whitelist,
+    hoặc None nếu toàn bộ hợp lệ. Tag rỗng hoặc tên lạ (ví dụ `<renderer>`, `<target>`)
+    → BAD. Whitelist = {b,i,u,s,a,code,pre,tg-spoiler,blockquote} · TG parse_mode=HTML."""
+    for m in _TG_TAG_RE.finditer(text):
+        inner = m.group(1).strip()
+        if not inner:
+            return (m.group(0), m.start())
+        name = inner.lstrip("/").split()[0].split(">")[0].lower()
+        if name not in TG_ALLOWED_HTML_TAGS:
+            return (m.group(0), m.start())
+    return None
+
+
 def send_telegram(text: str) -> tuple[bool, str]:
     # D3/17-09 · PRE-CHECK độ dài · TG limit=4096 chars · KHÔNG tự cắt (cắt = mất seal/cites)
     n_chars = len(text)
     if n_chars > 4096:
-        _log(f"[N/A-ERROR:BODY-TOO-LONG len={n_chars} limit=4096]")
+        _log(f"[N/A-ERROR:BODY-TOO-LONG] len={n_chars} limit=4096")
         return (False, f"BODY-TOO-LONG len={n_chars}")
     if n_chars > 3800:
         _log(f"[WARN:BODY-NEAR-LIMIT len={n_chars}]")
+    # AB1/U7/18-09 · PRE-CHECK HTML tag whitelist · chặn thẻ lạ trước khi API nhận HTTP 400
+    bad = _tg_scan_bad_html(text)
+    if bad is not None:
+        tag_str, pos = bad
+        _log(f"[N/A-ERROR:BAD-HTML] tag={tag_str} pos={pos}")
+        return (False, f"BAD-HTML tag={tag_str} pos={pos}")
     bot = os.getenv("TG_BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN")
     chat = os.getenv("TG_CHAT_ID_DAILY")
     if not bot or not chat:
@@ -325,16 +349,45 @@ def compute_night_verdict(target: str) -> dict:
     except Exception as e:
         pin_result = f"ERR:{e}"
     # Sentinel scan (grep [N/A-ERROR:*] outside declared list)
+    # AB2/U1/18-09 · CỬA-SỔ 26h · sentinel ngoài 26h TRƯỚC now → không tính (xanh);
+    # trong → tính (đen). Bài học p23: sentinel 09-15 vẫn đen 09-17 → phải trượt cửa.
     declared_sentinels = {"N/A-ERROR:DUMP-HALF-FAIL", "N/A-ERROR:DUMP-FAIL",
                           "N/A-ERROR:STANDING", "N/A-ERROR:VETO"}
+    from datetime import datetime as _dt2, timedelta as _td2, timezone as _tz2
+    _now_utc = _dt2.now(_tz2.utc)
+    _cutoff = _now_utc - _td2(hours=26)
+    _line_ts_re = re.compile(r"^\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+\-]\d{2}:\d{2})?)\]")
     unknown_sentinels = []
-    for logf in [REPO / "data/logs/master_preview.log", bell]:
-        if not logf.exists(): continue
-        content = logf.read_text(encoding="utf-8", errors="replace")
-        for m in re.finditer(r"\[N/A-ERROR:([A-Z0-9\-_/]+)\]", content):
-            tag = f"N/A-ERROR:{m.group(1)}"
-            if not any(tag.startswith(d) for d in declared_sentinels):
-                unknown_sentinels.append(tag)
+    _log_p = REPO / "data/logs/master_preview.log"
+    if _log_p.exists():
+        for line in _log_p.read_text(encoding="utf-8", errors="replace").splitlines():
+            m_ts = _line_ts_re.match(line)
+            if not m_ts: continue
+            try:
+                ts = _dt2.fromisoformat(m_ts.group(1))
+                if ts.tzinfo is None: ts = ts.replace(tzinfo=_tz2.utc)
+            except Exception:
+                continue
+            if ts < _cutoff: continue  # ngoài cửa sổ · KHÔNG tính
+            for m in re.finditer(r"\[N/A-ERROR:([A-Z0-9\-_/]+)\]", line):
+                tag = f"N/A-ERROR:{m.group(1)}"
+                if not any(tag.startswith(d) for d in declared_sentinels):
+                    unknown_sentinels.append(tag)
+    # bell_journal.jsonl · ts_utc field · N/A-ERROR không xuất hiện trong record ok,
+    # nhưng vẫn giữ scan để future-proof nếu bell ghi error record
+    if bell.exists():
+        for line in bell.read_text(encoding="utf-8", errors="replace").splitlines():
+            try:
+                e = json.loads(line)
+                ts = _dt2.fromisoformat(e.get("ts_utc", ""))
+                if ts.tzinfo is None: ts = ts.replace(tzinfo=_tz2.utc)
+                if ts < _cutoff: continue
+            except Exception:
+                continue
+            for m in re.finditer(r"\[N/A-ERROR:([A-Z0-9\-_/]+)\]", line):
+                tag = f"N/A-ERROR:{m.group(1)}"
+                if not any(tag.startswith(d) for d in declared_sentinels):
+                    unknown_sentinels.append(tag)
     # V3.5o · VERDICT enum += CHƯA-THI
     # target có cửa-cron chưa đóng (now < target+1d 01:46 UTC) ⇒ CHƯA-THI
     # (cấm đóng dấu KÍCH lên đêm chưa mở đề)
@@ -433,6 +486,62 @@ def preview_journal_append(entry: dict) -> None:
 PREVIEW_EPOCH = "2026-09-10"  # V3.5q item 0 · epoch cho night counter
 
 
+def _ab3_stuck_check(target: str) -> tuple[int, str]:
+    """AB3/U3/18-09 · AC1 fix: dùng _journal_iter() UNION preview+master (cutover 09-15).
+    SKIP def: không có entry với sent_ok=True cho renderer master_* (preview hoặc live).
+    Pre-D2 entries thiếu `sent_ok` field → mặc định True (giống counter filter L547).
+    Đếm ngược từ `target` (inclusive). Đọc lý do từ master_preview.log 26h."""
+    from datetime import datetime as _dt3, timedelta as _td3, timezone as _tz3
+    sent_days = set()
+    for e in _journal_iter():
+        if not e.get("renderer", "").startswith("master"): continue
+        if e.get("sent_ok", True):  # default True · legacy pre-D2 compat
+            sent_days.add(e.get("target_date", ""))
+    try:
+        target_d = _dt3.strptime(target, "%Y-%m-%d").date()
+    except Exception:
+        return (0, "")
+    streak = 0
+    for i in range(0, 15):
+        d = (target_d - _td3(days=i)).isoformat()
+        if d in sent_days:
+            break
+        streak += 1
+    reason = ""
+    log_p = REPO / "data/logs/master_preview.log"
+    if log_p.exists():
+        _now = _dt3.now(_tz3.utc); _cutoff = _now - _td3(hours=26)
+        _ts_re3 = re.compile(r"^\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+\-]\d{2}:\d{2})?)\]")
+        latest_ts = None
+        for line in log_p.read_text(encoding="utf-8", errors="replace").splitlines():
+            m_ts = _ts_re3.match(line)
+            if not m_ts: continue
+            try:
+                ts = _dt3.fromisoformat(m_ts.group(1))
+                if ts.tzinfo is None: ts = ts.replace(tzinfo=_tz3.utc)
+            except Exception:
+                continue
+            if ts < _cutoff: continue
+            m_err = re.search(r"\[N/A-ERROR:([A-Z0-9\-_/]+)\]", line)
+            if m_err and (latest_ts is None or ts >= latest_ts):
+                latest_ts = ts
+                reason = f"N/A-ERROR:{m_err.group(1)}"
+    return (streak, reason)
+
+
+def _ab3_maybe_alert_stuck(target: str) -> None:
+    """AB3/U3 · gọi ở finally · nếu streak ≥ 2, gửi [STUCK: ...]."""
+    try:
+        streak, reason = _ab3_stuck_check(target)
+    except Exception as _e:
+        _log(f"[STUCK-CHECK-ERR] {type(_e).__name__}: {_e}")
+        return
+    if streak < 2: return
+    stuck_msg = f"[STUCK: {streak} đêm SKIP liên tiếp · lý do gần nhất: {reason or 'no-error-in-26h'}]"
+    ok, det = send_telegram(stuck_msg)
+    _log(f"[STUCK-BELL] streak={streak} reason={reason!r} sent={ok} det={det}")
+
+
 def main():
     # V3.5s GATE-D · D6: header spec_version + amendments_applied
     _log("─── master_preview_send V3.5s pipeline start · spec_version=V3.5s · amendments_applied=[GATE-D] ───")
@@ -452,6 +561,7 @@ def main():
     _log(f"standing: ok={ok_standing} · {reason}")
     if not ok_standing:
         _log("SKIP · standing not met")
+        _ab3_maybe_alert_stuck(target)
         return 0
 
     target = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
@@ -459,26 +569,41 @@ def main():
     # Pipeline steps · fail-fast
     ok, msg = step_rebuild_ledger(target)
     _log(f"[STEP 1/5 rebuild-ledger] ok={ok} · {msg}")
-    if not ok: _log("SKIP · rebuild failed"); return 1
+    if not ok: _log("SKIP · rebuild failed"); _ab3_maybe_alert_stuck(target); return 1
 
     # J4/17-09 · BẬT LẠI V1.3 · sau khi wire L1+L3+3-tier cap (budget=3680 body-only)
     # Full msg ước 3735-3844 chars · dưới 4096 mọi đêm sample · 09-15 T2 EXCEEDED 3844
     # 3 tầng có audit + D3 pre-check chặn tầng 3 · rollback: cp .bak_v12_run_019276a1
     os.environ["DIGEST_V1_3"] = "1"
+    os.environ["DIGEST_U0_BELL_BLOCK"] = "1"   # AD2/19-09 · U0-BELL UNHEDGE block · CAL-ONLY · hold-out 21/10
     ok, res = step_render_digest(target)
     _log(f"[STEP 2/5 render-digest] ok={ok} · DIGEST_V1_3={os.environ.get('DIGEST_V1_3')} · "
          f"{res[:100] if isinstance(res,str) and ok else res}")
-    if not ok: _log("SKIP · render failed"); return 1
+    if not ok: _log("SKIP · render failed"); _ab3_maybe_alert_stuck(target); return 1
     body = res
 
     ok, msg = step_label_lint(body)
     _log(f"[STEP 3/5 label-lint] ok={ok} · {msg}")
-    if not ok: _log("SKIP · lint orphan found"); return 1
+    if not ok: _log("SKIP · lint orphan found"); _ab3_maybe_alert_stuck(target); return 1
 
     ok, res = step_concat_seal(body)
     _log(f"[STEP 4/5 concat-seal] ok={ok} · {res[:100] if isinstance(res,str) and ok else res}")
-    if not ok: _log("SKIP · seal failed"); return 1
+    if not ok: _log("SKIP · seal failed"); _ab3_maybe_alert_stuck(target); return 1
     body_sealed = res if isinstance(res, str) and "━━ footer" in res else body
+
+    # AB0/19-09 · U0-BELL audit-only · CALIBRATION · KHÔNG chạm body
+    # HOLD-OUT 20/09→20/10: audit-only. Cấm dùng làm input cho quyết định ngưỡng trước 21/10.
+    try:
+        from u0_bell_audit import run_audit as _u0_run_audit
+        _body_md5_before = hashlib.md5(body_sealed.encode()).hexdigest()
+        _u0_stats = _u0_run_audit(target, log_fn=_log)
+        _body_md5_after = hashlib.md5(body_sealed.encode()).hexdigest()
+        _log(f"[U0-BELL-AUDIT-CHECK] body_md5_before={_body_md5_before[:12]} · after={_body_md5_after[:12]} · match={_body_md5_before == _body_md5_after}")
+        if _body_md5_before != _body_md5_after:
+            _log(f"[N/A-ERROR:U0-BELL-AUDIT-MUTATED-BODY] · CRITICAL · DỪNG")
+            return 1
+    except Exception as _e_audit:
+        _log(f"[U0-BELL-AUDIT-ERR] {type(_e_audit).__name__}: {_e_audit} · continue (audit is best-effort)")
 
     # V3.5q item 3 · IDEMPOTENT preview-sender per (renderer=master_preview · target)
     existing = preview_journal_check(target)
@@ -545,6 +670,8 @@ def main():
         "sent_ok": ok_send,                       # D2/17-09 · counter filter (mới)
         "send_error": "" if ok_send else str(det)[:200],
     })
+    # AB3/U3/18-09 · STUCK bell · sau khi journal cập nhật, đếm streak (kể cả tối nay)
+    _ab3_maybe_alert_stuck(target)
     return 0 if ok_send else 1
 
 
