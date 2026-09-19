@@ -164,3 +164,130 @@ Tất cả 6/6 body_md5 khớp trước/sau.
 **Ảnh hưởng holdout**: **KHÔNG** — audit-only, không đọc để tune, không chạm body. File `data/logs/u0_bell_audit.jsonl` sẽ tích luỹ dữ liệu cho grid 8 ô đọc lại ngày 21/10.
 
 **Chốt cấm**: mọi decision ngưỡng {w, T} dựa data từ `u0_bell_audit.jsonl` trong window 20/09-20/10 = VI PHẠM hold-out. File này CHỈ được đọc từ 21/10.
+
+## 2026-09-19 · AE0-3 · Tiên nhìn khối U0-BELL trên bản tin
+
+**Chữ Tiên 19/09**: bật khối UNHEDGE vào thân bản tin (AD1 format · CAL-ONLY).
+
+**Ghi rõ vào sổ hold-out**:
+
+> "Tiên đã NHÌN các đêm ≥ 20/09 (bản tin bật U0-BELL); không dùng để chỉnh."
+
+**Ý**: Tiên đọc được khối UNHEDGE trong bản tin từ đêm cron đầu 21/09 (target 09-20)
+xuyên hold-out (20/09 → 20/10). **Việc NHÌN** dữ liệu không phải là vi phạm hold-out.
+**Việc CHỈNH** ngưỡng {w, T, các cap} dựa vào những gì đã nhìn được TRƯỚC 21/10 = VI PHẠM.
+
+Grid 8 ô đã khoá `{w=2, w=3} × {−10%, −15%, −20%, −30%}` giữ nguyên · chạy ngày 21/10.
+
+## 2026-09-19 · AE0-4 · Detector C wire audit-only
+
+**Files**:
+- `scripts/c_detect_audit.py` · md5 `7ec86f5682c5abfb9ac860a58e0c8737` · SCP xong · AST OK
+- Rào HOLD-OUT trong comment đầu file
+- Log path: `data/logs/c_detect_audit.jsonl` (append-only)
+- Nguồn spec: S1 c1-c6 (sha 298bf565, per sổ · KHÔNG tự đặt số)
+
+**Pin p38 · 3/3 PASS** (`_probe_p38_c_detect_20260919.py`):
+- p38-a · blind → không tính, không giả vờ đạt · PASS
+- p38-b · dữ liệu đủ → k=3 · PASS
+- p38-c · lint dead-leg (PASS ∧ value=None) · PASS
+
+**Live test AKE/BTW/UAI-C quanh D0 · k/6**:
+```
+AKE D0=07-15    · k=1/1/1/0 (D-7/-3/0/+3)
+BTW D0=08-03    · k=2/2/2/1
+UAI D0=08-24    · k=3/3/2/1
+UAI D0=07-07    · k=3/2/2/1
+```
+Max k = 3/6. Sensitivity thấp — chờ ≥10 dương ∧ ≥10 âm mới đọc lại (per AE0-4 rule).
+
+**Trạng thái**: KHÔNG vào bản tin · KHÔNG seed · KHÔNG ngưỡng ký.
+
+## 2026-09-19 · AE0-2 · ERRATA GOM-E scanned vs universe_gen
+
+**File**: `proposals/ERRATA_gome_scanned_vs_universe_gen_20260919.md`
+
+**Nội dung**: `scanned=k/228` TÁCH khỏi `universe_gen=228`. Hai số hai nghĩa,
+không đứng chung ô. Cấm gộp thành `k/N universe_gen=N`.
+
+Chờ ANALYSIS niêm → apply vào GOM-E spec.
+
+## 2026-09-19 · H · SỬA MISMATCH Opt-A ↔ verdict · retro-audit 4 đêm SKIP
+
+**Root cause 4 đêm SKIP** (09-15 → 09-18):
+
+**Opt-A** (commit `bf115ed` · KÝ 18/09 · handover session cũ):
+- `digest_daily_vps.py` đổi target fresh/exch từ D-1 sang D (today snapshot)
+- Artifact dump: `tg_final_fresh_digest_<snap>.txt` với `snap = today` (Opt-A shift +1)
+- Log grep marker: `snapshot=<today>.json`
+
+**BUG**: `compute_night_verdict(target=T)` cũ:
+- Grep `snapshot=T.json` (T = master target = today-1) → **Opt-A đã shift sang T+1** → miss
+- Check `tg_final_<r>_<T>.txt exists` (T = master target) → **artifact tên là T+1** → miss
+
+Kết quả: `fresh_digest` và `exch_digest` cả 2 fail SENT + fail full_pair → `n_full=4/6, n_sent=4/6` → verdict **KÍCH** cả 4 đêm.
+
+**FIX H · ký 19/09**:
+- `scripts/digest_daily_vps.py` (md5 `d3a53a2ea1b0ea6a9f04ad27f44b177e`): thêm marker canonical `[LEG-SENT renderer=X snapshot=<snap> md5=<...> ts_utc=<...>]` sau send OK
+- `scripts/master_preview_send.py` (md5 `888686680eea43addf718cf535d669b4`):
+  - LEG-SENT detection · ưu tiên marker · fallback legacy `[SENT] X ok=True` với ts prefix
+  - Window = 25h TRƯỚC `cron_close = target+1d 01:46 UTC` (không dùng `now`)
+  - Full_pair check cho fresh/exch: `_has_recent_artifact(renderer, 25h)` glob file với mtime trong window (không match filename target)
+- Pin p42 · 3/3 PASS (Opt-A shift · shift lần nữa · outside window)
+
+**Retro-audit 4 đêm SKIP với logic mới**:
+```
+target       verdict         full   sent   missing
+2026-09-15   KHÔNG-KÍCH      6/6    6/6    []
+2026-09-16   KHÔNG-KÍCH      6/6    6/6    []
+2026-09-17   KHÔNG-KÍCH      6/6    6/6    []
+2026-09-18   KHÔNG-KÍCH      6/6    6/6    []
+```
+
+**Xác nhận đúng nguyên nhân**: Opt-A mismatch verdict logic · 4 đêm KHÔNG do wire khối B / U0-BELL / detector C. Sau H fix, cả 4 đêm sẽ ra KHÔNG-KÍCH.
+
+**Ghi bổ sung Opt-A 18/09 (lẽ ra ghi hôm ấy)**:
+- 2026-09-18 · Opt-A commit `bf115ed` · `scripts/digest_daily_vps.py` shift target snapshot D-1 → D
+- Chạm nguồn: `data/logs/digest_daily_vps.log` marker format · `data/artifacts/tg_final_fresh_digest_*.txt` filename convention
+- Hệ quả: **4 đêm SKIP** (09-15 → 09-18) do verdict không đọc được leg fresh/exch với target-name mới
+- Fix trong H session 19/09.
+
+**Verdict epoch retro giữ nguyên** (V3.5q ĐIỂM-THI-BẤT-BIẾN · epoch stamp original). Live compute mới ghi forensic-note với `verdict = epoch verdict` (unchanged), `verdict_at_stamp = <old KÍCH>`.
+
+## 2026-09-19 · AE0-1 · Khối B ba tầng · ĐO NGÂN SÁCH · CHỜ WIRE
+
+**Budget dry-run 6 đêm** (`sandbox/u0_bell_a3/ae0_1_bblock_3tier_probe.py`):
+
+```
+target     old_B   new_B   delta   body_after   tier
+09-12      559     224     -335    3526         T0 no-cut
+09-13      588     258     -330    3433         T0 no-cut
+09-14      598     260     -338    3446         T0 no-cut
+09-15      632     259     -373    3427         T0 no-cut
+09-16      615     265     -350    3408         T0 no-cut
+09-17      640     297     -343    3454         T0 no-cut
+```
+
+**Không đêm nào chạm 4096** ★. Delta trung bình **-343 chars/đêm** (khối mới gọn hơn nhiều).
+
+**Chưa wire live** vì cần logic runtime để xác định CONFIRMED/FAILED per token per night
+(hiện chỉ hardcoded cho 09-17 test). Chờ Tiên chọn approach:
+- (a) Pilot với hardcoded set cho tuần đầu
+- (b) Dựng state tracker (bell_journal query + U1 D+5 eval history)
+
+## 2026-09-19 · AE0-5 · Bảng AA4 cổng đếm dương/âm cho 27/09
+
+**File**: `_probe_ae0_5_gate_count_20260919.py`
+
+```
+gate         n_pos   n_neg   ≥5?
+H2b          4       10      pos THIẾU 1 · neg ✓
+H1-step      3       9       pos THIẾU 2 · neg ✓
+H1-ramp      1       4       pos THIẾU 4 · neg THIẾU 1
+kho-ramp     3       0       pos THIẾU 2 · neg THIẾU 5 (N/A · cần Nansen slice)
+```
+
+**Không cổng nào đạt ≥5 mỗi phía**. Cấm mượn âm chéo cổng đã áp.
+Cổng gần nhất "đo lại được" = H2b (thiếu 1 pos).
+
+Chỉ đếm · KHÔNG precision · KHÔNG ngưỡng.

@@ -280,6 +280,29 @@ def compute_night_verdict(target: str) -> dict:
     bell = REPO / "data/logs/bell_journal.jsonl"
     renderers = ["tg_relay_gom_h", "fresh_digest", "exch_digest", "gom_daily", "phase_map", "watchlist"]
     # 6/6 full-pair check
+    # H1/19-09 · fresh/exch dùng snapshot filename (Opt-A shift) · KHÔNG khớp target=T
+    # Scan artifact với PATTERN prefix + timestamp trong 25h window trước cron_close
+    from datetime import datetime as _dt_fp, timedelta as _td_fp, timezone as _tz_fp
+    try:
+        _tgt_d_fp = _dt_fp.strptime(target, "%Y-%m-%d").date()
+        _cron_close_fp = _dt_fp.combine(_tgt_d_fp + _td_fp(days=1),
+                                         _dt_fp.strptime("01:46", "%H:%M").time(),
+                                         tzinfo=_tz_fp.utc)
+    except Exception:
+        _cron_close_fp = _dt_fp.now(_tz_fp.utc)
+
+    def _has_recent_artifact(renderer, window_hours=25):
+        """Trả True nếu có tg_final_<renderer>_*.txt với mtime trong (cron_close - window, cron_close)."""
+        for p in art_dir.glob(f"tg_final_{renderer}_*.txt"):
+            try:
+                mtime = _dt_fp.fromtimestamp(p.stat().st_mtime, tz=_tz_fp.utc)
+                lag_h = (_cron_close_fp - mtime).total_seconds() / 3600
+                if 0 <= lag_h <= window_hours:
+                    return True, p
+            except Exception:
+                continue
+        return False, None
+
     full_pair_status = {}
     for r in renderers:
         txt = art_dir / f"tg_final_{r}_{target}.txt"
@@ -287,6 +310,13 @@ def compute_night_verdict(target: str) -> dict:
         if txt.exists() and jsonl.exists():
             n_rows = sum(1 for _ in open(jsonl, encoding="utf-8"))
             full_pair_status[r] = {"txt": txt.stat().st_size, "jsonl_rows": n_rows}
+        elif r in ("fresh_digest", "exch_digest"):
+            # H1 · Opt-A shift · check artifact trong window 25h thay khớp target-name
+            has_recent, p = _has_recent_artifact(r)
+            if has_recent:
+                full_pair_status[r] = {"txt": p.stat().st_size, "jsonl_rows": None, "source": "opt-a-shifted"}
+            else:
+                full_pair_status[r] = {"missing": True}
         else:
             full_pair_status[r] = {"missing": True}
     n_full = sum(1 for r in renderers if not full_pair_status[r].get("missing"))
@@ -303,30 +333,88 @@ def compute_night_verdict(target: str) -> dict:
                         "cite": f"body_md5={e.get('body_md5','')[:12]} msg_id={e.get('message_id')}"
                     }
             except: pass  # L-66-OK (benign fallback)
-    # 2. Native/log-grep fallback
+    # 2. Native/log-grep fallback · H1/19-09 · LEG-SENT canonical marker cho fresh/exch
+    # Verdict xác định leg bằng BẢN GHI, không bằng tên file:
+    #   fresh/exch có LEG-SENT ts_utc trong 25h TRƯỚC compute · leg ok (không quan tâm snapshot target)
+    #   → chấp nhận Opt-A shift · không hardcode <T+1>
     log_map = {
         "tg_relay_gom_h": (REPO / "data/logs/tg_relay.log", r"\[SENT\] all_ok=True", "target_date"),
-        "fresh_digest": (REPO / "data/logs/digest_daily_vps.log", r"\[SENT\] Fresh-Wallets.*ok=True", "snapshot"),
-        "exch_digest": (REPO / "data/logs/digest_daily_vps.log", r"\[SENT\] EXCH-BAL.*ok=True", "snapshot"),
+        "fresh_digest": (REPO / "data/logs/digest_daily_vps.log", r"\[LEG-SENT renderer=fresh_digest.*ts_utc=([^\]]+)\]", "leg_sent_ts"),
+        "exch_digest": (REPO / "data/logs/digest_daily_vps.log", r"\[LEG-SENT renderer=exch_digest.*ts_utc=([^\]]+)\]", "leg_sent_ts"),
         "gom_daily": (REPO / "data/logs/gom_daily.log", rf"\[SENT\] gom_daily ok=True.*target={target}", "target"),
         "phase_map": (REPO / "data/logs/phase_tag.log", rf"\[SENT\] phase_map ok=True.*target={target}", "target"),
         "watchlist": (REPO / "data/export/watchlist_cron.log", rf"\[SENT\] watchlist ok=True.*target={target}", "target"),
     }
+    from datetime import datetime as _dt_ls, timedelta as _td_ls, timezone as _tz_ls
+    # H1/H4/19-09 · anchor window vào target+1d 01:46 UTC (cron_close) · KHÔNG dùng now
+    # Lý do: retroactive verdict compute (VD chấm 09-15 hôm 19/09) phải xét fresh SENT ngày 09-16 01:25
+    # (đêm cron chấm target 09-15), không phải "SENT trong 25h qua so hôm nay"
+    try:
+        _tgt_d = _dt_ls.strptime(target, "%Y-%m-%d").date()
+        _cron_close = _dt_ls.combine(_tgt_d + _td_ls(days=1),
+                                      _dt_ls.strptime("01:46", "%H:%M").time(),
+                                      tzinfo=_tz_ls.utc)
+    except Exception:
+        _cron_close = _dt_ls.now(_tz_ls.utc)
+    _leg_sent_window_hours = 25   # H1 · leg ok nếu SENT trong 25h TRƯỚC cron_close của target
     for r, (logf, pat, mark_type) in log_map.items():
         if sent_leg[r]["ok"]: continue
         if not logf.exists(): continue
         content = logf.read_text(encoding="utf-8", errors="replace")
+
+        if mark_type == "leg_sent_ts":
+            # H1/H2 · Ưu tiên LEG-SENT canonical · fallback [SENT] line với ts window
+            latest_match = None; latest_ts = None; used_fallback = False
+            for mm in re.finditer(pat, content):
+                ts_str = mm.group(1)
+                try:
+                    ts_val = _dt_ls.fromisoformat(ts_str)
+                    if ts_val.tzinfo is None: ts_val = ts_val.replace(tzinfo=_tz_ls.utc)
+                except Exception:
+                    continue
+                lag_hours = (_cron_close - ts_val).total_seconds() / 3600
+                if 0 <= lag_hours <= _leg_sent_window_hours:
+                    if latest_ts is None or ts_val > latest_ts:
+                        latest_ts = ts_val
+                        latest_match = mm.group(0)
+            # Fallback · legacy log SENT trong 25h window (không cần LEG-SENT marker)
+            if latest_match is None:
+                # H4/19-09 · backward compat cho log cũ (trước H2 wire)
+                # Grep dòng [SENT] X · lấy ts từ prefix log line [YYYY-MM-DDTHH:MM:SS+00:00]
+                legacy_pat = r"\[SENT\] Fresh-Wallets" if r == "fresh_digest" else r"\[SENT\] EXCH-BAL"
+                # microseconds có thể có (VD 2026-09-15T01:25:02.323123+00:00)
+                line_ts_re = re.compile(r"^\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[+\-]\d{2}:\d{2})?)\]")
+                for line in content.splitlines():
+                    if not re.search(legacy_pat, line): continue
+                    if "ok=True" not in line: continue
+                    m_ts = line_ts_re.match(line)
+                    if not m_ts: continue
+                    try:
+                        ts_val = _dt_ls.fromisoformat(m_ts.group(1))
+                        if ts_val.tzinfo is None: ts_val = ts_val.replace(tzinfo=_tz_ls.utc)
+                    except Exception:
+                        continue
+                    lag_hours = (_cron_close - ts_val).total_seconds() / 3600
+                    if 0 <= lag_hours <= _leg_sent_window_hours:
+                        if latest_ts is None or ts_val > latest_ts:
+                            latest_ts = ts_val; latest_match = line; used_fallback = True
+            if latest_match is None: continue
+            sent_leg[r] = {
+                "ok": True,
+                "source": "legacy-sent-fallback" if used_fallback else "leg-sent-marker",
+                "cite": f"{logf.name}: {latest_match[:100]}",
+            }
+            continue
+
         m = re.search(pat, content)
         if not m: continue
-        # target_date verify for digest/relay (block-scoped)
-        if mark_type == "snapshot":
-            if f"snapshot={target}.json" not in content: continue
-        elif mark_type == "target_date":
+        # target_date verify for tg_relay (block-scoped)
+        if mark_type == "target_date":
             if f"target_date={target}" not in content: continue
         # For gom_daily/phase_map/watchlist: pattern already includes target
         sent_leg[r] = {
             "ok": True,
-            "source": "native-marker" if r in ("tg_relay_gom_h","fresh_digest","exch_digest") else "log-grep",
+            "source": "native-marker" if r == "tg_relay_gom_h" else "log-grep",
             "cite": f"{logf.name}: {m.group(0)[:80]}",
         }
     n_sent = sum(1 for r in renderers if sent_leg[r]["ok"])

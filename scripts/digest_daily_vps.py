@@ -580,10 +580,19 @@ def main():
             sys.exit(0)
 
     all_ok = True
+    fresh_ok = True
     for i, part in enumerate(fresh_parts, 1):
         ok, det = send_telegram(part)
         _log(f"[SENT] Fresh-Wallets part={i}/{len(fresh_parts)} · ok={ok} · {det}")
-        if not ok: all_ok = False
+        if not ok:
+            all_ok = False
+            fresh_ok = False
+    # H2/19-09 · LEG-SENT canonical marker · verdict đọc từ dòng này, không grep tên file
+    # snapshot = current snapshot date · ts_utc = cron run time · md5 = full msg
+    if fresh_ok:
+        _fresh_md5 = hashlib.md5(fresh_msg.encode()).hexdigest()[:12]
+        _snap_key = snap_path.stem if snap_path else "unknown"
+        _log(f"[LEG-SENT renderer=fresh_digest snapshot={_snap_key} md5={_fresh_md5} ts_utc={datetime.now(timezone.utc).isoformat(timespec='seconds')}]")
     # [ARTIFACT-DUMP as-sent · KÝ 07/09 P0] · dump full fresh_msg after all parts sent
     if all_ok:
         try:
@@ -591,10 +600,17 @@ def main():
             _ok, _det = _das("fresh_digest", (snap_path.stem if snap_path else "unknown"), fresh_msg, channel="old")
             _log(f"[ARTIFACT-DUMP fresh_digest] {_ok} · {_det}")
         except Exception as _e: _log(f"[ARTIFACT-DUMP-ERR fresh_digest] {type(_e).__name__}: {_e}")
+    exch_ok = True
     for i, part in enumerate(exch_parts, 1):
         ok, det = send_telegram(part)
         _log(f"[SENT] EXCH-BAL part={i}/{len(exch_parts)} · ok={ok} · {det}")
-        if not ok: all_ok = False
+        if not ok:
+            all_ok = False
+            exch_ok = False
+    if exch_ok:
+        _exch_md5 = hashlib.md5(exch_msg.encode()).hexdigest()[:12]
+        _snap_key = snap_path.stem if snap_path else "unknown"
+        _log(f"[LEG-SENT renderer=exch_digest snapshot={_snap_key} md5={_exch_md5} ts_utc={datetime.now(timezone.utc).isoformat(timespec='seconds')}]")
     # [ARTIFACT-DUMP as-sent · KÝ 07/09 P0]
     if all_ok:
         try:
