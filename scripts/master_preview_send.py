@@ -576,6 +576,7 @@ def main():
     # 3 tầng có audit + D3 pre-check chặn tầng 3 · rollback: cp .bak_v12_run_019276a1
     os.environ["DIGEST_V1_3"] = "1"
     os.environ["DIGEST_U0_BELL_BLOCK"] = "1"   # AD2/19-09 · U0-BELL UNHEDGE block · CAL-ONLY · hold-out 21/10
+    os.environ["DIGEST_B_TIER"] = "1"          # AE5-3/19-09 · Khối B ba tầng · CAL-ONLY · hold-out 21/10
     ok, res = step_render_digest(target)
     _log(f"[STEP 2/5 render-digest] ok={ok} · DIGEST_V1_3={os.environ.get('DIGEST_V1_3')} · "
          f"{res[:100] if isinstance(res,str) and ok else res}")

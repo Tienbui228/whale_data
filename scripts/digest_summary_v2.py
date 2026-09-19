@@ -840,10 +840,27 @@ def _v1_3_render_species_body(target: str, token_records: list, dai_no_line: str
 
     _EMPTY_LABELS = {"A": "A", "B": "B", "C": "C", "D": "D", "E": "E", "?": "?", "CHUA_XEP": "CHƯA XẾP LOÀI"}
     empty_collapsed = []
+
+    # AE5-3 · toggle DIGEST_B_TIER=1 → thay khối B mặc định bằng render_b_block ba tầng
+    # HOLD-OUT 20/09→20/10: audit-only · CẤM chỉnh ngưỡng theo cái đọc được trước 21/10
+    _b_tier_mode = os.environ.get("DIGEST_B_TIER", "0") == "1"
+
     for key, header in _SPECIES:
         block_tokens = species_blocks[key]
         block_hints = hint_by_block.get(key, [])
         n = len(block_tokens)
+
+        # AE5-3 · B block replaced by 3-tier renderer
+        if key == "B" and _b_tier_mode:
+            try:
+                from b_block_renderer import render_b_block as _render_b_tier
+                b_block_text = _render_b_tier(target)
+                lines.append(b_block_text)
+                lines.append("")
+                continue   # skip default render
+            except Exception:
+                pass   # fallback to default render below
+
         if n == 0 and not block_hints:
             empty_collapsed.append(f"{_EMPTY_LABELS[key]} (0)")
             continue
