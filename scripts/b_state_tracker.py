@@ -1,34 +1,41 @@
 # HOLD-OUT 20/09→20/10: audit-only. Cấm dùng làm input cho bất kỳ
 #  quyết định ngưỡng nào trước 21/10. Grid 8 ô đã khoá.
-"""B State Tracker · AE1-1 · state cho khối B ba tầng · KHÔNG hardcode.
+"""B State Tracker · M1-M3/19-09 · L1 THAY check_B · relapse BỎ.
+
+M0(a)=1 đã ký: L1 (Δacc_bwd ≤ -30% ∧ |Δpos_bwd| ≤ 5% tại D_cross) THAY check_B
+làm cổng vào tầng B. check_B/v_run/v_ratio là cấu hình CŨ, KHÔNG chồng lên A3.
 
 Đọc trạng thái từ:
-  · freshwatch_daily (px, LSR, OI) để chấm cross_today + U1 D+5 + STALE
-  · KHÔNG cần jsonl bell (dùng cross detection trực tiếp từ div_avg3)
+  · freshwatch_daily (px, LSR, OI) để chấm cross_today + L1 + U1 D+5 + STALE
+  · KHÔNG cần jsonl bell
 
 Trả state per token · tier ∈ {CONFIRMED · CROSS · cand · FAILED · STALE}:
-  · CONFIRMED = U1 v2∧v1 pass tại D+5 · còn hiệu lực (≤30d ∨ nến ≥+20% trong 30d)
-  · CROSS     = cross_today ∧ U0-CLASS L1 ∧ D+k ≤ 5
-  · cand      = div_avg3 ≤ 0.5 tại T · chưa cross gần đây
-  · FAILED    = đã cross · qua D+5 · U1 v2∧v1 fail
-  · STALE     = D_cross quá 30d không nến ≥+20%
+  · CONFIRMED = L1(D_cross) ∧ U1 v2∧v1 pass tại D+5 ∧ (T − D_cross) ≤ 30d
+  · CROSS     = cross_today (D+k ≤ 5) ∧ L1(D_cross)
+  · cand      = div_avg3(T) ≤ 0.5 (đang hedge) · khớp cổng U0-BELL
+  · FAILED    = L1(D_cross) ∧ D+k > 5 ∧ U1 fail
+  · STALE     = L1(D_cross) ∧ U1 pass ∧ D+k > 30d ∧ không nến ≥+20% trong 30d
+
+L2/L3 (không đạt L1 tại D_cross) → KHÔNG vào tầng B · append audit:
+  data/logs/b_l2_l3_reject.jsonl per token · KHÔNG hiển thị trong render.
 """
 from __future__ import annotations
-import os, sys, csv, math
+import os, sys, csv, math, json
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 _SCRIPTS = Path(__file__).parent
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
-from species_tag import _div_avg3, check_B
+from species_tag import _div_avg3
 from u0_bell import delta_bwd
 
 REPO = Path("/root/Data_back_test/whale_data") if os.name != "nt" else Path(r"D:/Data back test/whale_data")
 FW_PATH = REPO / "data/config/freshwatch_symbols.txt"
+L2L3_AUDIT = REPO / "data/logs/b_l2_l3_reject.jsonl"
 
-# U0-CLASS L1 threshold (AE1 spec)
+# U0-CLASS L1 threshold (spec A2.1 · Δacc_bwd ≤ -30% ∧ |Δpos_bwd| ≤ 5% tại D_cross)
 L1_DACC_MAX = -0.30
 L1_DPOS_MAX_ABS = 0.05
 
@@ -81,16 +88,8 @@ def _load_universe():
 
 
 def _find_latest_cross(rows, target, lookback=BELL_LOOKBACK, episode_gap=14):
-    """AE4-3 · Trả D_cross ĐẦU của episode gần T nhất (WL-EPISODE gap ≥ episode_gap).
-
-    Thay vì latest raw cross, dùng "earliest of episode" — khớp calibration.
-    Cách:
-      1. Scan mọi cross trong lookback backward.
-      2. Group thành episodes (gap ≥ episode_gap ngày = episode mới).
-      3. Trả cross ĐẦU của episode chứa T (episode gần T nhất).
-    """
+    """Trả D_cross ĐẦU của episode gần T nhất (WL-EPISODE gap ≥ episode_gap)."""
     td = datetime.strptime(target, "%Y-%m-%d").date()
-    # Scan all crosses backward
     crosses = []
     for k in range(0, lookback):
         d = (td - timedelta(days=k)).isoformat()
@@ -100,9 +99,7 @@ def _find_latest_cross(rows, target, lookback=BELL_LOOKBACK, episode_gap=14):
         if v is not None and vp is not None and vp <= 0.5 and v > 0.5:
             crosses.append(d)
     if not crosses: return None
-    # crosses list is newest-first (backward scan) · reverse to oldest-first
     crosses.reverse()
-    # Group episodes
     episodes = [[crosses[0]]]
     for c in crosses[1:]:
         prev = datetime.strptime(episodes[-1][-1], "%Y-%m-%d").date()
@@ -111,16 +108,17 @@ def _find_latest_cross(rows, target, lookback=BELL_LOOKBACK, episode_gap=14):
             episodes.append([c])
         else:
             episodes[-1].append(c)
-    # Return earliest of the LATEST episode (gần T nhất)
     return episodes[-1][0]
 
 
 def _check_u0_class_L1(rows, d_cross):
-    """L1 threshold tại D_cross: Δacc_bwd ≤ -30% ∧ |Δpos_bwd| ≤ 5%."""
+    """L1 threshold tại D_cross: Δacc_bwd ≤ -30% ∧ |Δpos_bwd| ≤ 5%.
+    Trả (is_L1, dacc, dpos). None nếu blind."""
     dacc, _, _ = delta_bwd(rows, d_cross, "lsr_acc_r")
     dpos, _, _ = delta_bwd(rows, d_cross, "lsr_pos_r")
-    if dacc is None or dpos is None: return False
-    return dacc <= L1_DACC_MAX and abs(dpos) <= L1_DPOS_MAX_ABS
+    if dacc is None or dpos is None:
+        return (False, dacc, dpos)
+    return (dacc <= L1_DACC_MAX and abs(dpos) <= L1_DPOS_MAX_ABS, dacc, dpos)
 
 
 def _check_u1_v2v1(rows, d_cross):
@@ -138,7 +136,6 @@ def _check_u1_v2v1(rows, d_cross):
 
 
 def _has_candle_up_pct(rows, target, back_days, pct):
-    """Có nến D-1 → D nào ≥ pct trong back_days không?"""
     td = datetime.strptime(target, "%Y-%m-%d").date()
     for k in range(0, back_days):
         d = (td - timedelta(days=k)).isoformat()
@@ -151,7 +148,6 @@ def _has_candle_up_pct(rows, target, back_days, pct):
 
 
 def _div_min_5d(rows, target):
-    """Trả (date, div_min) trong 5d gần T."""
     td = datetime.strptime(target, "%Y-%m-%d").date()
     best = (None, None)
     for k in range(0, 5):
@@ -162,22 +158,29 @@ def _div_min_5d(rows, target):
     return best
 
 
-# AE5-1 · Proven-13 per PATTERN_BOOK v1.3 §2 · ca proven bị check_B rớt cổng
-# → nhãn [relapse] · KHÔNG mất truy vết
-PROVEN_13 = {"BTR","BULLA","UAI","AKE","HEMI","ON","BANK","TUT","CYS","PROM","BTW","CAP","龙虾"}
+def _audit_l2_l3(token, target, d_cross, dacc, dpos, u1_ratios, reason):
+    """Append audit reject cho L2/L3 (không đạt L1) · KHÔNG vào tầng B."""
+    L2L3_AUDIT.parent.mkdir(parents=True, exist_ok=True)
+    with L2L3_AUDIT.open("a", encoding="utf-8") as f:
+        f.write(json.dumps({
+            "target": target, "token": token, "d_cross": d_cross,
+            "dacc_bwd": dacc, "dpos_bwd": dpos,
+            "u1_v1": u1_ratios.get("v1") if u1_ratios else None,
+            "u1_v2": u1_ratios.get("v2") if u1_ratios else None,
+            "reason": reason,
+            "computed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        }, ensure_ascii=False) + "\n")
 
 
 def build_b_state(target, universe=None, by_sym=None,
                    failed_display_window: int = 14):
-    """Trả dict {token: {tier, ...}} cho khối B.
+    """Trả dict {token: {tier, ...}} cho khối B · M1-M3/19-09.
 
-    AE2-1/AE3-1 · SPECIES-B FILTER:
-      · CONFIRMED / CROSS / FAILED / STALE → check_B tại D_CROSS của token
-      · cand → check_B tại HÔM NAY (nhóm này mới thật sự đang hedge)
+    M1: CONFIRMED := L1 ∧ U1(v2∧v1) ∧ (T − D_cross) ≤30d
+    M2: BỎ relapse tag · BỎ mọi tham chiếu v_run
+    M3: cand = div_avg3(T) ≤ 0.5 · L1/L2/L3 gate tại D_cross (KHÔNG check_B)
 
-    AE3-4 · FAILED display cutoff: chỉ giữ FAILED có D_cross trong
-    ≤ `failed_display_window` days (default 14). Ca cũ hơn không hiển thị
-    (vẫn append jsonl audit qua nguồn khác).
+    L2/L3 (không đạt L1) → append audit `b_l2_l3_reject.jsonl` · KHÔNG vào tầng B.
     """
     if universe is None: universe = _load_universe()
     if by_sym is None: by_sym = _load_fw_rows(target)
@@ -189,64 +192,46 @@ def build_b_state(target, universe=None, by_sym=None,
         if not rows: continue
 
         d_cross = _find_latest_cross(rows, target)
+        div_T = _div_avg3(rows, target)
 
-        # AE3-1 · Species-B filter tại LAST HEDGE DAY (D_cross - 1) · hoặc tại T (cho cand)
-        # Lý do: AT D_cross acc đã rớt (transition day) · v_ratio fail
-        # D_cross - 1 là ngày cuối cùng còn hedge → check_B đọc structure đúng
-        if d_cross:
-            dc_d = datetime.strptime(d_cross, "%Y-%m-%d").date()
-            gate_date = (dc_d - timedelta(days=1)).isoformat()
-        else:
-            gate_date = target
-        b_matched, reasons, _b_blind = check_B(rows, gate_date)
-        if not b_matched:
-            # AE5-1 · Proven token rớt cổng → nhãn [relapse] · không mất truy vết
-            if tok in PROVEN_13 and d_cross:
-                # Xác định vế FAIL: v_run hay v_ratio
-                reason_str = reasons[0] if reasons else ""
-                fail_reason = ""
-                if "gLSR_or_acc≥2=False" in reason_str:
-                    fail_reason = "v_ratio FAIL"
-                elif "div_run≤" in reason_str and "=False" in reason_str.split("div_run≤")[1]:
-                    fail_reason = "v_run FAIL"
-                else:
-                    fail_reason = "check_B FAIL"
-                dc_d2 = datetime.strptime(d_cross, "%Y-%m-%d").date()
-                result[tok] = {"tier": "RELAPSE", "d_cross": d_cross,
-                               "fail_reason": fail_reason,
-                               "dd_mm": f"{dc_d2.day:02d}/{dc_d2.month:02d}"}
-            continue   # Không B tại gate_date → (RELAPSE nếu proven) · không vào T1/T2/T3
-
+        # No D_cross recent · chỉ cand nếu đang hedge tại T
         if d_cross is None:
-            # Không cross gần đây · xem đang hedge không → cand
-            div_T = _div_avg3(rows, target)
             if div_T is not None and div_T <= 0.5:
                 _, div_min = _div_min_5d(rows, target)
                 result[tok] = {"tier": "cand", "div_min_5d": div_min}
             continue
 
-        # Có D_cross gần đây
         dc = datetime.strptime(d_cross, "%Y-%m-%d").date()
         d_plus_k = (td - dc).days
 
-        # T2 CROSS: D+k ≤ 5 AND U0-CLASS L1
+        # M3 · L1 gate tại D_cross (THAY check_B)
+        is_L1, dacc, dpos = _check_u0_class_L1(rows, d_cross)
+
+        # T2 CROSS: D+k ≤ 5 AND L1
         if d_plus_k <= CROSS_D_PLUS_MAX:
-            is_L1 = _check_u0_class_L1(rows, d_cross)
             if is_L1:
                 result[tok] = {"tier": "CROSS", "d_cross": d_cross, "d_plus_k": d_plus_k}
-                continue
-            # KHÔNG L1 → vẫn cand (không lên T2)
-            div_T = _div_avg3(rows, target)
-            if div_T is not None and div_T <= 0.5:
-                _, div_min = _div_min_5d(rows, target)
-                result[tok] = {"tier": "cand", "div_min_5d": div_min}
+            else:
+                # L2/L3 tại D_cross ≤5d → chưa audit reject (chưa qua U1) · nếu hedge → cand
+                if div_T is not None and div_T <= 0.5:
+                    _, div_min = _div_min_5d(rows, target)
+                    result[tok] = {"tier": "cand", "div_min_5d": div_min}
             continue
 
         # D+k > 5 → chấm U1 v2∧v1
         u1_pass, ratios = _check_u1_v2v1(rows, d_cross)
 
+        # M1 · L2/L3 (không L1) → KHÔNG BAO GIỜ CONFIRMED · audit reject
+        if not is_L1:
+            reason = ("L2_or_L3_dacc={:.3f}_dpos={:.3f}_u1={}".format(
+                dacc if dacc is not None else float('nan'),
+                dpos if dpos is not None else float('nan'),
+                'pass' if u1_pass else 'fail'))
+            _audit_l2_l3(tok, target, d_cross, dacc, dpos, ratios, reason)
+            continue
+
+        # L1 pass · chấm U1
         if u1_pass:
-            # STALE check: nếu D+k > 30d và không nến ≥+20% trong 30d → STALE
             if d_plus_k > CONFIRM_TTL_DAYS:
                 has_nen = _has_candle_up_pct(rows, target, 30, STALE_NEN_PCT)
                 if not has_nen:
@@ -256,12 +241,11 @@ def build_b_state(target, universe=None, by_sym=None,
         else:
             result[tok] = {"tier": "FAILED", "d_cross": d_cross, "d_plus_k": d_plus_k, "u1_ratios": ratios}
 
-    # AE3-4 · FAILED display cutoff · chỉ giữ FAILED với D_cross trong ≤N days
-    # (Không xoá khỏi jsonl audit qua nguồn khác; chỉ ẩn khỏi khối render)
+    # FAILED display cutoff · chỉ giữ FAILED có D_cross trong ≤N days
     result_filtered = {}
     for tok, state in result.items():
         if state["tier"] == "FAILED":
             if state.get("d_plus_k") is not None and state["d_plus_k"] > failed_display_window:
-                continue   # cũ hơn window → không hiển thị
+                continue
         result_filtered[tok] = state
     return result_filtered

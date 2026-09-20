@@ -86,16 +86,17 @@ def main() -> int:
         "và manual invocation."
     )
 
-    # ── [L-74 VIEW-AUTO-REGEN enforcement (c) · KÝ 01/09] · consumer đối chiếu md5+age ─────
-    # Was: mtime-only guard 3d (S3 D2). Nâng lên md5-based check per L-74 verbatim ANALYSIS.
-    # Header source_md5 + generated_at in view (lắp bởi enforcement b tại _task_gen).
-    # Consumer đối chiếu · nếu stale → in [VIEW-STALE age=Xd] inline (không block scan).
+    # ── [L-74 VIEW-STALE · L/19-09 · md5-based · BỎ age gate] ─────
+    # Doctrine (niêm 19-09): "một view đúng thì mười ngày tuổi vẫn đúng".
+    # Consumer so md5 sidecar (case_index_source.md5) với source_md5 header của view.
+    # Khớp → im. Lệch → nguồn đã đổi, map chưa regen. Thiếu sidecar → fail-closed (L-174).
+    # Tuổi in ra làm mô tả, KHÔNG làm cổng.
     _csm_path = REPO / "docs" / "case_files" / "case_state_map.md"
+    _csm_source_md5 = REPO / "data" / "state" / "case_index_source.md5"
     try:
         sys.path.insert(0, str(REPO / "scripts"))
         from lib.view_stale_check import check_view_stale
-        # VPS không có CASE_INDEX.xlsx (sống local Windows) · source_path=None → chỉ check age
-        _stale_note = check_view_stale(view_path=_csm_path, source_path=None, max_age_hours=24)
+        _stale_note = check_view_stale(view_path=_csm_path, source_md5_path=_csm_source_md5)
         if _stale_note:
             print(f"WARNING ⚠ {_stale_note} — regen+SCP (state có thể lệch verdict ký).", file=sys.stderr)
             try:
@@ -104,13 +105,8 @@ def main() -> int:
             except Exception as _exc:
                 print(f"  (telegram_error not wired: {_exc})", file=sys.stderr)
     except ImportError as _exc:
-        # L-66 sentinel · fallback to mtime-only if view_stale_check unavailable
-        print(f"[N/A-ERROR:VIEW-STALE-CHECK-IMPORT] {_exc} · fallback mtime-only guard", file=sys.stderr)
-        if _csm_path.exists():
-            import time as _t
-            _age_d = (_t.time() - _csm_path.stat().st_mtime) / 86400.0
-            if _age_d > 3:
-                print(f"WARNING ⚠ [VIEW-STALE mtime-fallback age={_age_d:.1f}d]", file=sys.stderr)
+        # Fail-closed L-174: module không import được → không kiểm nguồn được → nêu, không im.
+        print(f"[N/A-ERROR:VIEW-STALE-CHECK-IMPORT] {_exc} · KHÔNG kiểm được nguồn (fail-closed)", file=sys.stderr)
 
     # ── Load state (case_state_map + freshwatch) ───────────────────────────
     # INCREMENTAL: chỉ chạy tag() cho target_date, KHÔNG rebuild history.

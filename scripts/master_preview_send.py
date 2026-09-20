@@ -270,18 +270,27 @@ SENT_LEG_FORMAT = {
 }
 
 
-def compute_night_verdict(target: str) -> dict:
+def compute_night_verdict(target: str, dry: bool = False) -> dict:
     """V3.5n · compute verdict WITH bảng 6 chân đích danh (source per leg).
     · BỘ-PIN-ĐÃ-NIÊM p1-p22 (p23-p26 NGOÀI-niêm per fixture V3.5m)
     · SENT source priority: bell_journal > native-marker > log-fallback
     · Ghi verdict-file with evidence_pointers per leg.
+
+    U5-1/19-09 · `dry=True`: compute và trả kết quả · KHÔNG ghi verdict_epoch
+    · KHÔNG ghi dem0_lan2_verdict.json · KHÔNG _log sentinel · KHÔNG đụng state.
+    Doctrine: xem không được để lại dấu. Công cụ chẩn đoán không được đổi
+    thứ nó chẩn đoán.
     """
+    # Local logger · nuốt sentinel khi dry
+    def _log_local(msg):
+        if not dry:
+            _log(msg)
     art_dir = REPO / "data/artifacts"
     bell = REPO / "data/logs/bell_journal.jsonl"
     renderers = ["tg_relay_gom_h", "fresh_digest", "exch_digest", "gom_daily", "phase_map", "watchlist"]
     # 6/6 full-pair check
     # H1/19-09 · fresh/exch dùng snapshot filename (Opt-A shift) · KHÔNG khớp target=T
-    # Scan artifact với PATTERN prefix + timestamp trong 25h window trước cron_close
+    # Scan artifact với PATTERN prefix + timestamp trong 30h window trước cron_close (J1/19-09 · nới từ 25h · biên 5h39m)
     from datetime import datetime as _dt_fp, timedelta as _td_fp, timezone as _tz_fp
     try:
         _tgt_d_fp = _dt_fp.strptime(target, "%Y-%m-%d").date()
@@ -291,7 +300,7 @@ def compute_night_verdict(target: str) -> dict:
     except Exception:
         _cron_close_fp = _dt_fp.now(_tz_fp.utc)
 
-    def _has_recent_artifact(renderer, window_hours=25):
+    def _has_recent_artifact(renderer, window_hours=30):
         """Trả True nếu có tg_final_<renderer>_*.txt với mtime trong (cron_close - window, cron_close)."""
         for p in art_dir.glob(f"tg_final_{renderer}_*.txt"):
             try:
@@ -311,7 +320,7 @@ def compute_night_verdict(target: str) -> dict:
             n_rows = sum(1 for _ in open(jsonl, encoding="utf-8"))
             full_pair_status[r] = {"txt": txt.stat().st_size, "jsonl_rows": n_rows}
         elif r in ("fresh_digest", "exch_digest"):
-            # H1 · Opt-A shift · check artifact trong window 25h thay khớp target-name
+            # H1 · Opt-A shift · check artifact trong window 30h thay khớp target-name (J1 · nới từ 25h)
             has_recent, p = _has_recent_artifact(r)
             if has_recent:
                 full_pair_status[r] = {"txt": p.stat().st_size, "jsonl_rows": None, "source": "opt-a-shifted"}
@@ -335,7 +344,7 @@ def compute_night_verdict(target: str) -> dict:
             except: pass  # L-66-OK (benign fallback)
     # 2. Native/log-grep fallback · H1/19-09 · LEG-SENT canonical marker cho fresh/exch
     # Verdict xác định leg bằng BẢN GHI, không bằng tên file:
-    #   fresh/exch có LEG-SENT ts_utc trong 25h TRƯỚC compute · leg ok (không quan tâm snapshot target)
+    #   fresh/exch có LEG-SENT ts_utc trong 30h TRƯỚC cron_close · leg ok (không quan tâm snapshot target · J1 · nới từ 25h)
     #   → chấp nhận Opt-A shift · không hardcode <T+1>
     log_map = {
         "tg_relay_gom_h": (REPO / "data/logs/tg_relay.log", r"\[SENT\] all_ok=True", "target_date"),
@@ -356,7 +365,7 @@ def compute_night_verdict(target: str) -> dict:
                                       tzinfo=_tz_ls.utc)
     except Exception:
         _cron_close = _dt_ls.now(_tz_ls.utc)
-    _leg_sent_window_hours = 25   # H1 · leg ok nếu SENT trong 25h TRƯỚC cron_close của target
+    _leg_sent_window_hours = 30   # H1/J1 · leg ok nếu SENT trong 30h TRƯỚC cron_close (nới từ 25h · lý do: fresh gửi 01:25 UTC, cron_close 01:46 UTC hôm sau ~24h21m — 25h chỉ dư 39min · 30h cho biên 5h39m)
     for r, (logf, pat, mark_type) in log_map.items():
         if sent_leg[r]["ok"]: continue
         if not logf.exists(): continue
@@ -377,7 +386,7 @@ def compute_night_verdict(target: str) -> dict:
                     if latest_ts is None or ts_val > latest_ts:
                         latest_ts = ts_val
                         latest_match = mm.group(0)
-            # Fallback · legacy log SENT trong 25h window (không cần LEG-SENT marker)
+            # Fallback · legacy log SENT trong 30h window (không cần LEG-SENT marker)
             if latest_match is None:
                 # H4/19-09 · backward compat cho log cũ (trước H2 wire)
                 # Grep dòng [SENT] X · lấy ts từ prefix log line [YYYY-MM-DDTHH:MM:SS+00:00]
@@ -430,8 +439,8 @@ def compute_night_verdict(target: str) -> dict:
             [sys.executable, str(REPO / "tests/harness/harness_p20_p22_v3_5k.py"),
              "--target", target, "--only", "pre-ledger"],
             capture_output=True, text=True, timeout=60)
-        if r.stdout: _log(f"[PIN-SCAN stdout]\n{r.stdout.rstrip()}")
-        if r.stderr: _log(f"[PIN-SCAN stderr]\n{r.stderr.rstrip()}")
+        if r.stdout: _log_local(f"[PIN-SCAN stdout]\n{r.stdout.rstrip()}")
+        if r.stderr: _log_local(f"[PIN-SCAN stderr]\n{r.stderr.rstrip()}")
         pin_result = ("PASS" if r.returncode == 0
                       else ("N/A" if r.returncode == 2 else "FAIL"))
     except Exception as e:
@@ -516,8 +525,9 @@ def compute_night_verdict(target: str) -> dict:
     epoch_p = STATE / f"verdict_epoch_{target}.json"
     if not epoch_p.exists():
         # First compute after cron close = ĐIỂM THI · immutable
-        epoch_p.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-        _log(f"[EPOCH-STAMP] target={target} · first-compute stored · verdict={verdict}")
+        if not dry:
+            epoch_p.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+            _log_local(f"[EPOCH-STAMP] target={target} · first-compute stored · verdict={verdict}")
     else:
         # Subsequent recompute = forensic · không đổi điểm
         epoch_data = json.loads(epoch_p.read_text(encoding="utf-8"))
@@ -527,10 +537,11 @@ def compute_night_verdict(target: str) -> dict:
             result["stamped_at"] = epoch_data.get("computed_at")
             # Điểm-thi verdict LIVE = epoch verdict (unchanged)
             result["verdict"] = epoch_data["verdict"]
-            _log(f"[EPOCH-BẤT-BIẾN] target={target} · epoch={epoch_data['verdict']} · new-compute={verdict} · forensic-only")
-    (STATE / "dem0_lan2_verdict.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+            _log_local(f"[EPOCH-BẤT-BIẾN] target={target} · epoch={epoch_data['verdict']} · new-compute={verdict} · forensic-only")
+    if not dry:
+        (STATE / "dem0_lan2_verdict.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     # V3.5n directive item 2: verdict-computed IN LOG TRƯỚC standing-check
-    _log(f"[COMPUTE-VERDICT] target={target} · {result['verdict']} · full={n_full}/6 · sent={n_sent}/6 · pin-bộ-niêm={pin_result} · missing_legs={missing_legs} · unk_sent={len(unknown_sentinels)}")
+    _log_local(f"[COMPUTE-VERDICT] target={target} · {result['verdict']} · full={n_full}/6 · sent={n_sent}/6 · pin-bộ-niêm={pin_result} · missing_legs={missing_legs} · unk_sent={len(unknown_sentinels)}")
     return result
 
 

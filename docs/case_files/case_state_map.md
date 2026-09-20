@@ -1,6 +1,11 @@
 # case_state_map — VIEW SINH read-only từ `CASE_INDEX.xlsx` sheet INDEX
 
-**Generated:** 2026-08-26 03:19 UTC  ·  **Source:** `docs/case_files/CASE_INDEX.xlsx`
+<!-- L-74 VIEW-AUTO-REGEN header · consumer đối chiếu md5 · lệch → in [VIEW-STALE age=Xd] -->
+<!-- source_md5: 957a8f7ee8a76d4e01654326e58f5128 -->
+<!-- generated_at: 2026-09-19T12:11:34.272341+00:00 -->
+<!-- source_path: docs/case_files/CASE_INDEX.xlsx -->
+
+**Generated:** 2026-09-19 12:11 UTC  ·  **Source:** `docs/case_files/CASE_INDEX.xlsx` (md5=`957a8f7e`)
 **Nguyên tắc (spec PHASE-TAG v0.3 §2, D1 chốt v0.3 #19):**
 - Operator ký state TRONG `CASE_INDEX.xlsx` (canonical). File này là ống dẫn read-only.
 - Đọc map = đọc verdict người ký, KHÔNG phạm Δ5.
@@ -39,10 +44,11 @@
 | PUMPBTC | TRACKING (cold-start Aug20, hedge episode 51d ongoing, contract VERIFIED) | ? |  |  |  |  |
 | AKE | COLD_START 21/08 (R2 nhịp 1) — DAILY populated, contract UNVERIFIED (nhịp 2) | ? |  |  |  |  |
 | COLD_START | 2026-08-23 | ? | 23/08 fresh operator paste contract |  |  | CAP |
+| COLD_START-WATCHLIST-REPLAY | 2026-08-23 | ? | 23/08 cold start + watchlist diagnostic. Contract UNVERIFIED. |  |  | BTR |
 
 ---
 
-**Tổng:** 28 case
+**Tổng:** 29 case
 
 **Machine-readable JSON view (join-key cho phase_tag.py):**
 
@@ -75,6 +81,7 @@
   "HEMI": {"state": "TRACKING (cold-start Aug20, active campaign, contract UNVERIFIED)", "ngay_ky": "?", "verdict_ref": ""},
   "PUMPBTC": {"state": "TRACKING (cold-start Aug20, hedge episode 51d ongoing, contract VERIFIED)", "ngay_ky": "?", "verdict_ref": ""},
   "AKE": {"state": "COLD_START 21/08 (R2 nhịp 1) — DAILY populated, contract UNVERIFIED (nhịp 2)", "ngay_ky": "?", "verdict_ref": ""},
-  "COLD_START": {"state": "2026-08-23", "ngay_ky": "?", "verdict_ref": "23/08 fresh operator paste contract"}
+  "COLD_START": {"state": "2026-08-23", "ngay_ky": "?", "verdict_ref": "23/08 fresh operator paste contract"},
+  "COLD_START-WATCHLIST-REPLAY": {"state": "2026-08-23", "ngay_ky": "?", "verdict_ref": "23/08 cold start + watchlist diagnostic. Contract UNVERIFIED"}
 }
 ```

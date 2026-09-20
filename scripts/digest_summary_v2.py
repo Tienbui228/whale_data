@@ -1088,20 +1088,47 @@ def build_v2_digest(target: str) -> str:
     if tw: lines.append(tw)
 
     # AD0-AD1/19-09 · U0-BELL UNHEDGE block · NGAY SAU tripwire · CALIBRATION-ONLY
-    # HOLD-OUT 20/09→20/10: Tiên ĐỌC được, CẤM chỉnh ngưỡng theo cái đọc được
-    #  trước 21/10. Grid 8 ô đã khoá.
-    # AD1 format: tên + Δacc int một dòng · near/blind chỉ đếm (blind LUÔN đếm, không tên · AD1-6 lock)
-    # Toggle via env DIGEST_U0_BELL_BLOCK=1 (default 0 = tắt · khối AB0 audit stderr vẫn chạy)
-    # Fallback cắt bậc thang: DIGEST_U0_DROP_NEAR=1 · DIGEST_U0_DROP_BLIND=1
+    # M6/19-09 · A3 format: [U0-BELL D=... · Δacc_bwd · pos_bwd · lead=known] TOK [CAL-ONLY]
+    # Blind rule M0(b)=1: ≤3 in tên · >3 đếm+3 mới nhất
+    # HOLD-OUT 20/09→20/10: Tiên ĐỌC được, CẤM chỉnh ngưỡng theo cái đọc được trước 21/10.
     if os.environ.get("DIGEST_U0_BELL_BLOCK", "0") == "1":
         try:
             from u0_bell_audit import render_unhedge_block as _u0_render
             _drop_near = os.environ.get("DIGEST_U0_DROP_NEAR", "0") == "1"
             _drop_blind = os.environ.get("DIGEST_U0_DROP_BLIND", "0") == "1"
-            _u0_block = _u0_render(target, drop_near=_drop_near, drop_blind=_drop_blind)
+            # M6 · truyền universe_set để loại token ngoài sổ khỏi thân
+            _u_path = REPO / "data/config/freshwatch_symbols.txt"
+            _u_set = set()
+            if _u_path.exists():
+                for _ln in _u_path.read_text(encoding="utf-8").splitlines():
+                    _ln = _ln.strip()
+                    if _ln:
+                        _u_set.add(_ln)
+                        _u_set.add(_ln[:-4] if _ln.endswith("USDT") else _ln)
+            _u0_block = _u0_render(target, drop_near=_drop_near, drop_blind=_drop_blind,
+                                    universe_set=_u_set if _u_set else None)
             lines.append(_u0_block)
         except Exception:
             pass   # audit-only · fail silent, không chặn body
+
+    # M7/19-09 · 🎯 line BẮT BUỘC · rỗng → `🎯 hôm nay: không (lý do)` một dòng
+    # Nguồn: CONFIRMED tokens từ build_b_state (max 3 in tên · overflow +N)
+    if os.environ.get("DIGEST_B_TIER", "0") == "1":
+        try:
+            from b_state_tracker import build_b_state as _bst
+            _bs = _bst(target)
+            _conf = [(t, s) for t, s in _bs.items() if s.get("tier") == "CONFIRMED"]
+            if _conf:
+                _conf_sorted = sorted(_conf, key=lambda x: x[1].get("d_plus_k", 0))
+                _top3 = _conf_sorted[:3]
+                _parts = [f"{t} +{s['d_plus_k']}d" for t, s in _top3]
+                _overflow = len(_conf) - len(_top3)
+                _suffix = f" (+{_overflow})" if _overflow > 0 else ""
+                lines.append(f"🎯 hôm nay: {' · '.join(_parts)}{_suffix}")
+            else:
+                lines.append("🎯 hôm nay: không (không có T1 CONFIRMED)")
+        except Exception as _fe:
+            lines.append(f"🎯 hôm nay: N/A-ERROR ({type(_fe).__name__})")
 
     # V1.3-SPECIES-LAYOUT: if env DIGEST_V1_3=1 → use species layout, else V1.2
     v1_3_mode = os.environ.get("DIGEST_V1_3", "0") == "1"

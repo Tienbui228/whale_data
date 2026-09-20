@@ -123,50 +123,74 @@ def run_audit(target: str, log_fn=None):
     return {"n_bell": n_bell, "n_near": n_near, "n_blind": n_blind}
 
 
-def render_unhedge_block(target: str, drop_near: bool = False, drop_blind: bool = False) -> str:
-    """AD1 · khối UNHEDGE gọn cho THÂN BẢN TIN · CALIBRATION-ONLY.
+def render_unhedge_block(target: str, drop_near: bool = False, drop_blind: bool = False,
+                          universe_set=None) -> str:
+    """M6/19-09 · khối UNHEDGE cho THÂN BẢN TIN · A3 format · CAL-ONLY.
 
     HOLD-OUT 20/09→20/10: Tiên ĐỌC được nhưng CẤM chỉnh ngưỡng theo cái đọc được
     trước 21/10. Grid 8 ô đã khoá.
 
-    Format (AD1-1):
+    Format A3 (M6):
       ── UNHEDGE ── (n) [CAL-ONLY]
-         <TOK> −21 · <TOK> −22 · <TOK> −27      ← một dòng, tên + Δacc int, bỏ %
-         near <m>                                ← chỉ đếm, KHÔNG tên
-         blind <k>                               ← chỉ đếm, KHÔNG BAO GIỜ tên (AD1-6)
+         [U0-BELL D=dd/mm · Δacc_bwd=-XX% · pos_bwd=+YY% · lead=known] <TOK> [CAL-ONLY]
+         [U0-BELL D=dd/mm · Δacc_bwd=-XX% · pos_bwd=+YY% · lead=known] <TOK> [CAL-ONLY]
+         ...
+         near N (TOK · TOK · TOK)          ← M0(b)=1: ≤3 in tên, >3 đếm+3 mới
+         blind N (TOK · TOK · TOK)         ← M0(b)=1: ≤3 in tên, >3 đếm+3 mới
       Rỗng → `── UNHEDGE ── hôm nay: không chuông`
 
-    Δacc: làm tròn nguyên, bỏ dấu %. Bỏ Δpos_bwd và div khỏi thân
-    (vẫn ghi đủ trong u0_bell_audit.jsonl).
-
-    AD1-6 (LOCK): blind luôn là số đếm, KHÔNG BAO GIỜ danh sách tên.
-    Lý do: một đêm collector chậm → BLIND phình bằng cả universe → vỡ bản tin.
-
-    AD1-3 cắt bậc thang khi chật: drop_near=True → bỏ near · drop_blind=True → bỏ blind.
-    KHÔNG cắt tên chuông (bell) — chuông là thứ Tiên xin để đánh giá.
+    M6:
+      · Token ngoài universe (universe_set) → không vào thân, chỉ audit.
+      · Blind rule (M0(b)=1): ≤3 hits → in tên đủ · >3 → in `N (TOK · TOK · TOK)` 3 tên mới nhất.
+        Áp dụng cho CẢ near và blind (AD1-6 LOCK vẫn được bảo toàn: >3 chuyển đếm).
     """
     tiers = collect_audit(target)
-    n_bell = len(tiers["bell"])
-    n_near = len(tiers["near"])
-    n_blind = len(tiers["blind"])
+
+    # M6 · lọc token ngoài sổ (universe) → chỉ audit, không vào thân
+    def _in_universe(tok):
+        if universe_set is None: return True
+        return tok in universe_set or f"{tok}USDT" in universe_set
+
+    bell_in = [x for x in tiers["bell"] if _in_universe(x[0])]
+    near_in = [x for x in tiers["near"] if _in_universe(x[0])]
+    blind_in = [x for x in tiers["blind"] if _in_universe(x[0])]
+
+    n_bell = len(bell_in)
+    n_near = len(near_in)
+    n_blind = len(blind_in)
 
     if n_bell == 0 and n_near == 0 and n_blind == 0:
         return "── UNHEDGE ── hôm nay: không chuông"
 
+    from datetime import datetime as _dt
+    td = _dt.strptime(target, "%Y-%m-%d").date()
+    dd_mm = f"{td.day:02d}/{td.month:02d}"
+
     lines = [f"── UNHEDGE ── ({n_bell}) [CAL-ONLY]"]
+
+    # M6 · dòng bell format A3
     if n_bell > 0:
-        parts = []
-        for tok, dacc, _dpos, _div in tiers["bell"]:
-            if dacc is None:
-                parts.append(f"{tok} N/A")
-            else:
-                # Δacc int, bỏ %, giữ dấu (âm)
-                parts.append(f"{tok} {int(round(dacc*100))}")
-        lines.append("   " + " · ".join(parts))
+        for tok, dacc, dpos, _div in bell_in:
+            dacc_s = f"{dacc*100:+.0f}%" if dacc is not None else "N/A"
+            dpos_s = f"{dpos*100:+.0f}%" if dpos is not None else "N/A"
+            lines.append(f"   [U0-BELL D={dd_mm} · Δacc_bwd={dacc_s} · pos_bwd={dpos_s} · lead=known] {tok} [CAL-ONLY]")
+
+    # M0(b)=1 blind rule: ≤3 in tên · >3 đếm+3 mới nhất
+    def _blind_fmt(items, label):
+        n = len(items)
+        if n == 0: return None
+        if n <= 3:
+            return f"   {label} {n} ({' · '.join(t for t, *_ in items)})"
+        # >3 → đếm + 3 mới nhất (theo thứ tự collect · giữ nguyên)
+        top3 = items[:3]
+        return f"   {label} {n} ({' · '.join(t for t, *_ in top3)})"
+
     if n_near > 0 and not drop_near:
-        lines.append(f"   near {n_near}")
+        line = _blind_fmt(near_in, "near")
+        if line: lines.append(line)
     if n_blind > 0 and not drop_blind:
-        lines.append(f"   blind {n_blind}")
+        line = _blind_fmt(blind_in, "blind")
+        if line: lines.append(line)
     return "\n".join(lines)
 
 

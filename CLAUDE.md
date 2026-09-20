@@ -146,3 +146,16 @@ Sau MỖI edit `CASE_INDEX.xlsx` sheet INDEX (đổi state token, thêm/xóa cas
 \- **spot_klines_1d local store:** không liên quan VPS — local machine chạy backfill + daily. Nếu VPS cần: SCP parquet sang hoặc chạy backfill script lại.
 \- **freshwatch_symbols.txt MISSING trên VPS** — data/config/ chưa tồn tại. Probe alpha_taker dùng fallback 10 symbols (không ảnh hưởng collector mới).
 
+
+## §KỶ-LUẬT (batch 09/2026 · niêm 31/08 · md5-batch 28fe5a43)
+1. mtime là bằng chứng; exit-code không phải. Claim "đã chạy" = mtime + wc/md5.
+2. Máy báo lỗi không được tự chết — stderr path trần trụi, printer ném exception = vi phạm riêng.
+3. except:pass trần = cấm; sentinel N/A-ERROR cả provenance-fields; grep-lint pre-merge.
+4. Fixture pin/expected = văn bản ký: cấm tự sửa/bỏ/né; fixture_md5 in mỗi run, lệch = FAIL-toàn-bộ.
+5. Expected mang target_date; target≠render_date = FAIL-ENGINE trước khi so số.
+6. Đổi tên field = bridge-inject hai-đường; cấm rename một-nhát.
+7. Amendment relay = nội dung verbatim; cấm con trỏ chữ-cái.
+8. Bảng đi bằng file+md5; cấm copy-console làm nguồn nạp. *[enforcement V-VERBATIM-20260903] text-đã-ký dính mojibake ⇒ DỪNG + xin re-drop; cấm tay-gõ phục dựng; verify md5 bản gốc trước SCP/re-drop.*
+9. Probe/counterfactual phải PASS fixture-trọng-tài trước khi được chấm.
+10. Import-prod chỉ đúng khi prod pass conformance-fixture tại sha import.
+11. **Xem không được để lại dấu.** Công cụ chẩn đoán không được đổi thứ nó chẩn đoán. (U5-4/19-09 · án lệ: preview-compute stamp epoch pre-cron 2 lần trong 3 ngày; giải: `compute_night_verdict(dry=True)` — nhánh XEM cấm ghi verdict_epoch/dem0/log sentinel; pin p26 3/3 PASS.)

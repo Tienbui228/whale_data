@@ -1,0 +1,42 @@
+"""p41 · pin AE5-1 · BULLA phải xuất hiện với nhãn [relapse].
+
+Case:
+  a. BULLA @ 09-17 · check_B FAIL tại D_cross-1 · MUST be in state với tier RELAPSE
+  b. Khối B render MUST chứa dòng '[relapse] BULLA'
+  c. Xoá RELAPSE dòng → khối B không có BULLA → FAIL
+"""
+import sys, importlib, re
+try: sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except: pass
+sys.path.insert(0, r"d:\Data back test\whale_data\scripts")
+import b_state_tracker; importlib.reload(b_state_tracker)
+import b_block_renderer; importlib.reload(b_block_renderer)
+from b_state_tracker import build_b_state
+from b_block_renderer import render_b_block
+
+TARGET = "2026-09-17"
+
+# Case a: BULLA in state với tier RELAPSE
+state = build_b_state(TARGET)
+bulla_state = state.get("BULLA")
+p41_a = bulla_state is not None and bulla_state.get("tier") == "RELAPSE"
+print(f"p41-a · BULLA in state với tier RELAPSE · got={bulla_state} · {'PASS' if p41_a else 'FAIL'}")
+
+# Case b: khối render có dòng [relapse] BULLA
+block = render_b_block(TARGET)
+has_bulla_relapse = "[relapse] BULLA" in block
+p41_b = has_bulla_relapse
+print(f"p41-b · khối B chứa '[relapse] BULLA' · got={has_bulla_relapse} · {'PASS' if p41_b else 'FAIL'}")
+
+# Case c: xoá dòng → BULLA missing
+block_no_relapse = "\n".join(l for l in block.split("\n") if not l.startswith("[relapse]"))
+p41_c = "BULLA" not in block_no_relapse
+print(f"p41-c · xoá dòng [relapse] → BULLA không còn trong khối · got={p41_c} · {'PASS' if p41_c else 'FAIL'}")
+
+# In mẫu khối
+print(f"\n─── Mẫu khối B render (target={TARGET}) ───")
+print(block)
+
+fails = sum(1 for p in [p41_a, p41_b, p41_c] if not p)
+print(f"\n═══ p41 · TỔNG 3 sub-cases · {fails} FAIL ═══")
+sys.exit(0 if fails == 0 else 1)
