@@ -291,3 +291,15 @@ kho-ramp     3       0       pos THIẾU 2 · neg THIẾU 5 (N/A · cần Nansen
 Cổng gần nhất "đo lại được" = H2b (thiếu 1 pos).
 
 Chỉ đếm · KHÔNG precision · KHÔNG ngưỡng.
+
+## 2026-09-20 · O5 · ERRATA · SOPH đêm 09-19 [B-CONFIRMED · +11d] SAI
+
+**Vết**: Bản tin đêm 09-19 (msg_id=34 · cron 20/09 01:46 UTC · body_md5=734289dca354…)
+in `[B-CONFIRMED · +11d] SOPH` trong khối B — verdict CŨ (check_B pass).
+
+**Sai**: SOPH loài E per sổ · L1 fail tại D_cross (Δacc_bwd chỉ -20%, không đủ -30%).
+Theo M1 ký 19/09 (L1 THAY check_B), SOPH KHÔNG được vào tier CONFIRMED. Nếu code
+M+N đã deploy trước cron, SOPH sẽ ở audit reject `b_l2_l3_reject.jsonl`, không thân bản tin.
+
+**Không sửa artifact · không gửi lại**: đêm 09-19 dùng code CŨ (M SCP sau cron).
+Chỉ ghi vết. Cron 01:46 UTC 21/09 (đêm đầu code M+N) sẽ áp L1 gate strict cho target 09-20.

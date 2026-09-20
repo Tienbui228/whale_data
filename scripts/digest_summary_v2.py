@@ -732,11 +732,18 @@ def _v1_3_route_layout_only(tags: list, blind_axes: list) -> tuple[str, str, lis
     · Hybrid [B·D] → block = chữ cái đầu; block còn lại nhận dòng nhắc (→ xem X)
     · [?] CHỈ khi không có tag ∧ trục chính mù · vế phụ mù không đẩy vào `?`
     · Zero-tag không blind → CHƯA XẾP LOÀI · no prefix
+
+    O1/20-09 · N4=(ii): tag `B` = check_B structural (không phải CONFIRMED).
+    → prefix `b` chữ thường để KHÔNG trùng nghĩa với `[B]` HOA trong khối B
+      (nơi `[B]` = CONFIRMED per M1: L1 ∧ U1 v2∧v1 ∧ ≤30d).
+    A/C/D/E giữ HOA (chưa có tầng, không đa nghĩa).
     """
     if tags:
         tags_sorted = sorted(tags)
-        prefix = "[" + "·".join(tags_sorted) + "]"
-        block = tags_sorted[0]
+        # O1 · N4=(ii): B → b chữ thường (structural, không phải CONFIRMED)
+        prefix_parts = ["b" if t == "B" else t for t in tags_sorted]
+        prefix = "[" + "·".join(prefix_parts) + "]"
+        block = tags_sorted[0]   # routing block key giữ HOA (species blocks)
         hints = tags_sorted[1:]
         return (block, prefix, hints)
     if blind_axes:
@@ -804,6 +811,8 @@ def _v1_3_render_species_body(target: str, token_records: list, dai_no_line: str
     if tripwire_line: lines.append(tripwire_line)
     lines.append(f"[loài = trạng thái hôm nay theo khuôn §16 PATTERN_BOOK v1.3 md5 77d86654 "
                  f"— draft, chưa đủ mẫu]")
+    # O1/20-09 · N4=(ii) explain: [B] HOA và [b] thường KHÁC nghĩa · một dòng, tính ngân sách
+    lines.append("[B] = unhedge đã xác nhận · [b] = đang hedge (cấu trúc)")
     lines.append("")
 
     _SPECIES = [

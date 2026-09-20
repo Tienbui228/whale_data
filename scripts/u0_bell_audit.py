@@ -132,8 +132,8 @@ def render_unhedge_block(target: str, drop_near: bool = False, drop_blind: bool 
 
     Format A3 (M6):
       ── UNHEDGE ── (n) [CAL-ONLY]
-         [U0-BELL D=dd/mm · Δacc_bwd=-XX% · pos_bwd=+YY% · lead=known] <TOK> [CAL-ONLY]
-         [U0-BELL D=dd/mm · Δacc_bwd=-XX% · pos_bwd=+YY% · lead=known] <TOK> [CAL-ONLY]
+         [U0-BELL D=dd/mm · Δacc_bwd=-XX% · pos_bwd=+YY% · lead=?] <TOK> [CAL-ONLY]
+         [U0-BELL D=dd/mm · Δacc_bwd=-XX% · pos_bwd=+YY% · lead=?] <TOK> [CAL-ONLY]
          ...
          near N (TOK · TOK · TOK)          ← M0(b)=1: ≤3 in tên, >3 đếm+3 mới
          blind N (TOK · TOK · TOK)         ← M0(b)=1: ≤3 in tên, >3 đếm+3 mới
@@ -173,7 +173,7 @@ def render_unhedge_block(target: str, drop_near: bool = False, drop_blind: bool 
         for tok, dacc, dpos, _div in bell_in:
             dacc_s = f"{dacc*100:+.0f}%" if dacc is not None else "N/A"
             dpos_s = f"{dpos*100:+.0f}%" if dpos is not None else "N/A"
-            lines.append(f"   [U0-BELL D={dd_mm} · Δacc_bwd={dacc_s} · pos_bwd={dpos_s} · lead=known] {tok} [CAL-ONLY]")
+            lines.append(f"   [U0-BELL D={dd_mm} · Δacc_bwd={dacc_s} · pos_bwd={dpos_s} · lead=?] {tok} [CAL-ONLY]")
 
     # M0(b)=1 blind rule: ≤3 in tên · >3 đếm+3 mới nhất
     def _blind_fmt(items, label):

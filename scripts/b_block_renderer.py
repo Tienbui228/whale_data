@@ -4,8 +4,8 @@
 
 Tier hiển thị:
   · T1 CONFIRMED: [B] TOKEN +kd
-  · T2 CROSS:     [B-cand] TOKEN · L1 · D+k (đang hedge sau cross)
-  · T3 cand:      TOKEN dd/mm · ... (trần 10 · (+N))
+  · T2 CROSS:     [B-CROSS] TOKEN · L1 · D+k (N3/19-09 · sửa từ [B-cand]: đã cross ≠ cand)
+  · T3 cand:      TOKEN dd/mm · ... (trần 10 · (+N)) · KHÔNG prefix (nằm trong section ứng viên)
   · T3 FAILED:    FAILED: N (TOK dd/mm · TOK dd/mm · TOK dd/mm)  ← nén 3 mới nhất (M8)
   · STALE:        TOKEN
 
@@ -57,12 +57,12 @@ def render_b_block(target: str, universe=None, by_sym=None, cand_cap: int = 10) 
               f"{n_cand} cand · {n_fail} FAILED · {n_stale} STALE) [CAL-ONLY]")
     lines = [header]
 
-    # M5 · [B] CHỈ khi CONFIRMED
+    # M5/N3 · [B] CHỈ khi CONFIRMED (T1) · [B-CROSS] cho CROSS tier (T2 · đã cross ≤5d, L1 pass)
+    # · [B-cand] chỉ cho ứng viên hedging chưa cross (không dùng ở đây, cand render riêng bên dưới)
     for tok, s in conf:
         lines.append(f"[B] {tok} +{s['d_plus_k']}d")
-    # M5 · [B-cand] khi CROSS (đang hedge sau cross · L1 tại D_cross)
     for tok, s in cross:
-        lines.append(f"[B-cand] {tok} · L1 · D+{s['d_plus_k']}")
+        lines.append(f"[B-CROSS] {tok} · L1 · D+{s['d_plus_k']}")
 
     if n_cand > 0:
         lines.append("── ứng viên ──")
