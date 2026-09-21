@@ -99,7 +99,12 @@ def dry_one(target: str) -> tuple[bool, list[tuple[str, bool, str]], dict]:
         if not ok:
             return (False, results, metrics)
         body = res
-        metrics["post_cap"] = len(body)   # body đã qua cap trong build_v2_digest
+        # AH4/22-09 · đo utf16-u (khớp Telegram limit)
+        try:
+            from lib.tg_len import tg_len as _tg_len_dry_m
+        except ImportError:
+            _tg_len_dry_m = len
+        metrics["post_cap"] = _tg_len_dry_m(body)   # body đã qua cap trong build_v2_digest
 
         # STEP 3
         ok, msg = mps.step_label_lint(body)
@@ -149,7 +154,8 @@ def dry_one(target: str) -> tuple[bool, list[tuple[str, bool, str]], dict]:
             try:
                 _dsv._v1_3_apply_3tier_cap = lambda b, budget=3680: b
                 body_nocap = _dsv.build_v2_digest(target)
-                metrics["pre_cap"] = len(body_nocap)
+                # AH4/22-09 · pre-cap utf16-u
+                metrics["pre_cap"] = _tg_len_dry_m(body_nocap)
             except Exception:
                 metrics["pre_cap"] = None
             finally:
