@@ -1,9 +1,11 @@
 # HOLD-OUT 20/09→20/10: audit-only. Cấm dùng làm input cho bất kỳ
 #  quyết định ngưỡng nào trước 21/10. Grid 8 ô đã khoá.
-"""B State Tracker · M1-M3/19-09 · L1 THAY check_B · relapse BỎ.
+"""B State Tracker · M1-M3/19-09 · AO1/22-09 · L1 THAY check_B · relapse BỎ.
 
-M0(a)=1 đã ký: L1 (Δacc_bwd ≤ -30% ∧ |Δpos_bwd| ≤ 5% tại D_cross) THAY check_B
-làm cổng vào tầng B. check_B/v_run/v_ratio là cấu hình CŨ, KHÔNG chồng lên A3.
+M0(a)=1 đã ký: L1 (fb30dd88 §3 · A2.1 · Δacc ≤ -15% ∧ |Δpos| ≤ 10% trên W3
+{D-1, D+2}) THAY check_B làm cổng vào tầng B. AO1/22-09: đổi từ -30/5 (M commit
+đặt sai, không có nguồn ký) → -15/10 (ký) · ERRATA_AO. check_B/v_run/v_ratio
+là cấu hình CŨ, KHÔNG chồng lên A3.
 
 Đọc trạng thái từ:
   · freshwatch_daily (px, LSR, OI) để chấm cross_today + L1 + U1 D+5 + STALE
@@ -35,9 +37,10 @@ REPO = Path("/root/Data_back_test/whale_data") if os.name != "nt" else Path(r"D:
 FW_PATH = REPO / "data/config/freshwatch_symbols.txt"
 L2L3_AUDIT = REPO / "data/logs/b_l2_l3_reject.jsonl"
 
-# U0-CLASS L1 threshold (spec A2.1 · Δacc_bwd ≤ -30% ∧ |Δpos_bwd| ≤ 5% tại D_cross)
-L1_DACC_MAX = -0.30
-L1_DPOS_MAX_ABS = 0.05
+# U0-CLASS L1 threshold · fb30dd88 §3 A2.1 · Δacc ≤ -15% ∧ |Δpos| ≤ 10% trên W3.
+# AO1/22-09: sửa từ -30/5 (M commit đặt sai) → -15/10 (nguồn ký). ERRATA_AO.
+L1_DACC_MAX = -0.15
+L1_DPOS_MAX_ABS = 0.10
 
 # CONFIRMED / STALE
 CONFIRM_TTL_DAYS = 30
@@ -112,7 +115,7 @@ def _find_latest_cross(rows, target, lookback=BELL_LOOKBACK, episode_gap=14):
 
 
 def _check_u0_class_L1(rows, d_cross):
-    """L1 threshold tại D_cross: Δacc_bwd ≤ -30% ∧ |Δpos_bwd| ≤ 5%.
+    """L1 threshold · Δacc ≤ -15% ∧ |Δpos| ≤ 10% (fb30dd88 §3 A2.1 · W3 {D-1, D+2}).
     Trả (is_L1, dacc, dpos). None nếu blind."""
     dacc, _, _ = delta_bwd(rows, d_cross, "lsr_acc_r")
     dpos, _, _ = delta_bwd(rows, d_cross, "lsr_pos_r")
