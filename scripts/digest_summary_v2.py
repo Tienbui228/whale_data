@@ -916,9 +916,24 @@ def _v1_3_render_species_body(target: str, token_records: list, dai_no_line: str
             continue
         lines.append(f"{header} ({n})")
         items = [(sym, line) for sym, line, _ in block_tokens]
-        # CHUA XEP · không per-block cap · 3-tier cap tại build_v2_digest xử
+        # AS1/22-09 · E4(iii)-1: CHUA_XEP compact · mỗi token `TOK cờ direction`.
+        # Cờ ⏸/[?]/[ĐỘNG-CƠ:KHÓA]/✦ giữ (p109 nén-không-nuốt-cờ). Không tail overflow.
+        # p109 chỉ trong khối này CHƯA XẾP KHÔNG BAO GIỜ thành đuôi.
         if key == "CHUA_XEP":
-            for _, ln in items: lines.append(ln)
+            import re as _re_as1
+            for sym, ln in items:
+                core = ln.strip()
+                # Extract flag prefix · giữ ⏸/[?]/[ĐỘNG-CƠ:KHÓA]/✦
+                flag = ""
+                for f in ("⏸", "✦"):
+                    if core.startswith(f): flag = f; core = core[len(f):].lstrip(); break
+                for f in ("[?]", "[ĐỘNG-CƠ:KHÓA]"):
+                    if core.startswith(f): flag = f; core = core[len(f):].lstrip(); break
+                # Extract direction từ `→ XXX` suffix (lấy chuỗi cuối)
+                m_dir = _re_as1.search(r"→\s*(\S+)(?:\[|\s|$)", core)
+                direction = m_dir.group(1) if m_dir else "?"
+                # Emit compact
+                lines.append(f"   {flag}{sym} {direction}")
         else:
             for ln in _cap_block(items): lines.append(ln)
         for h in block_hints: lines.append(h)
