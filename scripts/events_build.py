@@ -1,16 +1,26 @@
-"""events_build.py · AG3/21-09 · single source events file cho master + HEDGE v2.
+"""events_build.py · AG3/21-09 · AL1-AL2/22-09 · single source events file.
 
-Ghi 4 loại row vào `data/artifacts/events_<T>.jsonl` + `events_<T>.md5`:
-  {type:"bell", tok, D, dacc_bwd, dpos_bwd, div}
-  {type:"class", tok, d_cross, tier:L1|L2|L3, dacc, dpos}
-  {type:"u1", tok, d_cross, v1, v2, verdict}
-  {type:"btier", tok, tier, d_cross, k}
+Ghi 2 kind row vào `data/artifacts/events_<T>.jsonl` + `events_<T>.md5`:
 
-KHÔNG tính lead. KHÔNG định dạng hiển thị.
-Consumer (master render, HEDGE v2) đọc file, KHÔNG tự tính.
+  · kind:"event" · GHI ĐÚNG MỘT LẦN, đúng ngày sự kiện:
+    - {kind:"event", type:"bell", tok, D=<target>, dacc_bwd, dpos_bwd, div}
+      → emit khi u0_bell fires tại D=target (D là ngày chuông).
+    - {kind:"event", type:"class", tok, d_cross, tier:L1|L2_OR_L3|BLIND, dacc, dpos}
+      → emit khi target == D_cross + 2 (2 ngày sau cross · quan sát ổn định).
+    - {kind:"event", type:"u1", tok, d_cross, v1, v2, verdict:PASS|PARTIAL|FAIL}
+      → emit khi target == D_cross + 5 VÀ class(D_cross) == L1 (AL2 gate).
+      SOPH (L2) sẽ KHÔNG BAO GIỜ có dòng u1.
 
-Usage:
-  python3 scripts/events_build.py --target 2026-09-20
+  · kind:"state" · GHI MỖI ĐÊM (snapshot trạng thái tại target):
+    - {kind:"state", type:"btier", tok, tier, d_cross, k}
+      → mỗi token trong build_b_state(target).
+
+Tại sao tách?
+  - event = fact về 1 ngày cụ thể · consumer (master, HEDGE) đọc event = biết
+    "ngày X token Y có tín hiệu Z". Đọc lại forever giữ nguyên.
+  - state = view của cohort tại 1 ngày · consumer đọc để render bản tin đêm ấy.
+
+Consumer (master render, HEDGE v2) đọc file KHÔNG tự tính.
 
 Doctrine §KỶ-LUẬT #12: file phải chạy tay ≥2 đêm quá khứ khớp
 với b_state_tracker + u0_bell_audit trước khi apply cron.
@@ -36,12 +46,11 @@ from b_state_tracker import (
 
 
 def _class_tier(is_l1: bool, dacc: float | None, dpos: float | None) -> str:
-    """L1 pass | not L1 (blind/L2/L3 combined) · số thô chỉ ghi dacc/dpos."""
+    """L1 pass | not L1 (blind/L2/L3 combined)."""
     if dacc is None or dpos is None:
         return "BLIND"
     if is_l1:
         return "L1"
-    # Không tính L2/L3 phân biệt tại events_build · consumer đọc dacc/dpos tự phân
     return "L2_OR_L3"
 
 
@@ -52,74 +61,85 @@ def _u1_verdict(v1p: bool, v2p: bool) -> str:
 
 
 def build_events(target: str) -> tuple[list[dict], str]:
-    """Trả (list_rows, md5_hex). Không ghi file · pure function."""
+    """Trả (list_rows, md5_hex). Không ghi file · pure function.
+
+    Rules per AL1-AL2 (22-09):
+      · bell event: emit iff u0_bell(D=target) fires
+      · class event: emit iff target == D_cross + 2 (per each token's D_cross)
+      · u1 event: emit iff target == D_cross + 5 AND class(D_cross) == L1 (gated by AL2)
+      · btier state: emit for every token in build_b_state(target)
+    """
     universe = _load_universe()
     by_sym = _load_fw_rows(target)
     now_iso = datetime.now(timezone.utc).isoformat(timespec="seconds")
     rows = []
+    td = datetime.strptime(target, "%Y-%m-%d").date()
 
-    # ── bell events (U0-BELL detect tại D=target) ──
+    # ── EVENT: bell (D=target · fire hôm nay) ──
     bell_res = _collect_bell(target)
-    dd_target = datetime.strptime(target, "%Y-%m-%d")
     for tok, dacc, dpos, div in bell_res["bell"]:
         rows.append({
-            "type": "bell", "tok": tok, "D": target,
+            "kind": "event", "type": "bell", "tok": tok, "D": target,
             "dacc_bwd": dacc, "dpos_bwd": dpos, "div": div,
             "computed_at": now_iso,
         })
-    # NEAR + BLIND cũng ghi nhưng type khác để consumer phân
+    # NEAR + BLIND ghi kind="event" cùng phân type
     for tok, dacc, dpos, div in bell_res["near"]:
         rows.append({
-            "type": "bell_near", "tok": tok, "D": target,
+            "kind": "event", "type": "bell_near", "tok": tok, "D": target,
             "dacc_bwd": dacc, "dpos_bwd": dpos, "div": div,
             "computed_at": now_iso,
         })
     for tok, dacc, dpos, div in bell_res["blind"]:
         rows.append({
-            "type": "bell_blind", "tok": tok, "D": target,
+            "kind": "event", "type": "bell_blind", "tok": tok, "D": target,
             "dacc_bwd": dacc, "dpos_bwd": dpos, "div": div,
             "computed_at": now_iso,
         })
 
-    # ── class + u1 events (per token có D_cross gần T) ──
-    td = datetime.strptime(target, "%Y-%m-%d").date()
+    # ── EVENT: class (target == D_cross + 2) · u1 (target == D_cross + 5 AND class=L1) ──
     for tok in universe:
         toks = by_sym.get(tok, [])
         if not toks: continue
         d_cross = _find_latest_cross(toks, target)
         if d_cross is None: continue
+        dc_d = datetime.strptime(d_cross, "%Y-%m-%d").date()
+        dpk = (td - dc_d).days
 
-        is_l1, dacc, dpos = _check_u0_class_L1(toks, d_cross)
-        tier = _class_tier(is_l1, dacc, dpos)
-        rows.append({
-            "type": "class", "tok": tok, "d_cross": d_cross, "tier": tier,
-            "dacc": dacc, "dpos": dpos, "computed_at": now_iso,
-        })
-
-        dpk = (td - datetime.strptime(d_cross, "%Y-%m-%d").date()).days
-        # U1 chấm tại D+5 · chỉ meaningful khi D+k ≥5
-        if dpk >= 5:
-            u1_pass, u1_ratios = _check_u1_v2v1(toks, d_cross)
-            v1_pass = u1_ratios.get("v1") is not None and u1_ratios["v1"] <= 0.6
-            v2_pass = u1_ratios.get("v2") is not None and u1_ratios["v2"] >= 1.5
+        # class · emit at D_cross+2
+        if dpk == 2:
+            is_l1, dacc, dpos = _check_u0_class_L1(toks, d_cross)
+            tier = _class_tier(is_l1, dacc, dpos)
             rows.append({
-                "type": "u1", "tok": tok, "d_cross": d_cross,
-                "v1": u1_ratios.get("v1"), "v2": u1_ratios.get("v2"),
-                "verdict": _u1_verdict(v1_pass, v2_pass),
+                "kind": "event", "type": "class", "tok": tok, "d_cross": d_cross,
+                "tier": tier, "dacc": dacc, "dpos": dpos,
                 "computed_at": now_iso,
             })
 
-    # ── btier events (tier + k cho mỗi token trong build_b_state) ──
+        # u1 · emit at D_cross+5 · CHỈ KHI class(D_cross) == L1 (AL2 gate)
+        if dpk == 5:
+            is_l1, _, _ = _check_u0_class_L1(toks, d_cross)
+            if is_l1:
+                u1_pass_all, u1_ratios = _check_u1_v2v1(toks, d_cross)
+                v1_pass = u1_ratios.get("v1") is not None and u1_ratios["v1"] <= 0.6
+                v2_pass = u1_ratios.get("v2") is not None and u1_ratios["v2"] >= 1.5
+                rows.append({
+                    "kind": "event", "type": "u1", "tok": tok, "d_cross": d_cross,
+                    "v1": u1_ratios.get("v1"), "v2": u1_ratios.get("v2"),
+                    "verdict": _u1_verdict(v1_pass, v2_pass),
+                    "computed_at": now_iso,
+                })
+
+    # ── STATE: btier snapshot mỗi đêm ──
     state = build_b_state(target, universe=universe, by_sym=by_sym)
     for tok, s in state.items():
         rows.append({
-            "type": "btier", "tok": tok, "tier": s["tier"],
+            "kind": "state", "type": "btier", "tok": tok, "tier": s["tier"],
             "d_cross": s.get("d_cross"),
             "k": s.get("d_plus_k"),
             "computed_at": now_iso,
         })
 
-    # Serialize + md5
     body = "\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n"
     md5_hex = hashlib.md5(body.encode("utf-8")).hexdigest()
     return rows, md5_hex
@@ -136,11 +156,12 @@ def main():
     rows, md5_hex = build_events(args.target)
 
     print(f"[events_build] target={args.target} · rows={len(rows)} · md5={md5_hex[:12]}")
-    by_type = {}
+    by_kind_type = {}
     for r in rows:
-        by_type[r["type"]] = by_type.get(r["type"], 0) + 1
-    for t, n in sorted(by_type.items()):
-        print(f"  {t:16s} : {n}")
+        k = f"{r['kind']}:{r['type']}"
+        by_kind_type[k] = by_kind_type.get(k, 0) + 1
+    for kt, n in sorted(by_kind_type.items()):
+        print(f"  {kt:24s} : {n}")
 
     if args.dry_run:
         print("[dry-run] no file written")
