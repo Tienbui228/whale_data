@@ -130,10 +130,10 @@ def render_unhedge_block(target: str, drop_near: bool = False, drop_blind: bool 
     HOLD-OUT 20/09→20/10: Tiên ĐỌC được nhưng CẤM chỉnh ngưỡng theo cái đọc được
     trước 21/10. Grid 8 ô đã khoá.
 
-    Format A3 (M6):
+    Format A3 (M6/AH5):
       ── UNHEDGE ── (n) [CAL-ONLY]
-         [U0-BELL D=dd/mm · Δacc_bwd=-XX% · pos_bwd=+YY% · lead=?] <TOK> [CAL-ONLY]
-         [U0-BELL D=dd/mm · Δacc_bwd=-XX% · pos_bwd=+YY% · lead=?] <TOK> [CAL-ONLY]
+         [U0-BELL D=dd/mm · Δacc_bwd=-XX% · pos_bwd=+YY%] <TOK> [CAL-ONLY]
+         [U0-BELL D=dd/mm · Δacc_bwd=-XX% · pos_bwd=+YY%] <TOK> [CAL-ONLY]
          ...
          near N (TOK · TOK · TOK)          ← M0(b)=1: ≤3 in tên, >3 đếm+3 mới
          blind N (TOK · TOK · TOK)         ← M0(b)=1: ≤3 in tên, >3 đếm+3 mới
@@ -173,7 +173,9 @@ def render_unhedge_block(target: str, drop_near: bool = False, drop_blind: bool 
         for tok, dacc, dpos, _div in bell_in:
             dacc_s = f"{dacc*100:+.0f}%" if dacc is not None else "N/A"
             dpos_s = f"{dpos*100:+.0f}%" if dpos is not None else "N/A"
-            lines.append(f"   [U0-BELL D={dd_mm} · Δacc_bwd={dacc_s} · pos_bwd={dpos_s} · lead=?] {tok} [CAL-ONLY]")
+            # AH5/22-09 · AC4-1: bỏ trường lead khỏi dòng chuông (D chưa có cross).
+            # L-84 vẫn áp mọi dòng CLASS/U1 (nơi lead có nghĩa thật, ghi = D_cross-D_bell).
+            lines.append(f"   [U0-BELL D={dd_mm} · Δacc_bwd={dacc_s} · pos_bwd={dpos_s}] {tok} [CAL-ONLY]")
 
     # M0(b)=1 blind rule: ≤3 in tên · >3 đếm+3 mới nhất
     def _blind_fmt(items, label):

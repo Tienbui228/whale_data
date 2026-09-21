@@ -1,9 +1,20 @@
 """dryrun_gom_daily_pipeline.py · AG1/21-09 · pipeline khô chân gom_daily.
 
+⚠ AH2/22-09 · GIỚI HẠN AS-OF STATE:
+   Dry-run đêm cũ dùng state HÔM NAY (gom_e_state.json snapshot lúc chạy dry),
+   KHÔNG phải state AS-OF đêm ấy. Registry cooldown, chapter timelines đã tiến
+   nên alerts count trong dry KHÁC alerts count thực khi cron chạy đêm ấy.
+   Backup+restore quanh dry loop CHỈ giữ state prod nguyên vẹn, KHÔNG replay
+   state cũ. Kết quả dry chỉ đo được:
+     (a) render không crash · (b) HTML tag · (c) len sau smart-truncate ≤ SLICE_CAP
+     (d) smart-truncate cắt ranh dòng, không cắt giữa chữ.
+   KHÔNG dùng để validate alerts count. Muốn validate alerts count đêm cũ:
+   cần state snapshot AS-OF đêm ấy (chưa có snapshot store · TODO nếu cần).
+
 Steps (dry · trừ send + bell_journal):
   1. render-gomE     · gom_e.py --daily --date <T> --fw-filter · capture stdout
   2. len-before-slice · in raw len
-  3. slice-4000       · gome_msg = raw[:4000]
+  3. slice-4000       · gome_msg = smart-truncate (AG2 wire)
   4. len-after-slice  · in sliced len
   5. html-scan        · U7 gate check (dry · không chặn)
   6. tail-truncated?  · check ranh chữ cuối cùng của Bảng B (còn nguyên?)
@@ -25,6 +36,7 @@ _REPO = Path("/root/Data_back_test/whale_data") if os.name != "nt" \
 sys.path.insert(0, str(_REPO / "scripts"))
 
 from master_preview_send import _tg_scan_bad_html   # U7 gate reuse
+from lib.tg_len import tg_len as _tg_len              # AH4/22-09 · UTF-16 code unit
 
 STORE = _REPO / "data" / "export"
 FW_SYM_PATH = _REPO / "data" / "config" / "freshwatch_symbols.txt"
@@ -76,7 +88,7 @@ def dry_one(target: str) -> dict:
     metrics = {
         "target": target,
         "gomE_rc": rc,
-        "raw_len": len(raw),
+        "raw_len": _tg_len(raw),   # AH4 · UTF-16 code unit
         "sliced_len": 0,
         "html_ok": None,
         "tail_last_60": "",
@@ -87,18 +99,21 @@ def dry_one(target: str) -> dict:
     if rc != 0:
         return metrics
 
-    # AG2/21-09 · smart-truncate (khớp run_gom_daily wire)
-    if len(raw) > SLICE_CAP:
+    # AG2/21-09 · AH4/22-09 · smart-truncate với tg_len (UTF-16 code unit) — khớp run_gom_daily wire
+    if _tg_len(raw) > SLICE_CAP:
         _tail = raw[SLICE_CAP:]
         _remaining_a = len([l for l in _tail.split("\n") if re.match(r"^  [A-Z0-9]+USDT?\s+\|", l)])
         _tail_note = f"\n(+{_remaining_a} token Bảng A · đủ ở audit)"
-        _max_body = SLICE_CAP - len(_tail_note)
-        _cut_at = raw.rfind("\n", 0, _max_body)
-        if _cut_at < 0: _cut_at = _max_body
+        _max_units = SLICE_CAP - _tg_len(_tail_note)
+        _cut_at = raw.rfind("\n", 0, _max_units)
+        if _cut_at < 0: _cut_at = _max_units
+        while _cut_at > 0 and _tg_len(raw[:_cut_at] + _tail_note) > SLICE_CAP:
+            _cut_at = raw.rfind("\n", 0, _cut_at - 1)
+            if _cut_at < 0: _cut_at = 0; break
         gome_msg = raw[:_cut_at] + _tail_note
     else:
         gome_msg = raw
-    metrics["sliced_len"] = len(gome_msg)
+    metrics["sliced_len"] = _tg_len(gome_msg)
 
     # HTML scan · dry · không chặn, chỉ báo
     bad = _tg_scan_bad_html(gome_msg)

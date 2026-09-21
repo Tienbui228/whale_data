@@ -114,10 +114,16 @@ def dry_one(target: str) -> tuple[bool, list[tuple[str, bool, str]], dict]:
             return (False, results, metrics)
 
         # STEP 5 · pre-check body len (with prefix estimate)
+        # AH4/22-09 · đo bằng tg_len (UTF-16 code unit sau strip HTML)
+        try:
+            from lib.tg_len import tg_len as _tg_len_dry
+        except ImportError:
+            _tg_len_dry = len
         prefix_len = _prefix_est(target)
-        full_len = len(body) + prefix_len
+        body_u = _tg_len_dry(body)
+        full_len = body_u + prefix_len
         ok = full_len <= 4096
-        msg = f"body={len(body)} + prefix~{prefix_len} = {full_len} vs 4096"
+        msg = f"body={body_u} + prefix~{prefix_len} = {full_len} utf16-u vs 4096"
         results.append(("pre-check-len", ok, msg))
         if not ok:
             return (False, results, metrics)

@@ -723,18 +723,28 @@ def main() -> None:
         # AG2/21-09 · smart-truncate: cắt ranh dòng · tail line `(+n token Bảng A · đủ ở audit)`
         # thay vì cắt giữa chữ. Slice cap 4000 giữ (không đổi thành fail-closed U7 tới khi
         # AE3 order xong — xem §KỶ-LUẬT #13).
+        # AH4/22-09 · đo len bằng tg_len (UTF-16 code unit sau strip HTML) · lib/tg_len.py
         if gom_e_out.strip():
             _SLICE_CAP = 4000
-            if len(gom_e_out) > _SLICE_CAP:
+            try:
+                sys.path.insert(0, "/root/Data_back_test/whale_data/scripts")
+                from lib.tg_len import tg_len as _tg_len_ag2
+            except ImportError:
+                _tg_len_ag2 = len   # fallback
+            if _tg_len_ag2(gom_e_out) > _SLICE_CAP:
                 import re as _re_ag2
-                # Đếm số dòng Bảng A còn lại sau slice (dòng bắt đầu "  SYM...")
+                # Đếm số dòng Bảng A còn lại sau char-slice (dòng bắt đầu "  SYM...")
                 _tail = gom_e_out[_SLICE_CAP:]
                 _remaining_a = len([l for l in _tail.split("\n") if _re_ag2.match(r"^  [A-Z0-9]+USDT?\s+\|", l)])
                 _tail_note = f"\n(+{_remaining_a} token Bảng A · đủ ở audit)"
-                # Cắt ranh dòng ngay trước _SLICE_CAP - len(tail_note)
-                _max_body = _SLICE_CAP - len(_tail_note)
-                _cut_at = gom_e_out.rfind("\n", 0, _max_body)
-                if _cut_at < 0: _cut_at = _max_body
+                # Cắt ranh dòng · UTF-16 unit chưa vượt _SLICE_CAP - len(tail_note)
+                _max_units = _SLICE_CAP - _tg_len_ag2(_tail_note)
+                # Cắt binary theo units bằng cách shrink dần
+                _cut_at = gom_e_out.rfind("\n", 0, _max_units)
+                if _cut_at < 0: _cut_at = _max_units
+                while _cut_at > 0 and _tg_len_ag2(gom_e_out[:_cut_at] + _tail_note) > _SLICE_CAP:
+                    _cut_at = gom_e_out.rfind("\n", 0, _cut_at - 1)
+                    if _cut_at < 0: _cut_at = 0; break
                 gome_msg = gom_e_out[:_cut_at] + _tail_note
             else:
                 gome_msg = gom_e_out

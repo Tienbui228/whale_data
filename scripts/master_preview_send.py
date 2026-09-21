@@ -227,12 +227,19 @@ def _tg_scan_bad_html(text: str):
 
 def send_telegram(text: str) -> tuple[bool, str]:
     # D3/17-09 · PRE-CHECK độ dài · TG limit=4096 chars · KHÔNG tự cắt (cắt = mất seal/cites)
-    n_chars = len(text)
+    # AH4/22-09 · đo bằng tg_len (UTF-16 code unit sau strip HTML whitelist) · lib/tg_len.py
+    try:
+        from lib.tg_len import tg_len as _tg_len
+        n_chars = _tg_len(text)
+        _unit = "utf16-u"
+    except ImportError:
+        n_chars = len(text)   # fallback cũ (code points)
+        _unit = "codepoints"
     if n_chars > 4096:
-        _log(f"[N/A-ERROR:BODY-TOO-LONG] len={n_chars} limit=4096")
+        _log(f"[N/A-ERROR:BODY-TOO-LONG] len={n_chars} {_unit} limit=4096")
         return (False, f"BODY-TOO-LONG len={n_chars}")
     if n_chars > 3800:
-        _log(f"[WARN:BODY-NEAR-LIMIT len={n_chars}]")
+        _log(f"[WARN:BODY-NEAR-LIMIT len={n_chars} {_unit}]")
     # AB1/U7/18-09 · PRE-CHECK HTML tag whitelist · chặn thẻ lạ trước khi API nhận HTTP 400
     bad = _tg_scan_bad_html(text)
     if bad is not None:
