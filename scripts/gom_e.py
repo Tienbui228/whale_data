@@ -676,9 +676,10 @@ def run_daily(target_date: str, store_dir: Path,
     summary = (f"[GOM-E T1] {target_date} | scanned={len(symbols)} "
                f"registry={n_reg} candidates={n_cand} alerts={len(alert_rows)}")
     print(summary)
-    print("\n".join(table_a))
+    # AG2/21-09 · Bảng B TRƯỚC Bảng A · alerts ưu tiên hiển thị · slice không cắt B.
     if alert_rows:
         print("\n".join(table_b))
+    print("\n".join(table_a))
 
     return table_a, table_b
 
