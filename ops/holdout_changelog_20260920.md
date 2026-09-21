@@ -303,3 +303,30 @@ M+N đã deploy trước cron, SOPH sẽ ở audit reject `b_l2_l3_reject.jsonl`
 
 **Không sửa artifact · không gửi lại**: đêm 09-19 dùng code CŨ (M SCP sau cron).
 Chỉ ghi vết. Cron 01:46 UTC 21/09 (đêm đầu code M+N) sẽ áp L1 gate strict cho target 09-20.
+
+## 2026-09-22 · AO+AP · ERRATA · cap gánh 4/6 đêm · CHƯA XẾP + POST bị cắt · vi phạm §KỶ-LUẬT #14 có biết
+
+**Vết**: Sau AO1 (L1 ngưỡng ký -15/10) commit 22be097, dry pipeline master
+6/6 xanh nhưng **pre-cap 4/6 đêm vượt 4096** (09-17=4178, 09-18=4422, 09-19=4113,
+09-20=4170). Cap 3-tier cắt tokens từ CHƯA XẾP LOÀI + POST-DUMP tail để giữ
+post-cap dưới 3800.
+
+**Token bị cắt khỏi thân mỗi đêm** (đo AP3, không đếm):
+- 09-17: 16 tokens · AT · 我踏马来了 · MUBARAK · CGPT · GIGGLE · AGT · B2 · CLO · ESPORTS · 龙虾 · AKE · ON · HEMI · LAB · USELESS · XAN
+- 09-18: 19 tokens · IDOL · ⏸APR · ON · AT · 我踏马来了 · MUBARAK · CGPT · GIGGLE · AGT · B2 · CROSS · 4 · CLO · 龙虾 · AKE · LAB · KOMA · USELESS · XAN
+- 09-19: 16 tokens · ⏸APR · ON · MUBARAK · CGPT · GIGGLE · AGT · BTR · CROSS · 4 · CLO · 龙虾 · AKE · KOMA · USELESS · XAN · B2
+- 09-20: 16 tokens · IDOL · ON · AT · MUBARAK · CGPT · GIGGLE · AGT · BTR · 4 · CLO · 龙虾 · AKE · KOMA · USELESS · XAN · B2
+
+**Vi phạm §KỶ-LUẬT #14 CÓ BIẾT**: BTR (CONFIRMED · L1 pass · U1 pass) bị cắt
+khỏi thân 09-19 và 09-20. ⏸APR (PX-PENDING flag) bị cắt 09-18 + 09-19. CROSS
+(CONFIRMED) bị cắt 09-18 + 09-19. Token có tín hiệu → thân không hiện → doctrine #14 nói KHÔNG được giấu.
+
+**KHÔNG sửa artifact cũ · KHÔNG thêm dòng "ngoài L1" tự · CHỜ phán E4 ANALYSIS**:
+- AO5-AO8 (dòng "ngoài L1", HEDGE v2, gộp họ-kênh) NOT DO tới khi có chữ.
+- Cron 22/09 01:46 UTC vẫn chạy AO1 (L1 -15/10) như đã SCP.
+- Doctrine #14 vi phạm được ghi nhận nhưng không tự xử trước phán E4.
+
+**Đo AP2 · so 2 format "ngoài L1"** (chuẩn bị cho E4 phán):
+- Format A (đủ tên có loại): 408-436 chars/night
+- Format B (count-by-class): 38 chars fixed
+- Δ = +370-398 chars · Format B tiết kiệm chỗ đáng kể · cân nhắc khi wire.
