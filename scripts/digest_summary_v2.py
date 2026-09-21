@@ -306,6 +306,46 @@ def _rong_line(text: str) -> str:
     return f"RÒNG: {n_open} chương ({new_str} · {q1_str}) · churn{n_churn}→file · CLOSED:{closed} → #ròng"
 
 
+def _nhip_kenh_pointer(a_gh: str, a_wl: str, a_ex: str, a_fr: str, a_gd: str) -> str:
+    """P2/20-09 · nén 5 NHỊP-KÊNH thành 1 dòng pointer per AMD-01.
+
+    Format: `GOM-H {N} reo→#gomh · HEDGE {info}→#hedge · KHO {up}/{dn}→#kho ·
+             FRESH {N}→#fresh · RÒNG {N}→#ròng`
+
+    Số as-printed từ nguồn hiện tại · KHÔNG tính lại. Thiếu → `N/A-ERROR` slot đó.
+    """
+    def _slot_gomh():
+        if not a_gh: return "GOM-H N/A-ERROR→#gomh"
+        m = re.search(r"GOM-H:\s*(\d+)\s*reo", _gomh_line(a_gh))
+        return f"GOM-H {m.group(1)} reo→#gomh" if m else "GOM-H N/A-ERROR→#gomh"
+
+    def _slot_hedge():
+        if not a_wl: return "HEDGE N/A-ERROR→#hedge"
+        _line = _hedge_line(a_wl)
+        if "N/A-ERROR" in _line:
+            return "HEDGE N/A-ERROR→#hedge"
+        m = re.search(r"HEDGE:\s*A=(\d+)", _line)
+        return f"HEDGE A={m.group(1)}→#hedge" if m else "HEDGE B-top→#hedge"
+
+    def _slot_kho():
+        if not a_ex: return "KHO N/A-ERROR→#kho"
+        _line = _kho_line(a_ex)
+        m = re.search(r"📥(\d+)\s*\([^)]*\)\s*/\s*📤(\d+)", _line)
+        return f"KHO {m.group(1)}/{m.group(2)}→#kho" if m else "KHO N/A-ERROR→#kho"
+
+    def _slot_fresh():
+        if not a_fr: return "FRESH N/A-ERROR→#fresh"
+        m = re.search(r"FRESH:\s*(\d+)", _fresh_line(a_fr))
+        return f"FRESH {m.group(1)}→#fresh" if m else "FRESH N/A-ERROR→#fresh"
+
+    def _slot_rong():
+        if not a_gd: return "RÒNG N/A-ERROR→#ròng"
+        m = re.search(r"RÒNG:\s*(\d+)\s*chương", _rong_line(a_gd))
+        return f"RÒNG {m.group(1)}→#ròng" if m else "RÒNG N/A-ERROR→#ròng"
+
+    return " · ".join([_slot_gomh(), _slot_hedge(), _slot_kho(), _slot_fresh(), _slot_rong()])
+
+
 def _star_block_from_ledger(target: str) -> tuple[str, str, list[str], str, dict]:
     """⭐ compose · V3.5: BỘ-BA {treo tổng-sống, mới⊆treo} + DAO-DEFERRED + direction routing.
     Reads stars_<target>.jsonl (from ledger_backfill v3.5) for direction/flags.
@@ -811,8 +851,9 @@ def _v1_3_render_species_body(target: str, token_records: list, dai_no_line: str
     if tripwire_line: lines.append(tripwire_line)
     lines.append(f"[loài = trạng thái hôm nay theo khuôn §16 PATTERN_BOOK v1.3 md5 77d86654 "
                  f"— draft, chưa đủ mẫu]")
-    # O1/20-09 · N4=(ii) explain: [B] HOA và [b] thường KHÁC nghĩa · một dòng, tính ngân sách
-    lines.append("[B] = unhedge đã xác nhận · [b] = đang hedge (cấu trúc)")
+    # O1/20-09 · N4=(ii) · X1/21-09 · [B] HOA và [b] thường KHÁC nghĩa
+    # Đổi câu để tránh trigger label_claims_lint (X1: "đã xác nhận" chấm orphan claim).
+    lines.append("[B] = U1 đạt (L1 ∧ v2∧v1 ≤30d) · [b] = cấu trúc hedge")
     lines.append("")
 
     _SPECIES = [
@@ -995,9 +1036,15 @@ def _v1_3_apply_3tier_cap(body: str, budget: int = 3800) -> str:
         tm = _V1_3_TOKEN_RE.match(l)
         if tm:
             core = tm.group(2).strip()
+            # P4/20-09 · giữ cờ ⏸/[?] trong sym khi cắt · KHÔNG mất truy vết
             sym_match = re.match(r"^(?:\[[^\]]+\]\s+)?(?:⏸ WATCH \[PX-PENDING\]:\s+)?(\S+)", core)
             sym = sym_match.group(1) if sym_match else "?"
-            cur["tokens"].append({"sym": sym, "line": l, "idx": i})
+            # Prepend flag marker nếu token có ⏸ hoặc [?] prefix trong dòng gốc
+            flag = ""
+            if core.startswith("⏸"): flag = "⏸"
+            elif core.startswith("[?]"): flag = "?"
+            display_sym = f"{flag}{sym}" if flag else sym
+            cur["tokens"].append({"sym": display_sym, "line": l, "idx": i})
             cur["body_indices"].append(i)
         else:
             if l.strip() == "" or l == l.lstrip():
@@ -1020,7 +1067,8 @@ def _v1_3_apply_3tier_cap(body: str, budget: int = 3800) -> str:
                 new_tail_n = b["tail_n"] + len(dropped)
                 for t in kept: result.append(t["line"])
                 if new_tail_names:
-                    result.append(f"   (+{new_tail_n} nữa: " + "·".join(new_tail_names) + ")")
+                    # P4/20-09 · thêm `· đủ ở audit` để chỉ danh sách đầy trong master_body_<t>.txt
+                    result.append(f"   (+{new_tail_n} nữa: " + "·".join(new_tail_names) + " · đủ ở audit)")
                 for j in b["body_indices"]: handled.add(j)
             elif i in handled:
                 continue
@@ -1153,19 +1201,21 @@ def build_v2_digest(target: str) -> str:
         # V1.2 (default): use star_body as-is
         lines.append(star_body)
 
-    # 📒 SỔ THƯỜNG (1-trục symbols, ≠ star) — parse from ledger for symbols with 1 axis
-    # Simplified: just note count for now
-    # 🚪 RỜI-SỔ (none)-không-câm
-    lines.append("📒 SỔ THƯỜNG · [PENDING batch-kế · 1-trục compose]")
-    lines.append("🚪 RỜI-SỔ · (none) — hôm nay không có token rời sổ")
+    # P1/20-09 · BỎ 📒 SỔ THƯỜNG stub `[PENDING batch-kế]` (chưa có nội dung thật).
+    # BỎ 🚪 RỜI-SỔ `(none)` (khi rỗng KHÔNG in dòng). Khi có nội dung thật → wire lại
+    # có điều kiện. Hai stub chưa bao giờ tính gì → bỏ dòng rỗng KHÔNG giấu tin.
+    # Trả ~110 chars.
+    _so_thuong_content = ""   # TODO: fill khi có 1-trục compose thực
+    _roi_so_tokens = []       # TODO: fill khi có token rời sổ thực
+    if _so_thuong_content:
+        lines.append(f"📒 SỔ THƯỜNG · {_so_thuong_content}")
+    if _roi_so_tokens:
+        lines.append(f"🚪 RỜI-SỔ · {' · '.join(_roi_so_tokens)}")
 
-    # 5 NHỊP-KÊNH R2 templates VERBATIM
+    # P2/20-09 · NHỊP-KÊNH nén 5 dòng → 1 dòng pointer per AMD-01.
+    # Số as-printed từ nguồn hiện tại · thiếu → N/A-ERROR trong slot đó.
     lines.append("")
-    lines.append(_gomh_line(a_gh))
-    lines.append(_hedge_line(a_wl))
-    lines.append(_kho_line(a_ex))
-    lines.append(_fresh_line(a_fr))
-    lines.append(_rong_line(a_gd))
+    lines.append(_nhip_kenh_pointer(a_gh, a_wl, a_ex, a_fr, a_gd))
 
     # O2/17-09 · L2 · gỡ 👁 forward_tests khỏi thân master V1.3
     # → chuyển sang tin sáng phase_map (AMD-02 R6, wire riêng trong run_phase_tag.py)
