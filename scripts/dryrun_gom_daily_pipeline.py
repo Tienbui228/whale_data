@@ -100,19 +100,27 @@ def dry_one(target: str) -> dict:
         return metrics
 
     # AG2/21-09 · AH4/22-09 · smart-truncate với tg_len (UTF-16 code unit) — khớp run_gom_daily wire
-    if _tg_len(raw) > SLICE_CAP:
+    # AV1/22-09 · tách footer trước slice · footer LUÔN ở cuối tin
+    _footer_str = ""
+    _body_lines = raw.split("\n")
+    for _i in range(len(_body_lines) - 1, -1, -1):
+        if _body_lines[_i].startswith("━━ footer ━━"):
+            _footer_str = "\n" + _body_lines[_i]
+            raw = "\n".join(_body_lines[:_i]).rstrip("\n")
+            break
+    if _tg_len(raw) + _tg_len(_footer_str) > SLICE_CAP:
         _tail = raw[SLICE_CAP:]
         _remaining_a = len([l for l in _tail.split("\n") if re.match(r"^  [A-Z0-9]+USDT?\s+\|", l)])
         _tail_note = f"\n(+{_remaining_a} token Bảng A · đủ ở audit)"
-        _max_units = SLICE_CAP - _tg_len(_tail_note)
+        _max_units = SLICE_CAP - _tg_len(_tail_note) - _tg_len(_footer_str)
         _cut_at = raw.rfind("\n", 0, _max_units)
         if _cut_at < 0: _cut_at = _max_units
-        while _cut_at > 0 and _tg_len(raw[:_cut_at] + _tail_note) > SLICE_CAP:
+        while _cut_at > 0 and _tg_len(raw[:_cut_at] + _tail_note + _footer_str) > SLICE_CAP:
             _cut_at = raw.rfind("\n", 0, _cut_at - 1)
             if _cut_at < 0: _cut_at = 0; break
-        gome_msg = raw[:_cut_at] + _tail_note
+        gome_msg = raw[:_cut_at] + _tail_note + _footer_str
     else:
-        gome_msg = raw
+        gome_msg = raw + _footer_str
     metrics["sliced_len"] = _tg_len(gome_msg)
 
     # HTML scan · dry · không chặn, chỉ báo
@@ -130,6 +138,9 @@ def dry_one(target: str) -> dict:
         next_char = raw[SLICE_CAP] if len(raw) > SLICE_CAP else ""
         cut_mid = (last_char.isalnum() and next_char.isalnum())
         metrics["sliced_tail_cut_mid_word"] = cut_mid
+
+    # AV1/22-09 · footer có trong sliced?
+    metrics["footer_in_sliced"] = "━━ footer ━━" in gome_msg
 
     # Bảng B có nguyên vẹn trong sliced? "— BẢNG B" marker + có ≥1 dòng alert sau
     m = re.search(r"— BẢNG B MODE-SWITCH ALERTS \d{4}-\d{2}-\d{2} \((\d+) fires\) —", gome_msg)
@@ -153,8 +164,8 @@ def main():
     args = ap.parse_args()
     targets = [t.strip() for t in args.targets.split(",") if t.strip()]
 
-    print(f"{'target':12s} | {'rc':>3s} | {'raw':>5s} | {'sliced':>6s} | {'html':>4s} | {'tail-cut':>8s} | {'BảngB in':>10s}")
-    print(f"{'-'*12} | {'-'*3} | {'-'*5} | {'-'*6} | {'-'*4} | {'-'*8} | {'-'*10}")
+    print(f"{'target':12s} | {'rc':>3s} | {'raw':>5s} | {'sliced':>6s} | {'html':>4s} | {'tail-cut':>8s} | {'BảngB in':>10s} | {'footer':>6s}")
+    print(f"{'-'*12} | {'-'*3} | {'-'*5} | {'-'*6} | {'-'*4} | {'-'*8} | {'-'*10} | {'-'*6}")
 
     # AG1/AG2 · backup gom_e state 1 lần trước tất cả · restore sau
     _saved = _backup_gom_e_state()
@@ -170,7 +181,8 @@ def main():
         tgt = m["target"]
         cut_str = "YES" if m.get("sliced_tail_cut_mid_word") else "no"
         html_str = "OK" if m["html_ok"] else "BAD"
-        print(f"{tgt:12s} | {m['gomE_rc']:>3d} | {m['raw_len']:>5d} | {m['sliced_len']:>6d} | {html_str:>4s} | {cut_str:>8s} | {m.get('bang_b_in_sliced', '?'):>10s}")
+        foot_str = "OK" if m.get("footer_in_sliced") else "MISS"
+        print(f"{tgt:12s} | {m['gomE_rc']:>3d} | {m['raw_len']:>5d} | {m['sliced_len']:>6d} | {html_str:>4s} | {cut_str:>8s} | {m.get('bang_b_in_sliced', '?'):>10s} | {foot_str:>6s}")
 
     print()
     print(f"{'target':12s} | tail_last_60")
@@ -186,11 +198,12 @@ def main():
                           if m.get("bang_b_in_sliced", "").split("/")[0].isdigit()
                           and m.get("bang_b_in_sliced", "").split("/")[0] != "0")
     n_cut_mid = sum(1 for m in all_metrics if m.get("sliced_tail_cut_mid_word"))
+    n_footer_ok = sum(1 for m in all_metrics if m.get("footer_in_sliced"))
 
     print()
     print(f"═══ TỔNG {n} đêm · render OK: {n_ok_render}/{n} · html OK: {n_html_ok}/{n}")
-    print(f"═══ Bảng B trong sliced: {n_bang_b_intact}/{n} · tail cut giữa chữ: {n_cut_mid}/{n}")
-    sys.exit(0 if (n_ok_render == n and n_html_ok == n) else 1)
+    print(f"═══ Bảng B trong sliced: {n_bang_b_intact}/{n} · tail cut giữa chữ: {n_cut_mid}/{n} · footer OK: {n_footer_ok}/{n}")
+    sys.exit(0 if (n_ok_render == n and n_html_ok == n and n_footer_ok == n) else 1)
 
 
 if __name__ == "__main__":

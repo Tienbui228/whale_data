@@ -731,23 +731,30 @@ def main() -> None:
                 from lib.tg_len import tg_len as _tg_len_ag2
             except ImportError:
                 _tg_len_ag2 = len   # fallback
-            if _tg_len_ag2(gom_e_out) > _SLICE_CAP:
+            # AV1/22-09 · tách footer trước slice · footer LUÔN ở cuối tin sau slice
+            _footer_str = ""
+            _body_lines = gom_e_out.split("\n")
+            for _i in range(len(_body_lines) - 1, -1, -1):
+                if _body_lines[_i].startswith("━━ footer ━━"):
+                    _footer_str = "\n" + _body_lines[_i]
+                    gom_e_out = "\n".join(_body_lines[:_i]).rstrip("\n")
+                    break
+            if _tg_len_ag2(gom_e_out) + _tg_len_ag2(_footer_str) > _SLICE_CAP:
                 import re as _re_ag2
                 # Đếm số dòng Bảng A còn lại sau char-slice (dòng bắt đầu "  SYM...")
                 _tail = gom_e_out[_SLICE_CAP:]
                 _remaining_a = len([l for l in _tail.split("\n") if _re_ag2.match(r"^  [A-Z0-9]+USDT?\s+\|", l)])
                 _tail_note = f"\n(+{_remaining_a} token Bảng A · đủ ở audit)"
-                # Cắt ranh dòng · UTF-16 unit chưa vượt _SLICE_CAP - len(tail_note)
-                _max_units = _SLICE_CAP - _tg_len_ag2(_tail_note)
-                # Cắt binary theo units bằng cách shrink dần
+                # Reserve slice space cho BOTH tail_note VÀ footer
+                _max_units = _SLICE_CAP - _tg_len_ag2(_tail_note) - _tg_len_ag2(_footer_str)
                 _cut_at = gom_e_out.rfind("\n", 0, _max_units)
                 if _cut_at < 0: _cut_at = _max_units
-                while _cut_at > 0 and _tg_len_ag2(gom_e_out[:_cut_at] + _tail_note) > _SLICE_CAP:
+                while _cut_at > 0 and _tg_len_ag2(gom_e_out[:_cut_at] + _tail_note + _footer_str) > _SLICE_CAP:
                     _cut_at = gom_e_out.rfind("\n", 0, _cut_at - 1)
                     if _cut_at < 0: _cut_at = 0; break
-                gome_msg = gom_e_out[:_cut_at] + _tail_note
+                gome_msg = gom_e_out[:_cut_at] + _tail_note + _footer_str
             else:
-                gome_msg = gom_e_out
+                gome_msg = gom_e_out + _footer_str
             ok_e = tg_send(gome_msg)
             # V3.5o · GOM-E [SENT] marker + artifact_dump + log_bell (chuẩn chung)
             import hashlib as _hl_e

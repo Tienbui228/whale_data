@@ -581,21 +581,27 @@ def run_daily(target_date: str, store_dir: Path,
     symbols = sorted(df_all["symbol"].unique())
 
     # Filter to freshwatch universe if filter file provided
+    fw_syms = None
     if fw_filter and fw_filter.exists():
         with open(fw_filter, encoding="utf-8") as f:
             fw_syms = {ln.strip() for ln in f if ln.strip()}
         symbols = [s for s in symbols if s in fw_syms]
+
+    # AV1/22-09 · N_universe = fw filter size; k_scanned đếm trong loop; blind = N-k
+    n_universe = len(fw_syms) if fw_syms is not None else len(symbols)
 
     state = _load_state()
 
     registry_rows  = []  # Bảng A
     alert_rows     = []  # Bảng B
     capture_set    = []  # T1-STORE capture set: registry ∪ vừa-ra-≤3d
+    n_scanned      = 0   # AV1/22-09 · symbols có data tại target
 
     for sym in symbols:
         df_sym = df_all[df_all["symbol"] == sym].copy()
         if df_sym.empty or df_sym["date"].max() < target_date:
             continue
+        n_scanned += 1
 
         df_sym = compute_metrics(df_sym)
 
@@ -671,15 +677,26 @@ def run_daily(target_date: str, store_dir: Path,
     table_a = _format_table_a(registry_rows, target_date)
     table_b = _format_table_b(alert_rows, target_date)
 
-    n_cand = len(capture_set)
-    n_reg  = sum(1 for s in state.values() if s.get("in_registry"))
-    summary = (f"[GOM-E T1] {target_date} | scanned={len(symbols)} "
-               f"registry={n_reg} candidates={n_cand} alerts={len(alert_rows)}")
+    # AV1/22-09 · header format · scanned=k/N · blind=n · alerts=m (thay | bằng ·)
+    n_blind = n_universe - n_scanned
+    summary = (f"[GOM-E T1] {target_date} · scanned={n_scanned}/{n_universe} "
+               f"· blind={n_blind} · alerts={len(alert_rows)}")
     print(summary)
     # AG2/21-09 · Bảng B TRƯỚC Bảng A · alerts ưu tiên hiển thị · slice không cắt B.
     if alert_rows:
         print("\n".join(table_b))
     print("\n".join(table_a))
+
+    # AV1/22-09 · footer với universe_gen + events_md5 (md5 canonical alert_rows)
+    import hashlib as _hl_av1
+    import json as _json_av1
+    _events_payload = _json_av1.dumps(
+        sorted([f"{r['symbol']}|{r.get('tag_str','')}" for r in alert_rows]),
+        ensure_ascii=False,
+    )
+    events_md5 = _hl_av1.md5(_events_payload.encode("utf-8")).hexdigest()[:12]
+    footer = f"━━ footer ━━ universe_gen={n_universe} · events_md5={events_md5}"
+    print(footer)
 
     return table_a, table_b
 
