@@ -125,14 +125,55 @@ def load_list_a(target: str) -> tuple[set, dict]:
     return reg, details
 
 
-def registry_hop_145(target: str) -> tuple[list[dict], str]:
+def _compute_registry_fields(sym: str, target: str, fw_extra: dict) -> dict:
+    """β-fix2/22-09 · CANONICAL compute div_avg3/acc_r/pos_r cho MỘT sym tại target
+    trực tiếp từ store · không chép từ GOM-E hay watchlist.
+
+    Rule (mirror GOM-E · §1 spec):
+      div_raw = pos_r/acc_r · div_avg3 = rolling(3, min_periods=1).mean(div_raw)
+      low_conf mask (nếu có · L-21).
+
+    Nếu store trống → trả reason string "N/A-<lý do>".
+    """
+    dmap = fw_extra.get(sym, {})
+    if not dmap:
+        return {"acc_r": None, "pos_r": None, "div_avg3": None,
+                "reason": "N/A-no-store"}
+    dates_all = sorted(dmap.keys())
+    dates_up = [d for d in dates_all if d <= target]
+    if not dates_up:
+        return {"acc_r": None, "pos_r": None, "div_avg3": None,
+                "reason": "N/A-no-history"}
+    # Take 3 most recent for rolling mean
+    recent = dates_up[-3:]
+    div_vals = []
+    for d in recent:
+        row = dmap[d]
+        pr = row.get("pos"); ar = row.get("acc")
+        if pr is None or ar is None: continue
+        if isinstance(pr, float) and math.isnan(pr): continue
+        if isinstance(ar, float) and math.isnan(ar): continue
+        if ar == 0: continue
+        div_vals.append(pr / ar)
+    if not div_vals:
+        return {"acc_r": None, "pos_r": None, "div_avg3": None,
+                "reason": "N/A-nan-fields"}
+    # Last-day acc_r/pos_r (as-of target)
+    last_row = dmap[dates_up[-1]]
+    acc_r = last_row.get("acc")
+    pos_r = last_row.get("pos")
+    if isinstance(acc_r, float) and math.isnan(acc_r): acc_r = None
+    if isinstance(pos_r, float) and math.isnan(pos_r): pos_r = None
+    div_avg3 = sum(div_vals) / len(div_vals)
+    return {"acc_r": acc_r, "pos_r": pos_r, "div_avg3": div_avg3, "reason": None}
+
+
+def registry_hop_145(target: str, fw_extra: Optional[dict] = None) -> tuple[list[dict], str]:
     """Trả (registry_hop_list, registry_md5 hex[12]).
 
-    Union Bảng A ∪ List A · mỗi row:
-      {sym, in_A, in_L, div_smooth, sn, acc_r, pos_r, fund, band, source, tuoi_str}
-    band ∈ {"≤0.5", "0.5–0.85"} · source ∈ {"hedge-run", "H1∧H2", "hai-bên"}
-    tuoi_str: `≥Nd[state]` nếu entry=state-birth · `Nd` nếu tính từ hedge_start_date.
+    Union Bảng A ∪ List A · β-fix2 · MỌI row div_avg3/acc_r/pos_r từ _compute_registry_fields.
     """
+    if fw_extra is None: fw_extra = load_fw_extra(target)
     bang_a = load_bang_a()
     list_a_set, list_a_det = load_list_a(target)
 
@@ -156,10 +197,13 @@ def registry_hop_145(target: str) -> tuple[list[dict], str]:
         in_A = sym in bang_a
         in_L = sym in list_a_set
         lst  = list_a_det.get(sym, {})
-        div_smooth = lst.get("div", float("nan"))
+        # β-fix2 · CANONICAL fields từ store · KHÔNG dùng watchlist snapshot
+        canon = _compute_registry_fields(sym, target, fw_extra)
+        div_smooth = canon["div_avg3"] if canon["div_avg3"] is not None else float("nan")
+        acc_r      = canon["acc_r"] if canon["acc_r"] is not None else float("nan")
+        pos_r      = canon["pos_r"] if canon["pos_r"] is not None else float("nan")
+        na_reason  = canon["reason"]
         sn         = lst.get("sn", 0)
-        acc_r      = lst.get("acc_r", float("nan"))
-        pos_r      = lst.get("pos_r", float("nan"))
         fund       = lst.get("fund", float("nan"))
 
         # Band + source (AW6)
@@ -214,8 +258,10 @@ def registry_hop_145(target: str) -> tuple[list[dict], str]:
             "band":        band,
             "source":      source,
             "tuoi_str":    tuoi_str,
+            "na_reason":   na_reason,
         })
 
+    # registry_md5 SẼ tính từ CSV audit (β-fix4) · placeholder tạm thời
     payload = json.dumps(
         sorted([f"{r['sym']}|{r['band']}|{r['source']}" for r in rows]),
         ensure_ascii=False,
@@ -511,18 +557,25 @@ def render_registry_block(rows: list[dict], reg_md5: str,
         if r: forced_rows.append(r)
 
     def _line(r):
-        div_s = f"{r['div_smooth']:.3f}" if (isinstance(r["div_smooth"], float) and
-                                              not math.isnan(r["div_smooth"])) else "N/A"
-        acc_s = f"{r['acc_r']:.2f}" if isinstance(r["acc_r"], float) and not math.isnan(r["acc_r"]) else "?"
-        pos_s = f"{r['pos_r']:.2f}" if isinstance(r["pos_r"], float) and not math.isnan(r["pos_r"]) else "?"
+        # β-fix2 · store rỗng → in "N/A-<reason>" thay "?"
+        na_r = r.get("na_reason")
+        if na_r:
+            div_s = na_r
+            acc_s = na_r
+            pos_s = na_r
+        else:
+            div_s = f"{r['div_smooth']:.3f}" if (isinstance(r["div_smooth"], float) and
+                                                  not math.isnan(r["div_smooth"])) else "N/A"
+            acc_s = f"{r['acc_r']:.2f}" if isinstance(r["acc_r"], float) and not math.isnan(r["acc_r"]) else "?"
+            pos_s = f"{r['pos_r']:.2f}" if isinstance(r["pos_r"], float) and not math.isnan(r["pos_r"]) else "?"
         # α2 · fund_state 7d · lib.fund_state
         fund_s = _fund_state_for_sym(r["sym"], target, fw_extra)
         bare = _strip_usdt(r["sym"])
         ev_tag = f" [{events_by_tok.get(bare, '')}]" if bare in event_syms_bare else ""
         # p104 · nếu over 2×min60d, thêm [hậu-D0 +kd]
         luat_tag = f" [hậu-D0 +{kd_map[r['sym']]}d]" if over_map.get(r["sym"]) else ""
-        # compact format · d/a/p labels · tiết kiệm ~135 chars/15 dòng
-        return (f"  {r['sym']} · {r['band']} · {r['source']} · "
+        # compact format · d/a/p labels · β-fix1 bỏ USDT hậu tố
+        return (f"  {_strip_usdt(r['sym'])} · {r['band']} · {r['source']} · "
                 f"d={div_s} a={acc_s} p={pos_s} {fund_s} kr=? {r['tuoi_str']}{ev_tag}{luat_tag}")
 
     for r in top:
@@ -613,9 +666,10 @@ def render_from_master_block(events: list[dict], target: str) -> list[str]:
 # ── MAIN COMPOSE ─────────────────────────────────────────────────────────────
 
 def compose_body(target: str, report_only: bool = True,
-                 errata: bool = False) -> tuple[str, dict]:
+                 errata: bool = False, write_audit: bool = True) -> tuple[str, dict]:
     """Trả (body_str, meta).
 
+    β-fix4: write_audit=True → ghi hedge_registry_<T>.csv + registry_md5 từ CSV bytes.
     meta: {events_md5, events_status, registry_md5, n_reg, n_events, tg_len, ...}
     """
     events, events_md5, events_status = read_events(target)
@@ -642,12 +696,12 @@ def compose_body(target: str, report_only: bool = True,
         elif t == "u1":
             events_by_tok[tok] = f"U1-{e.get('verdict', '?')}"
 
-    # Registry hợp 145 · p111
-    reg_rows, reg_md5 = registry_hop_145(target)
-
-    # fw_extra cho WHALE + price_map cho luật nền
+    # fw_extra cho WHALE + registry canonical + price_map cho luật nền
     fw_extra = load_fw_extra(target)
     price_map = load_daily_rows(target)
+
+    # Registry hợp 145 · p111 · β-fix2 canonical fields
+    reg_rows, _reg_md5_tmp = registry_hop_145(target, fw_extra=fw_extra)
 
     # Scanned/blind
     fw_syms = set()
@@ -716,6 +770,13 @@ def compose_body(target: str, report_only: bool = True,
         header_lines.append("⚠ ERRATA đêm đầu: 🎓 TỐT-NGHIỆP BỎ · 🅱 nghĩa mới (Δpos thật ≥+10%) · "
                             "registry = hợp Bảng A ∪ List A (không phải List A cũ)")
 
+    # β-fix4 · Ghi audit CSV TRƯỚC · registry_md5 lấy từ CSV bytes
+    audit_path = f"data/artifacts/hedge_registry_{target}.csv"
+    if write_audit:
+        _p, reg_md5 = write_audit_csv(target, reg_rows, events_by_tok=events_by_tok)
+    else:
+        reg_md5 = _reg_md5_tmp
+
     # Compose
     parts = header_lines + [""]
     parts += render_events_block(events, events_status, target, luat_over_toks) + [""]
@@ -725,7 +786,6 @@ def compose_body(target: str, report_only: bool = True,
     parts += render_from_master_block(events, target) + [""]
 
     # Footer (AW10 · α6 CHƯA KÝ marker)
-    audit_path = f"data/artifacts/hedge_registry_{target}.csv"
     parts.append(f"━━ footer ━━ universe_gen={n_universe} [CHƯA KÝ] · "
                  f"events_md5={events_md5[:12] if events_md5 else 'N/A'} "
                  f"· registry_md5={reg_md5} · audit={audit_path}")
@@ -759,6 +819,171 @@ def compose_body(target: str, report_only: bool = True,
         "over_budget":     body_tg_len > BODY_BUDGET,
     }
     return body, meta
+
+
+# ── β-fix4 · AUDIT CSV + registry_md5 từ CSV bytes ───────────────────────────
+
+def write_audit_csv(target: str, reg_rows: list[dict], out_dir: Optional[Path] = None,
+                     events_by_tok: Optional[dict] = None) -> tuple[Path, str]:
+    """Ghi hedge_registry_<T>.csv · trả (path, md5_from_bytes[12]).
+
+    β-fix4: registry_md5 tính TỪ NỘI DUNG CSV bytes vừa ghi · không cache.
+    Cột: sym · in_A · in_L · dải · nguồn · div_avg3 · acc_r · pos_r · fund · kr · tuổi · na_reason
+    """
+    import csv as _csv_a
+    if out_dir is None: out_dir = ART_DIR
+    if events_by_tok is None: events_by_tok = {}
+    out_dir.mkdir(parents=True, exist_ok=True)
+    p = out_dir / f"hedge_registry_{target}.csv"
+    md5_p = out_dir / f"hedge_registry_{target}.md5"
+    cols = ["sym", "in_A", "in_L", "dai", "nguon",
+            "div_avg3", "acc_r", "pos_r",
+            "fund_state", "kr_share", "tuoi", "na_reason", "event_today"]
+    with p.open("w", newline="", encoding="utf-8") as f:
+        w = _csv_a.DictWriter(f, fieldnames=cols)
+        w.writeheader()
+        for r in sorted(reg_rows, key=lambda x: x["sym"]):
+            bare = _strip_usdt(r["sym"])
+            fund_s = "N/A"
+            # fund_state đã tính ở render; ở đây tính lại (canonical)
+            row_out = {
+                "sym":        bare,
+                "in_A":       int(r["in_A"]),
+                "in_L":       int(r["in_L"]),
+                "dai":        r["band"],
+                "nguon":      r["source"],
+                "div_avg3":   ("" if r.get("na_reason") else
+                               f"{r['div_smooth']:.6f}"
+                               if isinstance(r["div_smooth"], float) and not math.isnan(r["div_smooth"])
+                               else ""),
+                "acc_r":      ("" if r.get("na_reason") else
+                               f"{r['acc_r']:.6f}"
+                               if isinstance(r["acc_r"], float) and not math.isnan(r["acc_r"])
+                               else ""),
+                "pos_r":      ("" if r.get("na_reason") else
+                               f"{r['pos_r']:.6f}"
+                               if isinstance(r["pos_r"], float) and not math.isnan(r["pos_r"])
+                               else ""),
+                "fund_state": fund_s,   # placeholder · compute_body sẽ pass đúng
+                "kr_share":   "N/A",   # kr chưa wire · β5 defer
+                "tuoi":       r["tuoi_str"],
+                "na_reason":  r.get("na_reason") or "",
+                "event_today": events_by_tok.get(bare, ""),
+            }
+            w.writerow(row_out)
+    # md5 canonical từ CSV bytes vừa ghi
+    md5_hex = hashlib.md5(p.read_bytes()).hexdigest()
+    md5_p.write_text(md5_hex + "\n", encoding="utf-8")
+    return p, md5_hex[:12]
+
+
+# ── β2/β3 · U7 GATE SENDER + JOURNAL KÍCH-vì-chân-HEDGE ────────────────────────────
+
+def _u7_scan_bad_html(body: str) -> Optional[tuple]:
+    """Whitelist tags {b, i, u, s, a, code, pre, tg-spoiler, blockquote}.
+    Trả (tag_str, pos) nếu có tag ngoài whitelist · None nếu OK."""
+    import re
+    WL = {"b", "i", "u", "s", "a", "code", "pre", "tg-spoiler", "blockquote"}
+    for m in re.finditer(r"<(/?)([a-zA-Z][a-zA-Z0-9_-]*)", body):
+        tag = m.group(2).lower()
+        if tag not in WL:
+            return (m.group(0), m.start())
+    return None
+
+
+def u7_gate(body: str, tg_limit: int = 4096) -> tuple[bool, str]:
+    """Cổng U7 · β2 · tg_len + parse_mode + HTML scan · CẤM SLICE.
+
+    Trả (ok, reason). Reason là "" khi ok, error string khi fail.
+    """
+    try:
+        from lib.tg_len import tg_len
+        n = tg_len(body)
+    except ImportError:
+        n = len(body.encode("utf-16-le")) // 2
+    if n > tg_limit:
+        return False, f"U7-BLOCKED-LEN body={n} > tg_limit={tg_limit}"
+    bad = _u7_scan_bad_html(body)
+    if bad is not None:
+        return False, f"U7-BLOCKED-HTML tag={bad[0]} pos={bad[1]}"
+    return True, ""
+
+
+HEDGE_JOURNAL = _REPO / "data/logs/hedge_v2_journal.jsonl"
+
+def write_hedge_journal(target: str, ok: bool, body_md5: str,
+                         tg_len_val: int, fail_reason: str = "") -> None:
+    """β3 · journal marker · master (γ) đọc để dán KÍCH-vì-chân-HEDGE."""
+    HEDGE_JOURNAL.parent.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    entry = {
+        "ts_utc":         ts,
+        "target_date":    target,
+        "renderer":       "watchlist",   # AW1 · giữ renderer_id
+        "product":        "hedge_v2",
+        "ok":             ok,
+        "body_md5":       body_md5,
+        "tg_len":         tg_len_val,
+        "fail_reason":    fail_reason,
+        "leg_fail_label": "" if ok else "KÍCH-vì-chân-HEDGE",
+    }
+    with HEDGE_JOURNAL.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def send_hedge_v2(target: str, body: str, meta: dict, dry_run: bool = True) -> dict:
+    """β2 · sender wrap · U7 gate + journal write + artifact dump (dry mode).
+
+    dry_run=True: KHÔNG gọi tg_send · chỉ viết artifacts + journal (dry pipe).
+    dry_run=False: gọi thật · giữ cho γ.
+    """
+    body_md5 = hashlib.md5(body.encode("utf-8")).hexdigest()
+    ok_u7, reason = u7_gate(body)
+    result = {
+        "target":       target,
+        "body_md5":     body_md5[:12],
+        "tg_len":       meta.get("tg_len", 0),
+        "u7_ok":        ok_u7,
+        "u7_reason":    reason,
+        "sent":         False,
+        "journal_line": None,
+    }
+    if not ok_u7:
+        # β3 · journal fail marker · master (γ) verdict SẼ dán KÍCH-vì-chân-HEDGE
+        write_hedge_journal(target, ok=False, body_md5=body_md5[:12],
+                            tg_len_val=meta.get("tg_len", 0), fail_reason=reason)
+        return result
+    # Artifact dump (dry mode) · master compute_night_verdict cần tg_final_watchlist_<T>.txt/jsonl
+    art_txt = ART_DIR / f"tg_final_watchlist_{target}.txt"
+    art_jsonl = ART_DIR / f"tg_final_watchlist_{target}.jsonl"
+    ART_DIR.mkdir(parents=True, exist_ok=True)
+    art_txt.write_text(body, encoding="utf-8")
+    entry_jsonl = {
+        "ts_utc":      datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "renderer":    "watchlist",
+        "product":     "hedge_v2",
+        "target_date": target,
+        "body_md5":    body_md5,
+        "tg_len":      meta.get("tg_len", 0),
+        "dry":         dry_run,
+    }
+    with art_jsonl.open("w", encoding="utf-8") as f:
+        f.write(json.dumps(entry_jsonl, ensure_ascii=False) + "\n")
+
+    if dry_run:
+        result["sent"] = False
+        result["journal_line"] = "dry"
+        # Không write hedge_journal ok=True ở dry (tránh dán marker prod)
+        return result
+
+    # γ · sender thật · gọi tg_send · post-check
+    from run_gom_daily import tg_send   # reuse
+    ok_send = tg_send(body, parse_mode="")   # HTML gate đã qua U7
+    write_hedge_journal(target, ok=ok_send, body_md5=body_md5[:12],
+                        tg_len_val=meta.get("tg_len", 0),
+                        fail_reason="" if ok_send else "TG-SEND-FAIL")
+    result["sent"] = ok_send
+    return result
 
 
 if __name__ == "__main__":
