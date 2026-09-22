@@ -453,13 +453,30 @@ def compute_night_verdict(target: str, dry: bool = False) -> dict:
     except Exception as e:
         pin_result = f"ERR:{e}"
     # Sentinel scan (grep [N/A-ERROR:*] outside declared list)
-    # AB2/U1/18-09 · CỬA-SỔ 26h · sentinel ngoài 26h TRƯỚC now → không tính (xanh);
-    # trong → tính (đen). Bài học p23: sentinel 09-15 vẫn đen 09-17 → phải trượt cửa.
+    # AZ2/23-09 · NEO cron_close(T) · KHÔNG neo now (deterministic · chấm 2 giờ khác nhau
+    # cùng target cho cùng kết quả). Window = [cron_close(T-1) + BUFFER, cron_close(T)).
+    # BUFFER=5min · loại sentinel phát trong cron chấm T-1 (p115 sub-rule 1).
+    # Bài học 09-21 KÍCH: LINT 21/09 01:46:04 = từ cron chấm 09-20 · vô window
+    # [09-21 01:46, 09-22 01:46) cũ nhưng KHÔNG thuộc "đêm T=09-21" → phải loại.
     declared_sentinels = {"N/A-ERROR:DUMP-HALF-FAIL", "N/A-ERROR:DUMP-FAIL",
                           "N/A-ERROR:STANDING", "N/A-ERROR:VETO"}
     from datetime import datetime as _dt2, timedelta as _td2, timezone as _tz2
-    _now_utc = _dt2.now(_tz2.utc)
-    _cutoff = _now_utc - _td2(hours=26)
+    _CRON_HOUR = 1; _CRON_MIN = 46; _CRON_BUFFER_MIN = 5
+    try:
+        _tgt_d_snt = _dt2.strptime(target, "%Y-%m-%d").date()
+        _cron_close_T = _dt2.combine(_tgt_d_snt + _td2(days=1),
+                                      _dt2.strptime(f"{_CRON_HOUR:02d}:{_CRON_MIN:02d}", "%H:%M").time(),
+                                      tzinfo=_tz2.utc)
+        _cron_close_T_minus_1 = _cron_close_T - _td2(days=1)
+        # BOTH shifted by BUFFER · sentinel từ cron T-1 (01:46:xx) trong buffer → LOẠI
+        # Sentinel từ cron T (01:46:xx của cron_close_T) trong new upper buffer → GIỮ (đêm T tính)
+        _window_start = _cron_close_T_minus_1 + _td2(minutes=_CRON_BUFFER_MIN)
+        _window_end   = _cron_close_T + _td2(minutes=_CRON_BUFFER_MIN)
+    except Exception:
+        # Fallback safety · nếu parse fail dùng now-26h cũ
+        _now_utc_fb = _dt2.now(_tz2.utc)
+        _window_start = _now_utc_fb - _td2(hours=26)
+        _window_end = _now_utc_fb
     _line_ts_re = re.compile(r"^\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+\-]\d{2}:\d{2})?)\]")
     unknown_sentinels = []
     _log_p = REPO / "data/logs/master_preview.log"
@@ -472,7 +489,7 @@ def compute_night_verdict(target: str, dry: bool = False) -> dict:
                 if ts.tzinfo is None: ts = ts.replace(tzinfo=_tz2.utc)
             except Exception:
                 continue
-            if ts < _cutoff: continue  # ngoài cửa sổ · KHÔNG tính
+            if ts < _window_start or ts >= _window_end: continue  # ngoài cửa sổ · KHÔNG tính
             for m in re.finditer(r"\[N/A-ERROR:([A-Z0-9\-_/]+)\]", line):
                 tag = f"N/A-ERROR:{m.group(1)}"
                 if not any(tag.startswith(d) for d in declared_sentinels):
@@ -485,7 +502,7 @@ def compute_night_verdict(target: str, dry: bool = False) -> dict:
                 e = json.loads(line)
                 ts = _dt2.fromisoformat(e.get("ts_utc", ""))
                 if ts.tzinfo is None: ts = ts.replace(tzinfo=_tz2.utc)
-                if ts < _cutoff: continue
+                if ts < _window_start or ts >= _window_end: continue
             except Exception:
                 continue
             for m in re.finditer(r"\[N/A-ERROR:([A-Z0-9\-_/]+)\]", line):
