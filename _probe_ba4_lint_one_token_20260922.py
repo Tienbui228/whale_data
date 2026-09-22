@@ -1,7 +1,10 @@
-"""BA4 · lint một-token-một-khối · REPORT-ONLY (doctrine BA5).
+"""BA4/BB1 · lint một-token-một-khối · REPORT-ONLY (doctrine BA5).
 
-Tokenizer FIX: chỉ quét tên token trong universe (data/config/freshwatch_symbols.txt),
+Tokenizer FIX (BA4): chỉ quét tên token trong universe (data/config/freshwatch_symbols.txt),
 KHÔNG regex bắt ngày tháng/chữ.
+
+Scope FIX (BB1): chỉ khối LOÀI (A-E + CHƯA XẾP LOÀI · khối B ba tầng).
+Loại khỏi scope: UNHEDGE · 🎯 focus · ứng viên · 🔻 XẢ-WATCH · POST · DẢI · DAO · NHỊP-KÊNH.
 
 Doctrine BA5 (ANALYSIS 22/09): mọi lint mới = REPORT-ONLY ≥5 đêm trước khi chặn gửi.
 Trạng thái hiện tại: DAY 1/5 · CHỈ BÁO · KHÔNG chặn.
@@ -59,10 +62,28 @@ if current_content.strip():
 
 print(f"blocks parsed: {len(named_blocks)}")
 
+# BB1 · Loài whitelist: chỉ scan khối A-E + CHƯA XẾP LOÀI
+LOÀI_PATTERNS = [
+    re.compile(r"^── A \("),                # ── A (n) · D (n) · E (n) · ? (n) ──
+    re.compile(r"^── B ──"),                # ── B ──
+    re.compile(r"^── C ·"),                 # ── C · ĐẠP → GOM → ĐẨY ──
+    re.compile(r"^── D ──"),                # (nếu có)
+    re.compile(r"^── E ──"),                # (nếu có)
+    re.compile(r"^── CHƯA XẾP LOÀI"),
+]
+
+def is_loài(header):
+    return any(pat.match(header) for pat in LOÀI_PATTERNS)
+
+n_loài = sum(1 for h, _ in named_blocks if is_loài(h))
+n_out  = len(named_blocks) - n_loài
+print(f"scope filter · loài blocks: {n_loài} · out-of-scope: {n_out}")
+
 # For each token in universe, find which blocks it appears in
 # Match bare form as word boundary: \bTOK\b (or with USDT suffix)
 token_blocks = {}
 for header, content in named_blocks:
+    if not is_loài(header): continue    # BB1 · bỏ non-loài
     header_short = header[:35]
     tokens_found = set()
     # scan word-boundary tokens · check against universe_bare set
