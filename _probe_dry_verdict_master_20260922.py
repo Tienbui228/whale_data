@@ -25,8 +25,8 @@ if BELL_JOURNAL.exists():
 
 from master_preview_send import compute_night_verdict
 
-TARGETS = ["2026-09-15", "2026-09-16", "2026-09-17", "2026-09-18",
-           "2026-09-19", "2026-09-20"]
+TARGETS = ["2026-09-16", "2026-09-17", "2026-09-18",
+           "2026-09-19", "2026-09-20", "2026-09-21"]
 
 # Append HEDGE dry entries to bell_journal (renderer=watchlist)
 def _append_hedge_dry_entries():

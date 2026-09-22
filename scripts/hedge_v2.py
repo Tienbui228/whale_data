@@ -785,10 +785,11 @@ def compose_body(target: str, report_only: bool = True,
                                     fw_extra, events) + [""]
     parts += render_from_master_block(events, target) + [""]
 
-    # Footer (AW10 · α6 CHƯA KÝ marker)
+    # Footer (AW10 · α6 CHƯA KÝ · γ4 div_src=raw · low_conf mask defer p114)
     parts.append(f"━━ footer ━━ universe_gen={n_universe} [CHƯA KÝ] · "
                  f"events_md5={events_md5[:12] if events_md5 else 'N/A'} "
-                 f"· registry_md5={reg_md5} · audit={audit_path}")
+                 f"· registry_md5={reg_md5} · div_src=raw (mask defer p114) "
+                 f"· audit={audit_path}")
 
     body = "\n".join(parts)
 

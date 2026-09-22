@@ -661,8 +661,53 @@ def main():
     # v1.4 snapshot-diff: load yesterday, format with graduation classifier
     prev_snap = load_prev_snapshot(target)
     if not args.no_telegram:
-        tg_out = format_output_tg(snaps_a, snaps_b, target, td=td, prev_snap=prev_snap)
-        ok_tg = send_telegram(tg_out)
+        # γ1/22-09 · HEDGE_V2=1 → route qua hedge_v2 (renderer_id giữ "watchlist")
+        # HEDGE_V2=0 (default) → path cũ · rollback = đổi 1 dòng .env
+        _hedge_v2 = os.environ.get("HEDGE_V2", "0") == "1"
+        if _hedge_v2:
+            sys.path.insert(0, str(pathlib.Path(__file__).parent))
+            import hedge_v2 as _hv2
+            # γ5 · ERRATA đêm đầu · marker file control
+            _marker_p = REPO_ROOT / "data" / "state" / "hedge_v2_first_night.marker"
+            _errata = not _marker_p.exists()
+            try:
+                tg_out, _hv2_meta = _hv2.compose_body(target, report_only=True,
+                                                       errata=_errata, write_audit=True)
+            except Exception as _hv2_exc:
+                print(f"[HEDGE_V2 COMPOSE FAIL] {_hv2_exc}", file=sys.stderr)
+                # Fallback = old path
+                tg_out = format_output_tg(snaps_a, snaps_b, target, td=td, prev_snap=prev_snap)
+                _hv2 = None
+            if _hv2 is not None:
+                # γ2 · U7 gate cứng · CẤM slice · fail-closed
+                _u7_ok, _u7_reason = _hv2.u7_gate(tg_out)
+                if not _u7_ok:
+                    # β3 · journal marker · master verdict sẽ dán KÍCH-vì-chân-HEDGE (γ+)
+                    _hv2.write_hedge_journal(target, ok=False, body_md5="",
+                                             tg_len_val=_hv2_meta["tg_len"],
+                                             fail_reason=_u7_reason)
+                    print(f"[HEDGE_V2 U7-BLOCKED] {_u7_reason} · KHÔNG SEND",
+                          file=sys.stderr)
+                    ok_tg = False
+                else:
+                    ok_tg = send_telegram(tg_out)
+                    # γ2 · journal ghi thành công (renderer=watchlist · product=hedge_v2)
+                    import hashlib as _hl_hv2
+                    _body_md5_hv2 = _hl_hv2.md5(tg_out.encode("utf-8")).hexdigest()[:12]
+                    _hv2.write_hedge_journal(target, ok=ok_tg, body_md5=_body_md5_hv2,
+                                             tg_len_val=_hv2_meta["tg_len"],
+                                             fail_reason="" if ok_tg else "TG-SEND-FAIL")
+                    # γ5 · đặt marker đêm đầu SAU khi send OK
+                    if ok_tg and _errata:
+                        _marker_p.parent.mkdir(parents=True, exist_ok=True)
+                        _marker_p.write_text(f"{target}\n", encoding="utf-8")
+                        print(f"[HEDGE_V2 FIRST-NIGHT] marker written {_marker_p}",
+                              file=sys.stderr)
+            else:
+                ok_tg = send_telegram(tg_out)
+        else:
+            tg_out = format_output_tg(snaps_a, snaps_b, target, td=td, prev_snap=prev_snap)
+            ok_tg = send_telegram(tg_out)
         # V3.5i [SENT] MARKER CHUẨN (directive REV10 item 4)
         import hashlib as _hl
         _tg_hash = _hl.md5(tg_out.encode("utf-8")).hexdigest()[:12]
