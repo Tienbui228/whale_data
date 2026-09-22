@@ -1,0 +1,681 @@
+"""hedge_v2.py · AW-α/22-09 · HEDGE v2 body composer · sandbox (không gọi cron).
+
+Spec: docs/HEDGE_report_v2_spec_20260921.md (md5 e2bab119) + AW1-AW10 (22/09).
+Doctrine §KỶ-LUẬT #12: dry pipeline ≥5 đêm PASS trước khi ràng master (β).
+
+Nội dung tầng này (α):
+  · read_events(target) · kiểm target/md5 · trả rows | N/A-ERROR
+  · registry_hop_145(target) · Bảng A (gom_e in_registry) ∪ List A (watchlist)
+  · compose_body(target) · dựng thân tin đầy đủ theo spec §1
+  · KHÔNG có sender, KHÔNG U7 gate (β sẽ ràng)
+
+data-source: VPS canonical
+machine: VPS canonical
+code-commit: xem git log
+"""
+from __future__ import annotations
+import os, sys, json, hashlib, math
+from pathlib import Path
+from datetime import datetime, date, timedelta, timezone
+from typing import Optional
+
+_REPO = Path("/root/Data_back_test/whale_data") if os.name != "nt" \
+        else Path(r"D:/Data back test/whale_data")
+sys.path.insert(0, str(_REPO / "scripts"))
+
+ART_DIR    = _REPO / "data/artifacts"
+STORE_DIR  = _REPO / "data/export"
+CONFIG_DIR = _REPO / "data/config"
+STATE_DIR  = _REPO / "data"
+FW_SYM_P   = CONFIG_DIR / "freshwatch_symbols.txt"
+
+BODY_BUDGET   = 3200      # p100 · tg_len pre-cap ≤ 3200
+REGISTRY_TOP  = 15        # thân top-15 xếp div tăng
+WHALE_CAP     = 6         # 🅱1 + 🅱2 mỗi 6 dòng
+FAILED_NAMES  = 3         # ≤3 tên đủ, >3 in đếm + 3 mới nhất
+
+# ── EVENTS READER · provenance check (AW2) ──────────────────────────────────
+
+def read_events(target: str) -> tuple[Optional[list[dict]], str, str]:
+    """Trả (rows | None, md5_hex | "", status).
+
+    status ∈ {"ok", "N/A-ERROR:events-missing", "N/A-ERROR:md5-mismatch",
+              "N/A-ERROR:target-mismatch"}
+    p106: md5 file khớp .md5 sidecar (nếu có).
+    p107 base: bell D phải == target; class/u1 mang d_cross riêng, không kiểm ở đây.
+    """
+    p     = ART_DIR / f"events_{target}.jsonl"
+    md5_p = ART_DIR / f"events_{target}.md5"
+    if not p.exists():
+        return None, "", "N/A-ERROR:events-missing"
+    body = p.read_bytes()
+    actual_md5 = hashlib.md5(body).hexdigest()
+    if md5_p.exists():
+        expected = md5_p.read_text(encoding="utf-8").strip()
+        if actual_md5 != expected:
+            return None, actual_md5, "N/A-ERROR:md5-mismatch"
+    rows = []
+    for line in body.decode("utf-8", errors="replace").splitlines():
+        if not line.strip(): continue
+        try: rows.append(json.loads(line))
+        except json.JSONDecodeError: continue
+    for r in rows:
+        if r.get("type") == "bell":
+            if r.get("D") != target:
+                return None, actual_md5, "N/A-ERROR:target-mismatch"
+    return rows, actual_md5, "ok"
+
+
+def events_build_time_5nights(target: str) -> list[str]:
+    """5 đêm gần nhất · mtime events_<d>.jsonl · trả list line."""
+    out = []
+    td = datetime.strptime(target, "%Y-%m-%d").date()
+    for i in range(5):
+        d = (td - timedelta(days=i)).isoformat()
+        p = ART_DIR / f"events_{d}.jsonl"
+        if p.exists():
+            mt = datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc)
+            out.append(f"{d}: {mt.strftime('%H:%M:%S UTC')}")
+        else:
+            out.append(f"{d}: MISSING")
+    return out
+
+
+# ── REGISTRY HỢP 145 (Bảng A ∪ List A · p111) ────────────────────────────────
+
+def load_bang_a() -> set:
+    """Bảng A = gom_e in_registry (thres 0.85 · H1∧H2)."""
+    p = STATE_DIR / "gom_e_state.json"
+    if not p.exists(): return set()
+    try:
+        s = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return set()
+    return {sym for sym, v in s.items() if v.get("in_registry")}
+
+
+def load_list_a(target: str) -> tuple[set, dict]:
+    """List A = watchlist_daily gate (div ≤ 0.5 · sn_count_le050 ≥ 5).
+    Trả (set_tokens, dict details {sym: (div, sn_count_le050)})."""
+    import watchlist_daily as wl
+    cfg = wl.load_config()
+    td_data = wl.load_token_data(min_rows=cfg["data"]["min_history_rows"])
+    reg, details = set(), {}
+    for sym, arr in td_data.items():
+        ep = wl.detect_episodes(arr, cfg)
+        idx = next((i for i, r in enumerate(arr) if r["date"] == target), None)
+        if idx is None: continue
+        s = wl.snapshot(sym, arr, ep, idx, cfg)
+        if wl.in_list_a(s, cfg):
+            reg.add(sym)
+            details[sym] = {
+                "div":       s["div_ratio"],
+                "sn":        s.get("sn_count_le050", 0),
+                "acc_r":     s.get("lsr_acc", float("nan")),
+                "pos_r":     s.get("lsr_pos", float("nan")),
+                "fund":      s.get("fund", float("nan")),
+                "start":     s.get("hedge_start_date", ""),
+                "px_dist":   s.get("px_dist", float("nan")),
+            }
+    return reg, details
+
+
+def registry_hop_145(target: str) -> tuple[list[dict], str]:
+    """Trả (registry_hop_list, registry_md5 hex[12]).
+
+    Union Bảng A ∪ List A · mỗi row:
+      {sym, in_A, in_L, div_smooth, sn, acc_r, pos_r, fund, band, source, tuoi_str}
+    band ∈ {"≤0.5", "0.5–0.85"} · source ∈ {"hedge-run", "H1∧H2", "hai-bên"}
+    tuoi_str: `≥Nd[state]` nếu entry=state-birth · `Nd` nếu tính từ hedge_start_date.
+    """
+    bang_a = load_bang_a()
+    list_a_set, list_a_det = load_list_a(target)
+
+    # Bảng A: load gom_e_state cho entry_date + state-birth check
+    gp = STATE_DIR / "gom_e_state.json"
+    gom_state = {}
+    if gp.exists():
+        try: gom_state = json.loads(gp.read_text(encoding="utf-8"))
+        except Exception: pass  # L-66-OK
+    state_birth = datetime.fromtimestamp(gp.stat().st_mtime if gp.exists() else 0,
+                                          tz=timezone.utc).date()
+    # Note: mtime rồi Birth khác; dùng birth mtime hoặc file stat st_ctime → dùng
+    # AV2 findings: 74/121 entry=2026-09-07 (state Birth 09-08) → dán `≥Nd[state]`.
+
+    td_d = datetime.strptime(target, "%Y-%m-%d").date()
+    STORE_START_DATE = date(2026, 6, 27)  # p103 · store-start canonical
+
+    rows = []
+    union_syms = bang_a | list_a_set
+    for sym in sorted(union_syms):
+        in_A = sym in bang_a
+        in_L = sym in list_a_set
+        lst  = list_a_det.get(sym, {})
+        div_smooth = lst.get("div", float("nan"))
+        sn         = lst.get("sn", 0)
+        acc_r      = lst.get("acc_r", float("nan"))
+        pos_r      = lst.get("pos_r", float("nan"))
+        fund       = lst.get("fund", float("nan"))
+
+        # Band + source (AW6)
+        if in_A and in_L:
+            source = "hai-bên"
+        elif in_L:
+            source = "hedge-run"
+        else:
+            source = "H1∧H2"
+        # band: ≤0.5 nếu qua List A; 0.5-0.85 nếu chỉ ở Bảng A
+        band = "≤0.5" if in_L else "0.5–0.85"
+
+        # Tuổi (p103 · AV2 findings): ưu tiên hedge_start_date từ List A;
+        # fallback entry_date từ gom_e; nếu = state-birth → `≥Nd[state]`.
+        tuoi_str = "?"
+        hedge_start = lst.get("start", "")
+        if hedge_start:
+            try:
+                s_d = datetime.strptime(hedge_start, "%Y-%m-%d").date()
+                dd = (td_d - s_d).days
+                if s_d <= STORE_START_DATE:
+                    tuoi_str = f"≥{dd}d[store]"
+                else:
+                    tuoi_str = f"{dd}d"
+            except ValueError:
+                tuoi_str = "?"
+        elif in_A:
+            entry = gom_state.get(sym, {}).get("entry_date")
+            if entry:
+                try:
+                    e_d = datetime.strptime(entry, "%Y-%m-%d").date()
+                    dd = (td_d - e_d).days
+                    if e_d <= state_birth - timedelta(days=0):
+                        tuoi_str = f"≥{dd}d[state]"
+                    else:
+                        tuoi_str = f"{dd}d"
+                except ValueError:
+                    tuoi_str = "?"
+
+        rows.append({
+            "sym":         sym,
+            "in_A":        in_A,
+            "in_L":        in_L,
+            "div_smooth":  div_smooth,
+            "sn":          sn,
+            "acc_r":       acc_r,
+            "pos_r":       pos_r,
+            "fund":        fund,
+            "band":        band,
+            "source":      source,
+            "tuoi_str":    tuoi_str,
+        })
+
+    payload = json.dumps(
+        sorted([f"{r['sym']}|{r['band']}|{r['source']}" for r in rows]),
+        ensure_ascii=False,
+    )
+    reg_md5 = hashlib.md5(payload.encode("utf-8")).hexdigest()[:12]
+    return rows, reg_md5
+
+
+# ── LUẬT NỀN V1.4-A (≥2× đáy 60d) — p104 partial ────────────────────────────
+
+def load_daily_rows(target: str, back: int = 90) -> dict:
+    """Load fw_daily cho `back` ngày trước target (px_avg per date/sym)."""
+    import csv
+    td = datetime.strptime(target, "%Y-%m-%d").date()
+    from_d = td - timedelta(days=back)
+    by_sym_dates = {}
+    months = set()
+    d_cur = from_d
+    while d_cur <= td:
+        months.add(d_cur.strftime("%Y-%m"))
+        d_cur += timedelta(days=1)
+    for ym in sorted(months):
+        p = STORE_DIR / f"freshwatch_daily_{ym}.csv"
+        if not p.exists(): continue
+        with p.open(encoding="utf-8", newline="") as f:
+            for r in csv.DictReader(f):
+                d = r.get("date", "")
+                if not d or d > target or d < from_d.isoformat(): continue
+                sym = r.get("symbol", "")
+                try: px = float(r.get("px_avg", "") or "nan")
+                except Exception: px = float("nan")
+                by_sym_dates.setdefault(sym, {})[d] = px
+    return by_sym_dates
+
+
+def luat_nen_2x_min60d(sym: str, target: str, price_map: dict) -> tuple[bool, int]:
+    """Trả (over_2x, dist_days_from_min).
+    ≥2× đáy 60d = px(T) ≥ 2 · min(px 60d gần nhất kết thúc target-1).
+    """
+    d_map = price_map.get(sym, {})
+    if not d_map: return (False, 0)
+    td = datetime.strptime(target, "%Y-%m-%d").date()
+    px_now = d_map.get(target)
+    if px_now is None or math.isnan(px_now): return (False, 0)
+    windowed = []
+    for i in range(1, 61):
+        d = (td - timedelta(days=i)).isoformat()
+        px = d_map.get(d)
+        if px is not None and not math.isnan(px):
+            windowed.append((d, px))
+    if not windowed: return (False, 0)
+    min_d, min_px = min(windowed, key=lambda x: x[1])
+    if min_px <= 0: return (False, 0)
+    kd = (td - datetime.strptime(min_d, "%Y-%m-%d").date()).days
+    return (px_now >= 2 * min_px, kd)
+
+
+# ── EVENTS BLOCK render ─────────────────────────────────────────────────────
+
+def _dm(iso: str) -> str:
+    """YYYY-MM-DD → DD/MM · fallback nguyên chuỗi."""
+    if not iso or len(iso) < 10: return iso or "?"
+    return f"{iso[8:10]}/{iso[5:7]}"
+
+
+def render_events_block(events: list[dict], status: str, target: str) -> list[str]:
+    """SỰ KIỆN (phía crowd → xác nhận) block · AW4."""
+    lines = ["── SỰ KIỆN (phía crowd → xác nhận) ── [master-events]"]
+    if status != "ok":
+        lines.append(status)
+        return lines
+
+    n = 0
+    # sort · bell first, then class, then u1 · bell_near/bell_blind → audit-only (spec §2)
+    order = {"bell": 0, "class": 1, "u1": 2}
+    events_e = [e for e in events if e.get("type") in order]
+    events_e.sort(key=lambda e: (order.get(e.get("type"), 9), e.get("tok", "")))
+
+    for e in events_e:
+        t = e.get("type")
+        tok = e.get("tok", "?")
+        if t == "bell":
+            dacc = (e.get("dacc_bwd") or 0.0) * 100
+            dpos = (e.get("dpos_bwd") or 0.0) * 100
+            # AC4: bỏ trường lead ở dòng chuông
+            lines.append(
+                f"[U0-BELL D={_dm(e.get('D', ''))} · "
+                f"Δacc_bwd={dacc:+.0f}% · pos_bwd={dpos:+.0f}%] {tok}"
+            )
+            n += 1
+        elif t == "class":
+            tier = e.get("tier", "?")
+            dc = e.get("d_cross", "")
+            dacc = (e.get("dacc") or 0.0) * 100
+            dpos = abs(e.get("dpos") or 0.0) * 100
+            if tier == "L1":
+                try:
+                    dc_d = datetime.strptime(dc, "%Y-%m-%d").date()
+                    u1_due = (dc_d + timedelta(days=5)).strftime("%d/%m")
+                except ValueError:
+                    u1_due = "?"
+                lines.append(
+                    f"[U0-CLASS D_cross={_dm(dc)} · L1 · Δacc={dacc:+.0f}% · "
+                    f"|Δpos|={dpos:.0f}%] {tok} → U1 due {u1_due}"
+                )
+            else:
+                # §14 · L2_OR_L3 hoặc BLIND VẪN in — nhãn không giấu token có event
+                lines.append(
+                    f"[U0-CLASS D_cross={_dm(dc)} · {tier} · Δacc={dacc:+.0f}% · "
+                    f"|Δpos|={dpos:.0f}%] {tok} (không mở U1)"
+                )
+            n += 1
+        elif t == "u1":
+            v1 = e.get("v1")
+            v2 = e.get("v2")
+            verdict = e.get("verdict", "?")
+            v1s = f"{v1:.2f}" if isinstance(v1, (int, float)) else "?"
+            v2s = f"{v2:.2f}" if isinstance(v2, (int, float)) else "?"
+            v1m = "✓" if isinstance(v1, (int, float)) and v1 <= 0.6 else "✗"
+            v2m = "✓" if isinstance(v2, (int, float)) and v2 >= 1.5 else "✗"
+            state = "CONFIRMED" if verdict == "PASS" else "FAILED"
+            lines.append(
+                f"[U1 D+5 · v1={v1s} {v1m} v2={v2s} {v2m}] {tok} → {state}"
+            )
+            n += 1
+
+    if n == 0:
+        lines.append("hôm nay: không event")
+    return lines
+
+
+# ── WHALE block (🅱1/🅱2 · AW5 · Δpos thật) ──────────────────────────────────
+
+def _rows_last2(sym: str, price_map: dict, extra: dict) -> tuple[Optional[dict], Optional[dict]]:
+    """Trả (row_T, row_T-1) từ CSV fw_daily. price_map (đã load) mapping."""
+    if sym not in extra: return None, None
+    dates = sorted(extra[sym].keys())
+    if len(dates) < 2: return None, None
+    return extra[sym].get(dates[-1]), extra[sym].get(dates[-2])
+
+
+def load_fw_extra(target: str, back: int = 30) -> dict:
+    """Load fw_daily rows cho pos/acc/oi. Trả {sym: {date: {pos, acc, oi}}}."""
+    import csv
+    td = datetime.strptime(target, "%Y-%m-%d").date()
+    from_d = td - timedelta(days=back)
+    out = {}
+    months = set()
+    d_cur = from_d
+    while d_cur <= td:
+        months.add(d_cur.strftime("%Y-%m"))
+        d_cur += timedelta(days=1)
+    for ym in sorted(months):
+        p = STORE_DIR / f"freshwatch_daily_{ym}.csv"
+        if not p.exists(): continue
+        with p.open(encoding="utf-8", newline="") as f:
+            for r in csv.DictReader(f):
+                d = r.get("date", "")
+                if not d or d > target or d < from_d.isoformat(): continue
+                sym = r.get("symbol", "")
+                def _f(k):
+                    try: return float(r.get(k, "") or "nan")
+                    except Exception: return float("nan")
+                out.setdefault(sym, {})[d] = {
+                    "pos": _f("lsr_pos_r"), "acc": _f("lsr_acc_r"),
+                    "oi":  _f("oi_usd"),   "px":  _f("px_avg"),
+                }
+    return out
+
+
+def render_whale_block(target: str, fw_extra: dict,
+                       class_by_sym: dict) -> list[str]:
+    """🅱1 short-cover · 🅱2 whale đổi ghế · Δpos thật (pos_r(T)/pos_r(T-1)-1)."""
+    lines = ["── PHÍA WHALE (mô tả, KHÔNG phải chuông) ──"]
+    td = datetime.strptime(target, "%Y-%m-%d").date()
+    d_prev = (td - timedelta(days=1)).isoformat()
+
+    b1, b2 = [], []
+    for sym, dmap in fw_extra.items():
+        row_T = dmap.get(target)
+        row_p = dmap.get(d_prev)
+        if not row_T or not row_p: continue
+        pos_T, pos_p = row_T["pos"], row_p["pos"]
+        oi_T,  oi_p  = row_T["oi"],  row_p["oi"]
+        if any(math.isnan(x) for x in (pos_T, pos_p, oi_T, oi_p)): continue
+        if pos_p == 0 or oi_p == 0: continue
+        dpos = pos_T / pos_p - 1        # Δpos thật
+        doi  = oi_T  / oi_p  - 1
+        # 🅱 gate: Δpos ≥ +10%
+        if dpos < 0.10: continue
+        row = {"sym": sym, "dpos": dpos, "doi": doi,
+               "class": class_by_sym.get(sym, "")}
+        if doi <= -0.03: b1.append(row)     # short-cover
+        elif doi >= 0.03: b2.append(row)    # whale đổi ghế
+
+    b1.sort(key=lambda r: -r["dpos"])
+    b2.sort(key=lambda r: -r["dpos"])
+    b1 = b1[:WHALE_CAP]
+    b2 = b2[:WHALE_CAP]
+
+    if b1:
+        parts = []
+        for r in b1:
+            cls_s = f" → {r['class']}" if r["class"] else ""
+            parts.append(f"{r['sym']} Δpos {r['dpos']*100:+.0f}% ΔOI {r['doi']*100:+.0f}%{cls_s}")
+        lines.append(f"🅱1 short-cover (Δpos≥+10% ∧ ΔOI≤−3%): " + " · ".join(parts))
+    if b2:
+        parts = []
+        for r in b2:
+            cls_s = f" → {r['class']}" if r["class"] else ""
+            parts.append(f"{r['sym']} Δpos {r['dpos']*100:+.0f}% ΔOI {r['doi']*100:+.0f}%{cls_s}")
+        lines.append(f"🅱2 whale đổi ghế (Δpos≥+10% ∧ ΔOI≥+3%): " + " · ".join(parts))
+    if not b1 and not b2:
+        lines.append("(không token nào đạt Δpos≥+10%)")
+    return lines
+
+
+# ── REGISTRY HỢP block · top-15 · AW6 · p111 ─────────────────────────────────
+
+def _fund_state(fund) -> str:
+    """PIN | SHORT-TRẢ | NONE · rough classifier."""
+    if fund is None or (isinstance(fund, float) and math.isnan(fund)): return "NONE"
+    if fund > 5e-5 and fund < 1e-4: return "PIN"
+    if fund < 0: return "SHORT-TRẢ"
+    return "NONE"
+
+
+def render_registry_block(rows: list[dict], reg_md5: str,
+                           events_by_tok: dict, price_map: dict,
+                           target: str) -> list[str]:
+    """LIST A · REGISTRY hợp 145 · top-15 xếp div tăng · p104 · p107.
+
+    p104 · luật nền V1.4-A: ≥2× đáy 60d → KHÔNG vào top-15, ghi `[hậu-D0 +kd]` cuối.
+    p107 · token có event hôm nay LUÔN có dòng — kể cả rớt top-15 hoặc bị luật nền.
+    """
+    total = len(rows)
+    lines = [f"── LIST A · REGISTRY HỢP {total} tokens (Bảng A ∪ List A) ──"]
+    lines.append("sym · dải · nguồn · div · acc_r · pos_r · fund · tuổi")
+
+    # Sort: div tăng dần (NaN → cuối)
+    rows_sorted = sorted(rows, key=lambda r: (
+        float("inf") if (isinstance(r["div_smooth"], float) and math.isnan(r["div_smooth"]))
+        else r["div_smooth"]
+    ))
+
+    # Tag luật nền cho từng row · lookup one lần
+    over_map = {}
+    kd_map = {}
+    for r in rows_sorted:
+        over, kd = luat_nen_2x_min60d(r["sym"], target, price_map)
+        over_map[r["sym"]] = over
+        kd_map[r["sym"]] = kd
+
+    # top-15 SAU KHI loại luật-nền · lấy 15 đầu KHÔNG bị luật nền
+    top = [r for r in rows_sorted if not over_map[r["sym"]]][:REGISTRY_TOP]
+    top_syms = {r["sym"] for r in top}
+
+    # p107 · event tokens ép vào (nếu chưa có, kể cả bị luật nền hoặc rớt top-15)
+    event_syms = set(events_by_tok.keys())
+    reg_syms = {r["sym"] for r in rows_sorted}
+    forced_in_reg = event_syms & reg_syms - top_syms
+    forced_rows = []
+    for sym in sorted(forced_in_reg):
+        r = next((r for r in rows_sorted if r["sym"] == sym), None)
+        if r: forced_rows.append(r)
+
+    def _line(r, is_forced=False):
+        div_s = f"{r['div_smooth']:.3f}" if (isinstance(r["div_smooth"], float) and
+                                              not math.isnan(r["div_smooth"])) else "N/A"
+        acc_s = f"{r['acc_r']:.2f}" if isinstance(r["acc_r"], float) and not math.isnan(r["acc_r"]) else "?"
+        pos_s = f"{r['pos_r']:.2f}" if isinstance(r["pos_r"], float) and not math.isnan(r["pos_r"]) else "?"
+        fund_s = _fund_state(r["fund"])
+        ev_tag = f" [{events_by_tok.get(r['sym'], '')}]" if r["sym"] in event_syms else ""
+        # p104 · nếu over 2×min60d, thêm [hậu-D0 +kd]
+        luat_tag = f" [hậu-D0 +{kd_map[r['sym']]}d]" if over_map.get(r["sym"]) else ""
+        return (f"  {r['sym']} · {r['band']} · {r['source']} · "
+                f"div={div_s} · acc={acc_s} · pos={pos_s} · {fund_s} · {r['tuoi_str']}{ev_tag}{luat_tag}")
+
+    for r in top:
+        lines.append(_line(r))
+
+    if forced_rows:
+        for r in forced_rows:
+            lines.append(_line(r, is_forced=True))
+
+    if total > len(top) + len(forced_rows):
+        lines.append(f"(+{total - len(top) - len(forced_rows)} tokens đủ ở audit)")
+
+    # p104 audit: đếm tokens bị luật nền loại
+    n_over = sum(1 for r in rows_sorted if over_map[r["sym"]])
+    if n_over:
+        lines.append(f"(luật-nền V1.4-A loại {n_over} tokens ≥2× đáy 60d · audit)")
+    return lines
+
+
+# ── FROM MASTER · cand top-15, FAILED, ngoài L1 (AW7) ────────────────────────
+
+def _load_l2_l3_ngoai(target: str) -> list[str]:
+    """Đọc data/logs/b_l2_l3_reject.jsonl · trả tokens L2/L3 ngoài L1 cho target."""
+    p = _REPO / "data/logs/b_l2_l3_reject.jsonl"
+    if not p.exists(): return []
+    toks = set()
+    try:
+        for line in p.read_text(encoding="utf-8", errors="replace").splitlines():
+            if not line.strip(): continue
+            try: r = json.loads(line)
+            except json.JSONDecodeError: continue
+            if r.get("target") == target:
+                t = r.get("token")
+                if t: toks.add(t)
+    except OSError:
+        return []
+    return sorted(toks)
+
+
+def render_from_master_block(events: list[dict], target: str) -> list[str]:
+    """cand top-15 · FAILED · ngoài L1: k (TOK L2 · TOK L3 …) đủ tên."""
+    lines = ["── TỪ MASTER (E4(iii)) ──"]
+    btier = [e for e in events if e.get("type") == "btier"]
+    cand    = sorted([e["tok"] for e in btier if e.get("tier") == "cand"])
+    failed  = sorted([e["tok"] for e in btier if e.get("tier") == "FAILED"])
+    # ngoài L1 · nguồn: b_l2_l3_reject.jsonl per target (btier state chỉ giữ L1-only)
+    l2_l3   = _load_l2_l3_ngoai(target)
+
+    if cand:
+        top = cand[:REGISTRY_TOP]
+        lines.append(f"cand top-{REGISTRY_TOP} · {len(cand)} tổng: " + " · ".join(top))
+        if len(cand) > REGISTRY_TOP:
+            lines.append(f"  (+{len(cand)-REGISTRY_TOP} tokens đủ ở audit)")
+
+    if failed:
+        if len(failed) <= FAILED_NAMES:
+            lines.append(f"FAILED {len(failed)}: " + " · ".join(failed))
+        else:
+            lines.append(f"FAILED {len(failed)}: " + " · ".join(failed[-FAILED_NAMES:]) +
+                         f" (+{len(failed) - FAILED_NAMES} audit)")
+
+    # ngoài L1 · cap 25 tokens in-line (spec "đủ tên" audit-only nếu vượt)
+    NGOAI_L1_CAP = 25
+    if l2_l3:
+        if len(l2_l3) <= NGOAI_L1_CAP:
+            lines.append(f"ngoài L1: {len(l2_l3)} (" + " · ".join(l2_l3) + ")")
+        else:
+            head = l2_l3[:NGOAI_L1_CAP]
+            rest = len(l2_l3) - NGOAI_L1_CAP
+            lines.append(f"ngoài L1: {len(l2_l3)} (" + " · ".join(head) + f" · +{rest} audit)")
+
+    return lines
+
+
+# ── MAIN COMPOSE ─────────────────────────────────────────────────────────────
+
+def compose_body(target: str, report_only: bool = True,
+                 errata: bool = False) -> tuple[str, dict]:
+    """Trả (body_str, meta).
+
+    meta: {events_md5, events_status, registry_md5, n_reg, n_events, tg_len, ...}
+    """
+    events, events_md5, events_status = read_events(target)
+    if events is None: events = []
+
+    # class_by_sym cho tag WHALE
+    class_by_sym = {}
+    events_by_tok = {}
+    for e in events:
+        tok = e.get("tok")
+        t = e.get("type")
+        if not tok: continue
+        if t == "bell": events_by_tok[tok] = "BELL"
+        elif t == "class":
+            tier = e.get("tier", "")
+            events_by_tok[tok] = f"CLASS-{tier}"
+            if tier in ("L2_OR_L3",):
+                class_by_sym[tok] = "L2"
+        elif t == "u1":
+            events_by_tok[tok] = f"U1-{e.get('verdict', '?')}"
+
+    # Registry hợp 145 · p111
+    reg_rows, reg_md5 = registry_hop_145(target)
+
+    # fw_extra cho WHALE + price_map cho luật nền
+    fw_extra = load_fw_extra(target)
+    price_map = load_daily_rows(target)
+
+    # Scanned/blind
+    fw_syms = set()
+    if FW_SYM_P.exists():
+        fw_syms = {ln.strip() for ln in FW_SYM_P.read_text(encoding="utf-8").splitlines() if ln.strip()}
+    n_universe = len(fw_syms)
+    n_scanned = len([s for s in fw_syms if s in fw_extra and target in fw_extra[s]])
+    n_blind = n_universe - n_scanned
+
+    # Header
+    from collections import Counter
+    ev_type_counts = Counter([e.get("type") for e in events])
+    n_bell = ev_type_counts.get("bell", 0)
+    n_class = sum(1 for e in events if e.get("type") == "class" and e.get("tier") == "L1")
+    n_u1 = ev_type_counts.get("u1", 0)
+
+    header_lines = []
+    if report_only:
+        header_lines.append(f"[HEDGE v2 · REPORT-ONLY] {target} · scanned={n_scanned}/{n_universe} · "
+                            f"blind={n_blind} · registry={len(reg_rows)} · "
+                            f"bell={n_bell} · cross-L1={n_class} · U1-due={n_u1} [CAL-ONLY]")
+    else:
+        header_lines.append(f"[HEDGE v2] {target} · scanned={n_scanned}/{n_universe} · "
+                            f"blind={n_blind} · registry={len(reg_rows)} · "
+                            f"bell={n_bell} · cross-L1={n_class} · U1-due={n_u1} [CAL-ONLY]")
+
+    if errata:
+        header_lines.append("⚠ ERRATA đêm đầu: 🎓 TỐT-NGHIỆP BỎ · 🅱 nghĩa mới (Δpos thật ≥+10%) · "
+                            "registry = hợp Bảng A ∪ List A (không phải List A cũ)")
+
+    # Compose
+    parts = header_lines + [""]
+    parts += render_events_block(events, events_status, target) + [""]
+    parts += render_whale_block(target, fw_extra, class_by_sym) + [""]
+    parts += render_registry_block(reg_rows, reg_md5, events_by_tok, price_map, target) + [""]
+    parts += render_from_master_block(events, target) + [""]
+
+    # Footer (AW10)
+    audit_path = f"data/artifacts/hedge_registry_{target}.csv"
+    parts.append(f"━━ footer ━━ universe_gen={n_universe} · events_md5={events_md5[:12] if events_md5 else 'N/A'} "
+                 f"· registry_md5={reg_md5} · audit={audit_path}")
+
+    body = "\n".join(parts)
+
+    # tg_len (UTF-16 code unit)
+    try:
+        from lib.tg_len import tg_len
+        body_tg_len = tg_len(body)
+    except ImportError:
+        body_tg_len = len(body.encode("utf-16-le")) // 2
+
+    meta = {
+        "target":         target,
+        "events_md5":     events_md5,
+        "events_status":  events_status,
+        "registry_md5":   reg_md5,
+        "n_reg":          len(reg_rows),
+        "n_events":       len(events),
+        "n_bell":         n_bell,
+        "n_class_L1":     n_class,
+        "n_u1":           n_u1,
+        "n_scanned":      n_scanned,
+        "n_universe":     n_universe,
+        "n_blind":        n_blind,
+        "tg_len":         body_tg_len,
+        "body_budget":    BODY_BUDGET,
+        "over_budget":    body_tg_len > BODY_BUDGET,
+    }
+    return body, meta
+
+
+if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--target", required=True)
+    ap.add_argument("--report-only", action="store_true", default=True)
+    ap.add_argument("--errata", action="store_true")
+    ap.add_argument("--full", action="store_true", help="Print full body")
+    args = ap.parse_args()
+
+    body, meta = compose_body(args.target, report_only=args.report_only, errata=args.errata)
+    if args.full:
+        print(body)
+        print()
+    print(f"[hedge_v2] target={meta['target']} · tg_len={meta['tg_len']}/{meta['body_budget']} "
+          f"· events={meta['n_events']} ({meta['events_status']}) · reg={meta['n_reg']} · "
+          f"bell={meta['n_bell']} · cross-L1={meta['n_class_L1']} · U1={meta['n_u1']} · "
+          f"scanned={meta['n_scanned']}/{meta['n_universe']} · blind={meta['n_blind']}")
