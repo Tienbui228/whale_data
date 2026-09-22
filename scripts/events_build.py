@@ -45,13 +45,12 @@ from b_state_tracker import (
 )
 
 
+from lib.u0_class_tier import classify_tier
+
 def _class_tier(is_l1: bool, dacc: float | None, dpos: float | None) -> str:
-    """L1 pass | not L1 (blind/L2/L3 combined)."""
-    if dacc is None or dpos is None:
-        return "BLIND"
-    if is_l1:
-        return "L1"
-    return "L2_OR_L3"
+    """α1/22-09 · L1 | L2 | L3 | BLIND (dùng lib.u0_class_tier · shared).
+    is_l1 param giữ cho backward-compat · classify_tier tự tính từ dacc/dpos."""
+    return classify_tier(dacc, dpos)
 
 
 def _u1_verdict(v1p: bool, v2p: bool) -> str:

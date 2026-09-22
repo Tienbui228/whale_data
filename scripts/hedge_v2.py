@@ -29,10 +29,15 @@ CONFIG_DIR = _REPO / "data/config"
 STATE_DIR  = _REPO / "data"
 FW_SYM_P   = CONFIG_DIR / "freshwatch_symbols.txt"
 
-BODY_BUDGET   = 3200      # p100 · tg_len pre-cap ≤ 3200
+BODY_BUDGET   = 3600      # p100 · tg_len pre-cap ≤ 3600 (α' bump từ 3200 · thêm kr/STALE/Nguội)
 REGISTRY_TOP  = 15        # thân top-15 xếp div tăng
 WHALE_CAP     = 6         # 🅱1 + 🅱2 mỗi 6 dòng
 FAILED_NAMES  = 3         # ≤3 tên đủ, >3 in đếm + 3 mới nhất
+NGOAI_L1_CAP  = 25        # ngoài L1 in-line cap
+
+# α1/22-09 · lib helpers (shared với events_build + gom_e)
+from lib.u0_class_tier import classify_tier
+from lib.fund_state import fund_state_7d
 
 # ── EVENTS READER · provenance check (AW2) ──────────────────────────────────
 
@@ -187,7 +192,10 @@ def registry_hop_145(target: str) -> tuple[list[dict], str]:
                 try:
                     e_d = datetime.strptime(entry, "%Y-%m-%d").date()
                     dd = (td_d - e_d).days
-                    if e_d <= state_birth - timedelta(days=0):
+                    if dd < 0:
+                        # state entry AFTER target · as-of state unavailable
+                        tuoi_str = "?"
+                    elif e_d <= state_birth:
                         tuoi_str = f"≥{dd}d[state]"
                     else:
                         tuoi_str = f"{dd}d"
@@ -273,8 +281,13 @@ def _dm(iso: str) -> str:
     return f"{iso[8:10]}/{iso[5:7]}"
 
 
-def render_events_block(events: list[dict], status: str, target: str) -> list[str]:
-    """SỰ KIỆN (phía crowd → xác nhận) block · AW4."""
+def render_events_block(events: list[dict], status: str, target: str,
+                         luat_over_toks: Optional[dict] = None) -> list[str]:
+    """SỰ KIỆN (phía crowd → xác nhận) block · AW4.
+
+    luat_over_toks: {tok_bare: kd_days} · nếu token có luật nền → thêm [hậu-D0 +kd]
+    """
+    if luat_over_toks is None: luat_over_toks = {}
     lines = ["── SỰ KIỆN (phía crowd → xác nhận) ── [master-events]"]
     if status != "ok":
         lines.append(status)
@@ -292,10 +305,13 @@ def render_events_block(events: list[dict], status: str, target: str) -> list[st
         if t == "bell":
             dacc = (e.get("dacc_bwd") or 0.0) * 100
             dpos = (e.get("dpos_bwd") or 0.0) * 100
-            # AC4: bỏ trường lead ở dòng chuông
+            # AC4: bỏ trường lead · α4: [hậu-D0] khi có luật nền
+            luat_tag = ""
+            if tok in luat_over_toks:
+                luat_tag = f" [hậu-D0 +{luat_over_toks[tok]}d]"
             lines.append(
                 f"[U0-BELL D={_dm(e.get('D', ''))} · "
-                f"Δacc_bwd={dacc:+.0f}% · pos_bwd={dpos:+.0f}%] {tok}"
+                f"Δacc_bwd={dacc:+.0f}% · pos_bwd={dpos:+.0f}%] {tok}{luat_tag}"
             )
             n += 1
         elif t == "class":
@@ -303,6 +319,10 @@ def render_events_block(events: list[dict], status: str, target: str) -> list[st
             dc = e.get("d_cross", "")
             dacc = (e.get("dacc") or 0.0) * 100
             dpos = abs(e.get("dpos") or 0.0) * 100
+            # α4 · [hậu-D0 +kd] khi token có luật nền
+            luat_tag = ""
+            if tok in luat_over_toks:
+                luat_tag = f" [hậu-D0 +{luat_over_toks[tok]}d]"
             if tier == "L1":
                 try:
                     dc_d = datetime.strptime(dc, "%Y-%m-%d").date()
@@ -311,13 +331,13 @@ def render_events_block(events: list[dict], status: str, target: str) -> list[st
                     u1_due = "?"
                 lines.append(
                     f"[U0-CLASS D_cross={_dm(dc)} · L1 · Δacc={dacc:+.0f}% · "
-                    f"|Δpos|={dpos:.0f}%] {tok} → U1 due {u1_due}"
+                    f"|Δpos|={dpos:.0f}%] {tok} → U1 due {u1_due}{luat_tag}"
                 )
             else:
-                # §14 · L2_OR_L3 hoặc BLIND VẪN in — nhãn không giấu token có event
+                # §14 · L2/L3/BLIND VẪN in — nhãn không giấu token có event
                 lines.append(
                     f"[U0-CLASS D_cross={_dm(dc)} · {tier} · Δacc={dacc:+.0f}% · "
-                    f"|Δpos|={dpos:.0f}%] {tok} (không mở U1)"
+                    f"|Δpos|={dpos:.0f}%] {tok} (không mở U1){luat_tag}"
                 )
             n += 1
         elif t == "u1":
@@ -350,7 +370,8 @@ def _rows_last2(sym: str, price_map: dict, extra: dict) -> tuple[Optional[dict],
 
 
 def load_fw_extra(target: str, back: int = 30) -> dict:
-    """Load fw_daily rows cho pos/acc/oi. Trả {sym: {date: {pos, acc, oi}}}."""
+    """Load fw_daily rows cho pos/acc/oi/px + f_min/f_avg.
+    Trả {sym: {date: {pos, acc, oi, px, f_min, f_avg}}}."""
     import csv
     td = datetime.strptime(target, "%Y-%m-%d").date()
     from_d = td - timedelta(days=back)
@@ -374,8 +395,23 @@ def load_fw_extra(target: str, back: int = 30) -> dict:
                 out.setdefault(sym, {})[d] = {
                     "pos": _f("lsr_pos_r"), "acc": _f("lsr_acc_r"),
                     "oi":  _f("oi_usd"),   "px":  _f("px_avg"),
+                    "f_min": _f("funding_min"), "f_avg": _f("funding_avg"),
                 }
     return out
+
+
+def _fund_state_for_sym(sym: str, target: str, fw_extra: dict) -> str:
+    """α2/22-09 · fund_state 7d wrap sym → PIN | SHORT-TRẢ | NONE."""
+    dmap = fw_extra.get(sym, {})
+    if not dmap: return "NONE"
+    dates = sorted(dmap.keys())[-7:]
+    days = [{"f_min": dmap[d].get("f_min"), "f_avg": dmap[d].get("f_avg")} for d in dates]
+    return fund_state_7d(days)
+
+
+def _strip_usdt(sym: str) -> str:
+    """α3/22-09 · bỏ hậu tố USDT (STEEMUSDT → STEEM) · cùng chuỗi tên master/HEDGE."""
+    return sym[:-4] if sym.endswith("USDT") else sym
 
 
 def render_whale_block(target: str, fw_extra: dict,
@@ -398,8 +434,10 @@ def render_whale_block(target: str, fw_extra: dict,
         doi  = oi_T  / oi_p  - 1
         # 🅱 gate: Δpos ≥ +10%
         if dpos < 0.10: continue
-        row = {"sym": sym, "dpos": dpos, "doi": doi,
-               "class": class_by_sym.get(sym, "")}
+        # α3: bỏ USDT suffix · match tên events
+        sym_bare = _strip_usdt(sym)
+        row = {"sym": sym_bare, "dpos": dpos, "doi": doi,
+               "class": class_by_sym.get(sym_bare, "")}
         if doi <= -0.03: b1.append(row)     # short-cover
         elif doi >= 0.03: b2.append(row)    # whale đổi ghế
 
@@ -427,25 +465,18 @@ def render_whale_block(target: str, fw_extra: dict,
 
 # ── REGISTRY HỢP block · top-15 · AW6 · p111 ─────────────────────────────────
 
-def _fund_state(fund) -> str:
-    """PIN | SHORT-TRẢ | NONE · rough classifier."""
-    if fund is None or (isinstance(fund, float) and math.isnan(fund)): return "NONE"
-    if fund > 5e-5 and fund < 1e-4: return "PIN"
-    if fund < 0: return "SHORT-TRẢ"
-    return "NONE"
-
-
 def render_registry_block(rows: list[dict], reg_md5: str,
                            events_by_tok: dict, price_map: dict,
-                           target: str) -> list[str]:
-    """LIST A · REGISTRY hợp 145 · top-15 xếp div tăng · p104 · p107.
+                           target: str, fw_extra: dict,
+                           events: list) -> list[str]:
+    """LIST A · REGISTRY hợp 145 · top-15 xếp div tăng · p104 · p107 · α5.
 
-    p104 · luật nền V1.4-A: ≥2× đáy 60d → KHÔNG vào top-15, ghi `[hậu-D0 +kd]` cuối.
-    p107 · token có event hôm nay LUÔN có dòng — kể cả rớt top-15 hoặc bị luật nền.
+    α4/22-09: luật nền loại 6 token → tên đích danh audit line.
+    α5/22-09: cột kr=? · dòng STALE k · dòng Nguội: tên (từ mai · từ snapshot D-1).
     """
     total = len(rows)
     lines = [f"── LIST A · REGISTRY HỢP {total} tokens (Bảng A ∪ List A) ──"]
-    lines.append("sym · dải · nguồn · div · acc_r · pos_r · fund · tuổi")
+    lines.append("sym · dải · nguồn · d=div a=acc p=pos · fund · kr · tuổi")
 
     # Sort: div tăng dần (NaN → cuối)
     rows_sorted = sorted(rows, key=lambda r: (
@@ -466,40 +497,61 @@ def render_registry_block(rows: list[dict], reg_md5: str,
     top_syms = {r["sym"] for r in top}
 
     # p107 · event tokens ép vào (nếu chưa có, kể cả bị luật nền hoặc rớt top-15)
-    event_syms = set(events_by_tok.keys())
+    # events_by_tok dùng short-form tok · registry dùng USDT-suffixed sym · match cả 2
+    event_syms_bare = set(events_by_tok.keys())
     reg_syms = {r["sym"] for r in rows_sorted}
-    forced_in_reg = event_syms & reg_syms - top_syms
+    forced_in_reg = set()
+    for sym in reg_syms:
+        bare = _strip_usdt(sym)
+        if bare in event_syms_bare and sym not in top_syms:
+            forced_in_reg.add(sym)
     forced_rows = []
     for sym in sorted(forced_in_reg):
         r = next((r for r in rows_sorted if r["sym"] == sym), None)
         if r: forced_rows.append(r)
 
-    def _line(r, is_forced=False):
+    def _line(r):
         div_s = f"{r['div_smooth']:.3f}" if (isinstance(r["div_smooth"], float) and
                                               not math.isnan(r["div_smooth"])) else "N/A"
         acc_s = f"{r['acc_r']:.2f}" if isinstance(r["acc_r"], float) and not math.isnan(r["acc_r"]) else "?"
         pos_s = f"{r['pos_r']:.2f}" if isinstance(r["pos_r"], float) and not math.isnan(r["pos_r"]) else "?"
-        fund_s = _fund_state(r["fund"])
-        ev_tag = f" [{events_by_tok.get(r['sym'], '')}]" if r["sym"] in event_syms else ""
+        # α2 · fund_state 7d · lib.fund_state
+        fund_s = _fund_state_for_sym(r["sym"], target, fw_extra)
+        bare = _strip_usdt(r["sym"])
+        ev_tag = f" [{events_by_tok.get(bare, '')}]" if bare in event_syms_bare else ""
         # p104 · nếu over 2×min60d, thêm [hậu-D0 +kd]
         luat_tag = f" [hậu-D0 +{kd_map[r['sym']]}d]" if over_map.get(r["sym"]) else ""
+        # compact format · d/a/p labels · tiết kiệm ~135 chars/15 dòng
         return (f"  {r['sym']} · {r['band']} · {r['source']} · "
-                f"div={div_s} · acc={acc_s} · pos={pos_s} · {fund_s} · {r['tuoi_str']}{ev_tag}{luat_tag}")
+                f"d={div_s} a={acc_s} p={pos_s} {fund_s} kr=? {r['tuoi_str']}{ev_tag}{luat_tag}")
 
     for r in top:
         lines.append(_line(r))
 
     if forced_rows:
         for r in forced_rows:
-            lines.append(_line(r, is_forced=True))
+            lines.append(_line(r))
 
     if total > len(top) + len(forced_rows):
         lines.append(f"(+{total - len(top) - len(forced_rows)} tokens đủ ở audit)")
 
-    # p104 audit: đếm tokens bị luật nền loại
-    n_over = sum(1 for r in rows_sorted if over_map[r["sym"]])
-    if n_over:
-        lines.append(f"(luật-nền V1.4-A loại {n_over} tokens ≥2× đáy 60d · audit)")
+    # α4 · luật nền tokens đích danh (audit line)
+    over_syms = sorted([r["sym"] for r in rows_sorted if over_map[r["sym"]]])
+    if over_syms:
+        lines.append(f"luật-nền: ≥2× đáy only · POST-routing defer · loại {len(over_syms)}: "
+                     + " · ".join(_strip_usdt(s) for s in over_syms))
+
+    # α5 · STALE k (từ btier · CONFIRMED >30d)
+    stale_toks = sorted([e["tok"] for e in events if e.get("type") == "btier"
+                        and e.get("tier") == "STALE"])
+    if stale_toks:
+        lines.append(f"STALE {len(stale_toks)}: " + " · ".join(stale_toks))
+    else:
+        lines.append("STALE 0")
+
+    # α5 · Nguội (rời registry ≥3d · từ snapshot D-1 · chưa wire · in placeholder)
+    lines.append("Nguội: (chưa có snapshot D-1 · từ mai)")
+
     return lines
 
 
@@ -569,7 +621,7 @@ def compose_body(target: str, report_only: bool = True,
     events, events_md5, events_status = read_events(target)
     if events is None: events = []
 
-    # class_by_sym cho tag WHALE
+    # class_by_sym cho tag WHALE · α1: L2/L3 tach riêng
     class_by_sym = {}
     events_by_tok = {}
     for e in events:
@@ -580,7 +632,12 @@ def compose_body(target: str, report_only: bool = True,
         elif t == "class":
             tier = e.get("tier", "")
             events_by_tok[tok] = f"CLASS-{tier}"
-            if tier in ("L2_OR_L3",):
+            # α1: giữ L2/L3 tach riêng · legacy L2_OR_L3 fallback → L2
+            if tier == "L2":
+                class_by_sym[tok] = "L2"
+            elif tier == "L3":
+                class_by_sym[tok] = "L3"
+            elif tier == "L2_OR_L3":  # legacy events file
                 class_by_sym[tok] = "L2"
         elif t == "u1":
             events_by_tok[tok] = f"U1-{e.get('verdict', '?')}"
@@ -604,18 +661,56 @@ def compose_body(target: str, report_only: bool = True,
     from collections import Counter
     ev_type_counts = Counter([e.get("type") for e in events])
     n_bell = ev_type_counts.get("bell", 0)
-    n_class = sum(1 for e in events if e.get("type") == "class" and e.get("tier") == "L1")
+    n_class_l1 = sum(1 for e in events if e.get("type") == "class" and e.get("tier") == "L1")
     n_u1 = ev_type_counts.get("u1", 0)
 
-    header_lines = []
-    if report_only:
-        header_lines.append(f"[HEDGE v2 · REPORT-ONLY] {target} · scanned={n_scanned}/{n_universe} · "
-                            f"blind={n_blind} · registry={len(reg_rows)} · "
-                            f"bell={n_bell} · cross-L1={n_class} · U1-due={n_u1} [CAL-ONLY]")
+    # α7 · U1-pending = class L1 events có D_cross+5 > target · tính due nearest
+    td_d = datetime.strptime(target, "%Y-%m-%d").date()
+    pending = []
+    for e in events:
+        if e.get("type") != "class" or e.get("tier") != "L1": continue
+        dc = e.get("d_cross", "")
+        try:
+            dc_d = datetime.strptime(dc, "%Y-%m-%d").date()
+            due_d = dc_d + timedelta(days=5)
+        except ValueError:
+            continue
+        if due_d > td_d:
+            pending.append((e.get("tok", "?"), due_d))
+    pending.sort(key=lambda x: x[1])
+    n_pending = len(pending)
+    if pending:
+        due_nearest = pending[0][1].strftime("%d/%m")
+        pending_str = f"U1-pending={n_pending} (due {due_nearest})"
     else:
-        header_lines.append(f"[HEDGE v2] {target} · scanned={n_scanned}/{n_universe} · "
-                            f"blind={n_blind} · registry={len(reg_rows)} · "
-                            f"bell={n_bell} · cross-L1={n_class} · U1-due={n_u1} [CAL-ONLY]")
+        pending_str = f"U1-pending=0"
+
+    # α4 · luat_over_toks · dict {tok_bare: kd_days} cho events block [hậu-D0]
+    luat_over_toks = {}
+    # Check registry over-2× tokens (used both in registry + events blocks)
+    for r in reg_rows:
+        over, kd = luat_nen_2x_min60d(r["sym"], target, price_map)
+        if over:
+            luat_over_toks[_strip_usdt(r["sym"])] = kd
+    # Also check event tokens outside registry (bell/class fires)
+    for e in events:
+        tok = e.get("tok")
+        if not tok or tok in luat_over_toks: continue
+        # Try both bare + USDT-suffixed
+        for candidate_sym in (f"{tok}USDT", tok):
+            if candidate_sym in price_map:
+                over, kd = luat_nen_2x_min60d(candidate_sym, target, price_map)
+                if over:
+                    luat_over_toks[tok] = kd
+                    break
+
+    header_lines = []
+    header_pref = "[HEDGE v2 · REPORT-ONLY]" if report_only else "[HEDGE v2]"
+    header_lines.append(
+        f"{header_pref} {target} · scanned={n_scanned}/{n_universe} · "
+        f"blind={n_blind} · registry={len(reg_rows)} · "
+        f"bell={n_bell} · cross-L1={n_class_l1} · {pending_str} [CAL-ONLY]"
+    )
 
     if errata:
         header_lines.append("⚠ ERRATA đêm đầu: 🎓 TỐT-NGHIỆP BỎ · 🅱 nghĩa mới (Δpos thật ≥+10%) · "
@@ -623,14 +718,16 @@ def compose_body(target: str, report_only: bool = True,
 
     # Compose
     parts = header_lines + [""]
-    parts += render_events_block(events, events_status, target) + [""]
+    parts += render_events_block(events, events_status, target, luat_over_toks) + [""]
     parts += render_whale_block(target, fw_extra, class_by_sym) + [""]
-    parts += render_registry_block(reg_rows, reg_md5, events_by_tok, price_map, target) + [""]
+    parts += render_registry_block(reg_rows, reg_md5, events_by_tok, price_map, target,
+                                    fw_extra, events) + [""]
     parts += render_from_master_block(events, target) + [""]
 
-    # Footer (AW10)
+    # Footer (AW10 · α6 CHƯA KÝ marker)
     audit_path = f"data/artifacts/hedge_registry_{target}.csv"
-    parts.append(f"━━ footer ━━ universe_gen={n_universe} · events_md5={events_md5[:12] if events_md5 else 'N/A'} "
+    parts.append(f"━━ footer ━━ universe_gen={n_universe} [CHƯA KÝ] · "
+                 f"events_md5={events_md5[:12] if events_md5 else 'N/A'} "
                  f"· registry_md5={reg_md5} · audit={audit_path}")
 
     body = "\n".join(parts)
@@ -643,21 +740,23 @@ def compose_body(target: str, report_only: bool = True,
         body_tg_len = len(body.encode("utf-16-le")) // 2
 
     meta = {
-        "target":         target,
-        "events_md5":     events_md5,
-        "events_status":  events_status,
-        "registry_md5":   reg_md5,
-        "n_reg":          len(reg_rows),
-        "n_events":       len(events),
-        "n_bell":         n_bell,
-        "n_class_L1":     n_class,
-        "n_u1":           n_u1,
-        "n_scanned":      n_scanned,
-        "n_universe":     n_universe,
-        "n_blind":        n_blind,
-        "tg_len":         body_tg_len,
-        "body_budget":    BODY_BUDGET,
-        "over_budget":    body_tg_len > BODY_BUDGET,
+        "target":          target,
+        "events_md5":      events_md5,
+        "events_status":   events_status,
+        "registry_md5":    reg_md5,
+        "n_reg":           len(reg_rows),
+        "n_events":        len(events),
+        "n_bell":          n_bell,
+        "n_class_L1":      n_class_l1,
+        "n_u1":            n_u1,
+        "n_u1_pending":    n_pending,
+        "n_luat_nen":      len(luat_over_toks),
+        "n_scanned":       n_scanned,
+        "n_universe":      n_universe,
+        "n_blind":         n_blind,
+        "tg_len":          body_tg_len,
+        "body_budget":     BODY_BUDGET,
+        "over_budget":     body_tg_len > BODY_BUDGET,
     }
     return body, meta
 
@@ -678,4 +777,5 @@ if __name__ == "__main__":
     print(f"[hedge_v2] target={meta['target']} · tg_len={meta['tg_len']}/{meta['body_budget']} "
           f"· events={meta['n_events']} ({meta['events_status']}) · reg={meta['n_reg']} · "
           f"bell={meta['n_bell']} · cross-L1={meta['n_class_L1']} · U1={meta['n_u1']} · "
+          f"U1-pending={meta['n_u1_pending']} · luật-nền={meta['n_luat_nen']} · "
           f"scanned={meta['n_scanned']}/{meta['n_universe']} · blind={meta['n_blind']}")

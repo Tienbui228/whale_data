@@ -1,13 +1,14 @@
-"""AW-α · pins đen-một-lần p100-p107 + p111 · 6 đêm mẫu.
+"""AW-α' · pins đen-một-lần p100-p107 + p111 + p112 · 6 đêm mẫu.
 
 p100 · thân ≤ ngân sách 3200 (tg_len) 6 đêm
 p101 · CROSS token: SỰ KIỆN in L1 · nếu 🅱2 hiển thị token này thì Δpos hiển thị đúng số (=Δpos thật)
-p102 · DRIFT 20/09: nếu class L1 → dòng SỰ KIỆN có; nếu 🅱2 → gắn → L2 cùng dòng (khi class == L2_OR_L3)
+p102 · DRIFT: nếu class L2/L3 → dòng SỰ KIỆN có; nếu 🅱2 → gắn → L2 or → L3 cùng dòng
 p103 · tuổi: KHÔNG có dòng nào in `?` khi có hedge_start_date/entry_date · dạng `Nd` hoặc `≥Nd[…]`
 p104 · luật nền: BTR (POST/XẢ hoặc ≥2× đáy 60d) → KHÔNG trong 🅱 hoặc REGISTRY top-15; audit có
 p106 · events_md5 khớp file: read_events md5 == .md5 sidecar
 p107 · token có event hôm nay LUÔN có dòng trong thân
 p111 · registry hợp = Bảng A ∪ List A cùng target · union size khớp
+p112 · TIER LUẬT (α1): POWER (Δacc=-71%, Δpos=+31%) → L2 · EVAA (-14, 0) → L3 · SHELL (-5, 8) → L3
 """
 from __future__ import annotations
 import os, sys, hashlib, re
@@ -77,20 +78,25 @@ for tgt in TARGETS:
     r["p111_diff_L_minus_reg"] = len(list_a - reg_syms)
     r["p111_union_size"] = len(union_expected)
 
-    # p103 · tuổi format
-    lines_reg = [l for l in body.split("\n") if l.startswith("  ") and " · " in l and "sym ·" not in l]
-    # dạng chuẩn: `Nd` hoặc `≥Nd[state|store]` hoặc `?` khi không có
+    # p103 · tuổi format · tìm token đầu tiên dạng {Nd | ≥Nd[state|store]} trong dòng
+    # trước bất kỳ [event] hoặc [luật_nền] tag
+    lines_reg = [l for l in body.split("\n") if l.startswith("  ") and " · " in l and "sym ·" not in l
+                 and " kr=? " in l]  # chỉ registry rows
     import re
     p103_ok = True
     p103_offend = []
     for ln in lines_reg:
-        m = re.search(r"·\s*([^·]+)$", ln)
-        if not m: continue
-        tail = m.group(1).strip()
-        if re.match(r"^(\d+d|≥\d+d\[(state|store)\]|\?)$", tail):
+        # split by " ["  · phần trước là tuổi
+        pre_bracket = ln.split(" [")[0]
+        # last token là tuổi
+        toks = pre_bracket.rsplit(" ", 1)
+        if len(toks) < 2:
+            p103_offend.append(ln[-30:]); p103_ok = False; continue
+        tuoi = toks[-1]
+        if re.match(r"^(\d+d|≥\d+d\[(state|store)\]|\?)$", tuoi):
             continue
+        p103_offend.append(tuoi[:30])
         p103_ok = False
-        p103_offend.append(tail[:30])
     r["p103"] = p103_ok
     r["p103_offend"] = p103_offend[:3]
 
@@ -105,21 +111,22 @@ for tgt in TARGETS:
                 p101_ok = False; break
     r["p101"] = p101_ok
 
-    # p102 · DRIFT tag: token L2_OR_L3 nếu có mặt trong 🅱2 phải có "→ L2" cùng dòng
+    # p102 · L2/L3 token trong 🅱2 phải có → L2 hoặc → L3 cùng dòng (segment level)
     p102_ok = True
-    l2_toks = {e.get("tok") for e in events or [] if e.get("type") == "class"
-               and e.get("tier") in ("L2_OR_L3",)}
+    tier_by_tok = {e.get("tok"): e.get("tier") for e in events or []
+                   if e.get("type") == "class" and e.get("tier") in ("L2", "L3", "L2_OR_L3")}
     for ln in body.split("\n"):
-        if not ln.startswith("🅱2"): continue
-        # parse segments after ": "
+        if not ln.startswith("🅱"): continue
         _, _, segs_str = ln.partition(":")
         segs = [s.strip() for s in segs_str.split(" · ") if s.strip()]
         for seg in segs:
-            # first "word" is tok · check exact match with USDT stripped
             tok_seg = seg.split()[0] if seg.split() else ""
             tok_bare = tok_seg[:-4] if tok_seg.endswith("USDT") else tok_seg
-            if tok_bare in l2_toks and "→ L2" not in seg:
-                p102_ok = False; break
+            if tok_bare in tier_by_tok:
+                tier = tier_by_tok[tok_bare]
+                expected = f"→ {tier}" if tier in ("L2", "L3") else "→ L2"
+                if expected not in seg:
+                    p102_ok = False; break
     r["p102"] = p102_ok
 
     # p104 · luật nền · TOP-15 không được chứa token ≥2× 60d (không tag [hậu-D0])
@@ -142,21 +149,40 @@ for tgt in TARGETS:
     r["p104"] = p104_ok
     r["p104_offend"] = p104_offend[:3]
 
+    # p112 · TIER LUẬT · nếu POWER/EVAA/SHELL có class event, tier phải khớp expected
+    from lib.u0_class_tier import classify_tier
+    p112_ok = True
+    p112_check = []
+    EXPECTED = {"POWER": "L2", "EVAA": "L3", "SHELL": "L3"}
+    for e in events or []:
+        if e.get("type") != "class": continue
+        tok = e.get("tok")
+        if tok not in EXPECTED: continue
+        dacc = e.get("dacc")
+        dpos = e.get("dpos")
+        actual = classify_tier(dacc, dpos)
+        expected = EXPECTED[tok]
+        if actual != expected:
+            p112_ok = False
+        p112_check.append(f"{tok}({dacc*100:.0f},{dpos*100:.0f})→{actual}[expect {expected}]")
+    r["p112"] = p112_ok
+    r["p112_check"] = p112_check
+
     pins_pass = all([r["p100"], r["p101"], r["p102"], r["p103"], r["p104"],
-                     r["p106"], r["p107"], r["p111"]])
+                     r["p106"], r["p107"], r["p111"], r["p112"]])
     if not pins_pass: fails += 1
     results.append(r)
 
 # Print summary
 print(f"{'target':12s} | {'p100':>4s} | {'p101':>4s} | {'p102':>4s} | {'p103':>4s} | "
-      f"{'p104':>4s} | {'p106':>4s} | {'p107':>4s} | {'p111':>4s} | tg_len | reg")
+      f"{'p104':>4s} | {'p106':>4s} | {'p107':>4s} | {'p111':>4s} | {'p112':>4s} | tg_len | reg")
 print(f"{'-'*12} | {'-'*4} | {'-'*4} | {'-'*4} | {'-'*4} | {'-'*4} | {'-'*4} | "
-      f"{'-'*4} | {'-'*4} | {'-'*6} | {'-'*3}")
+      f"{'-'*4} | {'-'*4} | {'-'*4} | {'-'*6} | {'-'*3}")
 for r in results:
     def m(k): return "PASS" if r[k] else "FAIL"
     print(f"{r['target']:12s} | {m('p100'):>4s} | {m('p101'):>4s} | {m('p102'):>4s} | "
           f"{m('p103'):>4s} | {m('p104'):>4s} | {m('p106'):>4s} | {m('p107'):>4s} | "
-          f"{m('p111'):>4s} | {r['meta']['tg_len']:>6d} | {r['meta']['n_reg']:>3d}")
+          f"{m('p111'):>4s} | {m('p112'):>4s} | {r['meta']['tg_len']:>6d} | {r['meta']['n_reg']:>3d}")
 
 print()
 # Detailed FAILs (nếu có)
@@ -168,6 +194,12 @@ for r in results:
     if not r["p111"]:
         fail_detail.append(f"p111 union={r['p111_union_size']} A\\reg={r['p111_diff_A_minus_reg']} "
                            f"L\\reg={r['p111_diff_L_minus_reg']}")
+    if not r["p112"]:
+        fail_detail.append(f"p112: " + " · ".join(r["p112_check"]))
+    elif r.get("p112_check"):
+        # print p112 for information even when PASS (measurable data)
+        print(f"{r['target']} p112 measured: " + " · ".join(r["p112_check"]))
+        continue
     if fail_detail:
         print(f"{r['target']}: " + " · ".join(fail_detail))
 
