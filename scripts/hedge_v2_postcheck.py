@@ -16,8 +16,11 @@ Exit code:
   0 · tất cả 4 dấu chân + hedge_v2_journal ok (no U7 block)
   1 · thiếu 1+ dấu chân hoặc journal có KÍCH-vì-chân-HEDGE
 
-If exit 1 · operator can revert: đặt HEDGE_V2=0 trong .env → chạy tay watchlist_daily
-tối tối đó. Không sửa artifact tay.
+If exit 1 · operator revert HAI BƯỚC (V9 · V8 gotcha marker giữ ERRATA lifetime):
+  ssh root@5.223.67.21 "sed -i '/^HEDGE_V2=/d' /root/Data_back_test/whale_data/.env && \\
+    rm -f /root/Data_back_test/whale_data/data/state/hedge_v2_first_night.marker"
+Bước 1: tắt cờ · Bước 2: xóa marker (để ERRATA in lại nếu bật lại lần sau).
+KHÔNG sửa artifact tay (bell_journal · verdict_epoch immutable per §KỶ-LUẬT #11).
 """
 from __future__ import annotations
 import os, sys, json, argparse, re
@@ -129,7 +132,13 @@ def main():
     ])
 
     print()
-    print(f"═══ {'PASS · sẵn sàng chạy đêm sau' if ok_all else 'FAIL · xem lại + revert HEDGE_V2=0 nếu cần'} ═══")
+    if ok_all:
+        print(f"═══ PASS · sẵn sàng chạy đêm sau ═══")
+    else:
+        print(f"═══ FAIL · xem lại · rollback 2 bước (V9):")
+        print(f"  ssh root@5.223.67.21 \"sed -i '/^HEDGE_V2=/d' /root/Data_back_test/whale_data/.env && \\")
+        print(f"    rm -f /root/Data_back_test/whale_data/data/state/hedge_v2_first_night.marker\"")
+        print(f"═══")
     sys.exit(0 if ok_all else 1)
 
 
