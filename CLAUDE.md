@@ -171,3 +171,17 @@ Sau MỖI edit `CASE_INDEX.xlsx` sheet INDEX (đổi state token, thêm/xóa cas
   · KHÔNG tự động nâng theo đếm ngày — cần ANALYSIS ký sau khi soát 5 đêm sạch
   · Nếu bất kỳ đêm nào trong 5 đêm có ≥1 ca → reset đếm về 0 · quan sát thêm
   Ví dụ p115/BB1 (lint một-token-một-khối loài-only): sớm nhất chặn ~02/10 nếu 27/09-01/10 sạch.
+
+16. **ĐO, KHÔNG KẾT LUẬN.** Mọi bảng phải có cột NGUỒN (file · dòng · thời điểm lấy). Agent in số; DEV rút kết luận. Áp cho mọi output bảng — probe, dry pipeline, verdict summary, registry list, whale delta, etc. Ví dụ dòng: `BULLA · dacc=-25.9% · dpos=+9.4% · nguồn=events_2026-09-20.jsonl:L14 · lấy=2026-09-22T06:33:01Z`. Không được kết luận `→ L1` hay `→ FAIL` trong bảng — chỉ in số + nguồn; luật classifier chạy tách riêng, DEV chấm sau.
+
+17. **CẤM tự so code với chính nó.** Kiểm chứng = so với ca có đáp án đã ký (vd BULLA −25.9/9.4 → L1 · fb30dd88 §3 A2.1). "Cùng hàm nên diff=0" KHÔNG phải bằng chứng — chỉ chứng minh hàm deterministic, không chứng minh hàm đúng. Pin đúng cần: input mẫu ký + expected output ký + assert khớp. Fixture-trọng-tài (§KỶ-LUẬT #4) là chỗ chứa ca ký. Consistency probe (HEDGE vs GOM-E) chỉ xác nhận hai hàm cùng ra 1 số — nếu cả hai đều sai vẫn "consistent". Phải có ít nhất 1 ca có đáp án ký để làm neo.
+
+18. **MỌI SỐ MANG GỐC CỦA NÓ.** Không viết tắt tên trường theo cảm tính:
+   · `lead_anchor` ≠ `lead_known` (anchor = mốc gốc · known = đã kiểm chứng)
+   · `ret-từ-cross` ≠ `ret-từ-nền` (cross = D_cross · nền = min60d/base episode)
+   · `px_avg` ≠ `close/high` (avg = mean của bar · close/high = spot cuối/đỉnh bar)
+   · `pre-cap` ≠ `post-cap` (pre = trước smart-truncate · post = sau)
+   · `scanned` ≠ `universe` (scanned = có data tại target · universe = fw filter size)
+   Tỷ lệ phải in MẪU SỐ: `sent=6/6` không `sent=6` · `k/N=222/228` không `k=222`.
+   Phần trăm phải nói "so với cái gì": `+15% vs T-1` không `+15%` · `-30% vs đáy 60d` không `-30%`.
+   Reason: mù nguồn → so sai · Δ giữa 2 số khác gốc = số vô nghĩa.
