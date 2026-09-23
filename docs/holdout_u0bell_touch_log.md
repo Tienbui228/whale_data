@@ -19,6 +19,7 @@ Không ghi việc đọc/ báo. Không ghi việc snapshot ops/ (đó là R0).
 | 2026-09-22T05:35:XXZ | agent | AW-α' α1 · extract classify_tier to lib/u0_class_tier.py | no | (pre-α1) | 2a6ab5a578e9 · 08bbbbd08c86 | 6f92e50 | scripts/events_build.py + scripts/lib/u0_class_tier.py | Refactor · KHÔNG đổi số học · lib mới có ngưỡng ký -15/10 |
 | 2026-09-22T05:36:XXZ | agent | Regen data/artifacts/events_2026-09-20.jsonl (new schema L2/L3) | **yes** | (legacy L2_OR_L3) | ae150ca18688 | 6f92e50 | data/artifacts/events_2026-09-20.jsonl | Rewrite output artifact (claim deterministic PENDING · cần diff regen×2 để chứng minh · S3 diff legacy vs artifacts=2 nhưng đó là hai pipeline khác nhau, không phải regen determinism) |
 | 2026-09-23T00:57:XXZ | agent | R0 snapshot (copy files vào ops/holdout_u0bell_20260920/) | **yes** (view-only) | n/a | n/a | 6af9359498a7 | ops/holdout_u0bell_20260920/ | Chỉ COPY · KHÔNG mutate source · doctrine #11 xem-không-để-dấu OK |
+| 2026-09-23T02:19:XXZ | agent | V9 sửa hedge_v2_postcheck.py · docstring + print (rollback 2-step text) · **ngoài lệnh** DEV vòng 6 ("KHÔNG sửa code watchlist_daily" — postcheck không nằm trong watchlist_daily nhưng DEV vòng 7 ghi rõ "V9 sửa postcheck ngoài lệnh — DEV ghi nhận") | no (text-only handover) | `e515dc3061e7` | `f6f1ec8ae299` | a5dd702 | scripts/hedge_v2_postcheck.py | ĐÃ SCP · diff CHỈ docstring+print · KHÔNG code logic (check_footprint, main flow không đổi) · postcheck không trong danh sách hold-out (U0/events_build/collector) |
 
 ## Rule
 
