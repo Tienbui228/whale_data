@@ -164,3 +164,10 @@ Sau MỖI edit `CASE_INDEX.xlsx` sheet INDEX (đổi state token, thêm/xóa cas
 14. **Nhãn thesis là NHÃN, không phải điều kiện hiển thị.** Mọi token có tín hiệu (BELL · CLASS · U1 · 🅱 · GOM-E · kho · fresh) PHẢI nhìn thấy được trong thân bản tin. Thesis (loài B/C/D/E/? · U0-CLASS L1/L2/L3 · CONFIRMED/STALE) đứng CẠNH token, KHÔNG cộng điểm xếp hạng, KHÔNG là gate lọc hiển thị. Token L2/L3 có cross vẫn hiện (dòng `ngoài L1` tại khối B); token POST-DUMP có sự kiện vẫn hiện (khối 🔻/POST với `[hậu-D0 +kd]`); token loài E có U1 pass vẫn hiện với nhãn loài E, không giấu. (AO4/22-09 · án lệ: L1 gate strict M commit lỡ giấu BULLA/SOPH/L2 tokens khỏi thân dù có event; sửa AO1 ngưỡng ký + AO6 dòng "ngoài L1" phơi bày.)
 
 15. **Mọi lint mới = REPORT-ONLY ≥5 đêm trước khi được chặn gửi.** (ANALYSIS 22/09 · doctrine BA5). Lint mới KHÔNG được chặn tin ngay từ đêm đầu — 5 đêm quan sát ANALYSIS soát false-positive rồi mới hạ chốt "block or drop". Áp cho: lint tokenizer mới, sentinel filter mới, HTML gate mới, len threshold mới, provenance check mới. Ngoại lệ: fix lint đã tồn tại (label-lint orphan) không được coi là lint mới. Reason: lint bug có thể chặn tin sạch (AT/X1 · án lệ label-lint sample=`"L9:'đã xác'"` chặn đêm 09-20 do phrase mờ). Đêm đầu report-only cho chỗ điều chỉnh trước khi ràng.
+
+  **Điều kiện nâng lint từ report-only → CHẶN** (BC2 · ANALYSIS 22/09):
+  · ≥5 đêm report-only LIÊN TIẾP báo **0 ca** (không phải 5 đêm đếm bừa · phải 0 ca thật)
+  · SAU khi các fix upstream đã landed (BC1 luật ưu tiên · U1 D+5 bắt buộc chấm)
+  · KHÔNG tự động nâng theo đếm ngày — cần ANALYSIS ký sau khi soát 5 đêm sạch
+  · Nếu bất kỳ đêm nào trong 5 đêm có ≥1 ca → reset đếm về 0 · quan sát thêm
+  Ví dụ p115/BB1 (lint một-token-một-khối loài-only): sớm nhất chặn ~02/10 nếu 27/09-01/10 sạch.
