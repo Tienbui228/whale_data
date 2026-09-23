@@ -1,0 +1,40 @@
+{"kind": "event", "type": "bell", "tok": "MYX", "D": "2026-09-20", "dacc_bwd": -0.22876290104142347, "dpos_bwd": 0.0174852346907056, "div": 0.3733269405315321, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "event", "type": "bell", "tok": "DRIFT", "D": "2026-09-20", "dacc_bwd": -0.32199953390818, "dpos_bwd": 0.21069418386491548, "div": 0.4292675265527397, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "event", "type": "bell_blind", "tok": "ZETA", "D": "2026-09-20", "dacc_bwd": 0.01848944021355104, "dpos_bwd": 0.43433652530779754, "div": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "event", "type": "class", "tok": "CROSS", "d_cross": "2026-09-18", "tier": "L1", "dacc": -0.47088388214904675, "dpos": -0.02303664921465959, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "event", "type": "class", "tok": "BIRB", "d_cross": "2026-09-18", "tier": "L1", "dacc": -0.26246265136027686, "dpos": -0.07132149901380673, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "event", "type": "class", "tok": "STABLE", "d_cross": "2026-09-18", "tier": "L1", "dacc": -0.18099036724864534, "dpos": -0.03294429269100245, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "DATAIP", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "BAS", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "RAVE", "tier": "FAILED", "d_cross": "2026-09-10", "k": 10, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "COAI", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "SIREN", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "CROSS", "tier": "CROSS", "d_cross": "2026-09-18", "k": 2, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "FOLKS", "tier": "FAILED", "d_cross": "2026-09-08", "k": 12, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "SPACE", "tier": "CROSS", "d_cross": "2026-09-17", "k": 3, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "BSB", "tier": "FAILED", "d_cross": "2026-09-12", "k": 8, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "IDOL", "tier": "CROSS", "d_cross": "2026-09-16", "k": 4, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "AIO", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "ACU", "tier": "STALE", "d_cross": "2026-08-13", "k": 38, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "TAIKO", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "MYX", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "ORDER", "tier": "FAILED", "d_cross": "2026-09-12", "k": 8, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "1000000BOB", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "DOOD", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "STBL", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "LYN", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "FIGHT", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "COOKIE", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "BTR", "tier": "CONFIRMED", "d_cross": "2026-08-12", "k": 39, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "BULLA", "tier": "CONFIRMED", "d_cross": "2026-08-30", "k": 21, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "BMT", "tier": "CONFIRMED", "d_cross": "2026-08-10", "k": 41, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "2Z", "tier": "STALE", "d_cross": "2026-08-13", "k": 38, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "BEAT", "tier": "FAILED", "d_cross": "2026-09-10", "k": 10, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "BIRB", "tier": "CROSS", "d_cross": "2026-09-18", "k": 2, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "CLANKER", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "DRIFT", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "ELSA", "tier": "FAILED", "d_cross": "2026-09-06", "k": 14, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "STABLE", "tier": "CROSS", "d_cross": "2026-09-18", "k": 2, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "TRUST", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "TRUTH", "tier": "FAILED", "d_cross": "2026-09-14", "k": 6, "computed_at": "2026-09-22T05:36:09+00:00"}
+{"kind": "state", "type": "btier", "tok": "WET", "tier": "cand", "d_cross": null, "k": null, "computed_at": "2026-09-22T05:36:09+00:00"}

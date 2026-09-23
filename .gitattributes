@@ -1,0 +1,4 @@
+# HOLD-OUT snapshot files · giữ byte-identical với VPS · md5 stable
+ops/holdout_u0bell_*/**.snap -text
+ops/holdout_u0bell_*/**.txt -text
+ops/holdout_u0bell_*/**.jsonl -text
