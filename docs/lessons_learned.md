@@ -1,4 +1,4 @@
-<!-- generated · source_md5=a95de82154c6 · generated_at=2026-09-28T11:36:23+00:00 (L-74) -->
+<!-- generated · source_md5=e834435dca95 · generated_at=2026-09-28T13:20:54+00:00 (L-74) -->
 # Lessons Learned · hub bài học cross-case (append-only)
 
 | ID | topic | amendment | text |
@@ -121,3 +121,5 @@
 | LR-18 | Nansen bal_date trễ [1-3]d: lead từ kho phải trừ; replay không thay findings khi coverage mù | data | 5 |
 | LR-20 | hedge-struct ≥[30]d không unhedge-event = CHRONIC (FP); List-A cần TTL | B | 1 |
 | L-28 am.1 | whales_config căn cước bằng giá contract | MIGRATION-CLASSIFIER-28-09 | nguồn ngoài neo căn cước = khớp giá CỦA ĐỊA CHỈ với perp (≤[5×]); giá theo symbol (spot/Alpha-symbol) là sanity-circle, không dùng cho căn cước/DEAD; symbol, Alpha entry, CoinGecko chỉ là ứng viên. Ca: ARX · STAR · BOB · ONE (trùng contract với CROSS) · PLAY · TAC. |
+| L-81 | taker_buy pin xuyên markup | PROMOTE-LR-05-28-09 | taker_buy <[55%] xuyên markup (≤1 ngày eve) · ngưỡng descriptive:55 · evidence_class=E2 · support_n=13 · counter_n=0 · gate_binding=N · promoted from LR-05 (gieo 10/09 · bada4e50) · ký chat Tiến 28/09 |
+| L-82 | acc_r sập quanh ignition = xác nhận muộn | PROMOTE-LR-10-28-09 | acc_r sập ≥[40-50%]/≤3d quanh ignition = xác nhận muộn (không phân biệt E) · ngưỡng descriptive:40-50 · evidence_class=E2 · support_n=13 · counter_n=0 · gate_binding=N · promoted from LR-10 (gieo 10/09 · bada4e50) · ký chat Tiến 28/09 |
