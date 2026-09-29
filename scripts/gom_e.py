@@ -621,6 +621,19 @@ def run_daily(target_date: str, store_dir: Path,
             if not last_row.empty:
                 r = last_row.iloc[-1]
                 new_flag = (entry_date == target_date)
+                # [v30 P1 · night1 GOM-E cắt-hiển-thị] n_valid_3d for RÒ detection
+                # # TEMP-(e): count valid pos+acc in [T-2..T] · gỡ post-(e) merge
+                _t_idx = df_sym.index[df_sym["date"] == target_date]
+                _n_valid_3d = 0
+                if len(_t_idx) > 0:
+                    _ti = _t_idx[-1]
+                    _start = max(0, _ti - 2)
+                    _win = df_sym.iloc[_start:_ti + 1]
+                    for _, _wr in _win.iterrows():
+                        _p = _wr.get("lsr_pos_r"); _a = _wr.get("lsr_acc_r")
+                        if _p is not None and _a is not None and \
+                           _p == _p and _a == _a and _a != 0:  # not NaN, not zero
+                            _n_valid_3d += 1
                 registry_rows.append({
                     "symbol": sym,
                     "days_in_mode": days_in,
@@ -628,6 +641,7 @@ def run_daily(target_date: str, store_dir: Path,
                     "gLSR": round(_f(r.get("gLSR")), 3),
                     "f_avg": round(_f(r.get("f_avg")), 6),
                     "new": new_flag,
+                    "n_valid_3d": _n_valid_3d,  # [v30 P1] cho priority sort
                 })
             capture_set.append(sym)
 
@@ -703,7 +717,29 @@ def run_daily(target_date: str, store_dir: Path,
 
 def _format_table_a(rows: list, target_date: str) -> list[str]:
     lines = [f"— BẢNG A HEDGE-FARM REGISTRY {target_date} ({len(rows)} tokens) —"]
-    for r in sorted(rows, key=lambda x: x["days_in_mode"], reverse=True):
+    # [v30 P1 · night1 GOM-E cắt-hiển-thị] priority sort · tier ≤0.5 > 0.5-0.85 > None/RÒ
+    # Bucket: 2 = div hợp lệ tier ≤0.5 · 1 = tier 0.5-0.85 · 0 = None/NaN/RÒ (<3 valid days)
+    # # TEMP-(e): dùng n_valid_3d shim · gỡ post-(e) khi div_avg3 tự fail-closed NaN
+    import math as _m
+    def _pri(r):
+        dv = r.get("div_avg3")
+        try:
+            dv_f = float(dv) if dv is not None else None
+            if dv_f is not None and _m.isnan(dv_f): dv_f = None
+        except (ValueError, TypeError):
+            dv_f = None
+        n_valid = r.get("n_valid_3d", 3)  # default 3 (giả sử OK nếu không có shim)
+        # RÒ = <3 valid days OR div None
+        if dv_f is None or n_valid < 3:
+            b = 0
+        elif dv_f <= 0.5:
+            b = 2
+        elif dv_f <= 0.85:
+            b = 1
+        else:
+            b = 0
+        return (b, r["days_in_mode"], -ord(r["symbol"][0]) if r["symbol"] else 0)
+    for r in sorted(rows, key=_pri, reverse=True):
         new_tag = " [NEW]" if r["new"] else ""
         lines.append(
             f"  {r['symbol']}{new_tag} | {r['days_in_mode']}d | "

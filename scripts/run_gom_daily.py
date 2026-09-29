@@ -743,8 +743,12 @@ def main() -> None:
                 import re as _re_ag2
                 # Đếm số dòng Bảng A còn lại sau char-slice (dòng bắt đầu "  SYM...")
                 _tail = gom_e_out[_SLICE_CAP:]
-                _remaining_a = len([l for l in _tail.split("\n") if _re_ag2.match(r"^  [A-Z0-9]+USDT?\s+\|", l)])
-                _tail_note = f"\n(+{_remaining_a} token Bảng A · đủ ở audit)"
+                # [v30 P1 · night1 GOM-E cắt-hiển-thị] Trailer đếm ĐẦY ĐỦ dòng cắt (A+B) + first_cut_token
+                _tail_lines = _tail.split("\n")
+                _cut_all = [l for l in _tail_lines if _re_ag2.match(r"^  \S+", l)]
+                _first_m = _re_ag2.match(r"^  (\S+)", _cut_all[0]) if _cut_all else None
+                _first_tok = _first_m.group(1) if _first_m else "?"
+                _tail_note = f"\n[GOM-E CẮT {len(_cut_all)} dòng · từ {_first_tok}]"
                 # Reserve slice space cho BOTH tail_note VÀ footer
                 _max_units = _SLICE_CAP - _tg_len_ag2(_tail_note) - _tg_len_ag2(_footer_str)
                 _cut_at = gom_e_out.rfind("\n", 0, _max_units)
