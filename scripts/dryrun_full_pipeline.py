@@ -69,6 +69,54 @@ def _restore_ledger_files(target: str, saved: dict) -> list:
     return changed
 
 
+# [DRY-GUARD · ANALYSIS 29/09 câu 2] Sao lưu artifact prod mà dry sẽ ghi đè, TRƯỚC bước 1;
+# khôi phục trong finally. Trước bản này, master_body/concat bị build_v2_digest ghi đè ở bước 2
+# rồi mới sao lưu (khối X6-2) → mất bản as-built (ERRATA [AS-BUILT-OVERWRITTEN]).
+def _artifact_paths(target: str) -> list:
+    art = _REPO / "data/artifacts"
+    return [art / f"master_concat_{target}.txt",
+            art / f"master_body_{target}.txt",
+            _REPO / "data/logs/master_preview_body.txt"]
+
+
+def _snapshot_artifacts(target: str) -> dict:
+    """{path: None | (bytes, atime_ns, mtime_ns)} — giữ cả mtime (forensics N3 dựa vào mtime · ANALYSIS 30/09 (i))."""
+    snap = {}
+    for p in _artifact_paths(target):
+        if p.exists():
+            st = p.stat()
+            snap[p] = (p.read_bytes(), st.st_atime_ns, st.st_mtime_ns)
+        else:
+            snap[p] = None
+    return snap
+
+
+def _restore_artifacts(snap: dict) -> list:
+    changed = []
+    for p, rec in snap.items():
+        if rec is None:
+            if p.exists():
+                p.unlink(); changed.append(f"deleted {p.name}")
+            continue
+        data, at_ns, mt_ns = rec
+        if (not p.exists()) or p.read_bytes() != data:
+            p.write_bytes(data); changed.append(f"restored {p.name}")
+        if p.stat().st_mtime_ns != mt_ns:
+            os.utime(p, ns=(at_ns, mt_ns)); changed.append(f"mtime {p.name}")
+    return changed
+
+
+# [DRY-GUARD] Cổng rỗng (L-78): đêm khô chỉ có tư cách khi thân có dữ liệu thật.
+_VACUOUS_MARKERS = ("[LEDGER-WARMUP", "N/A-ERROR")
+
+
+def _vacuity(body: str) -> tuple[bool, str]:
+    hits = [m for m in _VACUOUS_MARKERS if m in body]
+    if hits:
+        return (False, "FAIL-VACUOUS · " + " · ".join(f"{m}×{body.count(m)}" for m in hits))
+    return (True, "OK · 0 marker rỗng")
+
+
 def _prefix_est(target: str) -> int:
     """Ước prefix cho label night_index/master-live (~30 chars)."""
     from datetime import datetime as _dt
@@ -85,6 +133,7 @@ def dry_one(target: str) -> tuple[bool, list[tuple[str, bool, str]], dict]:
     metrics = {"pre_cap": None, "post_cap": None, "n_cut": None, "cap_ganh": False}
 
     # X6-1 · backup event_ledger trước rebuild
+    art_snap = _snapshot_artifacts(target)   # [DRY-GUARD] TRƯỚC bước 1
     saved = _backup_ledger_files(target)
     try:
         # STEP 1
@@ -99,6 +148,11 @@ def dry_one(target: str) -> tuple[bool, list[tuple[str, bool, str]], dict]:
         if not ok:
             return (False, results, metrics)
         body = res
+        # [DRY-GUARD] cổng rỗng ngay sau render
+        ok_v, msg_v = _vacuity(body)
+        results.append(("vacuity", ok_v, msg_v))
+        if not ok_v:
+            return (False, results, metrics)
         # AH4/22-09 · đo utf16-u (khớp Telegram limit)
         try:
             from lib.tg_len import tg_len as _tg_len_dry_m
@@ -172,6 +226,9 @@ def dry_one(target: str) -> tuple[bool, list[tuple[str, bool, str]], dict]:
     finally:
         # X6-1 · restore event_ledger về nguyên trạng
         _restore_ledger_files(target, saved)
+        # [DRY-GUARD] khôi phục artifact prod về đúng byte trước dry
+        _art_changed = _restore_artifacts(art_snap)
+        metrics["artifacts_restored"] = _art_changed
 
 
 def main():
